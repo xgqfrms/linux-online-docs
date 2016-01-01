@@ -1,0 +1,2849 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- WWW 伺服器 Apache</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0360apache.htm">
+    <span class="text_head0"><span class="text_head_en">WWW </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0360apache.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/11/10</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們最常講的『架站』其實就是架設一個 Web 網站啦！那麼什麼是 Web 呢？那就是全球資訊廣播的意思 (World Wide
+	Web)，或者也可以稱之為互連網吧！這個是我們目前的人類最常使用的 Internet
+	的協定之一啦！通常說的上網就是使用 WWW 來查詢使用者所需要的資訊囉！^_^！目前的
+	WWW 伺服器主要分為兩大陣營，分別是 Unix-Like 上面的 Apache 與 Windows 上面的
+	IIS ，就以效能價格比來說，當然是 Linux 上面的 Apache 最棒啦！至於 WWW 
+	伺服器的類型可以分為靜態與動態，而這些動態的網站裡面，很多都是以目前的當紅炸子雞
+	Linux + Apache + MySQL + PHP 架設而成的，簡稱為 LAMP 的咯！這種動態 WWW
+	主機很有趣喔！他可以溝通 Server 與 Client 端的資料呢！趕緊來進入這個 LAMP
+	的世界吧！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#whatis_www">WWW 的簡史、資源以及伺服器軟體</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#whatis_www_hist">WWW 的簡史、HTML與標準制訂 (W3C)</a><br />
+	　　2.2 <a href="#whatis_www_brow">WWW 主機與瀏覽器所提供的資源設定</a><br />
+	　　2.3 <a href="#whatis_www_lamp">WWW 伺服器的類型：WWW 平台、網頁程式語言與資料庫(LAMP)</a><br />
+	　　2.4 <a href="#whatis_www_ssl">加密的網頁資料 (SSL) 及第三方公正單位</a><br />
+	　　2.5 <a href="#whatis_www_browser">用戶端常見的瀏覽器</a><br />
+	</span>
+3. <a href="#www_basic">WWW (Apache) 伺服器基本設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#www_basic_pkg">LAMP 所需套件與其結構</a><br />
+	　　3.2 <a href="#www_basic_basic">httpd.conf 的基本設定</a><br />
+	　　　　<a href="#www_basic_basic_main">針對主機環境的設定項目</a><br />
+	　　　　<a href="#www_basic_basic_lang">針對中文 big5 編碼語系</a><br />
+	　　　　<a href="#www_basic_basic_dir">首頁權限相關設定 (DocumentRoot 與 Directory)</a><br />
+	　　3.3 <a href="#www_basic_php">PHP 等額外設定檔</a><br />
+	　　3.4 <a href="#www_basic_start">Apache 的啟動與 PHP 的測試</a><br />
+	　　3.5 <a href="#www_basic_mysql">MySQL 資料庫的啟動與測試</a><br />
+	　　　　<a href="#www_basic_mysql_1">啟動 MySQL (設定 MySQL root 密碼與新增 MysQL 用戶帳號)</a><br />
+	　　　　<a href="#www_basic_mysql_2">效能調校 /etc/my.cnf</a><br />
+	　　　　<a href="#www_basic_mysql_3">MysQL root 密碼忘記的緊急處理</a><br />
+	　　3.6 <a href="#www_basic_www">開始網頁設計及安裝架站軟體，如 phpBB2</a><br />
+	</span>
+4. <a href="#www_adv">Apache 伺服器的進階設定</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#www_adv_personal">啟動用戶的個人網站(權限是重點)</a><br />
+	　　4.2 <a href="#www_adv_cgi">啟動某個目錄的 CGI (perl) 程式執行權限</a><br />
+	　　4.3 <a href="#www_adv_error404">找不到網頁時的顯示訊息通知</a><br />
+	　　4.4 <a href="#www_adv_order">瀏覽權限的設定動作 (order, limit)</a><br />
+	　　4.5 <a href="#www_adv_status">主機狀態說明網頁</a><br />
+	　　4.6 <a href="#www_adv_htaccess">.htaccess 與認證網頁設定</a><br />
+	　　4.7 <a href="#www_adv_virtual">虛擬主機的設定</a><br />
+	　　4.8 <a href="#www_adv_firewall">防火牆與 SELinux</a><br />
+	</span>
+5. <a href="#other_pkg">登錄檔分析以及 PHP 強化模組等套件說明</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#other_pkg_php">PHP 強化模組 (eaccelerator) 與 Apache 簡易效能測試</a><br />
+	　　5.2 <a href="#other_pkg_syslog">syslog 與 logrotate</a><br />
+	　　5.3 <a href="#other_pkg_webalizer">webalizer</a><br />
+	　　5.4 <a href="#other_pkg_awstats">awstats</a><br />
+	</span>
+6. <a href="#www_ssl">建立 SSL (https) 網站</a><br />
+7. <a href="#security">一些安全性管理的網頁</a><br />
+	<span class=text_h2>
+	　　7.1 <a href="#security_ssh">讓 SSH 可以使用後門連線</a><br />
+	　　7.2 <a href="#security_teleport">防砍站軟體</a><br />
+	</span>
+8. <a href="#review">重點回顧</a><br />
+9. <a href="#ex">課後練習</a><br />
+10. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+11.<a href="http://phorum.vbird.org/viewtopic.htm?p=116564"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=116564</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	WWW 伺服器能否提供瀏覽器來瀏覽其實與檔案系統有很深的關係，如果你對於 Linux 檔案的權限概念不足的話，
+	那麼即使你架設好一部 WWW 伺服器，您網站的資料也可能不能夠被使用者所瀏覽的。
+	此外，由於 Linux 的 WWW 伺服器含有很多的外掛模組，所以你可能會需要自行進行一些原始碼的編譯行為。
+	而你的 WWW 伺服器很可能同時管理多部主機名稱的，所以 DNS 以及網路基礎的部分也要很清楚的！
+	所以，您最好已經具有如下的基礎：<br />
+
+	<ul>
+	<li>基礎學習篇內的<a href="../linux_basic/0220filemanager.htm">檔案與目錄管理</a>以及<a
+	href="../linux_basic/0210filepermission.htm">檔案屬性與目錄配置</a>等部分；
+	<li>基礎學習篇內的<a href="../linux_basic/0520source_code_and_tarball.htm">原始碼的編譯</a>與相關意義；
+	<li><a href="0350dns.htm">DNS 伺服器的原理</a>與設定技巧；
+	<li><a href="0110network_basic.htm">網路基礎概念</a>；
+	<li>務必要關閉 <a href="0240network-secure-1.htm#selinux">SELinux</a> ，否則 Apache 肯定無法順利提供瀏覽資料。
+	</ul>
+</div>
+
+<hr /><a NAME="whatis_www"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">WWW 的簡史、資源以及伺服器軟體</span><br />
+<div class=block1>
+	你知道目前 (2006) 網路為什麼會這麼流行嗎？其實都是 WWW 造成的啦。早在 1993 年左右，鳥哥初次接觸到網路，
+	當時的網路較熱門的大概就是一些資源下載的 FTP 網站以及很多文字熱烈討論的 BBS 站了。
+	資料雖然豐富，不過，總是覺得少了點什麼。後來上了研究所，為了課業需要，
+	經常連上台灣的學術網路 (TANET) 進行一些學術資料的檢索，當時大約是 1996 年左右。
+	因為上網就是要找資料而已，所以就慢慢的很少使用網路了。<br /><br />
+
+	過了幾年後，再次使用圖形介面的作業系統，竟然發現只要點幾個小按鈕，就會有很多網路上花花綠綠的文字與圖案，
+	有的網站甚至提供影音的特效，當時真是相當的訝異！不過，由於圖形影像的視覺方面要比 BBS
+	純文字的資料吸引人，自然造成很多人喜歡流連在網際網路上，人潮多當然就有商機！由於奇貨可居，才有後來 
+	90 年代末期的瀏覽器大戰，
+	這個商業大戰也造成後來 WWW 標準不被某些瀏覽器所支援的後果。<br /><br />
+
+	這些年由於搜尋引擎、個人網誌 (blog) 的流行，又將網際網路推向另一個新境界！啊！
+	要學的東西真是很多啊～～@_@。底下讓我們來瞭解瞭解什麼是 WWW 以及他所需要的伺服器軟體，
+	還有一些瀏覽器相關的資訊吧！<br /><br />
+
+	<hr /><a NAME="whatis_www_hist"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">WWW 的簡史、HTML
+	與標準制訂 (W3C)</span><br />
+	<div class=block2>
+		眾所皆知的，目前網際網路社會上最熱門的協定就是 TCP/IP 了，而 TCP/IP 的應用方面則有
+		mail, dns, ftp, telnet 與 www  等等，其中造成 TCP/IP 大流行的應屬 mail 與 www，尤其是 WWW 這個玩意兒。
+		<span class=text_import2>WWW 是 Word Wide Web 的縮寫，其中 Web 有廣播網的意思存在，
+		所以簡稱為全球資訊網的就是了。</span>WWW 可以結合文字、圖形、影像以及聲音等多媒體，
+		並透過超連結 (Hyper Text) 的方式將資訊以 Internet 傳遞到世界各處去。<br /><br />
+
+		與其他的伺服器類似的，你要連結上 WWW 網站時，該網站必需要提供一些資料，
+		而你的用戶端則必需要使用可以解析這些資料的軟體來處理，那就是瀏覽器啦！
+		簡單的來說，你可以這樣瞧一瞧 WWW server/client 的相關性：<br /><br />
+
+		<a name="fig_01"></a><center><img src="0360apache/server_client.png"
+		title="WWW 主機與用戶端的連線相關性"
+		alt="WWW 主機與用戶端的連線相關性"><br />
+		圖一、WWW 主機與用戶端的連線相關性</center><br />
+
+		也就是說，你的 WWW 伺服器不但需要一個可讓用戶端瀏覽器瀏覽的平台，還需要提供用戶端一些資料才行！
+		那這些可供查詢的資料有哪些類型？最主要的其實是<span class=text_import2>超文件標籤語言 
+		(Hyper Text Markup Language, HTML)。
+		其實超文件標籤語言大多只是一些純文字資料，然而透過瀏覽器對於一些標籤 (&lt;tag&gt;) 的解釋後，
+		就能夠得到不同的文字格式、顏色顯示等等</span>。你可以使用任何一個瀏覽器連結到搜尋大師 
+		<a href="http://www.google.com.tw">http://www.google.com</a> 網站，然後在其上的頁面上按下滑鼠右鍵，
+		選擇察看原始碼，你就能發現該網頁是如何寫成的了。<br />
+
+<table class="term"><tr><td class="term"><pre>
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> <span class=term_say>&lt;==HTML的標準版本宣告</span>
+&lt;html>
+&lt;head>
+<span class=term_say>.....一些標頭資料，例如 title 等等......</span>
+&lt;/head>
+&lt;body>
+<span class=term_say>.....實際的資料放置位置......</span>
+&lt;/body>
+&lt;/html>
+</pre></td></tr></table>
+
+		HTML 之所以被稱為標籤語言就如同上面的表格所示，他是由很多 &lt;tag&gt; 所組成的，主要分為兩大區塊，
+		一個是與標頭有關的 &lt;head&gt; 區塊，包括該網頁所使用的編碼格式與抬頭等等。另一部份則是 &lt;body&gt;
+		所含有的實際網頁內容資料啦。關於 HTML 不在本文的介紹內，你可以在市面上找到很多相關的書籍。而除了 HTML 之外，
+		目前的標籤語言還包括了 XHTML, CSS 風格語法等等，都值得參考喔。<br /><br />
+
+		知道了 WWW 的 server/client 架構後，再來我們要討論的是，那 WWW 是怎麼來的啊？
+		伯納斯-李 (Tim Berners-Lee) 在 1980 年代為了更有效率的讓歐洲核子物理實驗室的科學家可以分享及更新他們的研究成果，
+		於是他發展出一個<span class=text_import2>超文件傳輸協定 (Hyper Text Transport Protocol, HTTP)</span>。
+		如同前面提到的，在這個協定上面的伺服器需要軟體，而用戶端則需要瀏覽器來解析伺服器所提供的資料。
+		那麼這些軟體怎麼來的？<br /><br />
+
+		為了讓 HTTP 這個協定得以順利的應用，大約在 90 年代初期由伊利諾大學的國家超級電腦應用中心
+		(NCSA, <a href="http://www.ncsa.uiuc.edu/" target="_blank">http://www.ncsa.uiuc.edu/</a>)
+		開發出伺服器 HTTPd (HTTP daemon 之意)。HTTPd 為自由軟體，所以很快的領導了 WWW 伺服器市場。
+		後來網景通訊 (Netscape) 開發出更強大的伺服器與相對應的用戶端瀏覽器，那就是大家曾經熟悉的 Netscape 
+		這套軟體啦。這套軟體分為伺服器與瀏覽器，其中瀏覽器相對便宜，不過伺服器可就貴的嚇人了。
+		所以，在伺服器市場上主要還是以 HTTPd 為主的。<br /><br />
+
+		後來由於 HTTPd 這個伺服器一直沒有妥善的發展，於是一群社群朋友便發起一個計畫，
+		這個計畫主要在改善原本的 HTTPd 伺服器軟體，<span class=text_import2>他們稱這個改良過的軟體為 Apache ，
+		取其『一個修修改改的伺服器 (A patch server)』的雙關語</span>！ ^_^！這個 Apache 在 1996 
+		年以後便成為 WWW 伺服器上市佔率最高的軟體了 (<a href="http://httpd.apache.org/"
+		target="_blank">http://httpd.apache.org/</a>)。<br /><br />
+
+		雖然 WWW 越來越重要，但相對的來說，用戶端如果沒有瀏覽器的話那麼他們當然就無法去瀏覽 WWW 
+		伺服器所提供的資料。為了搶佔瀏覽器的市佔率，於是在 90 年代末期微軟將 IE 
+		瀏覽器內建在 Windows 作業系統內，此一決定也讓當時相當廣泛使用的 Netscape 瀏覽器 (Navigator) 市佔率急速下降。
+		後來網景公司在 1998 年左右將瀏覽器的原始碼部分開放成為自由軟體，採用 Mozilla 通用授權 (MPL) 。<br /><br />
+
+		Mozilla (<a href="http://www.mozilla.org/" target="_blank">http://www.mozilla.org/</a>)
+		這個計畫所開發的軟體可不止瀏覽器而已，還包括郵件處理軟體及網頁編輯軟體等等。
+		當然啦，其中最出名的就是瀏覽器軟體『火狐狸 (firefox)』啦！那這玩意兒與 IE 有啥不同？
+		由於 IE 是整合在 Windows 作業系統核心內，
+		加上改版的幅度太慢，甚至 IE 使用的 HTML 標準語法解析行為都是微軟自訂的標準，
+		並不全然符合網際網路上的標準規範 (W3C, <a href="http://www.w3.org/" 
+		target="_blank">http://www.w3.org/</a>)，導致伺服器端所提供的資料並無法在所有的瀏覽器上都顯示出相同的樣式，
+		而且用戶端也容易受到網路攻擊。
+		<br /><br />
+
+		firefox (<a href="http://moztw.org/" target="_blank">http://moztw.org/</a>) 
+		的發展就標榜小而美，因此程式相當的小，所以執行效能上面非常的快速，此外，對於超文件的解析上面，
+		firefox 主要依據 w3c 所制訂的標準來發展的，所以任何以 w3c 的標準開發的網站，在 firefox 
+		上面就能夠得到設計者所希望的樣式！目前 firefox 已經針對市面上最常見到的 Windows/Linux/Unix 
+		等作業系統來進行支援，大家可以多多使用喔！^_^<br /><br />
+
+		由上面的介紹我們可以知道：<br />
+		<ul><span class=text_import2>
+		<li>WWW 是依據 HTTP 這個協定而來的，分為伺服器端與用戶端；
+		<li>Apache 是一個伺服器端的軟體，主要依據 NCSA 的 HTTPd 伺服器發展而來，為自由軟體；
+		<li>Mozilla 是一個自由軟體的開發計畫，其中 firefox 瀏覽器是相當成功的作品。
+		<li>在撰寫自己的網頁資料時，盡量使用 W3C 所發佈的標準，這樣在所有的瀏覽器上面才能夠順利的顯示出你想要的樣子。
+		</span></ul>
+	</div>
+
+	<hr /><a NAME="whatis_www_brow"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">WWW 
+	主機與瀏覽器所提供的資源設定</span><br />
+	<div class=block2>
+		由前面的說明我們可以知道其實 WWW 伺服器的重點是提供一些資料，這些資料必需要是用戶端的瀏覽器可以支援顯示才行。
+		那麼這些資料是什麼類型啊？很簡單啊，當然就是檔案囉。如此說來，我們必需要在伺服器端先將資料檔案寫好，
+		並且<span class=text_import2>放置在某個特殊的目錄底下，這個目錄就是我們整個網站的首頁了！</span>
+		一般來說，這個目錄很可能是在 /var/www/html/ 或者是 /srv/www/。我們的 CentOS 預設在 /var/www/html 喔。<br /><br />
+
+		好了，那麼瀏覽器如何取得這個目錄內的資料呢？你必需要在瀏覽器的『網址列』輸入所需要的網址才行。
+		不過，現今的瀏覽器功能實在很多，他不只可以連上 WWW ，還可以連上類似 FTP 之類的網路通訊協定。
+		所以你得要在網址列輸入正確的網址，這個網址包括這樣：<br />
+
+		<ul><span class=text_import2>&lt;協定&gt;://&lt;主機位址或主機名稱&gt;[:port]/&lt;目錄資源&gt;</span></ul>
+
+		上頭就是我們常常聽到的 URL (Uniform Resource Locator) 啦！他可以這樣看的：<br /><br />
+
+		<li><span class=text_import1>協定</span>：</li>
+		<div class=block2>
+		比較常見的協定有 http, https, ftp, telnet 等等，還有類似 news, gopher 等。
+		這個協定在告知瀏覽器『請你利用此一協定連接到主機端』的意思。舉例來說，如果你下達：
+		<a href="http://ftp.isu.edu.tw" target="_blank">http://ftp.isu.edu.tw</a> 這表示瀏覽器要連結到
+		義守大學的 http (亦即 port 80) 的意思。如果是 <a href="ftp://ftp.isu.edu.tw" 
+		target="_blank">ftp://ftp.isu.edu.tw</a> 則代表連結到義守大學的 ftp (port 21) 啦！
+		因為使用的協定不同，所以當然回應的資料也不相同的。不過，
+		萬一對方伺服器的埠口啟動在非正規的埠號，例如將 http 啟動在 port 81 時，那你就得要這樣寫：
+		http://hostname:81/ 。<br /><br />
+		</div>
+
+		<li><span class=text_import1>主機位址或主機名稱</span>：</li>
+		<div class=block2>
+		就是主機在網際網路所在的 IP 位置。如果是主機名稱的話，當然得要透過名稱解析器囉！
+		一般來說，雖然使用 IP 就能夠架設 WWW 網站，不過建議您還是申請一個好記又合法的主機名稱比較好！<br /><br />
+		</div>
+
+		<li><span class=text_import1>目錄資源：</span>：</li>
+		<div class=block2>
+		剛剛不是提到首頁的目錄嗎？在首頁目錄下的相對位置就是這個目錄資源啦。
+		舉例來說，鳥哥的網站 www 資料放置在我主機的 /var/www/html/ 當中，所以說：<br />
+		<ul>
+		<li>http://linux.vbird.org --> /var/www/html/<br />
+		<li>http://linux.vbird.org/linux_basic/index.htm --> /var/www/html/linux_basic/index.htm</ul>
+		另外，通常首頁目錄底下會有個特殊的檔案名稱，例如 index.html 或 index.??? 等。舉例來說，如果你直接按下：
+		http://linux.vbird.org 會發現其實與 http://linux.vbird.org/index.htm 是一樣的！
+		這是因為 WWW 伺服器會主動的以該目錄下的『首頁』來顯示啦！<br />
+		</div>
+
+		所以啦，我們的伺服器會由於瀏覽器傳來的要求協定不同而給予不一樣的回應資料。
+		那你瞭解到網址列的意義了嗎？^_^！再來，如果瀏覽器是以 http://hostname 的型態來向伺服器要資料時，
+		那麼瀏覽器與伺服器端是如何傳遞資料的呢？基本上有這幾種方法：<br />
+
+		<ul>
+		<li><span class=text_import1>GET</span><br />
+		就是直接向 WWW 伺服器要求網址列上面的資源，這也是最常見的。此外，使用 GET 
+		的方式可以直接在網址列輸入變數喔。舉例來說，鳥哥的討論區有一篇提問的智慧，
+		他的網址是：『<a href="http://phorum.vbird.org/viewtopic.htm?t=96" 
+		target="_blank">http://phorum.vbird.org/viewtopic.htm?t=96</a>』，發現那個 ?t=96 了嗎？
+		t 就是變數， 96 就是這個變數的內容。如果你將問號後面的資料拿掉時，瞧瞧會出現什麼後果？
+		這麼說，您可以明白 GET 的處理了吧？</li><br />
+
+		<li><span class=text_import1>POST</span><br />
+		這也是用戶端向主機端提出的要求，只是這個要求裡面含有比較多的資料就是了。
+		舉例來說，討論區裡面不是常常有留言的選項嗎，如果你選擇留言的話不是會在瀏覽器冒出一個框框讓你填入資料嗎！
+		當按下傳送後，那些框框內的資料就會被瀏覽器包起來傳送至 WWW 伺服器了。
+		<span class=text_import2>POST 與 GET 不相同喔，
+		GET 可以在網址列取得用戶端所要求的變數，不過 POST 就不是使用網址列的功能了</span>。</li><br />
+
+		<li><span class=text_import1>HEAD</span><br />
+		主機端回應給 Client 端的一些資料檔頭而已；</li><br />
+
+		<li><span class=text_import1>OPTIONS</span><br />
+		主機端回應給 Client 端的一些允許的功能與方法；</li><br />
+
+		<li><span class=text_import1>DELETE</span><br />
+		刪除某些資源的舉動。
+		</ul>
+
+		常見的是 GET 這個項目啦！如果有大量資料由用戶端上傳到 WWW 伺服器端時，才會使用到 POST 這個項目。
+		你還是得需要注意一下這些舉動，因為後續的登錄檔分析內容都是使用這種動作來分析的呦！
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="whatis_www_lamp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">WWW 伺服器的類型：WWW 
+	平台、網頁程式語言與資料庫(LAMP)</span><br />
+	<div class=block2>
+		前面我們提到 WWW 伺服器軟體的研發，以目前來說，市佔率較高的應該是 Apache 與 IIS 這兩個玩意兒，
+		Apache 是自由軟體，可以在任何作業系統上面安裝的，至於 IIS 則是 Windows 家族開發出來的，
+		僅能在 Windows 作業系統上面安裝與執行。由於作業系統平台不一樣，所以其上安裝的軟體當然也不相同。
+		底下就讓我們來聊一聊目前網站的一些特色吧！<br /><br />
+
+		目前 Internet 上頭提供 WWW 資料的主機大致上我們可以粗分為兩種：<br /><br />
+
+		<li><span class=text_import1>僅提供使用者瀏覽的靜態網頁：</span></li>
+		<div class=block2>
+		這種類型的網站大多是提供『靜態』的網頁，或許有提供一些動畫圖示，但基本上就僅止於此啦！
+		因為他僅提供你來瀏覽，Server 不需要與 Client 端互動，所以你可以到該網站上去瀏覽，
+		但是無法進行進行資料的上傳喔！目前主要的免費虛擬主機大多是這種類型，所以，你只要依照 HTML 
+		的語法寫好你的網頁，並且上傳到該網站空間上，那麼你的資料就可以讓大家瀏覽了！<br /><br />
+		</div>
+
+		<li><span class=text_import1>提供使用者互動介面的動態網站：</span></li>
+		<div class=block2>
+		這種類型的網站可以讓伺服器與使用者互動，常見的例如討論區論壇與留言版，包括一些部落格也都是屬於這類型。
+		這類型的網站需要的技術程度比較高，因為他是藉由『網頁程式語言』來達成與使用者互動的行為，
+		常見的例如 PHP 網頁程式語言，配合 MySQL 資料庫系統來進行資料的讀、寫。整個互動可以使用下圖來說明：<br /><br />
+
+		<a name="fig_02"></a><center><img src="0360apache/server_client_2.png"
+		title="動態網站的網頁程式語言與資料庫介面"
+		alt="動態網站的網頁程式語言與資料庫介面"><br />
+		圖二、動態網站的網頁程式語言與資料庫介面</center><br />
+
+		這就是所謂的主機端工作任務介面 (Server Side Include, SSI)，因為不論你要求的資料是什麼，
+		其實都是透過伺服器端同一支網頁程式在負責將資料讀出或寫入資料庫，處理完畢後將結果傳給用戶端的一種方式，
+		變動的是資料庫內的資料，網頁程式其實並沒有任何改變的。這部份的網頁程式包括 PHP, ASP, Perl....
+		很多啦！<br /><br />
+
+		另外一種互動式的動態網頁主要是在用戶端達成的！舉例來說，我們可以透過利用所謂的 Java scripts 這種語法，
+		將可執行的程式 (java script) 傳送給用戶端，用戶端的瀏覽器如果有提供 java script 的功能，
+		那麼該程式就可以在用戶端的電腦上面運作了。由於程式是在用戶端電腦上執行，
+		因此如果伺服器端所製作的程式是惡意的，那麼用戶端的電腦就可能會遭到破壞。
+		這也是為啥很多瀏覽器都已經將一些危險的 java script 關閉的原因。<br /><br />
+
+		另外一種可在用戶端執行的就是 flash 動畫格式，在這種動畫格式內還可以進行程式設計，
+		因此用戶端只要擁有可以執行 flash 動畫的軟體，那就可以利用這個軟體來達到互動式的對談。
+		這些都算是動態網站所提供的功能喔！<br />
+		</div>
+
+		從上面的說明你可以知道動態網站是目前比較熱門的，像是近兩年來如同雨後春筍一般冒出來的個人部落格 (blog)
+		就是很經典的動態網站之一。而由<a href=#fig_02>圖二</a>我們也知道要做成這樣的動態網站你必需要有：<br />
+		<ul><span class=text_import2>
+		<li>支援的作業系統：讓所需要的軟體都能夠安裝執行啊；
+		<li>可運作的 WWW 伺服器：例如 Apache 與 IIS 等 WWW 伺服器平台軟體；
+		<li>網頁程式語言：包括 perl, PHP, JSP, CGI, ASP 等等都算是啦！
+		<li>資料儲存之資料庫系統：包括 MySQL, MSSQL, PostgreSQL 以及甲骨文 (Oracle) 等等。
+		</span></ul>
+
+		在整個平台設計上面，目前常見的有兩大系統，一個是 <span class=text_import2>Linux 
+		作業系統上面，搭配 Apache + MySQL + PHP 等而達成，
+		這個系統被稱為 LAMP</span> 。另一個則是微軟的 IIS + MSSQL + ASP (.NET) 伺服器。
+		在能見度與市佔率方面，應該還是以 LAMP 為主吧！ ^_^！上面這三個小東西讓我們來談談先：<br /><br />
+
+		<li><span class=text_import1>Apache (<a href="http://www.apache.org"
+			target="_blank">http://www.apache.org</a>)</span></li>
+		<div class=block2>
+		我們前面提到，1995 年以前就有很多的 WWW 伺服器軟體，其中以 HTTPd 佔有率較高。
+		後來 HTTPd 經過多次臭蟲的修訂後，才在 1995 年後發佈 Apache (A patche server) 的啦！這東西就是主要提供 WWW
+		的伺服器平台，後面談到的 MySQL 及 PHP 兩個咚咚都需要用這玩意兒來處理。<br /><br />
+		</div>
+
+		<li><span class=text_import1>PHP (<a href="http://www.htm.net/"
+			target="_blank">http://www.htm.net/</a>)</span></li>
+		<div class=block2>
+		按照官方的說法來說，PHP 是一個工具，他可以被用來建立動態網頁，PHP 程式碼可以直接在 HTML 網頁當中嵌入，
+		就像你在編輯 HTML 網頁一樣的簡單。所以說， PHP 是一種『程式語言』，這種程式語言可以直接在網頁當中編寫，
+		不需要經過編譯即可進行程式的執行。由於具有：自由軟體、跨平台、容易學習及執行效能高等優點，
+		目前是很熱門的一個設計網頁的咚咚喔！你可以在市面上找到很多相關的書籍來參考的。<br /><br />
+		</div>
+
+		<li><span class=text_import1>MySQL (<a href="http://www.mysql.org/" 
+			target="_blank">http://www.mysql.org/</a>)</span></li>
+		<div class=block2>
+		傳統的檔案讀取是很麻煩的，如果你只要讀取該檔案當中的一小部分，系統還是會將整個檔案讀出來，
+		若又有多人同時讀取同一個檔案時，那就會造成效能與系統上的問題，所以才會有資料庫系統的推出。
+		<span class=text_import2>資料庫其實是一種特殊格式的檔案，這種檔案必需要透過特殊介面 (資料庫軟體) 
+		來進行讀寫</span>。由於這個特殊介面已經針對資料的查詢、寫入做過最佳化設計，
+		因此很適合多人同時寫入與查詢的工作。<br /><br />
+
+		針對資料庫的語法有所謂的 SQL 標準語法，任何根據這種資料檢索語法發展出來的資料庫，就稱為 SQL 資料庫。
+		比較知名的自由軟體資料庫系統有 MySQL 及 PostgreSQL ，其中 MySQL 的使用率又比較高一些。
+		MysQL 可以透過網頁程式語言來進行讀寫的工作，因此很適合例如討論區、論壇等的設計，
+		甚至很多商業網站的重要資料也是透過 MySQL 這個資料庫軟體來存取的呢！<br />
+		</div>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上，如果光學會 Linux 與架站，對您自己的競爭力還是不夠的，
+		可以的話，多學一些 MySQL 的 SQL 語法，以及類似 PHP, JSP 等網頁程式語言，
+		對您的未來是很有幫助的喔！ ^_^！對於 MySQL 有興趣的話，可以看看這裡：<br />
+		<a href="http://linux.tnc.edu.tw/techdoc/mysql/mysql_doc/manual_toc.html" 
+		target="_blank">http://linux.tnc.edu.tw/techdoc/mysql/mysql_doc/manual_toc.html</a>
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a NAME="whatis_www_ssl"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">加密的網頁資料 (SSL) 
+	及第三方公正單位</span><br />
+	<div class=block2>
+		關於 HTTP 這個傳輸協定當中，你必需要知道的是：『這個傳輸協定傳輸資料是以明碼傳送的』，
+		所以你的任何資料封包只要被監聽竊取的話，那麼該資料就等於是別人的啦！那想一想，
+		你有過上線刷卡的經驗嗎？上線刷卡只要輸入你信用卡的卡號與相關的截止日期後，就能夠進行交易了。
+		那如果你的資料在 Internet 上面跑時是明碼的情況下，真要命！那你的信用卡不就隨時可能會被盜用？<br /><br />
+
+		雖然大多數 Internet 上面的 WWW 網站所提供的資料是可以隨意瀏覽的，不過如同上面提到的，
+		一些物流交易網站的資料以及關於你個人的重要機密資料當然就不能這樣隨意傳送啦！
+		這個時候就有需要用到 https://hostname 這種連線的方式啦！這種方式是透過 SSL 加密的機制喔！<br /><br />
+
+		<li><span class=text_import1>Secure Socket Layer (SSL)</span></li>
+		<div class=block2>
+		還記得我們在 <a href="0310telnetssh.htm#ssh">SSH 伺服器</a>當中介紹過他連線的機制吧？
+		就是利用非配對的 key pair (Public + Private kye) 來組成金鑰，然後透過公鑰加密後傳輸，
+		傳輸到目標主機後再以私鑰來解密，如此一來資料在 Internet 上面跑就以加密的方式，
+		想當然爾，這些資料自然就比較安全啦！SSL 就是利用在 WWW 傳輸上面的加密方式啦！<br /><br />
+
+		當瀏覽器端與 WWW 伺服器端同時支援 SSL 的傳輸協定時，在連線階段瀏覽器與伺服器就會產生那把重要的金鑰！
+		產生金鑰後就能夠利用瀏覽器來傳送與接收加密過的重要資料啦！要達成這樣的機制，
+		你的 WWW 伺服器必需要啟動 http<b>s</b> 這個重要的傳輸協定，而瀏覽器則必需要在網址列輸入 https://
+		開頭的網址，那兩者才能夠進行溝通與連線。要注意的是，在某些很舊的瀏覽器上面是不支援 SSL 的，
+		所以在那些舊的瀏覽器上就無法達成 https 的連線啦！<br /><br />
+		</div>
+
+		<li><span class=text_import1>Certificate Authorities (CA)</span></li>
+		<div class=block2>
+		想一想 SSL 這個機制有什麼問題？他的問題就是：『那把 Public key 是伺服器產生的』！
+		這是什麼問題？因為 public key 是伺服器產生的，所以那個伺服器如果是詐騙集團所造假產生的網站，
+		那麼你連上去後，即使是加密的資料，到了對方的主機上還是會被解開啊！那就麻煩了～
+		這個時候就有第三方公正單位來幫忙啦！<br /><br />
+
+		所謂的 CA 就是一個公認的公正單位，你可以向其註冊一個 public key (講到註冊你就要知道....
+		這東西是要錢的意思！)，
+		那麼當用戶端的瀏覽器在瀏覽時，該瀏覽器會主動的向 CA 單位確認該 public key 是否為合法註冊過的，
+		如果是的話，那麼該次連線才會建立，如果不是呢？那麼瀏覽器就會發出警告訊息，告知使用者應避免建立連線啊。
+		所以說，如此一來 WWW 伺服器不但有公正單位的背書，使用者在建立連線時也比較有保障！<br />
+		</div>
+
+		更多關於 SSL 以及 CA 的介紹，可以約略參考一下：<br />
+
+		<ul>
+		<li>SSL ： <a href="http://www.modssl.org/" target="_blank">http://www.modssl.org/</a></li>
+		<li>CA 組織之一：<a href="https://digitalid.verisign.com/server/apacheNotice.htm" 
+		target="_blank">https://digitalid.verisign.com/server/apacheNotice.htm</a></li></ul>
+	</div>
+
+	<hr /><a NAME="whatis_www_browser"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">用戶端常見的瀏覽器</span><br />
+	<div class=block2>
+		咱們前面談到 WWW 伺服器是 Server/Client 的架構，而用戶端使用的軟體就是瀏覽器啊！
+		目前比較知名的瀏覽器主要有兩款，包括 Windows 內建的 IE 這玩意兒，另一個則是自由軟體 firefox
+		(火狐狸) 。<br /><br />
+
+		由於<span class=text_import2>瀏覽器可以連結到網際網路上，所以瀏覽器也有可能被入侵！</span>
+		其中由於 IE 直接內嵌至 Windows 的核心當中，所以如果 IE 有漏洞時，對於系統的損害是很大的！
+		所以無論如何，請記得『務必要隨時更新到最新版本的瀏覽器』才行。建議您可以使用 firefox 
+		這個小巧玲瓏的瀏覽器啊！<br /><br />
+
+		除了視窗介面的瀏覽器軟體之外，其實還有兩個可以在文字介面底下進行瀏覽與網頁下載的程式，
+		分別是：<br />
+
+		<ul>
+		<li><a href="0140networkcommand.htm#lynx">lynx</a>：文字介面的瀏覽器；
+		<li><a href="0140networkcommand.htm#wget">wget</a>：文字介面下使用來擷取檔案的指令。
+		</ul>
+
+		這兩個指令我們已經在<a href="0140networkcommand.htm">常用網路指令</a>章節談過了，
+		請自行前往參考喔！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="www_basic"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">WWW (Apache) 伺服器基本設定</span><br />
+<div class=block1>
+	從前面的說明當中，我們知道在 Linux 上面要達成網頁伺服器 (WWW) 需要 Apache 這套伺服器軟體吶！
+	不過 Apache 僅能提供最基本的靜態網站資料而已，想要達成動態網站的話，那麼最好還是需要
+	PHP 與 MySQL 的支援才好。所以底下我們將會以 LAMP (Linux + Apache + MySQL + PHP) 作為安裝與設定的介紹，
+	加油吧！ ^_^<br /><br />
+
+	<hr /><a NAME="www_basic_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">LAMP 所需套件與其結構</span><br />
+	<div class=block2>
+		既然我們已經是 Linux 作業系統，而且使用的是號稱完全相容於 Red Hat Enterprise Linux 的 CentOS 版本，
+		那當然只要利用 CentOS 本身提供的 Apache, PHP, MySQL 即可！<span class=text_import2>不建議您自行利用 
+		tarball 安裝你的 LAMP 伺服器</span>。因為自行安裝不但手續麻煩，而且也不見得比系統預設的套件穩定。
+		除非您有特殊的需求 (例如你的某些 Apache 外掛程式需要較高的版本，或者是 PHP, MysQL 有特殊版本的需求)，
+		否則請使用 <a href="0220upgrade.htm#yum">yum</a> 來進行套件的安裝即可。<br /><br />
+
+		那麼我們的 LAMP 需要哪些東西呢？你必需要知道的是，<span class=text_import2>PHP 是掛在 Apache 底下執行的，
+		而我們要用網頁的 PHP 程式控制 MySQL 時，你的 PHP 就得要支援 MySQL 的模組才行！</span>
+		所以你至少需要底下幾個套件：<br />
+		<ul>
+		<li>httpd
+		<li>mysql
+		<li>mysql-server
+		<li>php
+		<li>php-devel (這個與 PHP 加速軟體有關)
+		<li>php-mysql
+		</ul>
+		要注意， Apache 目前有幾種主要版本，包括 1.3.x, 2.0.x, 以及 2.2.x 等等，在 1.3.x 以前的版本通常取名為 apache
+		，2.x 以後則稱為 httpd 囉！請與您的 distribution 比較看看先。至於 CentOS 4.x 則是提供 Apache 2.0.x 這個版本啦。
+		如果你沒有安裝的話，請直接使用 yum 或者是原本光碟來安裝先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum install httpd mysql-server php php-devel php-mysql</span>
+</pre></td></tr></table>
+
+		先來瞭解一下 Apache 2.0.x 這個版本的相關結構，這樣才能夠知道如何處理我們的網頁資料啊！<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/httpd/conf/httpd.conf (主要設定檔)</span><br />
+		最主要的設定檔，其實整個 Apache 也不過就是這個設定檔啦！裡面真是包山包海啊！
+		不過很多其他的 distribution 都將這個檔案拆成數個小檔案分別管理不同的參數。
+		但是主要設定檔還是以這個檔名為主的！你只要找到這個檔名就知道如何設定啦！</li><br />
+
+		<li><span class=text_import1>/etc/httpd/conf.d/*.conf (很多的額外參數檔，副檔名是 .conf)</span><br />
+		這是 CentOS 的特色之一，如果你不想要修改原始設定檔 httpd.conf 的話，那麼可以將你自己的額外參數檔獨立出來，
+		例如你想要有自己的額外設定值，可以將他寫入 /etc/httpd/conf.d/vbird.conf (注意，副檔名一定是 .conf 才行)
+		而啟動 Apache 時，這個檔案就會被讀入主要設定檔當中了！這有什麼好處？好處就是當你系統升級的時候，
+		你幾乎不需要更動原本的設定檔，只要將你自己的額外參數檔複製到正確的地點即可！ ^_^！維護更方便啦！</li><br />
+
+		<li><span class=text_import1>/usr/lib/httpd/modules/</span><br />
+		Apache 支援很多的模組，所有你想要使用的模組預設是放置在這個目錄當中的！</li><br />
+
+		<li><span class=text_import1>/var/www/html/</span><br />
+		這就是我們 CentOS 預設的『首頁』所在目錄啦！當你輸入『http://localhost』時所顯示的資料所在。</li><br />
+
+		<li><span class=text_import1>/var/www/error/</span><br />
+		如果因為主機設定錯誤，或者是瀏覽器端要求的資料錯誤時，在瀏覽器上出現的錯誤訊息就以這個目錄的預設訊息為主！
+		</li><br />
+
+		<li><span class=text_import1>/var/www/icons/</span><br />
+		這個目錄提供 Apache 預設給予的一些小圖示，你可以隨意使用啊！當你輸入『http://localhost/icons/』
+		時所顯示的資料所在。</li><br />
+
+		<li><span class=text_import1>/var/www/cgi-bin/</span><br />
+		預設給一些可執行的 CGI (網頁程式) 程式放置的目錄；當你輸入『http://localhost/cgi-bin/』
+		時所顯示的資料所在。</li><br />
+
+		<li><span class=text_import1>/var/log/httpd/</span><br />
+		預設的 Apache 登錄檔都放在這裡，對於流量比較大的網站來說，這個目錄要很小心，
+		因為以鳥哥網站的流量來說，<span class=text_import2>一個星期的登錄檔資料可以大到 500MBytes
+		至 1GBytes</span> 左右，所以你務必要修改一下你的 logrotate 讓登錄檔被壓縮，否則.....</li><br />
+
+		<li><span class=text_import1>/usr/sbin/apachectl</span><br />
+		這個就是 Apache 的主要執行檔，這個執行檔其實是
+		<a href="../linux_basic/0340bashshell-scripts.htm">shell script</a> 而已，
+		他可以主動的偵測系統上面的一些設定值，好讓你啟動 Apache 時更簡單！</li><br />
+
+		<li><span class=text_import1>/usr/sbin/httpd</span><br />
+		呵呵！這個才是主要的 Apache 二進位執行檔啦！</li><br />
+
+		<li><span class=text_import1>/usr/bin/htpasswd (Apache 密碼保護)</span><br />
+		在某些網頁當你想要登入時你需要輸入帳號與密碼對吧！那 Apache 本身就提供一個最基本的密碼保護方式，
+		該密碼的產生就是透過這個指令來達成的！相關的設定方式我們會在 WWW 進階設定當中說明的。</li><br />
+		</ul>
+
+		至於 MySQL 方面，你需要知道的幾個重要目錄與檔案有：<br />
+		<ul>
+		<li><span class=text_import1>/etc/my.cnf</span><br />
+		這個是 MySQL 的設定檔，包括你想要進行 MySQL 資料庫的最佳化，或者是針對 MySQL 進行一些額外的參數指定，
+		都可以在這個檔案裡面達成的！</li><br />
+
+		<li><span class=text_import1>/var/lib/mysql/</span><br />
+		這個目錄則是 MySQL 資料庫放置的所在處啦！當你有啟動任何 MySQL 的服務時，
+		請務必記得在備份時，這個目錄也要完整的備份下來才行啊！<br />
+		</ul>
+
+		另外，在 PHP 方面呢，你應該也要知道幾個檔案喔：<br />
+		<ul>
+		<li><span class=text_import1>/usr/lib/httpd/modules/libphp4.so</span><br />
+		PHP 這個套件提供給 Apache 使用的模組！這也是我們能否在 Apache 網頁上面設計 PHP 程式語言的最重要的咚咚！
+		務必要存在才行！</li><br />
+
+		<li><span class=text_import1>/etc/httpd/conf.d/php.conf</span><br />
+		那你要不要手動將該模組寫入 httpd.conf 當中？不需要的，因為系統主動將 PHP 設定參數寫入這個檔案中了！
+		而這個檔案會在 Apache 重新啟動時被讀入，所以 OK 的啦！</li><br />
+
+		<li><span class=text_import1>/etc/php.ini</span><br />
+		就是 PHP 的主要設定檔，包括你的 PHP 能不能允許使用者上傳檔案？能不能允許某些低安全性的標誌等等，
+		都在這個設定檔當中設定的啦！</li><br />
+
+		<li><span class=text_import1>/etc/php.d/mysql.ini, /usr/lib/php4/mysql.so</span><br />
+		你的 PHP 是否可以支援 MySQL 介面呢？就看這兩個東西啦！這兩個咚咚是由 php-mysql 套件提供的呢！</li><br />
+
+		<li><span class=text_import1>/usr/bin/phpize, /usr/include/php/</span><br />
+		如果你未來想要安裝類似 PHP 加速器以讓瀏覽速度加快的話，那麼這個檔案與目錄就得要存在，
+		否則加速器軟體可無法編譯成功喔！這兩個資料也是 php-devel 套件所提供的啦！<br />
+		</ul>
+
+		基本上我們所需要的幾個套件他的結構就是這樣啦！上面提到的是 Red Hat 系統 (RHEL, CentOS, FC) 所需的資料，
+		如果是 SuSE 或其他版本的資料，請依照您的 distribution 管理套件的指令 (rpm 或 dpkg) 去查詢一下，
+		應該就能夠知道各個重要資料放置在哪裡啦！這些資料很重要，你必需要對放置的地點有點概念才行喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="www_basic_basic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">httpd.conf 的基本設定</span><br />
+	<div class=block2>
+		在開始設定 Apache 之前，你要知道由於主機名稱對於 WWW 是有意義的，所以雖然利用 IP 也能架設 WWW 伺服器，
+		不過建議您還是<a href="0270dynamic_dns.htm">申請一個合法的主機名稱</a>比較好。
+		如果是暫時測試用的主機所以沒有主機名稱時，那麼至少在你的 /etc/hosts 內需要有一行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+127.0.0.1   localhost.localdomain localhost
+</pre></td></tr></table>
+
+		這樣在啟動你的 Apache 時才不會發生找不到完整主機名稱 (FQDN) 的錯誤訊息。此外，
+		<span class=text_import2>Apache 只是個伺服器平台而已，你還需要瞭解 HTML 以及相關的網頁設計語法，
+		如此才能豐富你的網站。</span>對於想要設計網頁的朋友來說，應用軟體或許是很好入門，
+		不過想要完整的瞭解網站設計的技巧，還是研究一下基礎的 HTML 或 CSS 比較妥當。
+		台灣有個不錯的網站介紹給你：<br />
+
+		<ul><a href="http://dob.tnc.edu.tw/" target="_blank">網站建置百寶箱： http://dob.tnc.edu.tw/</a></ul>
+
+		你可以在上頭發現不少的網頁製作範例，包括一些特殊的功能喔！如果你真的對於一些基礎語法有興趣，
+		並且也想要開發一些所謂的『無障礙網頁空間』的話，那麼可以造訪一下 <a href="http://www.w3c.org"
+		target="_blank">http://www.w3c.org</a> 所列舉的標準語法，或者是行政院的無障礙網頁空間申請規範
+		(<a href="http://enable.nat.gov.tw/" target="_blank">http://enable.nat.gov.tw/</a>)
+		相信會有所收穫的啦！<br /><br />
+
+		終於要來談一談如何設定 Apache 這個 httpd.conf 設定檔了！再次強調，每個 distribution 
+		的這個檔案內容都不很相同，所以你必需要自行找出相關的設定檔才行喔！那麼這個 httpd.conf  
+		的設定為何呢？他的基本設定是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+&lt;設定項目&gt;
+    此設定項目內的相關參數
+    ...........
+&lt;/設定項目&gt;
+</pre></td></tr></table>
+
+		舉例來說，如果你想要針對我們的首頁 /var/www/html/ 這個目錄提供一些額外的功能，那麼：<br />
+
+<table class="term"><tr><td class="term"><pre>
+&lt;Directory "/var/www/html"&gt;
+    Options Indexes
+    ...........
+&lt;/Directory&gt;
+</pre></td></tr></table>
+
+		幾乎都是這樣的設定方式喔！特別留意的是，如果你有額外的設定時，不能隨便在 httpd.conf 
+		裡頭找地方寫入！否則如果剛好寫在 &lt;Directory>...&lt;/Directory> 裡面，呼呼！
+		那麼就會發生錯誤啦！需要前前後後的找一找喔！好啦，底下咱們先來聊一聊 Apache 主機的基礎設定吧！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上在 Apache 的網頁有提供很多詳細的文件資料，真的是很詳細啦！
+		鳥哥在底下僅是介紹一些慣用的設定項目的意義而已。有興趣的話，請務必要前往查閱：<br />
+		<a href="http://httpd.apache.org/docs/2.0/mod/core.html"
+		target="_blank">Apache 2.0 核心文件：http://httpd.apache.org/docs/2.0/mod/core.html</a>
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<a name="www_basic_basic_main"></a><li><span class=text_import1>針對主機環境的設定項目</span></li>
+		<div class=block2>
+		Apache 針對主機的設定項目方面，包括回應給用戶端的主機版本、主機名稱、主機設定檔頂層目錄等。
+		底下咱們就來談一談：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_write>ServerTokens OS</span>
+<span class=term_say># 這個項目在告知用戶端 WWW 伺服器的版本與作業系統。不需要更動他。
+# 如果你不想要告知太多主機的資訊，這個項目將 OS 改成 Minor 吧！</span>
+
+<span class=term_write>ServerRoot "/etc/httpd"</span>
+<span class=term_say># 這個是設定檔的最頂層目錄，通常使用絕對路徑。底下某些設定資料使用相對路徑時，
+# 就是與這個設定值有關的下層目錄啦！不需要更動他。</span>
+
+<span class=term_write>PidFile run/httpd.pid</span>
+<span class=term_say># 放置 PID 的檔案，可方便 Apache 軟體的管理啦！只有相對路徑吧！
+# 考慮 ServerRoot 設定值，所以檔案在 /etc/httpd/run/httpd.pid ！</span>
+
+<span class=term_write>Timeout 120</span>
+<span class=term_say># 持續連線階段如果等待超過 120 秒則該次連線就中斷。
+# 一般來說，此數值在 300 秒左右即可，不需要修改這個原始值啦。</span>
+
+<span class=term_write>KeepAlive On</span>    <span class=term_note_b>&lt;==最好將預設的 Off 改為 On 啦！</span>
+<span class=term_say># 是否允許持續性的連線，亦即一個 TCP 連線可以具有多個檔案資料傳送的要求。
+# 舉例來說，如果你的網頁內含很多圖檔，那麼這一次連線就會將所有的資料送完，
+# 而不必每個圖檔都需要進行一次 TCP 連線。預設為 Off 請改為 On 較佳。</span>
+
+<span class=term_write>MaxKeepAliveRequests 500</span>  <span class=term_note_b>&lt;==可以將原本的 100 改為 500 或更高</span>
+<span class=term_say># 與上個設定值 KeepAlive 有關，當 KeepAlive 設定為 On 時，則這個數值可決定
+# 該次連線能夠傳輸的最大傳輸數量。為了增進效能則可以改大一點！0 代表不限制。</span>
+
+<span class=term_write>KeepAliveTimeout 15</span>
+<span class=term_say># 在允許 KeepAlive 的條件下，則該次連線在最後一次傳輸後等待延遲的秒數。
+# 當超過上述秒數則該連線將中斷。設定 15 差不多啦！如果設定太高 (等待時間較長)，
+# 在較忙碌的系統上面將會有較多的 Apache 程序佔用資源，可能有效能方面的困擾。</span>
+
+<span class=term_write>&lt;IfModule prefork.c>
+StartServers       8
+MinSpareServers    5
+MaxSpareServers   20
+ServerLimit      256
+MaxClients       256
+MaxRequestsPerChild  4000
+&lt;/IfModule>
+&lt;IfModule worker.c>
+StartServers         2
+MaxClients         150
+MinSpareThreads     25
+MaxSpareThreads     75
+ThreadsPerChild     25
+MaxRequestsPerChild  0
+&lt;/IfModule></span>
+<span class=term_say># 上面這一串其實是兩個與伺服器連線資源有關的設定項目。預設的項目對於一般
+# 小型網站來說已經很夠用了，不過如果你的流量比較大時，或許可以修訂一下呢！
+# 這兩個模組都是用在提供使用者連線的資源 (process)，設定的數量越大時，
+# 代表系統會啟動比較多的程序來提供 Apache 的服務，反應速度就比較快。
+# a. 針對模組來說：
+#    worker 模組佔用的記憶體較小，對於流量較大的網站來說，是一個比較好的選擇
+#    profork 雖然佔用較大的記憶體，不過速度與 worker 差異不大，並且 prefork
+#    記憶體使用設計較為優秀，可以在很多無法提供 debug 的平台上面進行自我除錯
+# b. 細部設定的內容方面：(以 Prefork 為例， worker 意義相同)
+#    StartServers 代表啟動 Apache 時就啟動的 process 數量
+#    MinSpareServers, MaxSareServers 代表最大與最小的備用程序數量
+#    MaxClients 最大的同時連線數量，也就是 process 數不會超過此一數量。
+#         假設有 10 個人連上來，則 apache 的程序數應有 15-30 個之意。
+#    MaxRequestsPerChild 每個程序能夠提供的最大傳輸次數要求。舉例來說，
+#         如果有個使用者連上伺服器後(一個 process)，卻要求數百個網頁，
+#         當他的要求數量超過此一數值，則該程序會被丟棄，另外切換一個新程序。
+#         這個設定可以有效的控管每個 process 在系統上的『存活時間』。
+# 除非你的網站流量特別大，否則上面的預設值已經夠你使用的了。而如果你的記憶體
+# 不夠大的話，那麼 MaxClients 反而要調小一點，例如 150 ，否則效能不佳。</span>
+
+<span class=term_write>Listen 80</span>
+<span class=term_say># 與監聽介面有關，預設開放在所有的網路介面啊！也可修改埠口，如 8080</span>
+
+<span class=term_write>LoadModule access_module modules/mod_access.so</span>
+<span class=term_say>.....(底下省略).....
+# 載入模組的設定項目。Apache 提供很多有用的模組給我們使用了！</span>
+
+<span class=term_write>Include conf.d/*.conf</span>
+<span class=term_say># 因為這一行，所以放置到 /etc/httpd/conf.d/*.conf 的設定都會被讀入</span>
+
+<span class=term_write>User apache
+Group apache</span>
+<span class=term_say># 前面提到的 prework, worker 等模組所啟動的 process 之擁有者與群組設定。
+# 這個設定很重要，因為未來你提供的網頁檔案能不能被瀏覽都與這個身份有關啊！</span>
+
+<span class=term_write>ServerAdmin dmtsai@linux.vbird.tsai</span>  <span class=term_note_b>&lt;==改成你自己的 email 吧</span>
+<span class=term_say># 系統管理員的 email ，當網站出現問題時，錯誤訊息顯示的聯絡信箱。</span>
+
+<span class=term_write>ServerName linux.vbird.tsai</span>    <span class=term_note_b>&lt;==自行設定好自己的主機名稱較佳！</span>
+<span class=term_say># 設定主機名稱，如果沒有指定的話，預設會以你的 hostname 為依據。
+# 千萬記得，你填入的這個主機名稱要找的到 IP 喔！(DNS 或 /etc/hosts)</span>
+
+<span class=term_write>UseCanonicalName Off</span>
+<span class=term_say># 是否使用標準主機名稱？如果你的主機有多個主機名稱，若這個設定為 On，
+# 那麼 Apache 只接受上頭 servername 指定的主機名稱連線而已。請使用 Off。</span>
+</pre></td></tr></table>
+
+		在基本設定項目比較有趣的在於系統的效能議題啦！初次接觸的朋友可能會覺得很好奇，怎麼兩個多執行緒模組
+		(worker 與 prefork) 有個 MaxClients 的設定，那麼那個 MaxKeepAliveRequests 又是什麼？
+		你可以這麼想：<br />
+		<ul><span class=text_import2>
+		<li>MaxClients 控制可以『同時連上 WWW 伺服器的總連線要求』數量，亦即想成最高即時線上人數啦；
+		<li>MaxKeepAliveRequests 則是每個 Clients 的該次連線中，可以要求的最高傳輸資料量。
+		</span></ul>
+		這樣說的話，對於連線有沒有較清楚的概念囉？不過你要注意的是，那個 MaxClients 的數量不是越高越好，
+		因為他會消耗實體記憶體，所以如果你設定太高導致超出實體記憶體能夠容許的範圍，
+		那麼效能反而會降低 (因為系統會使用速度較慢的 swap 啊！)，此外， MaxClients
+		也在 Apache 編譯時就指定最大值了，所以你也無法超出系統最大值，除非....你重新編譯 Apache 啦！<br /><br />
+
+		那，apache 到底是使用那個模組啊？prefork 還是 worker ？事實上 CentOS 
+		將這兩個模組分別放到不同的執行檔當中，分別是：<br />
+		<ul><span class=text_import2>
+		<li>/usr/sbin/httpd：使用 prefork 模組；
+		<li>/usr/sbin/httpd.worker：使用 worker 模組。</span></ul>
+		那如何決定你使用的是哪一支程式？你可以去查閱一下 /etc/sysconfig/httpd ，
+		就能夠知道系統預設提供 prefork 模組，但你可以透過修改 /etc/sysconfig/httpd 來使用 worker 模組的。
+		如果你很有好奇心，那麼可以分別試著啟動這兩種模組啊！ ^_^<br /><br />
+		</div>
+
+		<a name="www_basic_basic_lang"></a><li><span class=text_import1>針對中文 big5 編碼語系</span></li>
+		<div class=block2>
+		目前的網際網路傳輸的資料編碼多是以萬國碼 (UTF-8) 為主，不過在台灣還是有相當多的網站使用的是 Big5
+		的繁體中文編碼的啊！如果你的 Apache 預設是以 UTF-8 編碼來傳輸資料，但你 WWW 的資料卻是 big5 ，
+		那麼用戶端將會看到『亂碼』！雖然可以透過調整瀏覽器的編碼來讓資料正確顯示，不過總是覺得很討厭。
+		此時，你應該可以調整一下底下的兩個參數的喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 先確定有底下這幾行，理論上，應該都會有這幾行啦！</span>
+AddLanguage zh-TW .zh-tw
+AddCharset  Big5        .Big5       .big5
+
+<span class=term_say># 找到底下這一行，應該是在 730 行左右</span>
+AddDefaultCharset UTF-8
+<span class=term_say># 你有兩種作法，一種是『直接指定由 WWW 宣告 Big5 編碼，而不用網頁表頭的宣告』：</span>
+<span class=term_write>AddDefaultCharset Big5</span>
+<span class=term_say># 另一種則是不要宣告預設語系，由網頁表頭宣告的啦！直接註解起來即可</span>
+<span class=term_write># AddDefaultCharset Big5</span>
+
+<span class=term_say># 找到底下這一行(大約在 711 行)，這一行在設定顯示語系的優先順序</span>
+LanguagePriority en ca <span class=term_say>....(中間省略)....</span> sv zh-CN <span class=term_write>zh-TW</span>
+<span class=term_say># 將語系處理的優先順序中，以中文為優先吧！</span>
+LanguagePriority <span class=term_write>zh-TW</span> en ca <span class=term_say>....(中間省略)....</span> sv zh-CN
+</pre></td></tr></table>
+
+		你必須要注意的是，如果你已經在用戶端瀏覽器上面瀏覽過非 Big5 的網頁，
+		那麼你修改過這個設定值後，<span class=text_import2>仍然要將瀏覽器的快取 (cache)
+		清除才行！否則仍然會看到亂碼！</span>網友們已經回報過很多次了，
+		這不是 Apache 的問題，而是用戶端瀏覽器的快取所產生的啦！記得處理處理！<br /><br />
+
+		另外，有沒有『 AddDefaultCharset Big5 』這一個設定值的存在是差很多的！
+		如果你指定這個設定項目後，代表『由 WWW 發送到用戶端的網頁預設將都以 Big5 編碼為主』，
+		所以如果你在 /var/www/html/ 內的網頁資料有 big5, utf8 不同編碼的話，那麼使用 utf8
+		編碼的網頁將會在瀏覽器上面顯示亂碼！最好的作法是將該設定值註解掉，然後再你的網頁上面寫入：<br />
+
+<table class="term"><tr><td class="term"><pre>
+&lt;html>
+&lt;head>
+	&lt;meta http-equiv="Content-Type" content="text/html; <span class=term_write>charset=big5</span>" >
+	<span class=term_say>....其他省略....</span>
+</pre></td></tr></table>
+
+		這樣一來你的網頁就會向瀏覽器說明編碼的格式，嘿嘿！就可以正確的顯示出中文了！<br /><br />
+		</div>
+
+		<a name="www_basic_basic_dir"></a><li><span class=text_import1>首頁權限相關設定 (DocumentRoot 與 
+		Directory)</span></li>
+		<div class=block2>
+		開頭的時候不是講過 CentOS 的 Apache 預設首頁放置在 /var/www/html 這個目錄嗎？
+		為什麼呢？因為 DocumentRoot 這個設定值的關係啦！此外，由於 
+		<span class=text_import2>Apache 允許 Internet 對我們的資料進行瀏覽，
+		所以你當然必須要針對可被瀏覽的目錄進行權限的相關設定，那就是 &lt;Directory&gt; 
+		這個設定值的重要特色！</span>先讓我們來看看預設的主網頁設定吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_write>DocumentRoot "/var/www/html"</span>  <span class=term_note_b>&lt;==可以改成你放置首頁的目錄！</span>
+<span class=term_say># 這個設定值重要到不行，因為他規範了 WWW 伺服器主網頁所放置的『目錄』所在。
+# 這個設定值是可以被隨意更動的，不過更動之後你必須要針對該目錄進行權限設定，
+# 也就是底下要講到的 Directory 這個設定值來規範目錄的權限才行喔！</span>
+
+<span class=term_write>&lt;Directory />
+    Options FollowSymLinks
+    AllowOverride None
+&lt;/Directory></span>
+<span class=term_say># 這個設定值是針對 WWW 伺服器的『預設環境』而來的，因為針對『/』的設定嘛！
+# 建議可以設定的嚴格一點，就是保留上述的預設設定即可 (已經很嚴格了！)</span>
+
+<span class=term_write>&lt;Directory "/var/www/html">
+    Options Indexes FollowSymLinks  <span class=term_note_b>&lt;==建議拿掉 Indexes 比較妥當！</span>
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+</pre></td></tr></table>
+
+		這個地方則是針對 /var/www/html 這個目錄來設定權限啦！就是咱們首頁所在目錄的權限。
+		主要的幾個設定項目的意義是這樣的：<br />
+		<ol>
+		<li><span class=text_import1>Options</span>：<br />
+		表示這個目錄內能夠進行的動作，亦即是權限設定啦！主要的設定值：<br />
+		<ul><li><span class=text_import2>Indexes</span>：<br />如果在此目錄下找不到『首頁檔案』時，
+		就顯示整個目錄下的檔案名稱，『首頁檔案』與 DirectoryIndex 設定值有關。
+		<li><span class=text_import2>FollowSymLinks</span>：<br />讓在此目錄下的連結檔可以連結出此目錄外。
+		一般來說被 chroot 
+		的程式將無法離開其目錄，也就是說預設的情況下，你在 /var/www/html 
+		底下的連結檔只要連結到非此目錄的其他地方，則該連結檔預設是失效的。
+		但使用此設定即可讓連結檔有效的離開本目錄。
+		<li><span class=text_import2>ExecCGI</span>：<br />讓此目錄具有執行 CGI 
+		程式的權限，非常重要！舉例來說，目前常見的 OpenWebMail 使用了很多的 perl 的程式，
+		你要讓 openwebmail 可以執行，就得要在 openwebmail 程式所在目錄
+		擁有 ExecCGI 的權限。<span class=text_import2>注意，不要讓所有目錄均可使用 ExecCGI</span> ！
+		<li><span class=text_import2>Includes</span>：<br />讓一些 Server-Side Include 程式可以運作。建議可以加上去！
+		<li><span class=text_import2>MultiViews</span>：<br />這玩意兒有點像是多國語言的支持，與語系資料 
+		(LanguagePriority)
+		有關。最常見在錯誤訊息的回報內容，在同一部主機當中，
+		可以依據用戶端的語系而給予不同的語言顯示呢！預設在錯誤回報訊息當中存在，
+		你可以檢查一下 /var/www/error/ 目錄下的資料喔！</ul></li><br />
+
+		<li><span class=text_import1>AllowOverride</span>：<br />
+		表示是否允許額外設定檔 .htaccess 的權限複寫？我們可以在 httpd.conf 
+		內設定好所有的權限，不過如此一來若使用者自己的個人網頁想要修改權限時將會對管理員造成困擾。因此 
+		Apache 預設可以讓使用者以目錄底下的 .htaccess 檔案內複寫 &lt;Directory&gt; 內的權限設定。
+		這個項目則是在規定 .htaccess 可以複寫的權限類型有哪些。常見的有：<br />
+		<ul>
+		<li><span class=text_import2>ALL</span>：全部的權限均可被複寫；
+		<li><span class=text_import2>AuthConfig</span>：僅有網頁認證 (帳號密碼) 可複寫；
+		<li><span class=text_import2>Indexes</span>：僅允許 Indexes 方面的複寫；
+		<li><span class=text_import2>Limits</span>：允許使用者利用 Allow, Deny 與 Order 管理可瀏覽的權限；
+		<li><span class=text_import2>None</span>：不可複寫，亦即 .htaccess 檔案失效去！</ul>
+		這部份我們在進階設定時會再講到的！</li><br />
+
+		<li><span class=text_import1>Order</span>：<br />
+		決定是否可被瀏覽的權限設定啦！主要有兩種方式：<br />
+		<ul>
+		<li><span class=text_import2>deny,allow</span>：以 deny 優先處理，但沒有寫入規則的則預設為 allow 喔。
+		<li><span class=text_import2>allow,deny</span>：以 allow 為優先處理，但沒有寫入規則的則預設為 deny 喔。</ul>
+		所以在預設的環境中，因為是 allow,deny 所以預設為 deny (不可瀏覽)，
+		不過在下一行有個 Allow from all ，allow 優先處理，因此全部(all)
+		用戶端皆可瀏覽啦！這部份我們會在進階安全設定當中再提及低。</li></ol>
+
+		除了這些資料之外，你還得要知道的是底下這個玩意兒：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_write>DirectoryIndex index.html index.html.var</span>  <span class=term_note_b>&lt;==可能需要修改的項目！</span>
+<span class=term_say># 如果用戶端在網址列只輸入到目錄，例如 http://localhost/ 時，那麼 Apache
+# 將拿出那個檔案來顯示？這個檔案也被稱為預設的首頁啦！一般來說是以
+# index.* 為檔名開頭，但 Windows 則以 default.asp 之類的檔名為開頭的。
+# 如果你想要讓類似 index.pl 或 index.cgi 也可以是首頁，那可以改成：
+# DirectoryIndex index.html index.htm index.cgi index.htm3 ...
+# 這個項目與剛剛談到的 Options 裡面的 Indexes 有關喔！</span>
+
+<span class=term_write>Alias /icons/ "/var/www/icons/"
+&lt;Directory "/var/www/icons">
+    Options Indexes MultiViews
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+<span class=term_say># 這個 Alias 很有趣的！是製作出類似連結檔的東西啦！
+# 當你輸入 http://localhost/icons 時，其實你的 /var/www/html 並沒有 icons
+# 那個目錄，不過由於 Alias 的關係，會讓該網址直接連結到 /var/www/icons/ 下。
+# 這裡面預設有很多 Apache 提供的小圖示喔！而因為設定了一個新的可瀏覽目錄，
+# 所以你瞧，多了個 &lt;Directory> 來規定權限了吧！ ^_^</span>
+
+<span class=term_write>ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+&lt;Directory "/var/www/cgi-bin">
+    AllowOverride None
+    Options None
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+<span class=term_say># 與上面的 icons 類似，不過這邊卻是以 ScriptAlias 為設定值！
+# 這個設定值可以指定該目錄底下為『具有 ExecCGI 』能力的目錄所在喔！
+# 所以你可以將類似 Open webmail 的程式給他放置到 /var/www/cgi-bin 內，
+# 就不必額外設定其他的目錄來放置你的 CGI 程式喔！</span>
+</pre></td></tr></table>
+		</div>
+
+		這樣大概就 OK 了啦！接下來準備一下看看還有哪些額外的設定檔需要處理的呢？<br /><br />
+	</div>
+
+	<hr /><a NAME="www_basic_php"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">PHP 等額外設定檔</span><br />
+	<div class=block2>
+		約略談了談 httpd.conf 之後，你應該會發現一件事情，那就是『我們怎麼沒有講到 PHP 這個模組的設定啊？』
+		不是不講啦！而是因為目前 Apache 很聰明的將一些重要模組給他拆出來放置到 /etc/httpd/conf.d/ 這個目錄下了，
+		所以我們必須要到該目錄下才能瞭解到某些模組是否有被加入啊！底下先來瞧瞧吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/httpd/conf.d</span>
+[root@linux conf.d]# <span class=term_command>ll *.conf</span>
+-rw-r--r--  1 root root 448 Sep 21 20:13 php.conf
+-rw-r--r--  1 root root 299 Aug 13 16:33 welcome.conf
+<span class=term_say># 如果你是按照剛剛鳥哥說的幾個模組去安裝的，那麼這個目錄下至少會有這兩個資料，
+# 一個是規範 PHP 設定，一個則是規範『如果首頁不存在時的歡迎畫面』囉。</span>
+</pre></td></tr></table>
+
+		我們主要來看看關於 PHP 的設定檔吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf.d/php.conf</span>
+LoadModule     php4_module modules/libphp4.so
+AddType        application/x-httpd-php .htm
+DirectoryIndex index.htm
+</pre></td></tr></table>
+
+		這三行分別代表載入 PHP 模組、增加附檔名為 .htm 的檔案處理方式，以及將 index.htm 
+		增加成為首頁檔名。所以如果你在 /var/www/html 這個首頁目錄內新增一個檔名為 index.htm
+		時，他可以被使用為首頁顯示啦！基本上你不需要進行任何修改，這個檔案就能夠讓你的 Apache 
+		支援 PHP 模組與語法了！<br /><br />
+
+		另外你也必須要知道 PHP 的設定檔是在 /etc/php.ini ，這個檔案內容有某些地方可以進行一些小修改，
+		也有某些地方你必須要特別留意，免得被用戶端誤用你的 PHP 資源：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/php.ini</span>
+<span class=term_write>register_globals = Off</span>
+<span class=term_say># 這個項目請確定為 Off (預設就是 Off)，因為如果設定為 On 時，
+# 雖然程式執行比較不容易出狀況，但是很容易不小心就被攻擊。</span>
+
+<span class=term_write>log_errors = On
+ignore_repeated_errors = On
+ignore_repeated_source = On</span>
+<span class=term_say># 這三個設定項目可以決定是否要將 PHP 程式的錯誤記錄起來，
+# 建議將將重複的錯誤資料忽略掉，否則在很忙碌的系統上，
+# 這些錯誤資料將可能造成你的登錄檔暴增，導致效能不佳 (或當機)</span>
+
+<span class=term_write>display_errors = Off
+display_startup_errors = Off</span>
+<span class=term_say># 當你的程式發生問題時，是否要在瀏覽器上頭顯示相關的錯誤訊息 (包括部分程式碼)
+# 強烈的建議設定為 Off 。不過如果是尚未開放的 WWW 伺服器，為了你的 debug
+# 容易，可以暫時的將他設定為 On ，如此一來你的程式問題會在瀏覽器上面
+# 直接顯示出來，你不需要進入 /var/log/httpd/error_log 登錄當中查閱。
+# 但程式完成後，記得將此設定值改為 Off 喔！重要重要！</span>
+</pre></td></tr></table>
+
+		如果你想要提供 Apache 的說明文件給自己的 WWW 伺服器的話，
+		可以安裝一下 httpd-manual 這個套件，你就會發現在這個目錄當中又會新增檔案 (manual.conf)
+		，而且從此你可以使用 http://localhost/manual 來登入 Apache 的使用手冊呢！真方便！
+		有興趣的話可以參考與安裝底下這些套件喔：<br />
+
+		<ul><span class=text_import2>
+		<li>httpd-manual：提供 Apache 參考文件的一個套件；
+		<li>mrtg：利用類似繪圖軟體自動產生主機流量圖表的套件；
+		<li>mod_perl：讓你的 WWW 伺服器支援 perl 寫的網頁程式(例如 webmail 程式)；
+		<li>mod_python：讓你的 WWW 伺服器支援 python 寫的網頁程式。
+		<li>mod_ssl：讓你的 WWW 可以支援 https 這種加密過後的傳輸模式。
+		</span></ul>
+
+		perl 與 python 是與 PHP 類似的咚咚，都是一些很常用在網頁的程式語言！
+		例如知名的 OpenWebMail (<a href="http://turtle.ee.ncku.edu.tw/~tung/openwebmail/"
+		target="_blank">http://turtle.ee.ncku.edu.tw/~tung/openwebmail/</a>) 
+		就是利用 perl 寫成的。要讓你的 WWW 支援該程式語言，
+		你就得要安裝這些東西啦！(但不是所有的套件都安裝！請安裝你需要的即可！)<br /><br />
+	</div>
+
+	<hr /><a NAME="www_basic_start"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Apache 的啟動與
+	PHP 的測試</span><br />
+	<div class=block2>
+		OK！終於設定好一些資料囉，接下來就是要啟動 Apache 啦！啟動的方法簡單到不行，用傳統的方式來處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/httpd start</span>  <span class=term_say>&lt;==啟動啦！</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/httpd stop </span>  <span class=term_say>&lt;==關閉 WWW 啦！</span>
+</pre></td></tr></table>
+
+		另外，其實 Apache 也自行提供一支 script 可以讓我們來簡單的使用，那就是 apachectl 這支程式啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/usr/sbin/apachectl start</span>  <span class=term_say>&lt;==啟動啦！</span>
+[root@linux ~]# <span class=term_command>/usr/sbin/apachectl stop </span>  <span class=term_say>&lt;==關閉 WWW 啦！</span>
+</pre></td></tr></table>
+
+		幾乎是一模一樣的咚咚啦！你只要記得其中一個即可。一般建議你可以稍微記一下 apachectl 這支程式，
+		因為很多認證考試會考，而且他也是 Apache 預設提供的一個管理指令說！好了，來看看有沒有啟動成功？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -tunl | grep ':80'</span>
+tcp   0      0 <span class=term_write>:::80</span>    :::*    LISTEN
+<span class=term_say># 看看， port 80 啟動了！接下來看看登錄檔先！</span>
+
+[root@linux ~]# <span class=term_command>tail /var/log/httpd/error_log</span>
+[Mon Nov 06 00:38:42 2006] [notice] Apache/2.0.52 (CentOS) configured 
+-- resuming normal operations
+</pre></td></tr></table>
+
+		這樣應該就成功啟動了 Apache 囉！接下來測試看看能不能看到網頁呢？
+		首先看看 /var/www/html 有沒有資料？咦？沒有～沒關係，因為 CentOS 幫我們造了一個測試頁了，
+		所以你還是在瀏覽器上面輸入你這部主機的 IP 看看先：<br /><br />
+
+		<a name="fig_03"></a><center><img src="0360apache/apache_test_1.png"
+		title="Apache 主網頁的測試畫面"
+		alt="Apache 主網頁的測試畫面"><br />
+		圖三、Apache 主網頁的測試畫面</center><br />
+
+		如果看到這一頁，恭喜您，你的 Apache 已經順利啟動了！你可以快快樂樂的開始製作您自己的專屬網頁！
+		但如果想要知道有沒有成功的驅動 PHP 模組，那你最好先到 /var/www/html 目錄下去建立一個簡單的檔案：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/www/html/phpinfo.htm</span>
+<span class=term_write>&lt;?php
+phpinfo();
+?&gt;</span>
+</pre></td></tr></table>
+
+		那個『 &lt;?php ... ?&gt; 』是 PHP 模組的網頁嵌入式程式語法，在這中間的就是 PHP 的程式碼啦。
+		那個『 phpinfo() 』是特殊的 PHP 函數，可以顯示出目前你 WWW 伺服器內 PHP 模組的相關核心資料。
+		寫完之後立刻以瀏覽器再查閱這個檔案看看：<br /><br />
+
+		<a name="fig_04"></a><center><img src="0360apache/apache_test_2.png"
+		title="Apache 網頁的 PHP 測試畫面"
+		alt="Apache 網頁的 PHP 測試畫面"><br />
+		圖四、Apache 網頁的 PHP 測試畫面</center><br />
+
+		注意看網址的部分喔！檔名不要寫錯了！而且這個檔案僅是在作為測試之用，事實上內容提供的資料還挺機密的，
+		所以測試完畢後請將這個檔案刪除吧！從底下的畫面你可以知道 PHP 模組的版本以及 Apache
+		相關的重要資料啦！自己仔細瞧瞧吧！ ^_^！如此一來，你的 Apache 與 PHP 就 OK 的啦！<br /><br />
+
+		那萬一測試失敗怎麼辦？常見的錯誤問題以及解決之道可以參考：<br />
+		<ul>
+		<li><span class=text_import2>網路問題</span>：雖然在本機上沒有問題，
+		但不代表網路一定是通的！請確認一下網路狀態！例如 Route table, 撥接情況等等；
+		<li><span class=text_import2>網頁問題</span>：例如鳥哥第一次以 Tarball 
+		安裝好之後，竟然發現無法顯示主機的首頁！後來才發現是主機的首頁設定錯誤！
+		導致找不到網頁，這個時候，請特別留意瀏覽器上面的顯示訊息，裡面包含了無法連進來主機的問題！
+		請提供這樣的訊息到討論區，大家才知道問題出在哪裡吶！
+		<li><span class=text_import2>權限問題</span>：例如你剛剛在 httpd.conf 上面的 user 設定為 apache 
+		了，但偏偏要被瀏覽的目錄權限為 750 ，自然就無法讓人家連線進去啦！
+		<li><span class=text_import2>問題的解決之道</span>：如果還是沒有辦法連接上來你的 Linux Apache 主機，那麼請：
+		<ol>
+		<li>察看 /var/log/httpd/error_log 這個檔案吧！他應該可以告訴你很多的資訊喔！
+		<li>另外，也要仔細的察看一下你的瀏覽器上面顯示的資訊，這樣才能夠知道問題出在哪裡！ ^_^
+		<li>另一個可能則是防火牆啦！察看一下 iptables 的訊息！也可能是 SELinux 忘記關！</ol>
+		</ul>
+
+	</div>
+
+	<hr /><a NAME="www_basic_mysql"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">MySQL 
+	資料庫的啟動與測試</span><br />
+	<div class=block2>
+		雖然我們已經啟動了基本的 Apache 以及 PHP 模組了，不過，那個重要的資料庫尚未啟動吧？沒錯～
+		在這個小節裡面我們就來啟動一下 MySQL 吧！在啟動 MySQL 前其實系統並沒有幫我們建立任何的資料庫。
+		當你初次啟動 MySQL 後，系統才會針對資料庫進行初始化的建立啊。不相信的話你可以先看看 /var/lib/mysql
+		這個目錄，裡面其實沒有任何資料的啦。<br /><br />
+
+		<a name="www_basic_mysql_1"></a><li><span class=text_import1>啟動 MySQL (設定 MySQL root 
+		密碼與新增 MysQL 用戶帳號)</span></li>
+		<div class=block2>
+		首先得要啟動 MySQL 才行，啟動的方法還是很簡單啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/mysqld start</span>
+<span class=term_say># 如果是初次使用這個指令來啟動，你的 /var/lib/mysql 會建立資料庫。</span>
+
+[root@linux ~]# <span class=term_command>netstat -tuln | grep ':3306'</span>
+tcp  0      0 0.0.0.0:<span class=term_write>3306</span>   0.0.0.0:*   LISTEN
+
+<span class=term_say># 底下在測試看能否以手動的方式連上 MySQL 資料庫！</span>
+[root@linux ~]# <span class=term_command>mysql -u root</span>
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2 to server version: 4.1.20
+
+Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
+
+mysql> <span class=term_command>quit</span>
+Bye
+</pre></td></tr></table>
+
+		MySQL 預設監聽的埠口在 3306 號，從上面看來我們的 MySQL 似乎是啟動了，
+		不過<span class=text_import2>剛剛初始化的 MySQL 資料庫並沒有任何密碼</span>，
+		所以很可能我們的資料庫是會被使用者搞爛掉的～所以你最好對 MySQL 設定一下密碼才好。
+		另外，<span class=text_import2>上面那個 root 與我們 Linux 帳號的 root 是完全無關的</span>！因為 
+		MySQL 資料庫軟體也是個多人的操作環境，在該軟體內有個管理者恰好帳號也是 root 而已。<br /><br />
+
+		那麼如何針對 MySQL 這個軟體內的 root 這個管理者設定他的密碼呢？你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mysqladmin -u root password 'your.password'</span>
+<span class=term_say># 從此以後 MySQL 的 root 帳號就需要密碼了！如下所示：</span>
+
+[root@linux ~]# <span class=term_command>mysql -u root -p</span>
+Enter password:  <span class=term_say>&lt;==你必須要在這裡輸入剛剛建立的密碼！</span>
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 4 to server version: 4.1.20
+
+Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
+
+mysql><span class=term_command>quit</span>
+</pre></td></tr></table>
+
+		如此一來 MySQL 資料庫會比較安全些啦！其實更好的作法是分別建立不同的使用者管理不同的資料庫。
+		舉例來說，如果你要給予 dmtsai 這個使用者一個 MySQL 的資料庫使用權，
+		假設你要給他的資料庫名稱為 dmtsai ，那麼你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mysql -u root -p</span>
+Enter password:  <span class=term_say>&lt;==如前所述，你必須要輸入密碼嘛！</span>
+mysql> <span class=term_command>create database dmtsai;</span>  <span class=term_say>&lt;==注意每個指令後面都要加上分號 (;)</span>
+Query OK, 1 row affected (0.01 sec)
+
+mysql> <span class=term_command>grant all privileges on dmtsai.* to dmtsai@localhost 
+identified by 'your.password' ;</span>
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> <span class=term_command>show databases;</span>
++----------+
+| Database |
++----------+
+| dmtsai   |  <span class=term_say>&lt;==看見沒？多一個這個資料庫啦！</span>
+| mysql    |  <span class=term_say>&lt;==主要用來記錄 MySQL 的帳號、主機等等重要資訊的主要資料庫！</span>
+| test     |
++----------+
+3 rows in set (0.00 sec)
+
+mysql> <span class=term_command>exit</span>
+</pre></td></tr></table>
+
+		然後你可以利用『 mysql -u dmtsai -p 』這個指令來嘗試登入 MySQL 試看看，嘿嘿！就知道 dmtsai 
+		這個使用者在 MySQL 裡面擁有一個名稱為 dmtsai 的資料庫啦！其他更多的用法就得請您自行參考
+		SQL 相關的語法囉！不在本文的討論範圍啦！<br /><br />
+		</div>
+
+		<a name="www_basic_mysql_2"></a><li><span class=text_import1>效能調校 /etc/my.cnf</span></li>
+		<div class=block2>
+		由於 MySQL 這個資料庫系統如果在很多使用者同時連線時，可能會造成某些效能方面的瓶頸，
+		不過，我們可以透過簡單的設定來進一步處理 MySQL 資料庫呢！相關的資料鳥哥是參考這一篇簡單的中文說明：
+		<ul><li><a href="http://parus1974.wordpress.com/2005/02/27/mysql%e5%86%8d%e8%aa%bf%e6%95%b4/"
+		target="_blank">http://parus1974.wordpress.com/2005/02/27/mysql再調整</a></li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/my.cnf</span>
+<span class=term_write>[mysqld]
+default-storage-engine=innodb
+<span class=term_say># 關於目錄資料與語系的設定等等；</span>
+datadir                 = /var/lib/mysql
+socket                  = /var/lib/mysql/mysql.sock
+default-character-set   = utf8   <span class=term_note_b>&lt;==每個人的編碼都不相同，不要隨意跟我一樣</span>
+port                    = 3306
+skip-locking
+<span class=term_say># 關於記憶體的設定，注意，記憶體的簡單計算方式為：
+# key_buffer + (sort_buffer + read_buffer ) * max_connection
+# 且總量不可高於實際的實體記憶體量！所以，我底下的資料應該是 OK 的
+# 128 + (2+2)*150 = 728MB</span>
+key_buffer              = 128M
+sort_buffer_size        = 2M
+read_buffer_size        = 2M
+join_buffer_size        = 2M
+max_connections         = 150
+max_connect_errors      = 10
+read_rnd_buffer_size    = 4M
+max_allowed_packet      = 4M
+table_cache             = 1024
+myisam_sort_buffer_size = 32M
+thread_cache            = 16
+query_cache_size        = 16M
+tmp_table_size          = 64M
+<span class=term_say># 由連線到確定斷線的時間，原本是 28800 (sec) ，約 8 小時，我將他改為 20 分鐘！</span>
+wait_timeout            = 1200
+thread_concurrency      = 8
+old_passwords=1
+innodb_data_file_path = ibdata1:10M:autoextend
+innodb_buffer_pool_size = 128M
+innodb_additional_mem_pool_size = 32M
+innodb_thread_concurrency = 16
+
+[mysql.server]
+user=mysql
+basedir=/var/lib
+
+[mysqld_safe]
+err-log=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid</span>
+</pre></td></tr></table>
+
+		你要注意的是，因為鳥哥的主機上面假設記憶體有 2GB 啊！所以跟記憶體相關的資料才會寫很大！
+		請依照你實際擁有的記憶體量來處理喔！還得加上你的 Apache 本身的記憶體用量！
+		所以.....如果你的網站流量很大的話，在校能測試上面要很注意啊！<br /><br />
+		</div>
+
+		<a name="www_basic_mysql_3"></a><li><span class=text_import1>MysQL root 密碼忘記的緊急處理</span></li>
+		<div class=block2>
+		如果你不小心忘記 MySQL 的密碼怎麼辦？網路上有一些工具可以讓你去處理 MySQL 資料庫的挽回。
+		如果你的資料庫內容並不是很重要，刪除也無所謂的話 (測試中 @_@)，那麼可以將 MySQL 關閉後，
+		將 /var/lib/mysql 那個目錄整個刪除掉，然後再重新啟動 MySQL ，那麼 MySQL 資料庫會重建，
+		你的 root 又沒有密碼啦！<br /><br />
+
+		不過，這個方法僅適合你的資料庫並不重要的時候，如果資料庫很重要.....
+		那千萬不要隨便刪除啊！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="www_basic_www"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開始網頁設計及安裝架站軟體，如 
+	phpBB2</span><br />
+	<div class=block2>
+		基礎的 Apache 架設完畢之後，基本上，你就可以開始設計你想要的網站囉！
+		編寫網頁的工具很多，請自行尋找吧！不過你必須要知道的是：<br />
+		<ul>
+		<li>預設的首頁在 /var/www/html/ 目錄喔，你應該將所有的 WWW 資料都搬到該目錄底下才對！
+		<li>如果首頁想要建立在其他地方，你應該要修改 DocumentRoot 那個參數 (httpd.conf)
+		<li>如果你需要安裝一些 CGI 程式的話，建議你將他安裝到 /var/www/cgi-bin/ 底下，
+			如此一來你不需要額外設定 httpd.conf 即可順利啟動 CGI 程式；
+		<li>注意你的資料權限！務必要讓 Apache 的程序使用者 (預設是 apache) 能夠瀏覽！
+		<li>不要將重要資料或者隱私資料放置到 /var/www/html/ 首頁內！
+		<li>盡量將你的首頁檔案檔名取為 index.html 或 index.htm ！
+		</ul>
+		除了這些基本的項目之外，其實你可以使用網際網路上面人家已經做好的 PHP 程式架站機喔！
+		譬如說討論區軟體 phpBB2 這個玩意兒，完整的架站軟體 PHPNuke 以及部落格軟體 lifetype 等等。
+		但這些架站機都需要 PHP 與資料庫的支援，所以你必需要將上述介紹的 LAMP 完整的安裝好才行。
+		如果你不喜歡自己寫網頁的話，那麼這些有用的架站軟體就夠你瞧的囉！鳥哥列出幾個連結給你玩一玩先！<br />
+		<ul>
+		<li>phpBB 官方網站：<a href="http://www.htmbb.com/" target="_blank">http://www.htmbb.com/</a>
+		<li>phpBB 正體中文網站『竹貓星球』：<a href="http://phpbb-tw.net" 
+		target="_blank">http://phpbb-tw.net</a>
+		<li>鳥哥的簡易 phpBB2 安裝法：<a href="http://linux.vbird.org/apache_packages/" 
+		target="_blank">http://linux.vbird.org/apache_packages/</a>
+		<li>Lifetype 部落格架設軟體中文支援站：<a href="http://www.lifetype.org.tw/" 
+		target="_blank">http://www.lifetype.org.tw/</a>
+		<li>Lifetype 部落格架設軟體官網：<a href="http://www.lifetype.net/" target="_blank">http://www.lifetype.net/</a>
+		<li>PHP-Nuke 官方網站：<a href="http://phpnuke.org/" target="_blank">http://phpnuke.org/</a>
+		<li>xoops 官方網站：<a href="http://www.xoops.org/" target="_blank">http://www.xoops.org/</a>
+		</ul>
+		不過請注意，這些軟體由於是公開的，所以有些怪叔叔可能會據以亂用或亂改，
+		因此可能會有一些 bug 會出現！因此，你必需要取得最新的版本來玩才行，
+		而且架設之後還得要持續的觀察是否有更新的版本出現，隨時去更新到最新版本才行喔！
+		免得後患無窮～<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="www_adv"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Apache 伺服器的進階設定</span><br />
+<div class=block1>
+	事實上剛剛上頭的基本設定已經很足夠朋友們架設 WWW 伺服器所需了！不過，還有很多可以玩玩的地方，
+	例如個人用戶首頁、虛擬主機以及認證保護的網頁等等。底下我們分別來談一談囉！ ^_^<br /><br />
+
+	<hr /><a NAME="www_adv_personal"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">啟動用戶的個人網站
+	(權限是重點)</span><br />
+	<div class=block2>
+		每一部主機都有一個首頁，但是如果每個個人用戶都想要有可以自己完全控管的首頁時，
+		那該如何設計？呵呵！Apache 早就幫我們想到了！不過新版的設定檔內常常是預設將這個功能取消的，
+		所以你必需要自行修訂呢！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 找到如下的設定項目，大約在 340 行左右：</span>
+&lt;IfModule mod_userdir.c>
+    UserDir disable
+    #UserDir public_html
+&lt;/IfModule>
+<span class=term_say># 將他改成如下的情況喔！</span>
+&lt;IfModule mod_userdir.c>
+    <span class=term_write>#UserDir disable
+    UserDir public_html</span>
+&lt;/IfModule>
+
+<span class=term_say># 重新啟動一下先！</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/httpd restart</span>
+</pre></td></tr></table>
+
+		這只是個範例，Apache 預設的個人首頁是放置在家目錄下的 public_html/ 目錄下！假如 dmtsai
+		的家目錄在 /home/dmtsai，那麼他的個人首頁預設在 /home/dmtsai/public_html/ 囉！你當然可以修改這個目錄名稱，
+		只要將上表的 UserDir 內容改掉即可。例如改為 www 時，使用者的個人首頁則放在家目錄下的 www 目錄中。
+		設定完畢後得要重新啟動你的 apache 喔！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />如何讓未來所有『新增』的使用者預設家目錄下都有個 www 的目錄？<br />
+答：<ul>
+因為新增使用者時所參考的家目錄在 /etc/skel 目錄內，所以你可以直接 mkdir /etc/skel/www 即可。
+</ul>
+</td></tr></table><br />
+
+		好了，假設你的主機有個 dmtsai 的用戶，那麼這傢伙怎麼建立他的個人首頁？
+		我們這樣測試一下好了！(底下的工作請以你的一般身份使用者處理)：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@linux ~]$ <span class=term_command>cd ~</span>
+[dmtsai@linux ~]$ <span class=term_command>mkdir public_html</span>
+[dmtsai@linux ~]$ <span class=term_command>chmod 755 public_html</span>
+[dmtsai@linux ~]$ <span class=term_command>chmod 755 ~</span>
+[dmtsai@linux ~]$ <span class=term_command>cd public_html</span>
+[dmtsai@linux public_html]$ <span class=term_command>echo "Test your home" >> index.html</span>
+</pre></td></tr></table>
+
+		<span class=text_import2>由於 CentOS 預設的使用者家目錄權限是 drwx------ ，這個權限將無法讓 Apache 的程序瀏覽啊！
+		所以你至少要讓你的家目錄與 public_html 目錄的權限成為 drwxr-xr-x 才行！這個很重要啊！</span>
+		那麼未來只要你在瀏覽器的網址列這樣輸入：<br />
+
+		<ul><span class=text_import2>http://你的主機名稱/~dmtsai/</span></ul>
+
+		就可以看到你的使用者個人網頁囉！之後讓使用者自己去設計他的網站吧！
+		現在你知道那個毛毛蟲 (~) 的意義了吧？ ^_^！不過，多這個毛毛蟲就很討厭～
+		我可不可以將使用者的個人網站設定成為：<br />
+
+		<ul><span class=text_import2>http://你的主機名稱/dmtsai/</span></ul>
+
+		是可以啦！最簡單的方法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /var/www/html</span>
+[root@linux html]# <span class=term_command>ln -s /home/dmtsai/public_html dmtsai</span>
+</pre></td></tr></table>
+
+		由於我們首頁的『 Options 』內有 FollowSymLinks 這個參數的原因，所以可以直接使用連結檔即可。
+		另外我們也可以使用 Apache 提供的別名功能 (Alias)，例如這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 找個不與人家設定值有干擾的地方加入這個設定項目：</span>
+<span class=term_write>Alias /dmtsai/ "/home/dmtsai/public_html/"
+&lt;Directory "/home/dmtsai/public_html">
+    Options FollowSymLinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		這樣就 OK 的啦！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_cgi"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">啟動某個目錄的 CGI (perl) 
+	程式執行權限</span><br />
+	<div class=block2>
+		在前幾個小節裡面我們有談到如果你想要 Apache 可以執行 perl 之類的網頁程式時，
+		你就得需要<a href="#www_basic_php">安裝一些額外的模組</a>才行。其中 mod_perl 與 mod_python 
+		這兩個套件建議您最好安裝一下啦！然後我們也提到想要執行 CGI 程式就得到 /var/www/cgi-bin/
+		目錄下去執行。如果你想要在其他目錄底下執行 CGI 是否可以？當然行啊！<br /><br />
+
+		<li><span class=text_import1>利用新目錄下的 Options 參數設定：</span></li>
+		<div class=block2>
+		假設想要執行 CGI 的程式附檔名為 .cgi 或 .pl ，且放置的目錄在 /var/www/html/cgi/ 時，
+		你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 找到底下這一行，大約在 807 行左右啦：</span>
+#AddHandler cgi-script .cgi
+<span class=term_say># 將他改成底下的模樣，讓附檔名為 .pl 的檔案也能執行喔！</span>
+<span class=term_write>AddHandler cgi-script .cgi .pl</span>
+
+<span class=term_say># 然後加入底下這幾行來決定開放某個目錄的 CGI 執行權限。</span>
+<span class=term_write>&lt;Directory "/var/www/html/cgi">
+    Options ExecCGI
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		接下來只要讓你的 CGI 程式具有 x 權限，那麼他就可以執行啦！舉例來說，你的檔案在 /var/www/html/cgi/index.cgi
+		的話，那麼：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>chmod a+x /var/www/html/cgi/index.cgi</span>
+</pre></td></tr></table>
+
+		然後在網址列輸入：http://主機名稱或 IP/cgi/index.cgi 即可執行該檔案啦！<br /><br />
+		</div>
+
+		<li><span class=text_import1>使用 ScriptAlias 的功能：</span></li>
+		<div class=block2>
+		你可以直接利用檔名的別名來處理！更簡單呢：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 同樣的你要先確認這一行是存在的！</span>
+<span class=term_write>AddHandler cgi-script .cgi .pl</span>
+
+<span class=term_say># 然後加入底下這幾行來決定開放某個目錄的 CGI 執行權限。</span>
+<span class=term_write>ScriptAlias /cgi/ "/var/www/html/cgi/"</span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		這個方法比較棒啦！因為該目錄不需要在 Apache 首頁底下也可以成功的啦！
+		</div>
+
+		這兩個方法你可以隨意取一個來處理即可！不需要兩個都進行啦！<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_error404"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">找不到網頁時的顯示訊息通知</span><br />
+	<div class=block2>
+		如果你的 /var/www/html/cgi 目錄底下沒有任何首頁檔案 (index.???) 時，那當使用者在網址列輸入『
+		http://your.hostname/cgi 』，請問結果會顯示出什麼呢？可能有兩個：<br />
+		<ul><span class=text_import2>
+		<li>如果你的 Options 裡面有設定 Indexes 的話，那麼該目錄下的所有檔案都會被列出來，提供類似 FTP
+		的連結頁面。
+		<li>如果沒有指定 Indexes 的話，那麼錯誤訊息通知就會被顯示出來。
+		</span></ul>
+
+		事實上 CentOS 所提供的 Apache 已經規範好一些簡單的錯誤資料網頁了，你可以到 /var/www/error/ 
+		目錄下瞧瞧就曉得。不過該目錄下的檔案並沒有中文訊息，所以.....真要命！至於 Apache 的錯誤訊息設定在這裡：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 大約在 886 行左右，預設就是註解掉的！</span>
+#    ErrorDocument 403 /error/HTTP_FORBIDDEN.html.var
+#    ErrorDocument 404 /error/HTTP_NOT_FOUND.html.var
+#    ErrorDocument 405 /error/HTTP_METHOD_NOT_ALLOWED.html.var
+#    ErrorDocument 408 /error/HTTP_REQUEST_TIME_OUT.html.var
+<span class=term_say>....後面省略....</span>
+</pre></td></tr></table>
+
+		雖然 Apache 有提供這些資料了，不過 CentOS 預設是將那些資料註解掉的！因為我們使用中文語系，
+		該資料並沒有中文資訊，所以註解掉反而對我們的處理有幫助呢！ ^_^
+		由於你的網站可能會因為一些檔名的變更或者是重新編寫的原因，因此舊的網頁檔名就不存在。
+		但用戶端可能保留的還是舊的連結，此時我們就得要很好心的告知使用者該網頁找不到的原因才好。
+		你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 找到底下這一段，看看這些簡單的範例先：</span>
+#ErrorDocument 500 "The server made a boo boo."
+#ErrorDocument 404 /missing.html
+#ErrorDocument 404 "/cgi-bin/missing_handler.pl"
+#ErrorDocument 402 http://www.example.com/subscription_info.html
+
+<span class=term_say># 假設未來提供使用者相關資訊的地方為 missing.html 這個檔案，所以你應該要：</span>
+<span class=term_write>ErrorDocument 404 /missing.html</span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		上面那個檔案 /missing.html 必需要放置在你的首頁目錄下，亦即是 /var/www/html/missing.html 啦！
+		要提醒你的是：『<span class=text_import2>你的所有設定檔當中 (包括 /etc/httpd/conf.d/*.conf)
+		只能存在一個 ErrorDocument 404 ... 的設定值，否則將以較晚出現的設定為主</span>』
+		所以你得先搜尋一下，尤其是很多 Linux 版本的 Apache 並沒有將預設的錯誤訊息註解呢。
+		至於那個 404 是啥意思？他的意義是這樣的：<br />
+
+		<ul><span class=text_import2>
+		<li>100-199：一些基本的訊息
+		<li>200-299：用戶端的要求已成功的達成
+		<li>300-399：Client 的需求需要其他額外的動作，例如 redirected 等等
+		<li>400-499：Client 的要求沒有辦法完成(例如找不到網頁)
+		<li>500-599：主機的設定錯誤問題 </span></ul>
+
+		好了，接下來讓我們編輯一下那個 missing.html 的檔案吧！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/www/html/missing.html</span>
+<span class=term_write>&lt;html>
+&lt;head>
+        &lt;meta http-equiv="Content-Type" content="text/html; charset=big5">
+        &lt;title>錯誤訊息通知&lt;/title>
+&lt;head>
+&lt;body>
+        &lt;font size=+2 face="標楷體">您輸入的網頁找不到！&lt;/font>&lt;br />
+        &lt;hr />
+        親愛的網友，您所輸入的網址並不存在我們的伺服器當中，
+        有可能是因為該網頁已經被管理原刪除，
+        或者是您輸入了錯誤的網址。請再次查明後在填入網址囉！
+        感謝您常常來玩！ ^_^&lt;br />
+        &lt;hr />
+        若有任何問題，歡迎聯絡管理員&lt;a 
+	href="mailto:root@localhost">root@localhost&lt;/a>。
+&lt;/body>
+&lt;/html></span>
+</pre></td></tr></table>
+
+		現在你如果在網址列隨便輸入一個主機上不存在的網址，就會出現如下的畫面囉：<br /><br />
+
+		<a name="fig_05"></a><center><img src="0360apache/missing.png"
+		title="錯誤訊息的通知顯示網頁"
+		alt="錯誤訊息的通知顯示網頁"><br />
+		圖五、錯誤訊息的通知顯示網頁</center><br />
+
+		當然啦，您可以自行設定出符合你網頁風格的資料啦！例如鳥哥的網站上面就列出一些基本的連結，
+		幫助網友們可以順利的取得他們想要的資料啊！這也是很重要的功能呢！^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_order"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">瀏覽權限的設定動作
+	(order, limit)</span><br />
+	<div class=block2>
+		咱們的 Apache 設定檔內就可以指定限制瀏覽來源的動作了！我們可以針對來源 IP 或網域來限制呢！
+		就以 Order 這個限制配合 Allow 及 Deny 來處理即可。再次的強調一下：<br />
+		<ul><span class=text_import2>
+		<li>Order deny,allow：以 deny 優先處理，但沒有寫入規則的則預設為 allow 
+		。常用於：拒絕所有，開放特定的條件；
+		<li>Order allow,deny：以 allow 為優先處理，但沒有寫入規則的則預設為 deny。
+		常用於：開放所有，拒絕特定的條件。
+		<li>如果 allow 與 deny 的規則當中有重複的，則以預設的情況 (Order 的規範) 為主。</span></ul>
+		
+		舉例來說，如果我們的首頁想要讓 192.168.1.11 及政府部門無法連線，其他的則可以連線，
+		由上面的說明你可以知道是開放所有拒絕特定的條件，所以你可以這樣做設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+&lt;Directory "/var/www/html">
+    Options FollowSymLinks
+    AllowOverride None
+<span class=term_write>    Order allow,deny
+    allow from all
+    deny from 192.168.1.11
+    deny from .gov.tw</span>
+&lt;/Directory>
+</pre></td></tr></table>
+
+		注意一下，因為 Order 是『 allow,deny 』，所以所有規則當中屬於 allow 的都會被優先提到最上方，
+		為了避免這個設計上的困擾，所以建議你直接將 allow 的規則寫在最上方。
+		而由於規則當中 192.168.1.11 隸屬於 all 當中 (all 代表所有的嘛！)，因此這個設定項目則為預設值，
+		亦即為 deny 啦！那個 .gov.tw 的設定項目也一樣。如果是底下的模樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 底下可是個錯誤的示範，請仔細看下個段落的詳細說明喔！</span>
+&lt;Directory "/var/www/html">
+    Options FollowSymLinks
+    AllowOverride None
+<span class=term_write>    Order deny,allow
+    deny from 192.168.1.11
+    deny from .gov.tw
+    allow from all</span>
+&lt;/Directory>
+</pre></td></tr></table>
+
+		雖然 deny 會先挪到上方來處理，不過因為 192.168.1.11 是在 all 的範圍內，所以發生重複，
+		因此這個設定值將會以預設的 allow 為主，因此就無法限制住這個 192.168.1.11 的存取啦！
+		這邊很容易搞錯的吶！鳥哥也是常常搞到頭昏腦脹的～<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />如果有個應該要保護的內部目錄，假設在 /var/www/html/lan/ ，
+我僅要讓 192.168.1.0/24 這個網域可以瀏覽的話，那麼你應該要如何設定的好？<br />
+答：<ul>
+	這個案例當中有點像是『拒絕所有連線，僅接受特定連線』的樣子，因此可以使用 deny,allow 那個情況，
+	所以你可以這樣做：<pre><span class=text_import2><font face="細明體">&lt;Directory "/var/www/html/lan">
+    Options FollowSymLinks
+    AllowOverride None
+    Order deny,allow
+    deny from all
+    allow from 192.168.1.0/24
+&lt;/Directory></font></pre></ul>
+</td></tr></table><br />
+
+		事實上，如果想要讓某個網域或者是 IP 無法瀏覽的話，最好還是利用 iptables 來處理比較妥當。
+		不過如果僅是某些重要目錄不想讓人家來查閱的話，那麼這個 allow, deny 與 order 
+		的設定資料可就很值得參考了。<br /><br />
+
+		而除了這個 order 設定值之外，我們還有個限制用戶端能進行的動作的設定喔！
+		那就是 Limit 這個設定啦！舉例來說，如果我們想要讓使用者在 /var/www/html/lan 
+		這個目錄下僅能進行最陽春的 GET, POST, OPTIONS 的功能，除了這幾個之外的其他功能通通不允許，
+		那麼你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+&lt;Directory "/var/www/html/lan">
+    AllowOverride none
+    Options FllowSymLinks
+<span class=term_write>
+    <span class=term_say># 先允許能夠進行 GET, POST 與 OPTIONS 啦！</span>
+    &lt;Limit GET POST OPTIONS>
+        Order allow,deny
+        Allow from all
+    &lt;/Limit>
+
+    <span class=term_say># 再規定除了這三個動作之外，其他的動作通通不允許啦！</span>
+    &lt;LimitExcept GET POST OPTIONS>
+        Order deny,allow
+        Deny from all
+    &lt;/LimitExcept></span>
+&lt;/Directory>
+</pre></td></tr></table>
+
+		透過 Limit 與 LimitExcept 就能夠處理用戶端能夠進行的動作啦！也就有辦法針對你的資料進行細部保護囉。
+		不過這些保護真的很細部，一般小網站大致上用不到 Limit 這個玩意兒說。<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_status"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機狀態說明網頁</span><br />
+	<div class=block2>
+		既然已經安裝好了 WWW 主機，除了提供服務之外，重要的是要如何維護囉！嘿嘿！
+		那麼是否一定要額外安裝其他的套件才能知道目前的主機狀態呢？當然不需要啦！我們可以透過 Apache 
+		提供的特別功能來查詢主機目前的狀態！那就是 mod_status 這個模組囉！
+		這個模組預設是關閉的，你必須要修改設定檔來啟動他才行。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 先確定底下這幾個項目真的有存在才行！</span>
+LoadModule status_module modules/mod_status.so <span class=term_say>&lt;==大約在 166 行，就是模組的載入</span>
+
+<span class=term_write>ExtendedStatus On</span>  <span class=term_say>&lt;==大約在 201 行，你可以將他打開，資訊會比較多！</span>
+
+<span class=term_say># 底下的資料則大約在 934 行左右，你可以將他修改成為這樣：</span>
+<span class=term_write>&lt;Location /server-status>
+    SetHandler server-status
+    Order deny,allow
+    Deny from all
+    Allow from 192.168.1.0/24
+    Allow from 127.0.0.1
+&lt;/Location></span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		接下來你只要在你的網址列輸入主機名稱後面加上 http://hostname/server-status 即可發現如下的模樣：<br />
+
+		<a name="fig_06"></a><center><img src="0360apache/mod_status.png"
+		title="主機的目前狀況回報網頁"
+		alt="主機的目前狀況回報網頁"><br />
+		圖六、主機的目前狀況回報網頁</center><br />
+
+		輸出的結果包括目前的時間以及 Apache 重新啟動的時間，還有目前已經啟動的程序等等，
+		還有網頁最下方會顯示每個程序的用戶端與伺服器端的連線狀態。雖然顯示的狀況挺陽春，不過該有的也都有了，
+		可以讓你約略瞭解一下主機的狀況囉。要注意喔，可查閱者 (allow from 的參數)
+		還是需要限制的比較嚴格一點啦！<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_htaccess"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">.htaccess 
+	與認證網頁設定</span><br />
+	<div class=block2>
+		對於保護 Apache 本身的資料方面，除了上述的 Order 以及 Limit 之外，還有什麼方式呢？
+		因為 Order 與 Limit 主要是針對 IP 網域或者是主機名稱來管理，那如果我們用戶端是使用撥接方式取得 IP ，
+		那麼 IP 會一直變動的，如此一來那個保護的目錄使用者也就不能在任何地方進入了，會造成一些困擾。<br /><br />
+
+		此時如果能夠使用密碼保護的方式，讓使用者可以輸入帳號/密碼即可取得瀏覽的權限的話，
+		那用戶端就不用受到那個 order 的 Allow, deny 的限制啦！真好～
+		呵呵！Apache 確實剛好有提供一個簡單的認證功能，讓我們可以輕鬆愉快的就設定好保護的網頁呢！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		什麼是受保護的資料呢？舉例來說，學校老師們可能會提供一些教學教材或者是習題給同學，
+		這些資料不想給所有人取得，那麼就可以將這些資料放在特定的受保護的目錄中。還有例如某些重要的 Apache
+		主機分析的資料 (本章後面提及的一些分析工具)，這些資料建置的方法需要啟用 CGI 程式，
+		而 CGI 程式的執行是有風險的，而且那些分析所得的資料也很重要。
+		此時，該程式與輸出結果就需要放在受保護的目錄啦！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		那麼那個認證網頁如何搞定？簡單的說，他要這樣處理：<br />
+
+		<ol><span class=text_import2>
+		<li>建立受保護的目錄：既然我們是『按了某個連結進入某個目錄之後，才會出現對話視窗』，
+			那麼首先當然就是要有那個設定為認證網頁的『目錄』囉！請注意，<b>是要目錄才行喔</b>！
+		<li>設定 Apache 所需參數：然後，在對話視窗中，既然我們需要輸入 ID 與密碼，那麼自然就需要密碼檔囉！
+			另外，雖然 Apache 有支援 LDAP 及 MySQL 等等的認證機制，不過我們這裡並不討論其他的認證機制，
+			完全使用 Apache 的預設功能而已，所以，底下我們會使用基本 (Basic) 的認證模式喔！
+		<li>建立密碼檔案：處理完基本的設定後，再來則是建立登入時所需要的帳號與密碼！
+		<li>最後，重新啟動 Apache 就 OK 啦！
+		</span></ol>
+
+		其中，第二個步驟會比較有趣，我們說過，任何的設定資料都可以直接寫到 httpd.conf 這個設定檔當中，
+		所以設定保護目錄的參數資料確實可以寫入 httpd.conf 當中。不過，想一想，如果你的 Apache 主機有 30
+		個使用者具有個人首頁，然後他們都需要製作保護目錄，那個 httpd.conf 只有身為 root 的你才能夠修改，
+		更可怕的是『每次改完都需要重新啟動 Apache』～請問，你的時間精力是否會受到『很嚴厲的考驗？』<br /><br />
+
+		所以啦，如果我們能夠透過外部的檔案來取代設定 httpd.conf 內的參數，那麼是否會比較好？
+		而且最好能夠該檔案設定即生效，不需要重新啟動 Apache 的話，那就更好啦！因為如此一來，
+		你就可以交給使用者自行管理他們的認證網頁囉！呵呵～
+		透過 httpd.conf 內的 AllowOverride 參數，配合 .htaccess 這個檔案的設定就 OK 搞定！
+		這個設定項目與設定檔 httpd.conf 的關係可以這樣看：<br /><br />
+
+		<a name="fig_07"></a><center><img src="0360apache/protect.png"
+		title=".htaccess 與主要設定檔 httpd.conf 的相關性"
+		alt=".htaccess 與主要設定檔 httpd.conf 的相關性"><br />
+		圖七、.htaccess 與主要設定檔 httpd.conf 的相關性</center><br />
+
+		也就是說：<br />
+
+		<ul><span class=text_import2>
+		<li>你必需要在 httpd.conf 這個主設定檔當中先以 AllowOverride 指定某個目錄下的 .htaccess 
+		能夠進行取代的參數為何？一般有 AuthConfig, Options 等等，考慮到系統資料的安全，建議提供 AuthConfig 
+		的項目就好了。設定完畢後請重新啟動 Apache。
+		<li>在該目錄底下務必要存在 .htaccess 這個檔案，透過這個檔案即可修改 httpd.conf 內的設定啊！
+		<li>.htaccess 設定完『立刻生效』，不需要重新啟動 Apache ，因為該檔案的內容是『當有用戶端瀏覽到該目錄時，
+		該檔案才會被使用來取代原有的設定。
+		</span></ul>
+
+		既然 .htaccess  的用途比較廣，所以底下我們不介紹 httpd.conf 的認證參數了，
+		請您自行測試測試即可。底下主要以 .htaccess 檔案的設定為主喔！趕緊來看看吧！<br /><br />
+
+		<li><span class=text_import1>1. 建立保護目錄的資料</span></li>
+		<div class=block2>
+		假設我要將受保護的資料放置到 /var/www/html/protect 當中，記得，這個目錄要讓 Apache 可以瀏覽到才行。
+		所以你可以立刻將一些重要的資料給他搬一到這裡來。我們先這樣測試一下吧！建立個簡單的測試網頁即可。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir /var/www/html/protect</span>
+[root@linux ~]# <span class=term_command>vi /var/www/html/protect/index.html</span>
+<span class=term_write>&lt;html>
+&lt;head>&lt;title>這是個測試網頁啊！&lt;/title>&lt;/head>
+&lt;body>看到這個畫面了嗎？如果看到的話，表示你可以順利進入本受保護網頁啦！
+&lt;/body>&lt;/html></span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>2. 以 root 的身份處理 httpd.conf 的設定資料</span></li>
+		<div class=block2>
+		這個動作是僅有 root 能作的啦！你要開始編輯 httpd.conf ，讓受保護的那個目錄可以使用 .htaccess 啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf/httpd.conf</span>
+<span class=term_say># 確定底下這幾行是存在的！</span>
+AccessFileName .htaccess
+&lt;Files ~ "^\.ht">
+    Order allow,deny
+    Deny from all
+&lt;/Files>
+
+<span class=term_say># 在某個不受影響的地方加入這一段：</span>
+<span class=term_write>&lt;Directory "/var/www/html/protect">
+    AllowOverride AuthConfig
+    Order allow,deny
+    Allow from all
+&lt;/Directory></span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>  <span class=term_say>&lt;==重新啟動，不要忘記了！</span>
+</pre></td></tr></table>
+
+		這樣就設定妥當了，很簡單吧！再接下來要準備 .htaccess 的建立了。<br /><br />
+		</div>
+
+		<li><span class=text_import1>3. 建立保護目錄下的 .htaccess 檔案：只要有權限建立者即可進行</span></li>
+		<div class=block2>
+		要注意，這個檔案是在保護目錄底下喔！不要放錯地方啦！所以你要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /var/www/html/protect</span>
+[root@linux ~]# <span class=term_command>vi .htaccess</span>
+<span class=term_say># 只要加入底下這幾行即可</span>
+<span class=term_write>AuthName     "Protect test by .htaccess"
+Authtype     Basic
+AuthUserFile /var/www/apache.passwd
+require user test</span>
+</pre></td></tr></table>
+
+		這些參數的意義是這樣的：<br />
+		<ul>
+		<li><span class=text_import1>AuthName</span>：在出現要你輸入帳號與密碼的對話視窗中，出現的『提示字元』就是了；
+		<li><span class=text_import1>AuthType</span>：認證的類型，我們這裡僅列出 Apache 預設的類型，亦即是『basic』的啦
+		<li><span class=text_import1>AuthUserFile</span>：這個保護目錄所使用的帳號密碼設定檔。
+			也就是說，這個檔案是隨便你設定的，當然啦，所以使用者當然可以自行設定帳號與密碼囉。
+			檔案內的帳號不限在 /etc/passwd 出現的使用者！另外，<span class=text_import2>這個檔案不要放置在
+			Apache 可以瀏覽的目錄內，所以我將他放置在首頁之外！</span>避免被不小心竊取。
+		<li><span class=text_import1>require</span>：後面接可以使用的帳號。假如 /var/www/apache.passwd  內有三個帳號，
+			分別是 test, test1, test2 ，那我這裡只寫了 test ，因此 test1, test2 將無法登入此目錄。
+			如果要讓該密碼檔內的使用者都能夠登入，就改成『<span class=text_import2>require 
+			valid-user</span>』即可啊！
+		</ul>
+		設定好就立刻生效了，不需要重新啟動任何東西啊！<br /><br />
+		</div>
+
+		<li><span class=text_import1>4. 建立密碼檔案 htpasswd (只要有權限即可執行)</span></li>
+		<div class=block2>
+		Apache 預設讀取的帳號/密碼設定資料是由 htpasswd 所建立的，這個指令的語法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>htpasswd [-c] 密碼檔檔名 使用者帳號</span>
+<span class=term_say>參數：
+-c ：建立後面的密碼檔案。如果該檔案已經存在，則原本的資料會被刪除！
+     所以如果只是要新增使用者(檔案已存在時)，不必加上 -c 的參數！</span>
+
+<span class=term_hd>1. 建立 apache.passwd ，帳號為 test</span>
+[root@linux ~]# <span class=term_command>htpasswd -c /var/www/apache.passwd test</span>
+New password:  <span class=term_say>&lt;==這裡輸入一次密碼，注意，螢幕不會有任何訊息。</span>
+Re-type new password:  <span class=term_say>&lt;==這裡再輸入一次</span>
+Adding password for user test
+
+[root@linux ~]# <span class=term_command>cat /var/www/apache.passwd</span>
+test:FIquw/..iS4yo   <span class=term_say>&lt;==您瞧瞧！已經建立一個新使用者！</span>
+
+<span class=term_hd>2. 在已存在的 apache.passwd 內增加 test1 這個帳號：</span>
+[root@linux ~]# <span class=term_command>htpasswd /var/www/apache.passwd test1</span>
+</pre></td></tr></table>
+
+		再次強調，這個檔案檔名需要與 .htaccess 內的 AuthUserFile 相同，且不要放在瀏覽器可以瀏覽到的目錄！
+		這樣就算設定完畢啦！你可以使用瀏覽器在網址列輸入：『http://your.hostname/protect』試看看，結果會如何？<br />
+		</div>
+
+		最後測試的結果會像底下這個樣子：<br /><br />
+
+		<a name="fig_08"></a><center><img src="0360apache/protect_2.png"
+		title="受保護模式的授權畫面"
+		alt="受保護模式的授權畫面"><br />
+		圖八、受保護模式的授權畫面</center><br />
+
+		如果你曾經瀏覽過這個目錄了，當時可能尚未製作保護的檔案，或者是檔案設計錯誤，導致你曾經可以瀏覽該網頁，
+		則該網頁會被你的瀏覽器快取 (cache) 起來，所以可登入的畫面會一再地出現而不會跑出需要認證的對話視窗。
+		此時你應該要：<br />
+		<ul>
+		<li>務必將全部的瀏覽器都關閉，再重新啟動瀏覽器。因為你成功的登入該目錄後，
+			該登入的資訊會快取在這次的連線上喔！
+		<li>可以將瀏覽器上頭的『reload (重新讀取)』按下去，讓瀏覽器重新讀取一次；
+			否則快取不會更新。
+		<li>可以將瀏覽器的快取資料全部清除，關閉瀏覽器後再重新啟動瀏覽器看看。
+		</ul>
+		如果還是一直出問題，那就只好前往登錄檔 (/var/log/httpd/error_log) 察看錯誤資訊囉。
+		常見的錯誤只是打錯字啦！@_@<br /><br />
+	</div>
+
+	<hr /><a NAME="www_adv_virtual"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">虛擬主機的設定</span><br />
+	<div class=block2>
+		接下來我們要談的是『主機代管』......瞎密？不是啦～是一個稱為虛擬主機的東西啦～
+		這東西很有用喔！他可以讓你的一部 Apache 看起來像有多個『主站首頁』的感覺啦！<br /><br />
+
+		<li><span class=text_import1>什麼是虛擬主機 (Virtual Host)</span></li>
+		<div class=block2>
+		所謂的虛擬主機，基本上就是『<span class=text_import2>讓你的一部主機上面，有好多個 "主網頁"
+		存在，也就是說，硬體實際上只有一部主機，但是由網站網址上來看，則似乎有多部主機存在的樣子！</span>』。
+		舉個例子來說好了，鳥哥提供的網站主要有主要學習網站以及新手討論區，分別在底下的連結：<br />
+
+		<ul>
+		<li>主網站：<a href="http://linux.vbird.org" target="_blank">http://linux.vbird.org</a>
+		<li>討論區：<a href="http://phorum.vbird.org" target="_blank">http://phorum.vbird.org</a>
+		</ul>
+
+		這兩個連結你給他點下去，會發現其實是不同的資料內容，不過，如果你用 <a href="0350dns.htm#dig">dig</a>
+		之類的軟體來查驗 IP 的話，會發現這兩個網址都指向同一個 IP ㄟ！怎麼會這樣？沒錯啊！這就是虛擬主機的主要功能！
+		他<span class=text_import2>可以讓你的多個主機名稱對應到不同的主網頁目錄 (DocumentRoot 參數)，
+		所以看起來會像有多部實際主機的模樣</span>啦！這樣說，瞭解虛擬主機了嗎？<br /><br />
+		</div>
+
+		<li><span class=text_import1>架設的大前提</span></li>
+		<div class=block2>
+		那麼要架設虛擬主機需要什麼咚咚呢？以剛剛鳥哥的網站的結果為例，我必需要有多個主機名稱對應到同一個 IP 去，
+		所以說，你必需先擁有多個主機名稱才行。要如何擁有多個主機名稱？那就是：<br />
+		<ul>
+		<li>向 ISP 申請多個合法的主機名稱，而不自己架設 DNS；
+		<li>自行設定經過合法授權的 DNS 主機來設定自己所需要的主機名稱。
+		</ul>
+		相關的 DNS 申請與設定技巧我們在前幾章都談過了，您可得自行去瞧瞧先！<br /><br />
+		</div>
+
+		<li><span class=text_import1>架設範例練習：</span></li>
+		<div class=block2>
+		我們在 <a href="0350dns.htm">DNS</a> 章節裡面不是有設定了多個主機名稱嗎？
+		那些主機名稱就是為了要在這裡實作用的啦！ ^_^！你得要注意的是，我的每個主機名稱都必需要對應到某個主網頁目錄，
+		底下則是鳥哥的一個簡單範例：<br /><br />
+
+<table width=50% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td>主機名稱</td><td>對應的主目錄</td></tr>
+<tr align=center><td>linux.vbird.tsai</td><td>/var/www/html</td></tr>
+<tr align=center><td>www.vbird.tsai</td><td>/var/www/www</td></tr>
+<tr align=center><td>phorum.vbird.tsai</td><td>/var/www/phorum</td></tr>
+</table><br />
+
+		接下來就是開始設定囉！要告訴你的是，建議你將虛擬主機的設定建立一個新的檔案在 
+		/etc/httpd/conf.d/*.conf 當中，因為如此一來你的虛擬主機設定檔就可以進行搬移，
+		修改的時候也不會影響到原有的 httpd.conf 的資料！而因為 httpd.conf 內有個
+		Include 的參數將 /etc/httpd/conf.d/*.conf 的檔案都讀入設定檔當中，所以設定上面就變的很輕便，
+		備份與升級的時候也比較容易處理嘛！不囉唆，趕緊來實驗一下先！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先建立所需要的目錄：</span>
+[root@linux ~]# <span class=term_command>mkdir /var/www/www</span>
+[root@linux ~]# <span class=term_command>mkdir /var/www/phorum</span>
+[root@linux ~]# <span class=term_command>echo "www.vbird.tsai" > /var/www/www/index.html</span>
+[root@linux ~]# <span class=term_command>echo "phorum.vbird.tsai" > /var/www/phorum/index.html</span>
+<span class=term_say># 原有的首頁 (/var/www/html) 就不更動了！另建兩個不同的首頁內容，可供測試用。</span>
+
+<span class=term_hd>2. 開始編輯設定檔，這裡鳥哥用額外的檔案來設定喔！</span>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf.d/virtual.conf</span>
+<span class=term_say># 底下這一行在規定『本機任何介面的 port 80 所指定的虛擬主機』的意思。</span>
+<span class=term_write>NameVirtualHost *:80
+
+<span class=term_say># 先針對兩個多出來的可瀏覽目錄進行權限方面的規範啊！</span>
+&lt;Directory "/var/www/www">
+    Options FollowSymLinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory>
+&lt;Directory "/var/www/phorum">
+    Options FollowSymLinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory>
+
+<span class=term_say># 針對三部主機的 DocumentRoot 進行定！</span>
+&lt;VirtualHost *:80>
+    ServerName    linux.vbird.tsai
+    DocumentRoot  /var/www/html
+&lt;/VirtualHost>
+&lt;VirtualHost *:80>
+    ServerName    www.vbird.tsai
+    DocumentRoot  /var/www/www
+    CustomLog     /var/log/httpd/www.access_log combined
+    <span class=term_say># 不同的主頁可以指定不同的登錄檔資訊，這樣比較好 debug 與分析啦！</span>
+&lt;/VirtualHost>
+&lt;VirtualHost *:80>
+    ServerName    phorum.vbird.tsai
+    DocumentRoot  /var/www/phorum
+&lt;/VirtualHost></span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		你要注意的只有幾點：<br />
+		<ol><span class=text_import2>
+		<li>在虛擬主機的設定上還有很多的可用的功能，不過，最低的限度是需要有 ServerName 及 DocumentRoot 這兩個即可！
+		<li>使用了虛擬主機後，原本的主機名稱 (linux.vbird.tsai) 也要同時寫入虛擬主機的對應中，
+			否則這個主機名稱可能會不知道被丟到哪裡去喔！
+		<li>在 www.vbird.tsai 這個主機當中多了個 CustomLog ，表示任何向 www.vbird.tsai 要求資料的記錄都會改寫入
+			/var/log/httpd/www.access_log 而不是預設的 /var/log/httpd/access_log。
+			但這個新增的登錄檔必需要加入 logrotate 的管理當中才行喔！否則登錄檔會大到『爆表』
+		</span></ol>
+
+		接下來，只要你用戶端的瀏覽器可以找到這三個主機名稱並連線到正確的 IP 去，
+		你這個 Apache 就可以同時提供三個網站的站址了，很方便吧！^_^。<br /><br />
+		</div>
+
+		<li><span class=text_import1>虛擬主機常見用途</span></li>
+		<div class=block2>
+		虛擬主機為什麼會這麼熱門啊？這是因為他可以進行底下的任務：<br />
+
+		<ul>
+		<li><span class=text_import1>主機代管：</span><br />
+		如果你有一部很快速的電腦，配合你的網路頻寬又大的話，那麼你可以用這個虛擬主機的技術來『拉客』喔！
+		因為畢竟不是所有公司都有維護伺服器的能力，如果你能夠提供合理的流量、親和的資料傳輸介面、
+		穩定的提供服務，並且給予類似 MySQL 資料庫的支援，那麼當然有可能進行『主機代管』的業務啊！
+		您說是吧！ ^_^<br /><br />
+
+		<li><span class=text_import1>伺服器資料備援系統：</span><br />
+		你可以在兩個地方放置兩部主機，主機內的網頁資料是一模一樣的 (這個可以使用 
+		<a href="0310telnetssh.htm#rsync">rsync</a> 來達成的) ，那麼你將可以利用 Apache 的虛擬主機功能，
+		配合 DNS 的 IP 指向設定，讓某一部主機掛點時，另外一部主機立刻接管 WWW 的要求！
+		讓你的 WWW 伺服器不會有任何斷線的危機啊！ ^_^ (註：當 A 伺服器掛點時，
+		趕緊設定 DNS ，讓原本 A 的 IP 指定給 B，則任何向該 IP 要求的 WWW 將會被導向 B，
+		B 有 A 的備份資料以及虛擬主機設定，搞定！)<br /><br />
+
+		<li><span class=text_import1>將自己的資料分門別類：</span><br />
+		如果野心沒有這麼大的話，那麼如果你有幾個不同的資料類型時，也可以利用虛擬主機將各種資料分門別類啦！
+		例如將部落格指向 blog.vbird.tsai ，將討論區指向 phorum.vbird.tsai ，將教學資料指向
+		teach.vbird.tsai 等等，這樣的網址就很容易讓用戶端瞭解啦！您說是吧！ ^_^
+		</ul>
+		</div>
+	</div>
+
+	<hr /><a NAME="www_adv_firewall"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆與 SELinux</span><br />
+	<div class=block2>
+		一句老話啦！就是『<span class=text_import2>如果你的 Server 不能動，但是確定設定都沒有問題，
+		那麼除了持續查詢 log file 之外，最大的可能就是防火牆擋住了！</span>』
+		這句話應該沒有什麼太大的疑問才對～所以呢，萬一你的
+		Apache 不能動，那麼請看看你的防火牆設定規則吧！因為防火牆我們已經提過了，請參考『<a 
+		href="0250simple_firewall.htm">簡易防火牆設定</a>』一文，這裡不再贅述！<br /><br />
+
+		另外，Apache 由於太出名了，很多人有在使用這一套東西，所以可能發佈的漏洞也不少。
+		因此，你應該要保持隨時更新這套系統在最新的版本上才好！最好是要使用 yum 來自動線上更新啦！<br /><br />
+
+		最後，如果你沒有針對 SELinux 徹頭徹尾的設定 Apache 能夠讀取的檔案系統的話，
+		理論上，你的 Apache 應該是無法提供正確的瀏覽的。
+		所以囉，請先將 SELinux 關閉啦！不然的話，花個幾個月好好的研究一下 SELinux 吧！ ^_^<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="other_pkg"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">登錄檔分析以及 PHP 強化模組等套件說明</span><br />
+<div class=block1>
+	除了這些基本的 Apache 使用方式之外，我們還有哪些事情可以玩的？
+	當然還有很多啦！包括有趣的 PHP 效能強化模組、登錄檔分析以瞭解整個 Apache 的使用情況等等！
+	讓我們來瞧一瞧！<br /><br />
+
+	<hr /><a NAME="other_pkg_php"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">PHP 強化模組 (eaccelerator) 與 
+	Apache 簡易效能測試</span><br />
+	<div class=block2>
+		雖然 PHP 網頁程式標榜的是速度快速，不過因為 PHP 畢竟是先將一些可用函數先編譯成為模組，
+		然後當網頁使用到該 PHP 程式的時候，再由呼叫 PHP 模組來達成程式所需要的行為。
+		由於多了一道手續，所以他的執行效能還是有別於傳統編譯的程式語言囉。<br /><br />
+
+		那麼如果我們可以將 PHP 程式預先轉換成為可直接執行的 binary file ，那麼不就可以直接讀取進而加快速度嗎？
+		沒錯！是這樣～這東西稱為預編器～其中有一套軟體稱為 eaccelerator ，eaccelerator 可以將您的 PHP 
+		程式與 PHP 核心及相關函式庫預先編譯後暫存下來，以提供未來使用時可以直接執行，加上他可以優化您的 
+		PHP 程式，因此，可以讓您的 PHP 網頁速度增快不少喔！ eaccelerator 的官方網站在底下：<br />
+
+		<ul><a href="http://eaccelerator.net/HomeUk" target="_blank">http://eaccelerator.net/HomeUk</a></ul>
+
+		整個安裝的流程很簡單啦！你先將這個軟體的原始碼下載下來，我這裡假設你將他下載到 /root 目錄下，
+		另外你必需要確定你有安裝 php-devel, autoconf, automake, m4, libtool 等套件才行！
+		那就趕緊來安裝吧！ (鳥哥是以 0.9.5 這一版為範例的喔！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 解壓縮檔案：</span>
+[root@linux ~]# <span class=term_command>cd /usr/local/src</span>
+[root@linux src]# <span class=term_command>tar -jxvf /root/eaccelerator-0.9.5.tar.bz2</span>
+[root@linux src]# <span class=term_command>cd eaccelerator-0.9.5/</span>
+
+<span class=term_hd>2. 利用 phpize 進行 PHP 程式的預處理</span>
+[root@linux eaccelerator-0.9.5]# <span class=term_command>phpize</span>
+<span class=term_say># 過程會出現一些警告資訊，不要理他沒關係！</span>
+[root@linux eaccelerator-0.9.5]# <span class=term_command>./configure --enable-eaccelerator=shared \</span>
+> <span class=term_command>--with-php-config=/usr/bin/php-config</span>
+[root@linux eaccelerator-0.9.5]# <span class=term_command>make</span>
+
+<span class=term_hd>3. 將他整個安裝起來！</span>
+[root@linux eaccelerator-0.9.5]# <span class=term_command>make install</span>
+<span class=term_say># 此時這個新編譯的模組會被放置到 /usr/lib/php4/eaccelerator.so 當中啊！</span>
+</pre></td></tr></table>
+
+		將模組處理完畢之後接下來就是要讓 PHP 使用這個模組啦！如何進行呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 預先載入這個 PHP 的模組：</span>
+[root@linux ~]# <span class=term_command>vi /etc/ld.so.conf</span>
+<span class=term_say># 新增加這一行即可！</span>
+<span class=term_write>/usr/lib/php4</span>
+
+[root@linux ~]# <span class=term_command>ldconfig</span>
+<span class=term_say># 關於 <a href="../linux_basic/0520source_code_and_tarball.htm#library_ldconfig">ld.so.conf 以及 ldconfig</a> 我們在基礎篇談過了，請自行參考喔！</span>
+
+<span class=term_hd>2. 修改 php.ini 喔！</span>
+[root@linux ~]# <span class=term_command>vi /etc/php.ini</span>
+<span class=term_say># 在這個檔案的最底下加入這幾行：</span>
+<span class=term_write>;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; http://eaccelerator.net/HomeUk ;
+; 2006/11/08 VBird               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+extension="eaccelerator.so"
+eaccelerator.shm_size="16"
+eaccelerator.cache_dir="/tmp/eaccelerator"
+eaccelerator.enable="1"
+eaccelerator.optimizer="1"
+eaccelerator.check_mtime="1"
+eaccelerator.debug="0"
+eaccelerator.filter=""
+eaccelerator.shm_max="0"
+eaccelerator.shm_ttl="0"
+eaccelerator.shm_prune_period="0"
+eaccelerator.shm_only="0"
+eaccelerator.compress="1"
+eaccelerator.compress_level="9"</span>
+
+<span class=term_hd>3. 建立 eaccelerator 的暫存資料，重點在於權限要設定正確！</span>
+[root@linux ~]# <span class=term_command>mkdir /tmp/eaccelerator</span>
+[root@linux ~]# <span class=term_command>chmod 777 /tmp/eaccelerator</span>
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		基本上這樣就設定妥當啦！要注意的是：『<span class=text_import2>因為你的 eaccelerator 
+		是根據目前這一版的 PHP 核心所編譯出來的，所以未來如果你的 Linux distribution 有釋出新版的
+		PHP 時，你也順利更新到新版的 PHP 了，那你的這個 eaccelerator 就必需要自行手動再更新一次，
+		以配合到正確的 PHP 版本，否則這個模組將不會正確運作。</span>』！很重要喔！<br /><br />
+
+		那如何確認這個模組有正確的在運作呢？你可以利用我們在啟動 PHP 那個小節內談到的 phpinfo() 
+		這個函式來查閱，透過瀏覽器你應該會看到如下的畫面：<br /><br />
+
+		<a name="fig_09"></a><center><img src="0360apache/eaccelerator.png"
+		title="確定 eaccelerator 有運作的畫面"
+		alt="確定 eaccelerator 有運作的畫面"><br />
+		圖九、確定 eaccelerator 有運作的畫面</center><br />
+
+		如果你的 eaccelerator 沒有啟動的話，那就看不到圖九的畫面啦！藉由這個動作來測試測試吧！ ^_^！
+		接下來我們利用 Apache 提供的一個小程式來測試一下我們網站的效能吧！這個程式叫做 ab ，
+		他可以主動的向主機重複要求多筆資料來確認主機的效能喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ab [-dSk] [-c number] [-n number] 網頁檔名</span>
+<span class=term_say>參數：
+-d ：不要顯示 saved table 的百分比資料；通常不要那個資料，所以會加 -d
+-k ：還記得上面的 KeepAlive 吧！加入 -k 才會以這樣的功能測試；
+-S ：不顯示長訊息，僅顯示類似 min/avg/max 的簡短易懂訊息！
+-c ：同時有多少個『同時連線』的設定(可想成同時連線的 IP )
+-n ：同一個連線建立幾個要求通道！(可想成同一個 IP 要求的幾條連線)
+更多的訊息請自行 man ab 喔！ </span>
+
+<span class=term_say># 針對我們剛剛測試時的 phpinfo.htm 這個檔案來測試！</span>
+[root@linux ~]# <span class=term_command>ab -dSk -c100 -n100 http://localhost/phpinfo.htm</span>
+This is ApacheBench, Version 2.0.41-dev &lt;$Revision: 1.141 $> apache-2.0
+Copyright (c) 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Copyright (c) 1998-2002 The Apache Software Foundation, http://www.apache.org/
+<span class=term_say>....中間省略....</span>
+Total transferred:      4549407 bytes
+HTML transferred:       4532922 bytes
+<span class=term_write>Requests per second:    125.21 [#/sec] (mean)
+Time per request:       798.628 [ms] (mean)
+Time per request:       7.986 [ms] (mean, across all concurrent requests)
+Transfer rate:          5562.04 [Kbytes/sec] received</span>
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table>
+
+		根據這個軟體的輸出你會知道每秒鐘的傳輸速率、最大傳輸速度等等，可以約略知道一下基本效能啦！
+		不過鳥哥這個程式是在自己機器上面測試的，速度快是正常的！你可以在網路的另一頭來測試一下說！
+		(註：這個 ab 程式對於讀取 MySQL 之類的網頁似乎沒有辦法成功的完成測試的樣子，
+		你應該以較單純的網頁來測試吧！)<br /><br />
+	</div>
+
+	<hr /><a NAME="other_pkg_syslog"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">syslog 與 logrotate</span><br />
+	<div class=block2>
+		請特別注意，我們的 Apache 登錄檔主要記錄兩個東西，分別是：<br />
+		<ul><span class=text_import2>
+		<li>/var/log/httpd/access_log ：用戶端正常要求的記錄資訊
+		<li>/var/log/httpd/error_log ：使用者錯誤要求的資料，包括主機設定錯誤的資訊等。
+		</span></ul>
+		那個 /var/log/httpd/error_log 可以讓你處理很多設定錯誤的情況，包括網頁找不到、
+		檔案權限設定錯誤、密碼檔案檔名填錯等等。至於 access_log 則可以讓你分析那個網頁最熱門！ ^_^！
+		不過你可得注意的是：『<span class=text_import2>在稍有規模的網站下，Apache 
+		的登錄檔每週記錄量甚至可達 1GB 以上</span>』的紀錄。以鳥哥的主網站來說，一個星期逼近 1GB 
+		的登錄檔是合理的.....<br /><br />
+
+		不過，因為登錄檔是純文字資訊，所以如果能夠給予壓縮的話，那麼備份下來的登錄檔將可以減少到數十MB而已，
+		這樣可大大的減少了空間的浪費啊！如果你是使用預設的 Apache 來處理你的伺服器時，
+		那麼系統已經作了一個 logrotate 給你使用了，如果你是使用 Tarball 自己安裝的，
+		那麼.....你就得要自行手動建立底下這個檔案啦！鳥哥底下是以 CentOS 4.x 提供的檔案來作說明的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/logrotate.d/httpd</span>
+/var/log/httpd/*log {
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /bin/kill -HUP `cat /var/run/httpd.pid 2>/dev/null` 2> /dev/null || true
+    endscript
+    <span class=term_write>compress</span>   <span class=term_say>&lt;==建議加上這一段，讓你的備份登錄檔可以被壓縮</span>
+}
+</pre></td></tr></table>
+
+		為什麼這裡很重要呢？鳥哥的主機曾經發生過一件事情，就是....突然 WWW 效能變很差！
+		後來追蹤的原因竟然是..... /var/ 的空間被用完了！而耗掉這個 partition 的元兇竟然是 Apache 的登錄檔！
+		當時 /var/ 僅給 5GB ，而每個星期的登錄檔就上達 1GB 以上，備份四個星期的結果， /var/ 想不爆掉也很難～
+		所以啦，建議你的 /var 要給個 10GB 以上才好吶！而且備份登錄檔也要壓縮才好吶！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		關於 syslog 與 logrotate 的詳細說明請參考基礎篇的內容喔！或者是到底下的連結：<br />
+		<a href="http://linux.vbird.org/linux_basic/0570syslog.htm"
+		target="_blank">http://linux.vbird.org/linux_basic/0570syslog.htm</a>
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		此外，透過分析登錄檔其實我們可以知道我們的網站到底是哪一個網頁最熱門？
+		也且也能知道用戶端是來自哪裡呢！目前針對 Apache 有很多的分析軟體，
+		我們底下僅介紹兩個常見的分析軟體給大家呦！<br /><br />
+	</div>
+
+	<hr /><a NAME="other_pkg_webalizer"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">webalizer</span><br />
+	<div class=block2>
+		事實上，CentOS 4.x 預設就提供了 webalizer 這個分析軟體了！你只要將這套軟體安裝上來就是了。
+		如果你不是使用 CentOS 呢？沒關係，官方網站上也可以下載，安裝也很簡單！<br />
+
+		<ul>
+		<li>官方網站：<a href="http://www.mrunix.net/webalizer/" target="_blank">http://www.mrunix.net/webalizer/</a>
+		<li>設定難度：簡單，極適合新手架設
+		<li>軟體特色：大致上，所有分析的內容他都有了！雖然圖表比較沒有那麼炫...
+		<li>授權模式：GPL</ul>
+
+		CentOS 4.x 提供的這個軟體設定檔在 /etc/webalizer.conf ，而且他設定每天會分析一次 WWW 的登錄檔，
+		不過這個軟體預設會將輸出的結果放置到 /var/www/usage ，並且這個目錄僅有本機可以查閱，
+		鳥哥並不喜歡這樣的設定。我們剛剛不是有建立一個保護目錄 /var/www/html/protect 嗎？
+		這個目錄的功能來啦！鳥哥預計將 webalizer 的輸出資料放置到 /var/www/html/protect/webalizer 底下去，
+		所以知道密碼的都能夠查閱呢！整個動作是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先處理設定檔，指定一下我們要輸出的目錄即可：</span>
+[root@linux ~]# <span class=term_command>vi /etc/webalizer.conf</span>
+<span class=term_say># 確定一下底下這幾行是正確的！其他的則保留預設值</span>
+LogFile        /var/log/httpd/access_log
+OutputDir      <span class=term_write>/var/www/html/protect/webalizer</span>
+Incremental    yes
+
+<span class=term_hd>2. 建立該保護目錄的資料：</span>
+[root@linux ~]# <span class=term_command>cp -a /var/www/usage/ /var/www/html/protect/webalizer</span>
+[root@linux ~]# <span class=term_command>rm /etc/httpd/conf.d/webalizer.conf</span>
+[root@linux ~]# <span class=term_command>apachectl restart</span>  <span class=term_say>&lt;==取消系統預設的 webalizer 目錄</span>
+
+<span class=term_hd>3. 開始測試執行 webalizer 的分析工作</span>
+[root@linux ~]# <span class=term_command>webalizer</span>
+</pre></td></tr></table>
+
+		現在請你在瀏覽器上面輸入： http://your.hostname/protect/webalizer ，看看輸出的結果是如何吧！
+		結果應該會如下所示：<br /><br />
+
+		<a name="fig_10"></a><center><img src="0360apache/webalizer.png"
+		title="webalizer 分析工具所得的分析畫面"
+		alt="webalizer 分析工具所得的分析畫面"><br />
+		圖十、webalizer 分析工具所得的分析畫面</center><br />
+
+		在上圖當中的箭頭處你還可以點選喔，點選後會告知你當月的各項分析結果，很不錯吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="other_pkg_awstats"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">awstats</span><br />
+	<div class=block2>
+		除了 webalizer 之外，我們其實還可以透過 awstats 這個厲害到不行的 perl 的程式來進行資料分析，
+		由於這個軟體是以 perl 來執行的，所以<a 
+		href="#www_adv_cgi">請確定你的 mod_perl 已經安裝且 CGI 的執行權限已經啟動了</a>！
+		這個套件的特色是：<br />
+		<ul>
+		<li>官方網站：<a href="http://awstats.sourceforge.net/"
+		target="_blank">http://awstats.sourceforge.net/</a>
+		<li>設定難度：較難，需要有點技巧！
+		<li>軟體特色：中文化的很完整，而且該有的都有了，相當炫的一個分析利器！
+		<li>授權模式：GPL
+		</ul>
+		這套軟體不但可以由系統的 cron 來進行分析，甚至還提供瀏覽器直接以 CGI 的方式來即時更新登錄檔吶！
+		真是厲害厲害！鳥哥個人是比較不喜歡使用瀏覽器來線上更新分析的結果，
+		因為在你更新分析結果時，怎麼知道系統會不會很忙碌？如果系統正在忙碌中，
+		這套軟體的分析可也是很耗費系統資源的吶！所以建議直接以 crontab 的方式來處理即可。<br /><br />
+
+		目前官方網站不但提供 tarball 甚至也提供 RPM 來給使用者下載了！真是方便啊！
+		但是您還是要注意的，這個軟體曾經因為安全性的問題導致很多網站的掛點，
+		所以建議您還是把這個軟體的輸出結果放置在受保護的目錄中喔！底下鳥哥以 6.5 這個 RPM 版本來說明，
+		請你自行到官方網站下載吧！台灣地區可以到這個地方下載的：
+		(建議您可以自行前往官方網站下載最新版本的軟體較佳！)<br />
+
+		<ul><a href="http://nchc.dl.sourceforge.net/sourceforge/awstats/awstats-6.5-1.noarch.rpm"
+		target="_blank">http://nchc.dl.sourceforge.net/sourceforge/awstats/awstats-6.5-1.noarch.rpm</a></ul>
+
+		假設你將這個 RPM 檔案放置到 /root 當中，那麼自己 rpm -ivh filename 去安裝他吧！
+		不要跟我說你不會 RPM ～鳥哥是會昏倒的～ @_@
+		由於這個 RPM 檔案將 awstats 的資料通通放置到 /usr/local/awstats 當中去了！
+		為了自己網頁設定上的方便，建議你是可以這樣做的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先將 awstats 提供的 Apache 設定資料給他複製到 conf.d 下</span>
+[root@linux ~]# <span class=term_command>cp /usr/local/awstats/tools/httpd_conf  \</span>
+> <span class=term_command>/etc/httpd/conf.d/awstats.conf</span>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf.d/awstats.conf</span>
+Alias /awstatsclasses "/usr/local/awstats/wwwroot/classes/"
+Alias /awstatscss "/usr/local/awstats/wwwroot/css/"
+Alias /awstatsicons "/usr/local/awstats/wwwroot/icon/"
+<span class=term_write>Alias</span> /awstats/ "/usr/local/awstats/wwwroot/cgi-bin/"
+&lt;Directory "/usr/local/awstats/wwwroot">
+    Options <span class=term_write>+ExecCGI</span>
+    AllowOverride <span class=term_write>AuthConfig</span>  <span class=term_say>&lt;==這裡改成這樣，因為要保護！</span>
+    Order allow,deny
+    Allow from all
+&lt;/Directory>
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		awstats 還真的挺貼心的，因為他釋出的文件當中就有關於 Apache 的設定資料，
+		我們直接將他放到 conf.d/ 那個目錄下並且更名後，重新啟動 Apache 就生效了！真方便。
+		再來則是要針對我們的 WWW 登錄檔來設定啦！設定檔其實是在 /etc/awstats 目錄下，
+		在該目錄下有個範例檔為 awstats.model.conf，其實這個設定檔『檔名』格式為：<br />
+		<ul>awstats.<span class=text_import1>主機名稱</span>.conf</ul>
+		因為鳥哥這部主機名稱為 linux.vbird.tsai ，所以假設主機名稱為 linux ，所以檔名就應該是
+		awstats.linux.conf 囉！請你將他複製一個新檔，然後這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/awstats</span>
+[root@linux awstats]# <span class=term_command>cp awstats.model.conf awstats.linux.conf</span>
+[root@linux awstats]# <span class=term_command>vi awstats.linux.conf</span>
+<span class=term_say># 找到底下這幾行，並且修改一下內容啊：</span>
+<span class=term_write>LogFile="/var/log/httpd/access_log"  <span class=term_say>&lt;==確定登錄檔所在的位置</span>
+LogType=W                            <span class=term_say>&lt;==針對 WWW 的登錄檔分析</span>
+SiteDomain="linux.vbird.tsai"        <span class=term_say>&lt;==主機的 hostname</span>
+HostAliases="localhost 127.0.0.1 REGEX[myserver\.com$] www.vbird.tsai"
+DirCgi="/awstats"                    <span class=term_say>&lt;==能夠執行 awstats 的目錄</span>
+DirIcons="/awstatsicons"             <span class=term_say>&lt;==awstats 一些小圖示的目錄</span>
+Lang="tw"                            </span><span class=term_say>&lt;==重要！這是語系！</span>
+</pre></td></tr></table>
+
+		接著開始測試一下是否可以產生正確的分析資料出來？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux awstats]# <span class=term_command>cd /usr/local/awstats/wwwroot/cgi-bin</span>
+[root@linux cgi-bin]# <span class=term_command>perl awstats.pl -config=linux -update \</span>
+> <span class=term_command>-output > index.html</span>
+<span class=term_say># 那個 -config 後面接的就是 awstats.<span class=term_note_b>linux</span>.conf 的意思！會產生 index.html </span>
+Update for config "/etc/awstats/awstats.linux.conf"   <span class=term_say>&lt;==請確定設定檔無誤</span>
+With data in log file "/var/log/httpd/access_log"...  <span class=term_say>&lt;==請確定登錄檔無誤</span>
+Phase 1 : First bypass old records, searching new record...
+Searching new records from beginning of log file...
+Phase 2 : Now process new records (Flush history on disk after 20000 hosts)...
+Jumped lines in file: 0
+Parsed lines in file: 498
+ Found 0 dropped records,
+ Found 0 corrupted records,
+ Found 0 old records,
+ Found 498 new qualified records.
+
+[root@linux cgi-bin]# <span class=term_command>ls -l</span>
+awstats112006.linux.txt <span class=term_say>&lt;==剛剛才建立的重要資料檔！</span>
+awstats.pl              <span class=term_say>&lt;==就是剛剛我們下達的執行檔！</span>
+index.html              <span class=term_say>&lt;==重要輸出首頁檔案</span>
+</pre></td></tr></table>
+
+		接下來讓我們趕緊來建立保護目錄的 .htaccess 檔案吧！請注意，鳥哥這裡假設你已經有密碼檔了，
+		所以直接建立檔案即可啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /usr/local/awstats/wwwroot</span>
+[root@linux wwwroot]# <span class=term_command>vi .htaccess</span>
+<span class=term_write>AuthName     "Protect awstats data"
+Authtype     Basic
+AuthUserFile /var/www/apache.passwd
+require      valid-user</span>
+</pre></td></tr></table>
+
+		之後，只要你輸入『http://192.168.1.254/awstats/index.html』，就能夠看到輸出的圖表了！
+		圖表有點像這樣：<br /><br />
+
+		<a name="fig_11"></a><center><img src="0360apache/awstats.png"
+		title="awstats 分析工具所得的分析畫面"
+		alt="awstats 分析工具所得的分析畫面"><br />
+		圖十一、awstats 分析工具所得的分析畫面</center><br />
+
+		事實上，資料非常的多，你可以自行查閱輸出的結果。在上圖當中的箭頭處，
+		你還可以自己選擇曾有的月份資料來進行顯示！最後，將分析的動作規定在每天三點的時候跑，
+		你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /usr/local/awstats/wwwroot/cgi-bin/awstats.sh</span>
+<span class=term_write>cd /usr/local/awstats/wwwroot/cgi-bin
+perl awstats.pl -config=linux -update -output > index.html</span>
+
+[root@linux ~]# <span class=term_command>chmod 755 /usr/local/awstats/wwwroot/cgi-bin/awstats.sh</span>
+[root@linux ~]# <span class=term_command>vi /etc/crontab</span>
+<span class=term_write>0 3 * * * root /usr/local/awstats/wwwroot/cgi-bin/awstats.sh</span>
+</pre></td></tr></table>
+
+		這樣你就知道你的主機到底有多受歡迎囉！ ^_^！
+		另外，再次千萬拜託！這個軟體所在的目錄務必要製作密碼保護！不要隨意釋放出來！
+		甚至上面提供的一些目錄的連結你都可以根據自己的主機與喜好來重新修改，
+		會比較安全的啦！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="www_ssl"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">建立 SSL (https) 網站</span><br />
+<div class=block1>
+	瞭解了一堆 Apache 的功能之後，你要知道 Apache 的這個 http 傳輸協定是『明碼傳送』的，
+	也就是說，如果你的資料在 Internet 上面跑的時候被監聽，那你的資料可就很麻煩啦！
+	舉例來說，我們不是有透過 .htaccess 來加密碼保護嗎？但是你使用瀏覽器的時候，還是得輸入帳號密碼吧？
+	這個資料也許在傳輸的時候會被竊取喔！<br /><br />
+
+	那怎麼辦？我們不是在最前面的地方談過，有個 https 是利用 SSL 來加密傳輸的嗎？
+	這個傳輸的方式就很像 SSH 的連線方式，透過 public key 與 private key 這一對 key pair 來加解密，
+	那就 OK 的啦！<br /><br />
+
+	不過，與 SSH 不同的是， SSH 通常是管理員本身就允許某些人來登入使用的，而用戶端也是有特殊需求才會到該主機，
+	所以 public key 的建置可以直接由伺服器來管理即可。 WWW 伺服器就不一樣了，因為 WWW 伺服器提供的資料是給
+	Internet 上面所有的人瀏覽的，那麼『<span class=text_import2>為了保護瀏覽者的機密資料，因此 WWW 伺服器的 public key 
+	有必要經過第三方公正單位的驗證</span>』來處理，如此一來用戶端才能確保這部 WWW 伺服器是安全無虞的。<br /><br />
+
+	所以我們可以說，<span class=text_import2>apache 加上 SSL 並提供公正單位 (Certificate Authorities, CA) 註冊所得的憑證，
+	是建立你自己 WWW 伺服器具有公信力的一個方式</span>。不過，因為向 CA 單位註冊是需要錢的，
+	所以除非您的 WWW 伺服器真的是應用在商業行為上面，否則並不需要向 CA 來註冊申請憑證的啦。
+	那如果我自己想要建立加密的網頁 (https) 的話，怎麼註冊我的 public key ？
+	沒關係，我們可以『向自己註冊』！只是如此一來，除非用戶端相信你的主機，
+	否則通常對方可能會拒絕連線啦！ ^_^<br /><br />
+
+	那如何達成上述的功能呢？你可能要這樣：<br />
+	<ol>
+	<li>先以類似 openssl 的指令製作出一把 public key ；
+	<li>將這把 key 向本機註冊 (你也可以向 CA 單位註冊！)
+	<li>設定 Aapche ，讓註冊的憑證可以生效；
+	<li>你更可以限制某些目錄只能由 https 來進行連線瀏覽。
+	</ol>
+
+	那如何達成這些動作呢？也不難，事實上 CentOS 4.x 已經利用一個 mod_ssl 幫我們製作好那把 key 以及憑證了！
+	你只要安裝好這個模組後，可以發現幾個咚咚：<br />
+
+	<ul>
+	<li>/etc/httpd/conf.d/ssl.conf ：提供給 Apache 讀取的設定檔；
+	<li>/etc/httpd/conf/ssl.csr/server.csr ：用來申請憑證的檔案 (Certificate Signing Request)
+	<li>/etc/httpd/conf/ssl.crt/server.crt ：就是那個憑證檔案！
+	<li>/etc/httpd/conf/ssl.key/server.key ：就是那把 public key 囉！
+	</ul>
+
+	如果你要向 CA 單位申請憑證的話，那麼就需要製作出 ssl.csr 那個檔案，然後 CA 單位審核通過後會給你一個
+	*.crt 的檔案，那就是憑證！不過因為我們是向自己註冊，所以只需要 ssl.key 以及 ssl.crt 這兩個檔案即可，
+	而這兩個檔案都是由 openssl 這個指令所製作出來的啦！<br /><br />
+
+	<hr /><li><span class=text_import1>測試 CentOS 4.x 所提供的憑證</span></li>
+	<div class=block2>
+		你得先確定你已經安裝了 mod_ssl 了，如果還沒有安裝，請使用 yum install mod_ssl 即可安裝完畢。
+		然後重新啟動 apache ，接下來就能夠測試啦！使用瀏覽器連接到你的主機上，
+		記得使用的網址是：『https://your.hostname/』才是喔！之後你會發現這樣的畫面：<br /><br />
+
+		<a name="fig_12"></a><center><img src="0360apache/https_1.png"
+		title="CentOS 預設憑證"
+		alt="CentOS 預設憑證"><br />
+		圖十二、CentOS 預設憑證</center><br />
+
+		哇哈哈！憑證不成功是怎樣？沒辦法，因為這個憑證並非向 CA 單位註冊的嘛！如果你確認這個憑證是 OK 的，
+		那你可以選擇『永久接受此憑證』，未來再進入這個網站時就不會出現這個警告訊息。
+		如果只是這次想要連線，那就選擇『此次連線內暫時接受』吧！不然就不要接受囉。當然，你可以按下箭頭所指處，
+		看一看這個憑證先：<br /><br />
+
+		<a name="fig_13"></a><center><img src="0360apache/https_2.png"
+		title="CentOS 預設憑證"
+		alt="CentOS 預設憑證"><br />
+		圖十三、CentOS 預設憑證</center><br />
+
+		如果你不在乎認證的資訊，那麼此時你的 https 傳輸協定已經搞定了！不需要往下繼續處理。
+		如果你想要提供你自己主機的認證憑證，那就繼續往下看吧！<br /><br />
+	</div>
+
+	<hr /><li><span class=text_import1>建立自己本機的憑證吧！</span></li>
+	<div class=block2>
+		如果你想要擁有自己的憑證，那就需要作出自己主機的 public key 以及憑證檔案，可以這樣做：<br /><br />
+
+		<li><span class=text_import1>建立 public key</span></li>
+		<div class=block2>
+		public key 是放置在 /etc/httpd/conf/ssl.key 目錄下的，整個建立的方法真簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_say># 先將舊的檔案備份下來：</span>
+[root@linux ~]# <span class=term_command>cd /etc/httpd/conf/ssl.key</span>
+[root@linux ssl.key]# <span class=term_command>mv server.key server.key.raw</span>
+
+<span class=term_say># 開始作一支新的 public key 吧！</span>
+[root@linux ssl.key]# <span class=term_command>openssl [動作] -out filename [bits]</span>
+<span class=term_say>參數說明：
+[動作]：主要的動作有：
+        genrsa ：建立 RSA 加密的 public key 
+        req    ：建立憑證要求檔或者是憑證檔案
+-out  ：後面加上輸出的檔名，就是那把 key name
+bits  ：用在 genrsa，加密的金鑰長度！
+-x509 ：X.509 Certificate Data Management.，一種驗證的管理方式</span>
+
+<span class=term_hd>建立一支長度為 1024 bits 的 public key ，注意檔名！</span>
+[root@linux ssl.key]# <span class=term_command>openssl genrsa -out server.key 1024</span>
+Generating RSA private key, 1024 bit long modulus
+...................................................++++++
+..........++++++
+e is 65537 (0x10001)
+</pre></td></tr></table>
+
+		這個時候這把 public key 就建好啦！粉簡單啦！<br /><br />
+
+		</div>
+
+		<li><span class=text_import1>建立憑證檔案</span></li>
+		<div class=block2>
+		憑證檔案是放置到 /etc/httpd/conf/ssl.crt 目錄下的，所以你應該要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/httpd/conf/ssl.crt</span>
+[root@linux ssl.crt]# <span class=term_command>mv server.crt server.crt.raw</span>
+[root@linux ssl.crt]# <span class=term_command>openssl req -new -x509 -key ../ssl.key/server.key \</span>
+> <span class=term_command>-out server.crt -days 365 -set_serial 123</span> <span class="term_note">&lt;==每次序號都得不同！</span>
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [GB]:<span class=term_command>TW</span>
+State or Province Name (full name) [Berkshire]:<span class=term_command>Taiwan</span>
+Locality Name (eg, city) [Newbury]:<span class=term_command>Tainan</span>
+Organization Name (eg, company) [My Company Ltd]:<span class=term_command>VBird</span>
+Organizational Unit Name (eg, section) []:<span class=term_command>VBird</span>
+Common Name (eg, your name or your server's hostname) []:<span class=term_command>linux.vbird.tsai</span>
+Email Address []:<span class=term_command>vbird@linux.vbird.tsai</span>
+</pre></td></tr></table>
+
+		因為你註冊的時候需要填寫很多的資料，上頭就是在輸入你的資料啊！等到輸入都沒有錯誤後，就可以開始讓 
+		Apache 支援啦！<br /><br />
+		</div>
+
+		<li><span class=text_import1>設定 Apache 的支援</span></li>
+		<div class=block2>
+		其實 mod_ssl 提供的 /etc/httpd/conf.d/ssl.conf 已經足夠啦！
+		在那個檔案裡面比較重要的是這些東西：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf.d/ssl.conf</span>
+<span class=term_write>Listen 443
+&lt;VirtualHost _default_:443>
+#DocumentRoot "/var/www/html"
+#ServerName www.example.com:443
+SSLEngine on
+SSLCipherSuite ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP
+SSLCertificateFile /etc/httpd/conf/ssl.crt/server.crt
+SSLCertificateKeyFile /etc/httpd/conf/ssl.key/server.key
+&lt;/VirtualHost></span>
+
+<span class=term_say>參數：
+Listen                ：監聽的 port ，這是預設值，最好不要改！
+SSLEngine             ：是否支援 SSL ，要設成 On 喔！
+SSLCipherSuite        ：允許 client 端的連線要求機制！
+SSLCertificateFile    ：憑證檔案
+SSLCertificateKeyFile ：public key 啊！</span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		用預設值即可！接下來你就可以檢查看看你的憑證了！同樣的在瀏覽器的網址列以 https 輸入網址，結果會是如何？<br /><br />
+
+		<a name="fig_14"></a><center><img src="0360apache/https_3.png"
+		title="CentOS 預設憑證"
+		alt="CentOS 預設憑證"><br />
+		圖十四、CentOS 預設憑證</center><br />
+
+		上圖中的組織等單位，就變成自己囉！真是有趣吧！ ^_^
+		</div>
+	</div>
+
+	<hr /><li><span class=text_import1>將 http 與 https 的網頁分開</span></li>
+	<div class=block2>
+		剛剛我們處理的是 Apache 的 SSL ，也就是說原本的 WWW 資料可以分別使用 http 及 https 來瀏覽。
+		那我可不可以將這兩個傳輸協定分開呢？舉例來說，主網頁 (http) 在 /var/www/html 底下，
+		但 https 則僅能在  /var/www/www 目錄中。是可以的，同樣透過虛擬主機來處理即可！很簡單喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/httpd/conf.d/ssl.conf</span>
+<span class=term_say># 找到底下這兩行，並且將他改掉！</span>
+<span class=term_write>DocumentRoot "/var/www/www"
+ServerName *:443</span>    <span class=term_say>&lt;==意思是說，任何主機名稱都是到上述的目錄去！</span>
+
+[root@linux ~]# <span class=term_command>apachectl restart</span>
+</pre></td></tr></table>
+
+		Ya！從此你的 https 與 http 是看到不同的地方囉！這樣說，可以理解吧！ ^_^<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="security"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">一些安全性管理的網頁</span><br />
+<div class=block1>
+	還有一些可以玩的東西喔！讓你的 Apache 可以負責一些小程式的處理！
+	來瞧一瞧吧！<br /><br />
+
+	<hr /><a NAME="security_ssh"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">讓 SSH 可以使用後門連線</span><br />
+	<div class=block2>
+		我們在 SSH 章節裡面曾經談到 SSH 最好不要對整個 Internet 開放對吧！所以你最好只要針對幾個網域或者是 IP
+		開放他們能夠以 ssh 登入你的伺服器啦。那麼我能不能透過 WWW 網頁填寫一些重要的資料，讓我可以修改主機的防火牆？
+		然後我可以進入我的 Linux 主機呢？呵呵～是可以的！不過，你就得要自己小心啦！
+		因為既然你可以透過這個網頁來填寫你的 IP ，
+		那麼如果這個網頁被其他人瀏覽了，那就危險啦！所以，這個網頁的資料請將他放置到受保護的目錄喔！
+		這個網頁檔案資料的下載點在：<br />
+
+		<ul><a href="http://linux.vbird.org/download/index.htm?action=detail&fileid=71"
+		target="_blank">http://linux.vbird.org/download/index.htm?action=detail&fileid=71</a></ul>
+
+		假設你的保護目錄在 /var/www/html/protect ，那麼請到該目錄下，然後將取得的 tarball 解壓縮，
+		例如：『 tar -zxvf apache.ssh.tgz 』，這樣就 OK 啦！
+		請特別注意，鳥哥的這個 PHP 網頁其實寫的很陽春，而且利用到很多 apache 的權限，
+		因此這個網頁所在的目錄其實權限是開放很大的！所以，你必需要很清楚的知道如何設定權限方面的問題才行。
+		基本的功能是這樣的：<br />
+		<ul>
+		<li>假設你的 Apache 所設定的保護目錄或 SSL 的目錄在 $protectdir 當中，在預設的狀態下鳥哥將他指定到 
+		/var/www/html/protect 這個目錄喔；
+		<li>整個資料被鳥哥通通放置到 $protectdir/ssh 目錄下；
+		<li>$protectdir/ssh/index.htm 就是主程式，就是要有他才行！這個檔案請使用 vi 進去修改，
+		在該檔案開頭的四行請自行改寫成你所需要的帳號/密碼相關資料；
+		<li>$protectdir/ssh/temp/ 是網頁會主動改寫的目錄，請讓他可以被 apache.apache 這個 owner.group 所寫入才行！
+		而在這個目錄下還有兩個檔案， ip.new  及 iptables.ssh.sh 也需要是 apache.apache 的權限！
+		<li>$protectdir/ssh/temp/ip.sh 是用來判斷是否需要加入防火牆功能的一個 script，
+		這個檔案也需要修改，請你修改這個檔案內的 basedir 那個變數即可。然後，
+		請你將他放置到 /etc/crontab 的執行當中，每 3 或 5 
+		分鐘執行一次，例如『*/3 * * * * root $protectdir/ssh/temp/ip.sh 』
+		注意，那個 $protectdir 請填寫正確的目錄，例如 /var/www/html/protect ！
+		<li>開啟瀏覽器，填入『http://your.host/protect/ssh/』就會出現網頁啦！請自行測試先！
+		</ul>
+		如此一來，系統每 3 分鐘會主動去執行 IP 的檢查，所以如果你在該網頁填寫了你的 IP ，
+		則 3 分鐘內系統會將該筆資料加入防火牆內，如此一來你就可以利用該 IP 登入 ssh  這個服務了！
+		再說一遍，這個程式僅是提供給您暫時測試用的，有需要才下載去使用，
+		否則不要隨意將他放置到 Internet 上面啊！鳥哥不保證執行的後果喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="security_teleport"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防砍站軟體</span><br />
+	<div class=block2>
+		幾個比較知名的網站管理員大概都有這樣的困擾，那就是網站常被砍站軟體所強力下載，結果造成主機的 
+		CPU loading 過重，最後竟然會導致死掉～唉！真是的～人怕出名豬怕肥吶！先來解釋一下什麼是砍站吧！<br /><br />
+
+		所謂的『砍站』，就是以類似多點連線下載的持續性訊息傳遞軟體進行網站資料的下載，而且，
+		一啟用該軟體，該軟體就將『整個網站』的內容都給他 download 
+		下來，很厲害吧！沒錯！是很厲害，但是卻也害死人了～怎麼說呢？<br /><br />
+
+		因為這種軟體常常會為了加快 download 的速度，所以採用多點連線的方式，也就是會持續不斷的向 Server 
+		發出要求封包，而由於這些封包並不見得能夠成功的讓 Server 把資料傳導給 Client 
+		端，常常會無法投遞就是啦！這樣的結果就是.....造成 Server 要一直不斷的回應，又無法正確的回應出去，
+		此外，要求太過頻繁，結果主機應接不暇，最後....就當機了...真的是林老師ㄌㄟ～<br /><br />
+
+		我們這個小站的主機古早以前，就是因為這樣的原因，導致服務常常斷斷續續的，並且，由於 CPU loading 
+		太高，結果讓正常連線進來看資料的網友沒有足夠的資源，因此網頁開啟的速度就變的很慢～唉～
+		這些砍站的人，也太不道德啦！<br /><br />
+
+		由於這種砍站軟體真的很麻煩，一不注意馬上就又會被砍站而當機，三天兩頭就要重新開機一次，完全讓 
+		Linux 的穩定性無法發揮！真是氣死了～後來，鳥哥就自行寫了一個 scripts 來擋這樣的 
+		IP ！我的作法是這樣的：<br />
+
+		<ol>
+		<li>由於砍站軟體會多點連續下載，因此，同一個 IP 在同一個時間內，會有相當多的連線發生；
+		<li>由於他是重複不斷的要求連線，因此剛剛建立的連線在達成下載的目的後，會立刻死掉，
+		而又多生出其他的連線出來，因此，這個時候他的連線情況就變的相當的不正常了！
+		<li>由於某些較舊的砍站軟體並不會『欺騙』主機，所以，會在主機的登錄檔裡面記錄住 Teleport 的標記！
+		<li>既然如此的話，那麼我就讓我的主機每分鐘去檢查兩個東西(1)先檢查 log file 
+		，如果有發現到相關的 Teleport 字詞，就將該 IP 抵擋掉；(2)使用 netstat 
+		來檢查同一個 IP 的同時連線，如果該連線超過一個值(例如同時有 12 個連線)的話，那麼就將該 IP 抵擋掉！
+		<li>此外，由於上面的方案可能會將 Proxy 的 Client 端也同時抵擋掉，真是可憐啊！
+		這個時候，這支程式就會主動的將(1)的情況的主機抵擋 3 天，至於(2)的情況則抵擋2小時！
+		過了該抵擋的時限後，該 IP 即可又連上我們的主機了！
+		</ol>
+
+		大致上就是這樣吧！這樣的一程式需要與 iptables 相互配合，所以，請先查閱一下<a 
+		href="0250simple_firewall.htm">簡易防火牆設定</a>那一篇文章，然後再來下載這支程式吧！
+		這支程式您可以在底下的網址下載喔！<br />
+
+		<ul><a href="http://linux.vbird.org/download/index.htm?action=detail&fileid=47"
+		target="_blank">http://linux.vbird.org/download/index.htm?action=detail&fileid=47</a></ul>
+
+		詳細的安裝步驟鳥哥已經以中文寫在該檔案裡面了，所以請先查看一下該檔案的前面說明部分吧！此外，
+		Study Area 的 netman 大哥也已經開發了一套很棒的防砍站的程式了！
+		在防堵砍站的原理上面是完全相同的，不過寫法可能不是很雷同就是了！如果有需要的話，也可以前往 
+		Study-Area 搜尋一下囉！<br />
+
+		<ul><a href="http://phorum.study-area.org/viewtopic.htm?t=13643"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=13643</a></ul>
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>WWW 的傳輸協定使用 HTTP (Hyper Text Transport Protocol) ，最早是由歐洲核子物理實驗室的伯納斯-李所發展的；
+	<li>WWW 在 server/client 端主要傳遞的訊息資料以 HTML (Hyper Text Markup Language) 語法為主；
+	<li>http://www.w3c.org 為制訂與發佈 WWW 標準語法的組織，您撰寫網頁最好依據該站之標準為宜；
+	<li>Apache 是達成 WWW 伺服器的一項軟體，至於用戶端的瀏覽則使用瀏覽器，目前可使用 firefox
+	<li>瀏覽器可達成的主機連結不止 http，可在網址列輸入對應的『協定://主機[:port]/資源』即可取得不同的資料；
+	<li>若要 WWW 伺服器可以達成與使用者資訊互動，尚須要網頁程式語言 (如PHP, perl 等) 以及資料庫軟體 (如 MySQL, 
+		portgresql 等)；
+	<li>因為 http 使用的是明碼傳送，目前 WWW 可利用 SSL 等機制來進行資料加密的傳輸；
+	<li>Apache 的設定檔其實只有 httpd.conf 而已，其他的設定檔都是被 Include 進來的；
+	<li>Apache 的首頁目錄以 DocumentRoot 決定，首頁檔案則以 DirectoryIndex 決定；
+	<li>Apache 可以透過虛擬主機的設定以指定不同主機名稱到不同的 DocumentRoot 下；
+	<li>Apache 是多執行緒的軟體，可以啟動多個程序來負責 WWW。主要的模組有 prefork 及 worker，
+		至於最大可連線的數量則以 MaxClients 來決定。
+	<li>若要正確的讓瀏覽器顯示網頁的編碼格式，最好在網頁上宣告語系，並將 Apache  的設定檔 httpd.conf
+		內的 AddDefaultCharset 設定值取消；
+	<li>在 Apache 可瀏覽的目錄權限設定上  (Options 參數)，最好將 Indexes拿掉；
+	<li>透過 AllowOverride  與 .htaccess 可讓使用者在自己管理的目錄下制訂自己的風格；
+	<li>Apache 本身提供一個 apachectl 的 script 讓使用者得以快速管理其 apache 的服務；
+	<li>Apache 分析的資料如果比較重要時，務必以 SSL 或者是保護目錄來保護。
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>請問 LAMP 這個伺服器代表什麼意思？</li>
+	<div class=block2><font color=white size=-1>
+		這個名詞代表了 Linux + Apache + MySQL + PHP 這個 WWW 伺服器的組成！
+	</font></div>
+
+	<li>Apache 的設定檔檔名一般為何？</li>
+	<div class=block2><font color=white size=-1>
+		Apache 的設定檔檔名為 httpd.conf ，不過，由於 httpd.conf 內容參數可以使用『 
+		include "額外設定檔名"』，所以也可能具有其他的額外設定檔喔！ 
+	</font></div>
+
+	<li>在 Apache 的設定檔當中，哪一個參數是用來設定『主網頁』的？</li>
+	<div class=block2><font color=white size=-1>
+		設定主網頁的參數為：DocumentRoot 喔！後面接的是主網頁放置的『目錄』！
+	</font></div>
+
+	<li>哪一個指令用來重新啟動與關閉 Apache ？(請以 Apache 本身提供的功能來說明)</li>
+	<div class=block2><font color=white size=-1>
+		其實不論是 RPM 還是 Tarball 都是使用 apachectl 這個檔案來啟動 apache 的，不過 RPM 
+		已經將該檔案整合到 /etc/init.d/httpd 裡面去而已
+	</font></div>
+
+	<li>當我使用 ps -aux 的時候，發現好多的 httpd... 的程序，這是正常的嗎？
+	最多可以有幾個程序是在那個檔案的那個參數所設定的？！</li>
+	<div class=block2><font color=white size=-1>
+		由於 Apache 預設為多執行緒，所以啟動多個 processes 是正常的。至於啟動幾個 process 則由很多設定所處理，
+		包括 MinSpareServers, MaxSpareServers, MaxClients 等等。
+	</font></div>
+
+	<li>又，呈上題，這些程序 (process) 的 owner 與 group 是誰？該察看那個設定檔的那個參數？</li>
+	<div class=block2><font color=white size=-1>
+		同樣察看 httpd.conf 裡面的 User 與 Group 這兩個設定值！ 
+	</font></div>
+
+	<li>如果今天我以 http://your.ip 結果卻發現瀏覽器出現類似 FTP 
+	的畫面(會列出該目錄下的所有檔案)，這是什麼原因造成的？該如何避免？</li>
+	<div class=block2><font color=white size=-1>
+		這是由於在 httpd.conf 裡面，針對該目錄的設定參數『 Options 』當中，設定了 Indexes 
+		這個設定值，導致當找不到主頁時(通常是 index.html)，就會將該目錄下的所有檔案秀出來！解決的方法就是拿掉
+		Options 裡面的 Indexes 設定值即可！ 
+	</font></div>
+
+	<li>在 Apache 裡面 .htaccess 這個檔案的功能為何？</li>
+	<div class=block2><font color=white size=-1>
+		可以用來取代 httpd.conf 裡面的設定參數！創造屬於使用者自己的 Apache 風格！
+	</font></div>
+
+	<li>若你之前瀏覽過網頁，但顯示的資料並非正確的中文。後來按照上文的說明修改了中文的設定，卻還是無法看到中文。
+	請問可能的原因為何？</li>
+	<div class=block2><font color=white size=-1>
+		由於你曾經瀏覽過該網站的網頁，所以該網頁會被你的瀏覽器所暫存 (cache)，因此你應該可以這樣做：<br />
+		<ul>
+		<li>在同一頁面下按下『 reload 』來重新載入；
+		<li>清除掉所有的瀏覽器快取；
+		<li>將原本的網頁在伺服器端改名，並讓瀏覽器瀏覽新的網頁名稱。
+		</ul>
+	</font></div>
+
+	<li>PHP 的程式碼一定要使用 &lt;?php 程式碼 ?> 嗎？有沒有替代方案？
+	<div class=block2><font color=white size=-1>
+		預設的情況下，你應該要輸入 &lt;?php ?> 才能寫入 PHP 的程式。不過早期的程式或許都以 &lt? ?> 來撰寫的。
+		如果想要讓該種方式生效的話，你可以進入 /etc/php.ini 檔案中，修改『short_open_tag = On』這個設定項目即可。
+	</font></div>
+	
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>葛林.穆迪著，杜默譯，『Linux傳奇』，時報出版；
+	<li>WWW 發展者蒂姆·伯納斯－李的生平簡介：
+	<a href="http://zh.wikipedia.org/wiki/%E8%92%82%E5%A7%86%C2%B7%E4%BC%AF%E7%BA%B3%E6%96%AF%EF%BC%8D%E6%9D%8E"
+	target="_blank">http://zh.wikipedia.org/wiki/蒂姆·伯納斯－李</a>
+	<li>W3C 標準制訂與公布網站：<a href="http://www.w3c.org" target="_blank">http://www.w3c.org</a>
+	<li>Apache 官方網站： <a href="http://www.apache.org/" target="_blank">http://www.apache.org/</a>
+	<li>Mozilla 官方網站： <a href="http://www.mozilla.org/" target="_blank">http://www.mozilla.org/</a>
+	<li>PHP 官方網站： <a href="http://www.htm.net/" target="_blank">http://www.htm.net/</a>
+	<li>MySQL 官方網站： <a href="http://www.mysql.org/" target="_blank">http://www.mysql.org/</a>
+	<li>MySQL 中文使用手冊： <a href="http://linux.tnc.edu.tw/techdoc/mysql/mysql_doc/manual_toc.html"
+		target="_blank">http://linux.tnc.edu.tw/techdoc/mysql/mysql_doc/manual_toc.html</a>
+	<li>Apache 1.3 版的 Tarball 安裝方式：<a href="0360apache/0360apache-1.htm"
+		target="_blank">http://linux.vbird.org0360apache/0360apache-1.htm</a>
+	<li>Apache 2.0 的說明文件： <a href="http://httpd.apache.org/docs/2.0/mod/core.html"
+		target="_blank">http://httpd.apache.org/docs/2.0/mod/core.html</a>
+	<li>林彥明的 Apache SSL 實戰演練：<a href="http://www.vbird.org/somepaper/20060310-https.pdf"
+		target="_blank">http://www.vbird.org/somepaper/20060310-https.pdf</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2003/01/14：第一次完成<br />
+2003/01/18：新增問題討論：關於中文的說明<br />
+2003/01/21：新增問題討論：關於 PHP 無法使用的問題說明<br />
+2003/04/28：加入<a href="../download/index.htm#http-netstat.sh">砍站軟體</a>的程式說明<br />
+2003/04/29：加入 PHP 原始碼程式優化模組 <a href="#php_mmcache">MM Cache</a> 說明。<br />
+2003/05/07：加入 <a href="#apache_speed">ab</a> 這個效能測試的說明！<br />
+2003/05/30：使用 Tarball 安裝時常常發生一些困擾，加入 <a href="#user_group_httpd.conf">User/Group</a> 的設定說明！<br />
+2003/09/10：將原本在 2002/12 安裝 Tarball 的套件更新為目前 2003/09 最新的版本來安裝喔！<br />
+2003/10/02：加入<a href="#problem_4">一些問題的克服之道</a>喔！<br />
+2004/03/25：修訂2004/03/25：修訂 MySQL 安裝的流程！第四步驟加入權限的修訂！<br />
+2004/09/03：修改了 MMCache 的主網頁。<br />
+2006/10/21：將舊的文章移動到 <a href="0360apache/0360apache.htm">此處</a><br />
+2006/11/09：花了很多時間修改，不再提供 tarball 的安裝需求了！<br />
+2006/11/10：預先釋出版本，包括修改 MM Cache 成為 eaccelerator、增加 SSL 修改 awstats 之安裝等。<br />
+</span>
+<hr><span class="text_date">2003/01/14以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0360apache.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

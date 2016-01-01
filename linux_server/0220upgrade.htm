@@ -1,0 +1,1074 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 的網路線上升級</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0220upgrade.htm">
+    <span class="text_head0">主機基本安全之二：<span class="text_head_en"> Linux </span>線上自動升級</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0220upgrade.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/09/10</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在現在的 Internet 上面，Cracker 實在是太多了！這些 Cracker 會利用已經存在的系統漏洞，來進行偵測、入侵您的主機，
+	因此，除了未來架設防火牆之外，<b>最重要的 Linux 日常管理工作，莫過於套件的升級了</b>！
+	不過，經由每日觀察網路安全通報所告知的套件漏洞，以及等待各大
+	distribution 針對這些漏洞來提供 RPM 檔案，以使 Client 來升級的過程中，實在是有點緩慢啊！因此，
+	目前就有很多線上直接更新的機制出現了！有了這些線上直接更新
+	RPM 的手段與方法，我們系統管理員在管理主機系統上面，可就輕鬆的多囉！趕緊來看看吧！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#why_update">為何需要進行軟體升級</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#update_howto">如何進行軟體升級</a><br />
+	　　1.2 <a href="#update_online">各種 distributions 的自動升級機制</a><br />
+	</span>
+2. <a href="#yum">CentOS 的 yum 自動升級</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#yum_configure">yum 的設定檔</a><br />
+	　　2.2 <a href="#yum_com">yum 的安裝、升級、移除、查詢等功能</a>與<a href="#yum_group">安裝套件群組</a><br />
+	　　2.3 <a href="#yum_others">不同版本間的升級</a>：
+		<a href="#yum_centos">CentOS 4.2 to 4.3</a>, 
+		<a href="#yum_fc">FC1 to CentOS 4.3</a><br />
+	</span>
+3. <a href="#apt">Debian 的 apt 自動升級：以 B2D 為例</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#apt_config">APT 的設定檔</a><br />
+	　　3.2 <a href="#apt_cmd">實際使用 APT</a>： <a href="#apt-get">apt-get</a>, 
+		<a href="#apt-cache">apt-cache</a><br />
+	</span>
+4. <a href="#important">重點回顧</a><br />
+5. <a href="#FAQ">課後練習</a><br />
+6. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+7. <a href="http://phorum.vbird.org/viewtopic.htm?t=26298"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=26298</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="why_update"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">為何需要進行軟體升級</span><br />
+<div class=block1>
+	很多朋友在網路上面常常會這樣留言：
+	『<span class=text_import2>大家好，我的 Linux 好像怪怪的，因為沒有辦法以 root 的身份登入了</span>』，
+	呵呵！幾乎可以直接告訴這位朋友：『你的系統被入侵了』！嗄～真假？早上才裝好，下午被入侵？
+	沒錯啊～但～對方是如何辦到的呢？<br /><br />
+
+	在前一章我們不是有提到『<span class=text_import2>網路連線的 port 其實是由軟體所開啟的</span>』，
+	所以，如果該軟體本身就有問題的話，那麼當然你的系統就容易被攻破了！
+	咦！那自由軟體幹嘛開發出有問題的程式啊？這是因為程式是人寫出來的，
+	在設計之初有些奇怪的用法可能沒有考慮到，或者是某些安全問題沒有考慮到，
+	而造成程式的疏失。當這樣的程式發佈後，很多人會針對這些程式進行檢驗，如果發現問題就會回報給社群。
+	那麼當回報後直到程式更新之前，總會有一段空窗期，這期間可能就會有些 cracker 開發出具有攻擊碼的程式，
+	如果這些攻擊程式散佈出來的話，那麼隨便一個小朋友拿到這樣的程式，就能攻擊你啦！<br /><br />
+
+	這個問題並非僅存在於某個單一作業系統，而是所有的作業系統都存在這樣的問題，
+	而且套件的漏洞倒不是一定是會被利用來進行入侵，有的時候，某些套件的漏洞可能導致您 Linux 
+	主機的運行不良或者是容易產生系統當機等等的問題呢！所以，一個好的 Linux 主機，
+	他的套件最好是隨時保持在較新的版本上面，這樣還是比較好一點的啦！關於安全漏洞的通報您可以參考底下的網站： <br />
+
+	<ul><span class=text_import2>
+	<li>台灣電腦危機處理小組(TWCERT)：<a href="http://www.cert.org.tw/" 
+		target="_blank">http://www.cert.org.tw/</a></li>
+	<li>Red Hat 的官方說明：<a href="http://www.redhat.com/apps/support/errata/" 
+		target="_blank">http://www.redhat.com/apps/support/errata/</a></li>
+	</span></ul>
+
+	所以啊，並不是有防火牆就萬事 OK ！你還必須要更新你的軟體才行，
+	通常建議你，<span class=text_import2>安裝 Linux 完畢後的第一項工作那就是.....
+	立刻進行整體軟體的升級！</span><br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	事實上，自由軟體的安全性還是比較好的！因為有太多人幫忙檢驗程式碼與更新程式碼，
+	並且，萬一程式真的有問題，在發現問題到推出修補程式的期間是比較短的，
+	也就是說，攻擊者可以利用的時間相對縮短，當然使用自由軟體的我們就比較安全啦！ ^_^
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<hr /><a NAME="update_howto"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">如何進行軟體升級</span><br />
+	<div class=block2>
+		還記得你是如何安裝你 Linux 上面的軟體嗎？不就是 <a href="../linux_basic/0520rpm_and_srpm.htm">rpm</a>,
+		<a href="../linux_basic/0520source_code_and_tarball.htm">tarball</a> 與 dpkg 嗎？
+		所以囉，你的軟體如果想要升級，那就得依據當時你安裝該軟體的方式來進行升級啊！
+		而每種方式都有其適用性：<br />
+		<ul>
+		<li><span class=text_import1>RPM</span>：這是目前最常見於 Linux distribution 當中的套件安裝管理方式，
+			包括 CentOS / Fedora / SuSE / Red Hat / Mandriva 等等，都是使用這個方式來管理的；<br /><br /></li>
+		<li><span class=text_import1>Tarball</span>：利用軟體的官方網站所釋出的原始碼在您的系統上面編譯與安裝，
+			一般來說，由於軟體是直接在自己的機器上面編譯的，所以效能會比較好一些。
+			不過，升級的時候就比較麻煩，因為又得要下載新的原始碼並且重新編譯一次。
+			這種安裝模式常見於某些特殊軟體 (沒有包含在 distribution 當中)，或者是 Gentoo 
+			這個強調效能的 distribution；<br /><br /></li>
+		<li><span class=text_import1>dpkg</span>：是 debian 這個 distribution 所使用的套件管理方式，與 
+			RPM 很類似，都是透過預先編譯的處理，可以讓 end user 直接使用來升級與安裝。<br /></li>
+		</ul>
+
+		舉例來說，如果你的系統是 CentOS ，我們知道他使用的是 RPM 類型的套件管理模式，那如果你想要安裝 B2D
+		的軟體怎辦？要注意， B2D 是使用 debian 的 dpkg 來管理套件的，兩者並不相同啊！要互相安裝太難了！
+		所以說，要升級的話，得先瞭解到你系統上的套件安裝與管理的方法才行。<br /><br />
+
+		不過，有個特殊案例，那就是舊版本的 Linux (例如 Red Hat 9) 的軟體升級該如何是好？
+		由於舊版本的軟體支援度本來就比較差，商業公司或者是社群也沒有這麼多心力放在舊版本的支援上，
+		所以，你這個時候可以選擇： <span class=text_import2>(1)升級到較新的版本，例如 CentOS 4.3 或者是 
+		SuSE 10  等等，或者是 (2)利用 Tarball 來自行升級核心與軟體</span>
+		。不過，比較建議升級到新版本啦，因為要自行以手動方式由 Tarball
+		安裝到最新的版本，實在是很費時費力，而且還得要常常查閱官方網站所推出的最新消息，
+		漏過一則都可能發生無法預期的狀況。<br /><br />
+
+		但不管怎麼說，單純使用 RPM / Tarball / dpkg 的方式來安裝與升級軟體時，
+		你都必須要由原版光碟或者是由官方網站下載可安裝的套件檔案，然後再手動來實際安裝到你的系統上。
+		如此一來，你還是得要盯著官方網站提供的資訊，才能夠在第一時間進行升級的動作。
+		唉！怎麼這麼麻煩？<br /><br />
+
+		我們都曉得在 Windows 的環境下，他有提供一個 Live update 的項目可以自動的線上升級，
+		甚至很多的防毒軟體與防木馬軟體也都有推出即時的線上更新，如此一來可以讓您的軟體維持在最新版的狀況，
+		真是好啊！咦！那我們的 Linux 是否有這樣的功能？如果有的話，那麼系統自動進行軟體升級，
+		不就可以輕鬆又快樂了？沒錯！確實是這樣的！所以就讓我們來談一談 Linux 的線上升級機制吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="update_online"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">各種 distributions 
+	的自動升級機制</span><br />
+	<div class=block2>
+		在 Linux 最常見的套件安裝方式： RPM / Tarball / dpkg 當中，Tarball 由於取得的是原始碼，
+		所以要用 Tarball 來作線上自動更新是不太可能進行的，所以僅能用 RPM 或 dpkg
+		這兩種套件管理的方式來進行線上更新了。<br /><br />
+
+		但 RPM 與 dpkg 不是有所謂的相依屬性嗎？
+		這倒不需要擔心吶！因為我們的 RPM 與 dpkg 套件檔案都有一些套件的基本資訊，
+		並同時記錄了套件的相依屬性 (記得使用 rpm -q 的查詢嗎)，
+		所以當分析這些基本資訊並使用一些機制將這些相依資訊記錄下來後，
+		再透過一些額外的網路功能，就能夠自動的分析你的系統與修補套件之間的差異，
+		並可進一步幫你分析所需要升級與相依屬性的套件，就可達成自動升級的理想啦！<br /><br />
+
+		由於各家 distributions 在管理系統上都有自己獨特的想法，所以在分析 RPM 或 dpkg 套件與方式上面就有所不同，
+		也就有底下這些不同的線上升級機制啦：<br />
+
+		<ul>
+		<li><span class=text_import1>yum</span>：<br />
+		CentOS 與 Fedora 所常用的自動升級機制，透過 FTP 或 WWW 來進行線上升級以及線上直接安裝套件；<br /><br /></li>
+		<li><span class=text_import1>up2date</span>：<br />
+		這是 Red Hat 所使用的自動升級機制，需要註冊才能使用，並且依據付費與否而管制其流量；<br /><br /></li>
+		<li><span class=text_import1>apt</span>：<br />
+		最早由 debian 這個 distribution 所發展，現在 B2D 也是使用 apt ，同時由於 apt 的可移植性，
+		所以只要你的 RPM 可以使用 apt 來管理的話，就可以自行建立 apt 伺服器來提供其他使用者進行線上安裝與升級。
+		<br /><br /></li>
+		<li><span class=text_import1>you</span>：<br />
+		所謂的 Yast Online Update (YOU) 是由 SuSE 所自行開發出來的線上安裝升級方式，
+		經過註冊取得一組帳號密碼後，就能夠使用 you 的機制來進行線上升級。不過如果是免費的版本，
+		則僅有 60 天的試用期！<br /><br /></li>
+		<li><span class=text_import1>urpmi</span>：<br />
+		這個則是 Mandriva 所提供的線上升級機制！</li></ul>
+
+		講了這些升級機制並且與 distribution 作了對應，你就該瞭解到：『<span class=text_import2>每個 
+		distribution 可以使用的線上升級機制都不相同</span>』的啊！所以請參考你的 distribution 
+		所提供的文件來進行線上升級的設定喔！否則就得要自行手動下載安裝了！ @_@<br /><br />
+
+		底下鳥哥以 CentOS 4.3 提供的 yum 線上升級架構來進行說明，同時亦簡單的介紹一下 B2D 
+		這個 distribution 的 APT 來說明說明！ ^_^！那為什麼不選擇其他的版本來介紹呢？
+		就如同<a href="0120intranet.htm#linux">區域網路那個章節裡面的 distribution 選擇</a>提到的，
+		越穩定的版本就不容易發生程式臭蟲，不斷升級的情況就比較不會發生，所以，鳥哥這裡再次的說明一下，
+		<span class=text_import2>如果要做為主機伺服器之用的話，盡量選擇較穩定且支援較多的版本，例如
+		<b>CentOS, SuSE, Red Hat, B2D 及 debian </b>
+		等 distribution  啊！</span><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="yum"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">CentOS 的 yum 自動升級</span><br />
+<div class=block1>
+	我們知道 CentOS 主要是以 RPM 來作為套件的管理機制，那麼 RPM 本身就有一些表頭資料記錄了這個套件本身的資訊，
+	包括了相依屬性之類的訊息等等， yum 這個咚咚就是藉由分析這些 RPM 套件的表頭資料，並且將這些表頭資料事先記錄下來，
+	當使用者要求升級或者是安裝的時候， yum 就會透過分析這些表頭資料來決定下載的檔案，
+	這些下載的檔案當然包括了相依屬性的套件了，所以說，<span class=text_import2>yum 
+	已經主動克服了套件之間的屬性相依問題囉</span>！很棒吧！<br /><br />
+
+	那麼 yum 是如何動作的呢？基本上是這樣的：<br />
+	<ul><span class=text_import2>
+	<li>先由設定檔判斷 yum server 所在處；
+	<li>連接到 yum server 後，先下載新的 RPM 檔案的表頭資料；
+	<li>分析比較使用者所欲安裝/升級的檔案，並提供使用者確認；
+	<li>下載使用者選擇的檔案到系統中的 /var/cache/yum ，並進行實際安裝；
+	</span></ul>
+
+	所以說，找到合適的 yum server 是挺重要的一件事啊！<br /><br />
+
+	<hr /><a NAME="yum_configure"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">yum 的設定檔</span><br />
+	<div class=block2>
+		基本上，在你一安裝完 CentOS 之後，系統就主動的幫你建立好 CentOS 的 yum server 設定了，
+		他的設定檔在：
+		<ul>
+		<li>/etc/yum.conf
+		<li>/etc/yum.repos.d/CentOS-Base.repo
+		</ul>
+		其中，那個 yum.conf 是主要設定檔，可以設定一些環境參數之類的，至於 CentOS-Base.repo
+		則是主要的 yum server 選擇的資料，你可以直接修改 CentOS-Base.repo 這個檔案即可。
+		另外，台灣地區的 CentOS 鏡像站台 (mirror) 可以選擇義守大學的 FTP 網站，
+		例如底下的連結：<br />
+		<ul><li><a href="http://ftp.isu.edu.tw/pub/Linux/CentOS/"
+		target="_blank">http://ftp.isu.edu.tw/pub/Linux/CentOS/</a></li></ul>
+		截至目前為止 (2006/09/xx)，最新的 CentOS 是 4.4 版，所以上頭這個連結你可以進入 4.4 那個目錄，
+		就能夠看到很多 CentOS 提供的各項套件資料了。其中比較重要的兩個目錄是：『 o s』以及『 update 』
+		，分別是基礎套件以及修補過後的套件啦！既然知道了台灣地區的 FTP 網站後，自然就不需要連接到美國去下載檔案，
+		那麼連線下載的速度當然就會比較快啦！不過，你就得要自行修改修改設定檔了！<br /><br />
+
+		不過 CentOS 官方網站則是建議使用國碼來作為鏡相網站的選擇依據，
+		如此一來在大版本相同的環境下 (4.3 -> 4.4) 咱們的 CentOS 是可以自動升級到不同版本中的！
+		所以，鳥哥的設定檔是改成這個樣子的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/yum.repos.d/CentOS-Base.repo</span>
+[base]
+name=CentOS-$releasever - Base
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch
+&repo=os<span class=term_write>&cc=tw</span>
+<span class=term_say># 注意！上面兩行是同一行！</span>
+gpgcheck=1
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos4
+
+#released updates
+[update]
+name=CentOS-$releasever - Updates
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch
+&repo=updates<span class=term_write>&cc=tw</span>
+<span class=term_say># 注意！上面兩行是同一行！</span>
+gpgcheck=1
+gpgkey=http://mirror.centos.org/centos/RPM-GPG-KEY-centos4
+<span class=term_say>......(底下省略).....</span>
+</pre></td></tr></table>
+
+		主要是將 mirrorlist 那個變數的最後面加上國碼『&cc=tw』就可以了！如果未來有較新的版本時，
+		那麼你的 yum 就能夠自動升級囉！另外，除了 [base] 與 [update] 之外，其實 CentOS 還提供很多的額外套件，
+		這包括了： addons, extras, centosplus, contrib 等等，這些資料你也可以加入到設定檔當中，
+		來幫助你容易安裝某些非正規支援的套件資料啊！ ^_^<br /><br />
+
+		另外最要注意的是，在設定檔當中所指定的鏡像站台 (mirror) 離你越近越好，而且頻寬越大越好，
+		這樣你就可以比較方便快速的下載啊！而且，你必須已經成功的連結到該鏡像站台才行，
+		否則在執行 yum 時會發生某些問題喔！另外，你必須是 root 的身份才能使用 yum 啊！
+		也就是說：<br />
+		<ul><span class=text_import2>
+		<li>你必須使用 root 的身份來執行 yum ；
+		<li>設定檔內指定的鏡像站台必須能與你進行網路連接；
+		<li>鏡像站台頻寬越大越好，所以選擇離你越近的鏡像站越好！</span></ul>
+	</div>
+
+	<hr /><a NAME="yum_com"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">yum 的安裝、升級、移除、查詢等功能</span><br />
+	<div class=block2>
+		yum 可不止能夠線上自動升級而已，他還可以作查詢、套件群組的安裝、整體版本的升級等等，好用的哩！
+		先來談論一下 yum 這個 client 端的指令用法吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum [option] [工作項目] [套件]</span>
+<span class=term_say>參數：
+option：主要的參數，包括有：
+   -y ：當 yum 詢問使用者的意見時，主動回答 yes 而不需要由鍵盤輸入；
+   --installroot=/some/path ：安裝在其他的路徑，而不在目前目錄樹的架構中；
+        對於建立虛擬機器相當有幫助！不過，一般使用者應該用不到。
+[工作項目]：由於不同的使用條件，而有一些選擇的項目，包括：
+   install ：指定安裝的套件名稱，所以後面需接『 套件名稱 』
+   update  ：進行整體升級的行為；當然也可以接某個套件，僅升級一個套件；
+   remove  ：移除某個套件，後面需接套件名稱；
+   search  ：搜尋某個套件或者是重要關鍵字；
+   list    ：列出目前 yum 所管理的所有的套件名稱與版本，有點類似 rpm -qa；
+   info    ：同上，不過有點類似 rpm -qai 的執行結果；
+   clean   ：下載的檔案被放到 /var/cache/yum ，可使用 clean 將他移除，
+             可清除的項目：packages | headers | metadata | cache 等；
+另外，在[工作項目]部分還可以具有整個群組套件的安裝方式，如下所示：
+   grouplist   ：列出所有可使用的『套件組』，例如 Development Tools 之類的；
+   groupinfo   ：後面接 group_name，則可瞭解該 group 內含的所有套件名；
+   groupinstall：這個好用！可以安裝一整組的套件群組，相當的不錯用！
+                 更常與 --installroot=/some/path 共用來安裝新系統
+   groupupdate ：升級整個套件群組；
+   groupremove ：移除某個套件群組；</span>
+
+<span class=term_hd>範例一：搜尋 CentOS 的更新主機上是否有 RAID 磁碟陣列相關套件？</span>
+[root@linux ~]# <span class=term_command>yum search raid</span>
+<span class=term_say>.....前面省略.....</span>
+<span class=term_write>mdadm.i386                               1.6.0-3                base</span>
+Matched from:
+mdadm controls Linux md devices (software RAID arrays)
+mdadm is used to create, manage, and monitor Linux MD (software RAID)
+<span class=term_say>.....後面省略.....
+# 看到否？輸出資料的特殊字體那一行就顯示了你可以安裝的套件名稱然後你可以這樣：</span>
+
+[root@linux ~]# <span class=term_command>yum info mdadm</span>
+Name   : mdadm
+Arch   : i386
+Version: 1.6.0
+Release: 3
+Size   : 84 k
+Repo   : base
+Summary: mdadm controls Linux md devices (software RAID arrays)
+Description:
+<span class=term_say>.....後面省略.....
+# 瞧一瞧啊！套件的版本名稱、資料大小、還有該套件出處 (base)！
+# 需要注意看的是 Summary 與 Description 這兩個注意事項內容！</span>
+</pre></td></tr></table>
+
+		yum 真是個很好用的東西，他可以直接查詢是否有某些特殊的套件，
+		你可以利用『 <span class=text_import2>yum search "一些關鍵字"</span> 』或者是『 
+		<span class=text_import2>yum list</span> 』列出所有的套件名稱，
+		然後再以正規表示法取得關鍵字，或者是『 <span class=text_import2>yum list "套件名稱"</span> 』
+		就能夠知道該套件的用途，
+		最後再決定要不要安裝啊！上面的範例一就是在找出磁碟陣列的管理軟體，
+		如果確定要安裝時，那就可以這樣處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：安裝某個套件吧！以 mdadm 為例：</span>
+[root@linux ~]# <span class=term_command>rpm -q mdadm</span>
+package mdadm is not installed
+<span class=term_say># 鳥哥的主機並沒有安裝這個玩意兒～所以底下開始安裝先！</span>
+
+[root@linux ~]# <span class=term_command>yum install mdadm</span>
+Setting up Install Process
+Setting up repositories
+update                    100% |=========================|  951 B    00:00
+base                      100% |=========================| 1.1 kB    00:00
+addons                    100% |=========================|  951 B    00:00
+extras                    100% |=========================| 1.1 kB    00:00
+<span class=term_say># 上面這個階段在讀取 RPM 檔案的檔頭資料；</span>
+
+--> Populating transaction set with selected packages. Please wait.
+---> Downloading header for mdadm to pack into transaction set.
+mdadm-1.6.0-3.i386.rpm    100% |=========================| 8.2 kB    00:00
+---> Package mdadm.i386 0:1.6.0-3 set to be updated
+--> Running transaction check
+<span class=term_say># 上面這個階段則是在下載檔案以及準備更新的階段</span>
+
+Dependencies Resolved
+=============================================================================
+ Package                 Arch       Version          Repository        Size
+=============================================================================
+Installing:
+ mdadm                   i386       1.6.0-3          base               84 k
+
+Transaction Summary
+=============================================================================
+Install      1 Package(s)
+Update       0 Package(s)
+Remove       0 Package(s)
+Total download size: 84 k
+Is this ok [y/N]: <span class=term_command>y</span>
+<span class=term_say># 至於這個階段則在分析相依屬性，並且讓使用者確認下載開始</span>
+
+wnloading Packages:
+(1/1): mdadm-1.6.0-3.i386 100% |=========================|  84 kB    00:00
+Running Transaction Test
+Finished Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing: mdadm                        ######################### [1/1]
+
+Installed: mdadm.i386 0:1.6.0-3
+Complete!
+<span class=term_say># 最終則下載與安裝的結果！</span>
+</pre></td></tr></table>
+
+		瞧！經過 yum 我們可以很輕鬆的就安裝好一個軟體，並且這個軟體已經主動的幫我們做好相依屬性的克服了，
+		真是方便到爆！另外，你必須要知道，<span class=text_import2>剛剛那個被下載安裝的 mdadm
+		檔案被放置到 /var/cache/yum 裡面去了</span>，
+		如果你要節省硬碟空間的話那麼可以在安裝完畢後將該檔案移除，就用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum clean packages</span>
+Cleaning up Packages
+2 packages removed
+</pre></td></tr></table>
+
+		這樣就能夠清除掉已下載的檔案囉～節省一下硬碟空間啊！OK～那如何進行整體的更新呢？
+		比如說鳥哥剛剛裝完了 CentOS 4.3 ，但這個版本已經推出若干時間，所以也已經作了很多更新了，
+		那鳥哥如何整體更新啊？很簡單，就用如下的指令：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum -y update</span>
+</pre></td></tr></table>
+
+		加一個『 -y 』的參數可以讓系統自動幫你回答『 yes 』，在背景處理時會比較方便一點。
+		如果你是第一次執行，那就會發現：哇！怎麼下載的資料量到達數百 MB 之譜！沒錯啊！
+		所以記得 <span class=text_import2>/var/ 這個目錄的容量要給大一點</span>才行！
+		否則就會出現無法完整下載所有更新檔案的問題啊！ @_@<br /><br />
+
+		<a name="yum_group"></a><hr><li><span class=text_import1>安裝套件群組的功能</span><br />
+		<div class=block2>
+		什麼是『套件群組』呢？還記得在安裝的時候有出現套件選擇的地方吧？
+		在那個時候你選擇的資料可不是『套件名稱』喔，而是一堆『套件群組』，舉例來說，
+		你會看到『KDE 桌面環境』之類的，而不是每個 KDE 桌面的各項套件名稱，對吧！那個咚咚就是『套件群組』啦！
+		由於各大 distributions 預設都沒有選擇發展工具 (Development Tools)，
+		這些工具包含了 gcc, kernel-devel 等等，那麼你如何使用 yum  一口氣安裝呢？
+		看看底下的範例：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例三：查詢與安裝『套件群組』</span>
+[root@linux ~]# <span class=term_command>yum grouplist</span>
+Installed Groups:
+   Administration Tools
+   Authoring and Publishing
+   Compatibility Arch Support
+<span class=term_say>.....中間省略.....</span>
+Available Groups:
+   <span class=term_write>Development Tools</span>
+   XFCE-4.2
+<span class=term_say>.....中間省略.....</span>
+Done
+<span class=term_say># 看到沒！上面就列出來你已經安裝的套件群組，還有尚可安裝的其他套件群組，
+# 真是非常的方便！那麼如何知道 Development Tools 裡面有啥咚咚？</span>
+
+[root@linux ~]# <span class=term_command>yum groupinfo "Development Tools"</span>
+Group: Development Tools
+ Required Groups:         <span class=term_say>&lt;==所需要的相依屬性資料</span>
+   Development Libraries
+ Default Metapkgs:        <span class=term_say>&lt;==預設內部所需要的中繼套件</span>
+   Emacs
+ Optional Metapkgs:       <span class=term_say>&lt;==最好還含有這些套件較佳</span>
+   Ruby
+   XEmacs
+<span class=term_say>.....中間省略.....</span>
+ Mandatory Packages:      <span class=term_say>&lt;==一些所需要的套件資料</span>
+   pkgconfig
+   <span class=term_write>gcc-ppc32
+   make
+   gcc
+   autoconf</span>
+<span class=term_say>.....中間省略.....</span>
+ Default Packages:
+   gcc-g77
+   cscope
+<span class=term_say>.....中間省略.....</span>
+ Optional Packages
+   dejagnu
+   ElectricFence
+   gcc-gnat
+<span class=term_say>.....中間省略.....
+# 總共會列出來這個『套件群組』內含有的各項資料，如果你需要安裝的話，就可以：</span>
+
+[root@linux ~]# <span class=term_command>yum groupinstall "Development Tools"</span>
+</pre></td></tr></table>
+
+		利用這個『 yum groupinstall "套件群組名" 』可以讓你一口氣安裝很多的套件，
+		而不必擔心某個套件忘記裝了！實在是很不錯啦～而且利用 groupinfo 的功能你也可以發現一些不錯的套件資料，
+		如此一來，你就可以更方便的管理你的 Linux 系統了，很不錯吧！<br /><br />
+		</div>
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：請設定一下工作排程，讓你的 centOS 可以每天自動更新系統<br /><br />
+答：<ul>
+可以使用『 crontab -e 』來動作，也可以編輯『 vi /etc/crontab 』來動作，
+由於這個更新是系統方面的，所以鳥哥習慣使用 vi /etc/crontab 來進行指令的說明。
+其實內容很簡單：<pre>40 5 * * * root yum -y update && yum clean packages</pre>這樣就可以自動更新了，
+時間訂在每天的凌晨 5:40 ，並且更新完成後會主動的將下載的套件資料移除喔！
+</ul>
+</td></tr></table><br />
+	</div>
+
+	<hr /><a NAME="yum_others"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">不同版本間的升級</span><br />
+	<div class=block2>
+		什麼！不同的版本之間可以直接『網路』升級了喔？沒錯！而且整個流程還挺簡單的，
+		升級完成之後，絕大部分的服務都還不會有困擾！真是很不錯啊！那什麼是『不同版本？』舉例來說，
+		CentOS 4.2 升級到 CentOS 4.3 算是一種，而 Fedora Core 1 升級到 CentOS 4.3 則又是另外一種，
+		同樣是 CentOS 的升級比較容易，尤其 4.3 本來就是架構在 4.2 上面持續發展的結果；
+		不過如果是 Fedora Core 的話，可能就比較麻煩一點點。底下我們分別談一談這兩種方式的升級吧！<br /><br />
+
+		<a name="yum_centos"></a><hr><li><span class=text_import1>CentOS 4.2 升級到 CentOS 4.3</span><br />
+		<div class=block2>
+		在 CentOS 的發展理念當中，如果推出了 4.3 ，那麼 4.2 以前的 4.x 版本就不會繼續發展，
+		所以使用者必須要將原本的 4.2 直接提升到 4.3 才行。那麼需要作些什麼動作呢？
+		不需要啊！只要修改一下 yum 的設定檔就好了。首先，同樣需要找到最近的鏡像站台，
+		我們依舊以義守大學的 FTP 網站來提供所需要的套件資料，修改成這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先修改 /etc/yum.conf</span>
+[root@linux ~]# <span class=term_command>vi /etc/yum.conf</span>
+<span class=term_say>.....前面省略.....
+# 直接在檔案的最底下加入這一行來增加一些額外的功能：</span>
+<span class=term_write>plugins=1</span>
+
+<span class=term_hd>2. 再修改 /etc/yum.repos.d/CentOS-Base.repo</span>
+[root@linux ~]# <span class=term_command>vi /etc/yum.repos.d/CentOS-Base.repo</span>
+<span class=term_say># 內容與『 yum 的設定檔』說明相同，請回到本小節的最前面查閱該設定</span>
+</pre></td></tr></table>
+
+		因為 <a href="#yum_configure">/etc/yum.repos.d/CentOS-Base.repo</a> 的內容與前面相同，
+		所以鳥哥在這裡不再浪費篇幅，請往前翻閱吧！設定好了之後，接下來給他進行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum upgrade</span>
+</pre></td></tr></table>
+
+		記得是『 <span class=text_import2>upgrade</span> 』而不是『 
+		<span class=text_import2>update</span> 』喔！兩者用法不同啊！
+		然後接下來就是一段時間的等待啊！沒辦法，因為從網路上面捉資料下來是需要時間的！
+		還好鳥哥的環境是在學術網路內，所以連結同樣是學術網路的義守大學還挺快的就是了！ ^_^！
+		整個升級的時間大約花費 20 分鐘以內，升級完畢之後，重新開機瞧一瞧登入畫面！哇！變成 CentOS 4.3 了，
+		真是快速又方便！而且原本有啟動的服務幾乎沒有任何問題，同樣可以正常的啟動吶！^_^<br /><br />
+
+		上面的動作你可以參考底下這一篇官方說明文件：<br />
+		<ul><li><a href="http://www.centos.org/modules/news/article.htm?storyid=118"
+		target="_blank">http://www.centos.org/modules/news/article.htm?storyid=118</a></li></ul>
+		</div>
+
+		<a name="yum_fc"></a><hr><li><span class=text_import1>Fedora Core Release 1 升級到 CentOS 4.3</span><br />
+		<div class=block2>
+		如果你使用的是舊版的 Linux distributions ，例如 Fedora core release 1, Red Hat 9 等等的系統，
+		這些系統已經舊到沒有什麼更新的軟體出來，所以如果套件有臭蟲而需要更新時，
+		你可能就得要使用 Tarball 的方式手動的給他『 configure, make, make install 』等等的，
+		好累啊～那如果我安裝 CentOS 呢？如果需要主動重新安裝的話，那舊的資料不是會不見嗎？
+		又得要備份，重新處理等等的，還是很累啊！<br /><br />
+
+		沒關係！有 yum 就搞定了！你可以將你的 FC1 升級到 CentOS 4.3 了，而且是『線上更新』喔！
+		厲害吧！不過，因為 FC1 使用的核心是 2.4  版，但 CentOS 4.3 使用的是新的 2.6.x ，
+		這兩種核心可不能互相更新啊！所以囉，我們還需要一些額外的動作來進行升級，而不像前面
+		CentOS 4.2 升級到 4.3 那麼簡單！鳥哥底下的動作是參考這幾篇：<br />
+
+		<ul>
+		<li>twu2 兄提供的不同版本間升級：<a href="http://phorum.study-area.org/viewtopic.htm?t=28648"
+			target="_blank">http://phorum.study-area.org/viewtopic.htm?t=28648</a></li>
+		<li>CentOS 官方網站提供的一些升級建議：<br />
+			<a href="http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=428&forum=6"
+			target="_blank">http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=428&forum=6</a><br />
+			<a href="http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=382"
+			target="_blank">http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=382</a></li>
+		</ul>
+
+		鳥哥底下以 FC1 為例來進行整個升級的動作，不過你得要瞭解的是，每個人的 Linux 都不相同，
+		因此雖然鳥哥實作是成功的，不過不代表你的環境一定會成功，
+		所以，重點是....『<span class=text_import2>請做好備份！</span>』
+		以免升級不成功時，導致整個資料的損毀，那就得不償失了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>0. 前處理：先準備好你的資料，以及刪除不需要的資料</span>
+[root@linux ~]# <span class=term_command>yum clean packages headers</span>
+<span class=term_say># 先刪除原本的 yum  資料，因為 FC1 使用的也是 yum ，
+# 所以最好先將之前 FC1 的 yum 資料刪除，比較不會有問題；</span>
+</pre></td></tr></table>
+
+		在這個步驟當中，你最好先將一些重要資料備份起來，包括 /etc 與 /home 整個目錄，
+		還有其他你有開啟的服務的資料，包括 MySQL 或者是 WWW 的網頁資料等，請自行備份喔。
+		另外，我們的 yum 預設是將下載的套件通通放置到 /var/cache/yum 當中，所以你的 /var 
+		目錄所在 partition 的容量也需要至少 1GB 以上的容量，而且安裝軟體所在目錄 /usr 
+		所在的 partition 最好也能夠有 2GB 以上的空間，否則容易出現空間不足的錯誤訊息而無法繼續。<br /><br />
+
+		那如果真的空間不足怎麼辦？你可以將一些不需要的套件先移除啊！舉例來說，
+		你可以利用『 yum groupremove "Development Tools" 』之類的指令先將這些不是必備的套件群組移除，
+		以及其他 X 相關的套件也可以先移除，等到升級完畢後再以 yum 來重新安裝即可，
+		這樣可以節省很多升級時分析相依屬性所花費掉的時間喔！<br /><br />
+
+		同時你得要確認你的鏡像站台，以及 CentOS 的數位簽章檔案已經安裝到 RPM 資料庫當中才行，
+		同樣的，鳥哥還是以義守大學的 FTP 站為主要的來源鏡像站，但是你必須要先取得一些 RPM 相關的檔案，
+		這些檔案由於會與 FC1 原本的套件產生不相符合的特性，所以需要先捉下來並且強制安裝才行！
+		請你自行連上：<br />
+		<ul><li><a href="http://ftp.isu.edu.tw/pub/Linux/CentOS/"
+			target="_blank">http://ftp.isu.edu.tw/pub/Linux/CentOS/</a></li></ul>
+		然後選擇最新的版本，例如鳥哥使用 4.3 (2006/08/10 以前) 這個版本，所以直接點選他，
+		然後依序選擇『os』->『i386』->『CentOS』->『RPMS』，然後下載底下這些檔案
+		(註：套件的版本號碼可能會有些不同喔！)：<br />
+		<ul><span class=text_import2>
+		<li>centos-release-4-3.2.i386.rpm
+		<li>centos-yumconf-4-4.5.noarch.rpm
+		<li>kernel-2.6.9-34.EL.i686.rpm
+		<li>udev-039-10.12.EL4.i386.rpm</span></ul>
+
+		假設我的這些檔案捉下來後放到 /root 下，那接下來的動作是：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 安裝升級所需要的 RPM 檔案：</span>
+[root@linux ~]# <span class=term_command>rpm --import  \</span>
+> <span class=term_command>http://ftp.isu.edu.tw/pub/Linux/CentOS/4.3/os/i386/RPM-GPG-KEY-centos4</span>
+[root@linux ~]# <span class=term_command>rpm -Uvh centos-release-4-3.2.i386.rpm</span>
+[root@linux ~]# <span class=term_command>rpm -Uvh centos-yumconf-4-4.5.noarch.rpm</span>
+[root@linux ~]# <span class=term_command>rpm -ivh --force --nodeps kernel-2.6.9-34.EL.i686.rpm</span>
+<span class=term_say># 在這個動作時，由於我們的核心並非是 CentOS ，所以這個動作會發生一些錯誤，
+# 先不要理他，待會兒的動作再重新處理即可。</span>
+[root@linux ~]# <span class=term_command>rpm -ivh --force --nodeps udev-039-10.12.EL4.i386.rpm</span>
+</pre></td></tr></table>
+
+		由於 kernel 2.6 使用的裝置管理是以 udev 這個套件來處理的，與原本的 kernel 2.4 並不相同，
+		為了避免使用者進行錯誤的安裝，所以 yum 會主動的分析核心與裝置管理套件的差異，
+		如果兩者無法配合就產生錯誤訊息且強制中斷 yum ，那結果就是導致無法以 yum 進行升級啦！
+		要躲過這個困擾，你就得要先手動的安裝上頭那幾個 RPM 檔案。同時安裝 kernel 的過程當中會發生錯誤訊息，
+		先不要理他，等到後續步驟再來重新處理即可！
+		既然 kernel 2.6 會與 2.4 版衝突，而鳥哥的原本的 FC1 本來就有 2.4 版的核心嘛！
+		那即使安裝了新的 kernel-2.6.9-34.EL.i686.rpm 核心，但核心版本衝突的問題還是沒有解決的，
+		所以啊，你就得要這樣做了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>2. 移除會有衝突的 2.4 版核心，連同其原始碼</span>
+[root@linux ~]# <span class=term_command>rpm -qa | grep kernel</span>
+kernel-2.4.22-1.2197.nptl
+kernel-2.4.22-1.2115.nptl
+kernel-2.4.22-1.2199.nptl
+kernel-source-2.4.22-1.2197.nptl
+kernel-source-2.4.22-1.2199.nptl
+<span class=term_say>.....其他省略.....</span>
+[root@linux ~]# <span class=term_command>rpm -e kernel-source-2.4.22-1.2199.nptl</span>
+[root@linux ~]# <span class=term_command>rpm -e kernel-source-2.4.22-1.2197.nptl</span>
+[root@linux ~]# <span class=term_command>rpm -e kernel-2.4.22-1.2115.nptl</span>
+[root@linux ~]# <span class=term_command>rpm -e kernel-2.4.22-1.2197.nptl</span>
+[root@linux ~]# <span class=term_command>rpm -e kernel-2.4.22-1.2199.nptl</span>
+<span class=term_say># 反正就是找到核心與核心原始碼的套件後，就將他移除！記得套件名為：
+# kernel 與 kernel-source  ，其他的不用動！</span>
+[root@linux ~]# <span class=term_command>rpm --rebuilddb</span>
+</pre></td></tr></table>
+
+		將一些舊版本的核心給他移除後，你的系統就只有剩下剛剛安裝的那個 CentOS 的新核心，
+		所以核心版本的衝突當然就不存在了。要注意的是，你現在絕不可重新開機，否則你的系統就掛了！
+		因為沒有核心了喔！切記切記！然後開始要設定好升級時要使用的 yum 設定檔了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>3. 規範設定檔</span>
+[root@linux ~]# <span class=term_command>vi /etc/yum.upgrade</span>
+<span class=term_write>[main]
+cachedir=/var/cache/yum
+debuglevel=2
+logfile=/var/log/yum.log
+pkgpolicy=newest
+distroverpkg=fedora-release
+installonlypkgs=kernel kernel-smp kernel-hugemem kernel-unsupported
+tolerant=1
+exactarch=1
+plugins=1
+
+[upgrade]
+name=CentOS-4.3 - upgrade
+baseurl=http://ftp.isu.edu.tw/pub/Linux/CentOS/4.3/os/i386/
+
+[update]
+name=CentOS-4.3 - Updates
+baseurl=http://ftp.isu.edu.tw/pub/Linux/CentOS/4.3/updates/i386/</span>
+</pre></td></tr></table>
+
+		設定檔裡面先只要有這兩個項目即可，因為我們僅注視在整體版本的升級，
+		所以其他的額外功能部分先不要理他！以後再來處理即可啊！接下來就準備要升級了！這樣做吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>4. 開始升級的動作：</span>
+[root@linux ~]# <span class=term_command>yum -y -t -c /etc/yum.upgrade upgrade</span>
+</pre></td></tr></table>
+
+		理論上，如果你的 FC1 沒有安裝什麼奇怪的軟體，而且『<span class=text_import2>硬碟空間也足夠</span>』
+		，那麼 yum 應該會開始幫你一個一個的下載軟體並且分析屬性相依問題後，就開始進行安裝的步驟。
+		不過，如果發現一些軟體衝突的問題時，那麼你就得要先以 rpm -e 將舊的軟體先移除，
+		等到升級完畢後再安裝回來即可。只不過這個動作將依你的環境而有所不同。
+		鳥哥的 FC1 實在是舊的可以，所以很多軟體都有衝突，因此事先移除了很多的套件，
+		忙了快要半小時後，系統才順利的開始進行安裝。由於鳥哥主機所在環境的網路下載的速度尚可而已，
+		所以由開始下載到升級完畢，大概花了一個半小時左右！ @_@<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>5. 重新安裝核心，並處理 RPM 資料庫與更新其他套件</span>
+[root@linux ~]# <span class=term_command>rpm -ivh --force --nodeps kernel-2.6.9-34.EL.i686.rpm</span>
+[root@linux ~]# <span class=term_command>rpm --rebuilddb</span>
+[root@linux ~]# <span class=term_command>yum update</span>
+</pre></td></tr></table>
+
+		透過這三個指令我們可以再將剛剛沒有完成的核心安裝一遍，同時再以新的 yum 來進行升級，
+		這個時候我們的系統應該是很 OK 的啦！不過，有的小問題，那就是『開機的設定檔還沒有更新』喔！
+		所以你還得要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>6. 設定開機設定檔</span>
+[root@linux ~]# <span class=term_command>vi /boot/grub/menu.lst</span>
+<span class=term_write>default=0
+timeout=10
+splashimage=(hd0,0)/boot/grub/splash.xpm.gz
+title CentOS (2.6.9-34.0.2)
+        root (hd0,0)
+        kernel /boot/vmlinuz-2.6.9-34.0.2.EL ro root=/dev/hda1 hdd=ide-scsi rhgb
+        initrd /boot/initrd-2.6.9-34.0.2.EL.img
+title CentOS (2.6.9-34.EL)
+        root (hd0,0)
+        kernel /boot/vmlinuz-2.6.9-34.EL ro root=/dev/hda1 hdd=ide-scsi rhgb
+        initrd /boot/initrd-2.6.9-34.EL.img</span>
+</pre></td></tr></table>
+
+		在今日 (2006/08/10) 能夠安裝的最新核心版本是 2.6.9-34.0.2.EL ，所以上面的第一個 title
+		才會是這樣的設定資料，要記得與你的環境符合啊(如果你不是使用 4.3 來升級)！如果忘記上面各項資料的意義，
+		請參考『<a href="../linux_basic/0510osloader.htm">鳥哥的 Linux 私房菜 基礎篇 boot loader</a> 』的介紹啊！
+		如果設定好了這個開機資訊，嘿嘿！請重新開機試看看吧！ ^_^<br /><br />
+
+		基本上這樣已經處理完畢了！也就是說，你的系統應該是由 FC1 順利的轉成 CentOS 4.3 才對！
+		不過，有些小細節你依舊需要注意喔：<br />
+
+		<ul><span class=text_import2>
+		<li>觀察您的系統是否有啟動原有的服務，亦可利用 chkconfig --list；
+		<li>如果你的舊系統曾有使用 tarball 的方式來安裝軟體，則升級完畢後你必須要重新安裝一次該軟體；
+		<li>系統可能會產生很多的 .rpmnew 的檔案，請使用 locate 搜尋，並且重新處理設定檔。
+		</span></ul>
+
+		畢竟之前的版本太舊了，所以 RPM 升級時會將新套件的設定檔存成 *.rpmnew ，
+		你最好不要使用舊的設定檔，而是以新的設定檔來重新修改比較好！這樣服務的運作應該會比較順暢一些啊！
+		到此為止，恭喜您啊！ ^_^<br />
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="apt"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Debian 的 apt 自動升級：以 B2D 為例</span><br />
+<div class=block1>
+	APT 最早是 debian 這個社群的 Linux distribution 用來作為套件管理的一項機制，
+	後來實在很方便又好用，所以就被利用來做為其他 distributions 的線上升級管理機制了！
+	所以你會在很多地方看到有 FC 系列的 APT 伺服器、或者是自訂的 APT 伺服器等等的。
+	這個 APT 的使用與 yum 很類似吶！同樣也是透過套件的表頭分析後，然後與系統本身資料比對，
+	因此同樣也克服了屬性相依的困擾了，非常方便！底下我們就分別來談一談吧！<br /><br />
+
+	<hr /><a NAME="apt_config"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">APT 的設定檔</span><br />
+	<div class=block2>
+		如同前面提到的 yum 一樣，既然是線上升級，那麼我們自然得要找到相對應的伺服器囉！
+		而一般有提供 apt 服務的 distributions 事實上他們都已經做好設定檔內相關的伺服器選擇了，
+		例如 B2D 就是一個例子。<span class=text_import2>不過，
+		如果你是使用類似 Red Hat 9, Fedora Core Release 等版本的話，
+		可能由於種種原因讓你不能將該主機升級到類似 CentOS 等較新的版本時，那你就可以嘗試到底下的網站找找看 
+		APT 主機了</span>：<br />
+		<ul><li><a href="http://apt.freshrpms.net/" target="_blank">http://apt.freshrpms.net/</a></li></ul>
+		找到屬於你的 Linux 版本後，安裝 apt 就可以使用 apt 伺服器所提供的套件升級機制囉！
+		底下趕緊談一談，那麼如何處理 APT 的設定檔呢？
+		APT 的設定檔都放在 /etc/apt 目錄下，而在該目錄下，規範 APT 主機的設定則放到 /etc/apt/sources.list 當中。
+		以 B2D 為例，他的 sources.list 是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先處理 APT 伺服器來源的設定資料：</span>
+[root@linux ~]# <span class=term_command>vi /etc/apt/sources.list</span>
+deb ftp://debian.tnc.edu.tw/pub/debian/ stable main non-free contrib
+deb http://security.debian.org/ sarge/updates main contrib non-free
+deb ftp://debian.tnc.edu.tw/pub1 b2d/
+deb http://ftp2.de.debian.org/debian-volatile sarge/volatile main
+<span class=term_say># 上面的格式是這樣的：
+# &lt;deb 的標頭格式&gt; &lt;APT伺服器網址&gt; &lt;相對網址路徑&gt; &lt;目錄一&gt; &lt;目錄二&gt; ...</span>
+</pre></td></tr></table>
+
+		其實設定檔的內容很簡單，第一個欄位指的是『用哪一種套件管理員』的意思，主要有 deb 以及 rpm 還有
+		rpm-src 等，deb 是 debian 專屬的套件管理方式啦！ ^_^！第二欄以後就得要一起看才行！
+		以上表的第一行為例，其實他是說，提供 deb 的網址有三個，分別是：<br />
+		<ul>
+		<li>ftp://debian.tnc.edu.tw/pub/debian/stable/main
+		<li>ftp://debian.tnc.edu.tw/pub/debian/stable/non-free
+		<li>ftp://debian.tnc.edu.tw/pub/debian/stable/contrib
+		</ul>
+		這樣看懂了嗎？第二欄與第三欄要加在一起，那就是個完整的伺服器網址！
+		後面接的幾個資料則是在該網址底下的數個目錄，那就很容易看懂了吧！ ^_^
+		應該是不難啦～如果您是使用 b2d 的話，那恭喜你！不用修改就能用 apt 囉！ ^_^<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上， /etc/apt/apt.conf 還可以提供其他額外的設定喔，例如使用 Proxy 
+		以及規範下載後的套件在安裝完畢後應該進行的處理步驟，舉例來說，是否需要將該套件移除！
+		你應該要使用 man apt.conf 查詢一下該檔案的用法喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a NAME="apt_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實際使用 APT</span><br />
+	<div class=block2>
+		APT 的使用也實在是很簡單！只要利用 apt-get 即可！不過，不同於 yum 每次都會進行 RPM 檔案表頭的分析，
+		APT 則是將套件表頭的下載與實際的安裝分成兩個動作分別執行，先來談一談 apt-get 這個指令的用法吧！<br />
+
+<a name="apt-get"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>apt-get [-qy] [-c config_file] [更新項目] [套件名稱]</span>
+<span class=term_say>參數：
+-q ：不要在螢幕上輸出訊息，常用在背景環境的執行當中喔！
+-y ：自動在進行 apt-get 時回答 y 的回應；
+-c ：後面接的是設定檔，一般系統會主動的以 /etc/apt 內的設定檔為依據。
+[更新項目]：要 apt-get 進行的工作，主要有這幾項：
+   update      ：就是更新伺服器與用戶端的套件表頭清單，這個動作務必要進行！
+   install     ：後面需要加上要安裝的套件名稱才行！
+   upgrade     ：進行『已安裝套件』的完整升級，不過未安裝套件則不予安裝；
+   dist-upgrade：以 upgrade 相似，但是當新版本的套件有其他相依屬性的套件加入時，
+                 單純的 upgrade 將無法進行安裝，此時就得要使用 dist-upgrade 了！
+   clean       ：清除已經下載到 /var/cache/apt/archives/ 的套件檔案。
+   remove      ：移除某個套件啊！</span>
+
+<span class=term_hd>範例一：進行套件標頭更新後，進行整體套件的更新動作</span>
+[root@linux ~]# <span class=term_command>apt-get update</span>
+下載:1 ftp://debian.tnc.edu.tw stable/main Packages [3349kB]
+下載:2 http://ftp2.de.debian.org sarge/volatile/main Packages [3893B]
+<span class=term_say>.....中間省略.....</span>
+讀取 3868kB 用了 24s (159kB/s)
+讀取套件清單中... 完成
+
+[root@linux ~]# <span class=term_command>apt-get dist-upgrade</span>
+讀取套件清單中... 完成
+了解套件依存關係中... 完成
+籌畫升級套件中...完成
+下列的套件都將被【刪除】：
+  blt-common ettercap-plugins libgdbmg1-dev
+下列的【新】套件都將被安裝：
+  dictionaries-common ettercap-common <span class=term_say>.....後面省略.....</span>
+下列的套件都將維持舊版本:
+  fontconfig libxft-dev libxft2 libxft2-dbg <span class=term_say>.....後面省略.....</span>
+下列的套件都將更新:
+  apache apache-common apache-utils apache2 <span class=term_say>.....後面省略.....</span>
+更新 105 個套件，新安裝 32 個套件，刪除 3 個套件，另不更新 7 個套件。
+需要下載 122MB 的檔案。
+解壓縮後將消耗 39.6MB 的空間。
+繼續執行嗎？ 是按 [Y] 鍵，否按 [n] 鍵 <span class=term_command>y</span>
+下載:1 ftp://debian.tnc.edu.tw stable/main libc6-dev 2.3.2.ds1-22sarge3 [2535kB]
+下載:2 http://security.debian.org sarge/updates/main login 1:4.0.3-31sarge8 [576kB]
+<span class=term_say>.....中間省略.....</span>
+讀取 122MB 用了 11m47s (172kB/s)
+正在預先設定套件 ...
+(正在讀取資料庫 ... 系統目前總共安裝有 112550 個檔案和目錄。)
+正預備替換 libc6-dev 2.3.2.ds1-22 (使用 .../libc6-dev_2.3.2.ds1-22sarge3_i386.deb)
+正在解壓縮替換的套件檔 libc6-dev ...
+<span class=term_say>.....中間省略.....</span>
+Please *restart* your Apache2 !
+Y/N ?
+<span class=term_command>y</span>
+<span class=term_say>.....中間省略.....</span>
+
+[root@linux ~]# <span class=term_command>apt-get clean</span>
+<span class=term_say># 這個動作會將剛剛下載的幾個 deb 的套件給他移除！節省硬碟空間！</span>
+</pre></td></tr></table>
+
+		請記得，<span class=text_import2>那個 update 的參數並不是在進行更新，
+		而是在進行伺服器與用戶端的套件表頭清單更新而已，
+		但這個動作相當重要，如果你沒有作這個動作的話，你的套件就不會更新了</span>！
+		在 apt-get update 後，再使用 apt-get dist-upgrade
+		這樣就能夠將整個系統給他升級了！很快樂吧！不過，由於我們沒有加上『-y』這個參數，
+		所以在上表當中，我們會老是需要輸入一些有的沒有的指令，
+		這樣的話，就不適合作為背景的自動升級了！所以，如果你想要在背景以 crontab 
+		的方法自動的幫你升級的話，在 B2D 的環境下使用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/crontab</span>
+<span class=term_write>40 5 * * * root /usr/bin/apt-get update && /usr/bin/apt-get -y dist-upgrade</span>
+</pre></td></tr></table>
+
+		這樣每天的凌晨 5:40 就會自動的進行整體升級，而且會主動的克服相依屬性的問題喔！
+		另外，除了完整的將套件給他全部升級之外，我們還可以利用 apt 伺服器的功能來進行查詢的動作喔！
+		這個時候就得要 apt-cache 來幫忙了！<br />
+
+<a name=apt-cache></a>
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>apt-cache [搜尋項目]</span>
+<span class=term_say>參數：
+[搜尋項目]：apt-cache 可以搜尋 apt 所列出的套件標頭資料喔！可用項目有：
+pkgnames：列出本系統上面的所有套件名稱！！有點類似 (rpm -qa)；
+dump    ：列出所有的套件標頭以及其相關的相依屬性套件！
+search  ：後面可接要搜尋的字串，例如 apt-cache search postfix
+show    ：後面接套件名稱，可以顯示出該套件的主要內容的描述！
+showpkg ：列出後面所接套件的相依屬性以該其套件提供的相關功能！
+depends ：可以列出與後面所接套件有相依屬性或者是衝突的相關資料！</span>
+
+<span class=term_hd>範例一：找出與 grep  有關的套件</span>
+[root@linux ~]# <span class=term_command>apt-cache search grep</span>
+<span class=term_say>.....前面省略.....</span>
+grep - GNU grep, egrep and fgrep
+grep-dctrl - Grep Debian package information
+<span class=term_say>.....後面省略.....</span>
+
+[root@linux ~]# <span class=term_command>apt-cache show grep</span>
+Package: grep
+Essential: yes
+Priority: required
+Section: base
+Installed-Size: 660
+Maintainer: Ryan M. Golbeck &lt;rmgolbeck@debian.org&gt;
+Architecture: i386
+Version: 2.5.1.ds1-4
+Provides: rgrep
+Pre-Depends: libc6 (>= 2.3.2.ds1-4)
+Conflicts: rgrep
+Filename: pool/main/g/grep/grep_2.5.1.ds1-4_i386.deb
+Size: 170290
+MD5sum: 68196ad14b098b0eb4b91f4a7cfa8ff2
+Description: GNU grep, egrep and fgrep
+ 'grep' is a utility to search for text in files; it can be used from the
+ command line or in scripts.  Even if you don't want to use it, other packages
+ on your system probably will.
+
+[root@linux ~]# <span class=term_command>apt-cache depends grep</span>
+grep
+  特別依存關係: libc6
+  衝突: &lt;rgrep&gt;
+</pre></td></tr></table>
+
+		瞧！利用 apt-cache 就能夠找到很多有用的資訊！包括利用 show 這個參數也能夠將該套件重要的項目給他列出來！
+		以上面的 grep 這個套件為例， apt-cache 就列出很多例如版本資訊、衝突資訊 (conflicts) 等等，
+		尤其是描述 (Description) 的部分，就更可以讓使用者瞭解該套件的用途了！ ^_^！另外，
+		那個 depends 則可以特別列出與該套件有衝突或者是相依屬性的檔案名稱！也是個很有幫助的參數喔！
+		至於如果你想要安裝一個套件的話，例如 zlibc 這個套件時，就可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>apt-get install zlibc</span>
+</pre></td></tr></table>
+
+		如同前面提到的，如果你原本的系統並不是使用 apt 來進行線上升級的機制，而你想要使用 apt 的話，
+		目前很多伺服器都有提供相對應版本的升級，其中以 RPM 套件管理的 Red Hat 與 Fedora 最常見！
+		台灣楊錦昌老師也提供了完整的 APT 教學，您可以看看：<br />
+		<ul><li><a href="http://163.19.59.1/~linux/student_samba/apt/apt_server.html" 
+		target="_blank">http://163.19.59.1/~linux/student_samba/apt/apt_server.html</a></li></ul>
+		當然，還是那句老話，除非您的主機上面有專屬的軟體需要該版本的 distribution 才能執行，
+		當轉成其他版本可能會發生無法執行的困擾時，那你只好使用舊版的 distribution，
+		並且找到對應的 APT 或 yum 伺服器，或者是『你自己建立一個 APT/yum 伺服器』來提供自己升級！
+		比較能夠免除一些程式臭蟲的困擾。如果沒有以上的困擾，那就直接升級到比較新的版本吧！
+		『<span class=text_import2>比較新的版本不一定比較好，不過，在大部分的情況下，
+		較新版本對硬體的支援以及安全性方面，都會比較好一些</span>。』但是，如果你的主機明明運作的很好，
+		短期你也不需要什麼新硬體的增加，而且你自己有在注意各個套件的安全性時，那不需要升級也是沒有問題的啦！
+		<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="important"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>由於程式是由人所撰寫的，因此程式在執行的過程中難免可能會出現一些安全性的問題或者是程式臭蟲的問題。
+		所以，絕大部分的情況下，將套件保持在最新的版本較能夠避免被 cracker 所入侵的問題</li>
+	<li>絕大部分的自由軟體之維護的人員比專屬軟體還要多，所以程式發生臭蟲後的除錯與更新時間較快速！！</li>
+	<li>你不一定要將你的 distribution 更新到最新，不過，更新到最新可以保有較佳的硬體支援與網路安全。</li>
+	<li>由於 distribution 發展的不同，基本的套件安裝可以分為 rpm, dpkg 及 tarball 三種常見模式；</li>
+	<li>各個 distribution 均有推出自家的線上升級機制，如 CentOS 的 yum, Debian 的 apt, Red Hat 的 up2date 以及
+		SuSE 的 YOU 等等。各種版本均不可混用。</li>
+	<li>yum 這個升級方案在使用時，會主動的 (1)下載表頭資料與 (2)進行使用者所需要的更新動作；</li>
+	<li>apt-get 必須要使用 apt-get update 更新表頭資料後，才能夠進行使用者所要求的動作！</li>
+	<li>線上升級機制常常需要使用到 crontab 的工作排程支援；</li>
+</span></ul>
+</div>
+
+
+<hr /><a NAME="FAQ"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>請找到您的 distribution 所提供的線上升級機制，立刻進行全部更新的動作。</li>
+	<li>請前往台灣電腦危機處理小組註冊，並取得各項危險通告的電子郵件通知！</li>
+	<li>在 RPM base 的系統當中，如果升級的套件所含有的設定檔在系統當中已經被更動過，則該設定檔會如何被安裝到系統中？</li>
+	<div class=block2><font color=white size=-1>
+		如果設定檔已經被改過，則更新的設定檔會被儲存成為 *.rpmnew 的副檔名。
+		並建議使用者應該要將舊的設定檔備份，然後以新的設定檔來進行重新設定。對於該軟體的執行穩定性會較佳。
+	</font></div>
+	<li>承上題，如何找出系統上面含有被更動過的設定檔？以 rpm base 的系統為例？</li>
+	<div class=block2><font color=white size=-1>
+		你可以利用『 locate rpmnew 』來找出已經安裝的新版本設定檔，並據以處理該資料；
+		也可以利用 rpm -Va 來觀察系統上面所有的已經被更動過的檔案資料！
+	</font></div>
+	<li>請找出 CentOS 內的 "Development Tools" 相關的資料，如果您尚未安裝，請安裝他！</li>
+	<div class=block2><font color=white size=-1>
+		利用『 yum grouplist 』找出相關的套件群組，利用『 yum groupinfo "Develop Tools" 』找出該套件是否為您所需要，
+		最後用『 yum groupinstall "Develop Tools" 』安裝即可！
+	</font></div>
+	<li>你在進行 CentOS 安裝時，選擇的是預設安裝，裝完畢後才發現沒有 gcc 這個編譯器。
+		請問你如何安裝 gcc ？</li>
+	<div class=block2><font color=white size=-1>
+		可以使用『 yum search gcc 』找出所需要的套件，然後用『 yum install xxx 』來安裝即可！
+	</font></div>
+
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>台灣電腦危機處理小組(TWCERT)：<a href="http://www.cert.org.tw/" 
+		target="_blank">http://www.cert.org.tw/</a></li>
+	<li>Red Hat 的官方說明：<a href="http://www.redhat.com/apps/support/errata/" 
+		target="_blank">http://www.redhat.com/apps/support/errata/</a></li>
+	<li>APT 官方網站：<a href="http://apt.freshrpms.net/" 
+		target="_blank">http://apt.freshrpms.net/</a></li>
+	<li>Rondo 的 APT 實做：<a href="http://163.19.59.1/~linux/student_samba/apt/apt_server.html" 
+		target="_blank">http://163.19.59.1/~linux/student_samba/apt/apt_server.html</a></li>
+	<li>APT Server：<a href="http://install.opennms.org/apt/" 
+		target="_blank">http://install.opennms.org/apt/</a></li>
+	<li>由 Red Hat 9 升級到 CentOS 4.1：<a href="http://www.owlriver.com/tips/centos-31-ex-rhl-9/"
+		target="_blank">http://www.owlriver.com/tips/centos-31-ex-rhl-9/</a></li>
+	<li>twu2 兄提供的不同版本間升級：<a href="http://phorum.study-area.org/viewtopic.htm?t=28648"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=28648</a></li>
+	<li>CentOS 官方網站提供的一些升級建議：<br />
+		<a href="http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=428&forum=6"
+		target="_blank">http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=428&forum=6</a><br />
+		<a href="http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=382"
+		target="_blank">http://www.centos.org/modules/newbb/viewtopic.htm?topic_id=382</a></li>
+	<li>SuSE 的 YOU 自動升級機制須知：<br />
+		<a href="http://support.novell.com/linux/registration/"
+		target="_blank">http://support.novell.com/linux/registration/</a><br />
+		<a href="http://support.novell.com/techcenter/articles/RegandUpdate_SLE10.html"
+		target="_blank">http://support.novell.com/techcenter/articles/RegandUpdate_SLE10.html</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/02：第一次完成日期！<br />
+2003/06/29：加入自己寫的自動更新 RPM 的 bash scripts 功能！<br />
+2003/07/01：重新編寫一些內容介紹，此外，由於 Red Hat 6.x 有點老舊了，已經將 up2date 關於 Red Hat 6.x 以前的資料消除了！<br />
+2003/08/22：加入 Mandrake 的 urpmi 以及 APT Client 的設定方法<br />
+2006/08/08：將舊的文章移動到 <a href="0220upgrade/0220upgrade.htm">此處</a>。<br />
+2006/08/09：由於已經有這麼多的線上升級機制，所以<a href="0220upgrade/0220upgrade.htm#vbird_zzgetrpmfile"
+		target="_blank">鳥哥自己寫的 bash shell</a> 不需要使用的啦！將他取消了！<br />
+2006/08/10：需要付費的 <a href="0220upgrade/0220upgrade.htm#up2date">up2date</a>
+		也取消了，有需要的話請自行前往舊文章處查閱啦！<br />
+2006/08/11：連 <a href="0220upgrade/0220upgrade.htm#mandrake">Mandriva 所需要的 urpmi</a> 也拿掉了先！ ^_^<br />
+2006/09/10：本來 yum 的設定檔當中是以義守大學的 FTP 設定為主，改為 CentOS 建議的國碼為主！<br />
+</span>
+<hr><span class="text_date">2002/08/02以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0220upgrade.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,2235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 簡易網路基礎概念</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0110network_basic.htm">
+    <span class="text_head0">網路基礎概念</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0110network_basic.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2007/10/21</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在金庸的小說裡面提到了『欲練神功，揮刀自宮』才能練成無敵的葵花寶典，
+	另外，金大俠也提到太極拳的學習到最後需要將所學的忘光光，此時才能『無招勝有招』。
+	呵呵～這跟 Linux 有啥關係吶？在前一章我們不是提到關於『<a 
+	href="0105beforeserver.htm">架站前的技巧分析</a>』嗎？裡面提到在 Linux 裡面想要玩架站，
+	最重要的是得要搞熟 Linux 相關的操作技巧，這些技巧在一開始時真的得要花很多時間去熟悉，
+	真的會讓人覺得好像已經『自宮』的樣子！不過，別擔心，
+	等您花時間學習過後，肯定讓您忘不了了！因為那時您已經『無招勝有招』啦！
+	發生問題時，肯定會依循之前學習到的一貫解決方法去搜尋、解答！很重要的！<br /><br />
+
+	在這一章裡面，我們得要來談的就是另一個『神功』啦！那就是網路基礎。
+	網路基礎真的很重要的，包括乙太網路硬體的瞭解可以讓您知道如何查出有問題的地方，進一步解決他；
+	瞭解網路協定(IP)與路由(route)讓您可以完整的設定好您的網路架構，更可進一步進行子網路的劃分，
+	以建立更小而美的網路環境！當然還有不可不提的 OSI 網路七層協定，真是重要啊！
+	不過，在這一章鳥哥以較為口語的方式來介紹這些基礎網路架構，希望能帶給朋友們快速瞭解網路是啥。
+	當然，想要更瞭解網路相關功能的話，文末的參考資料可以參考看看喔！ ^_^
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#whatisnetwork">網路 (Network)</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#whatisnetwork_what">什麼是網路</a><br />
+	　　1.2 <a href="#whatisnetwork_ethernet">乙太網路</a><br />
+	　　1.3 <a href="#whatisnetwork_osi">OSI 七層協定</a><br />
+	</span>
+2. <a href="#ipandmac">IP 與 MAC</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#ipandmac_mac">傳輸單位與 MAC</a><br />
+	　　2.2 <a href="#ipandmac_ip">IP 的組成</a><br />
+	　　2.3 <a href="#ipandmac_network">網域的概念與 IP 的分級</a><br />
+	　　2.4 <a href="#ipandmac_netmask">Netmask 的用途與子網路的切分</a><br />
+	　　2.5 <a href="#ipandmac_type">IP 的種類與取得方式</a><br />
+	　　2.6 <a href="#ipandmac_head">IP 封包的表頭</a><br />
+	</span>
+3. <a href="#route">網路層之路由概念</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#route_route">什麼是路由</a><br />
+	　　3.2 <a href="#route_host">觀察主機的路由</a><br />
+	</span>
+4. <a href="#protocol">常見的通訊協定</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#protocol_tcp">TCP 協定</a>： 
+		<a href="#protocol_tcp_socket">通訊埠口與 Socket</a>, 
+		<a href="#protocol_tcp_connect">封包的傳送</a>, 
+		<a href="#protocol_tcp_3_handshake">三向交握</a><br />
+	　　4.2 <a href="#protocol_udp">UDP 協定</a><br />
+	　　4.3 <a href="#protocol_icmp">ICMP 協定</a><br />
+	　　4.4 <a href="#protocol_mtu">MTU 的限制</a><br />
+	　　4.5 <a href="#protocol_firewall">封包過濾的防火牆概念</a><br />
+	</span>
+5. <a href="#prepare">連上 Internet 前的準備事項</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#prepare_dns">什麼是主機名稱與 DNS</a><br />
+	　　5.2 <a href="#prepare_con">一組可以連上 Internet 的必要網路參數</a><br />
+	</span>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a><br />
+8. <a href="#reference">參考資料</a><br />
+	<span class=text_h2>
+9. <a href="http://phorum.vbird.org/viewtopic.htm?t=25884"
+	target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=25884</a><br />
+	</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr><a NAME="whatisnetwork"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">網路(Network)</span><br />
+<div class=block1>
+	Linux 這個作業系統的優勢之一就是在 (Network) 功能啦！這包含他的高穩定度系統資源分配，
+	以及較為安全的網路防備能力！所以很多人都喜歡拿他來進行網路伺服器的架設。
+	然而，這些網路功能的優點卻同時也是缺點，怎麼說呢？因為 Linux 網路功能太強了，
+	所以一旦被 Cracker (網路怪客) 入侵的話，嘿嘿嘿嘿！會遇上什麼災難你可能也想像不到！
+	所以囉，上網之前，請先注意：『我的網路做好安全防護了嗎？』<br /><br />
+
+	再者，相對於視窗作業系統來說， Linux 的設定確實會讓使用者花費比較多的心力，
+	畢竟當初它是一群工程師由於本身興趣而設計出來的，所以依舊具有相當麻煩的設定工作需要作！
+	這個時候，如果沒有一些網路基礎方面的認知的話，那麼在 Linux 
+	上面設定網路或者是進行網路除錯將是您一生當中最大的夢魘......。
+	所以，這裡有幾件事情要請您好好的來參考一下：
+
+	<ul>
+	<li><span class=text_import1>熟悉 Linux 操作與 Linux 基礎</span>：<br />
+		還是要一再地不斷強調，如果您確定您只是想要『<span class=text_import2>Linux
+		能正常運作就好</span>』那一類型的使用者，那麼真的不要再往下看了，因為主機後續的維護問題會很大，
+		倒不如花個小錢，請個專家來幫您搞定即可！而如果您確定您是『<span class=text_import2>想要更瞭解 
+		Linux 的使用者，並且想要熟悉架設網站</span>』，
+		那麼請不要再在網路上詢問：『為何我不能使用 FTP 傳送資料到主機上？』
+		或者是『為何我不能建立個人網頁』之類的傻問題，因為這僅僅牽涉到『
+		<a href="../linux_basic/0210filepermission.htm">檔案權限與屬性</a>
+		』的概念而已，而這些概念都是 Linux 基礎裡頭相當重要的功課！此外，由於遠端操控 
+		Linux 主機時，幾乎都是使用文字界面來工作，所以不懂 
+		<a href="../linux_basic/0320bash.htm">bash shell</a> ？
+		哈哈！那麼想要幹嘛都碼不可能！</li><br />
+
+	<li><span class=text_import1>花幾晚的時間將網路基礎看一看</span>：<br />
+		這一個章節旨在引導網路新鮮人快速進入網路的世界，所以鳥哥寫的比較淺顯一些些，
+		基本上，還有一堆網路硬體與通訊協定並沒有被包含在這篇短文裡頭。
+		如果您的求知慾已經高過本章節，那麼請自行到書局尋找適合您自己的書籍來閱讀！
+		當然，您也可以在網際網路上面找到您所需要的資料。
+		在本章最後的<a href="#reference">參考資料</a>可以瞧一瞧吶！</li><br />
+
+	<li><span class=text_import1>隨時掌握主機資訊</span>：<br />
+		 這是最麻煩的一點了！因為大家還是常常認為『<span 
+		class=text_import2>我的網站這麼小，沒有人會注意的啦！</span>』唉！
+		說過若干次了，就是因為有這種心理存在，我們才會常常聽到
+		『奇怪！我在早上剛安裝完畢，怎麼下午就無法以 root 的身份登入了！』
+		請隨時注意您主機的資訊，好好的愛護他吧！</li>
+	</ul>
+
+	好了，底下我們就得要來談一談一些重要的網路基礎概念了，清醒了沒？
+	趕緊清醒清醒，準備要好好用功啦！ ^_^<br /><br />
+
+	<hr><a NAME="whatisnetwork_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">什麼是網路</span><br />
+	<div class=block2>
+		我們都知道，<span class=text_import2>網路就是幾部電腦主機或者是網路印表機之類的周邊設備，
+		透過網路線或者是無線網路的技術，將這些主機與設備連接起來，
+		使得資料可以透過網路媒體(網路線以及其他網路卡等硬體)來傳輸的一種方式</span>。
+		請您想像一下，如果您家裡面只有電腦、印表機、傳真機等機器，卻沒有網路連接這些硬體，
+		那麼使用上會不會很麻煩？如果將這個場景移到需要工作的辦公室時，
+		電腦的資料無法使用網路連接到印表機來列印，那是否很傷腦筋呢？
+		對吧！光用想的就覺得很麻煩吧！不幸的是，這些麻煩事在 1970 年代以前，確實是存在的啊！<br /><br />
+
+		<span class=text_import1>各自為政的『硬體與軟體』技術發展</span><br />
+		<div class=block2>
+		在 1970 年代前後，為了解決這個煩人的資料傳輸問題，各主要資訊相關的公司都在研究獨自的網路連接技術，
+		以使自家的產品可以在辦公室的環境底下組織起來。其中比較有名的就是全錄公司的 Ethernet 技術，
+		以及 IBM 研發的 Token-Ring 技術了。但是這些技術有個很大的問題，那就是這些技術彼此不認識對方的網路技術，
+		也就是說，萬一你的辦公室購買了整合 Ethernet 技術的電腦主機，但是其他的電腦卻是使用 IBM 的機器時，
+		想要在這兩者之間進行資料的溝通，在早期來說那是不可能的。<br /><br />
+		</div>
+
+		<span class=text_import1>以『軟體』技術將硬體整合</span><br />
+		<div class=block2>
+		但是，這些硬體的技術出現之後，還是對企業造成一定程度的困擾，怎麼說呢？
+		因為一個公司不太可能僅會使用一家廠商所推出的資訊產品吧！所以囉，這麼多的硬體技術又該如何整合吶？
+		舉例來說， IBM 不可能不用自己的 Token-Ring 技術，當然也不會將該技術用在其他公司的硬體上面，
+		所以，這些廠商當然只會針對自家的硬體來進行網路傳輸軟體的撰寫囉。那麼當許多不同公司的產品在自己企業內時，
+		您該如何將這些咚咚整合在一起呢？傷腦筋是吧！<br /><br />
+
+		所以在 1960 年代末期美國國防部就開始研究一個
+		<span class=text_import2>可以在這些不同的網路硬體上面運作的軟體技術，
+		使得不同公司的電腦或資料可以透過這個軟體來達成資料溝通</span>。這個研究由美國國防部尖端研究企畫署
+		( Defense Advanced Research Project Agency, DARPA )負責，他們將該網路系統稱為 ARPANET，
+		這個咚咚就是目前熟知的 TCP/IP 技術的雛形了！在 1975 年左右， ARPANET 已可以在常見的
+		Ethernet 與 Token-Ring 等硬體平台底下互通資料了。DARPA 在 1980 年正式推出 TCP/IP 技術後，
+		由於想要推展此項技術，因此與柏克萊 (Berkeley) 大學合作，將 TCP/IP 植入著名的 BSD Unix 系統內，
+		由於大學乃是未來人才資料庫的培養處，所以， TCP/IP 這個技術便吸引越來越多使用者的投入，
+		而這種連接網路的技術也被稱之為 Internet 。<br /><br />
+		</div>
+
+		<span class=text_import1>沒有任何王法的 Internet </span><br />
+		<div class=block2>
+		現在我們知道 Internet 就是使用 TCP/IP 的網路連接技術所串聯起來的一個網路世界，
+		而這個 Internet 在 1980 年代之後由於瀏覽器圖形介面的興起，因此快速的蔓延在電腦世界中。
+		但是， Internet 有沒有人在管理啊？呵呵！很不巧的是， Internet 是一個管理相當鬆散的所在。
+		只要你能夠使用任何支援 TCP/IP 技術的硬體與作業系統，並且實際連接上網路後，
+		你就進入 Internet 的世界了。在該世界當中，沒有任何王法的保護，您的實際資料如果接上 Internet ，
+		在任何時刻都需要自己保護自己，免得中了『流彈』而受傷啊！<br /><br />
+
+		為甚麼說 Internet 沒有王法呢？這是因為 Internet 僅是提供一個網路的連接介面，
+		所以您只要連接上 Internet 後，全世界都可以任你遨遊，不過也因為如此，『跨海』而來的攻擊就成了簡單的事件，
+		簡單說，台灣的法律僅適用台灣地區對吧？但是電腦怪客可以在國外透過 Internet 對你的主機進行攻擊，
+		我們的法律可管不到國外地區啊！雖然可以透過很多國際管道來尋求協助，不過，還是很難協助你緝拿兇手的啊。
+		因此囉，在你的主機要連上 Internet 之前，請先詢問自己，真的有需要連上 Internet 嗎？^_^<br /><br />
+		</div>
+
+		<span class=text_import1>軟硬體標準制定的成功帶來的影響</span><br />
+		<div class=block2>
+		現在我們常常聽到『你要上網啊！？那你要去買網路卡喔！還得要連接到 Internet 才行啊！』
+		這個網路卡就是市面上隨處可見的一個介面卡而已，至於 Internet 則是去向 Hinet/Seed net 或
+		其他網路服務提供公司 (Internet Service Provider, ISP) 申請的帳號密碼。
+		問題是，是否就僅有網路卡與 Internet 才能上網啊？呵呵！當然不是！網路的硬體與軟體可多著那！
+		不過，最成功的卻是乙太網路 (Ethernet) 與 Internet ，這是為甚麼呢？這兩者的技術比較好嗎？
+		當然不是！這是因為這兩者都被『標準』所支援的緣故。<br /><br />
+
+		乙太網路最初是由全錄 (Xerox PARC) 所建構出來的，而後透過 DEC, Intel 與 Xerox 合作將乙太網路標準化。
+		再經由 IEEE (Institute of Electrical and Electronic Engineers) 這個國際著名的專業組織利用一個 802 
+		的專案制定出標準，之後有 19 家公司宣佈支援 IEEE 所發布的 802.3 標準，
+		並且到了 1989 年國際標準組織 ISO (International Organization for Standard) 將乙太網路編入 IS88023 標準，
+		呵呵！這表示乙太網路已經是一項公認的標準介面了，如此一來，大家都可以依據這個標準來設定與開發自己的硬體，
+		只要硬體符合這個標準，理論上，他就能夠加入乙太網路的世界，所以，購買乙太網路時，
+		僅需要查看這個乙太網路卡支援哪些標準就能夠知道這個硬體的功能有哪些，
+		而不必知道這個乙太網路卡是由哪家公司所製造的吶。<br /><br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">			標準真的是個很重要的東西，真要感謝這些維護標準的專業組織。當有公司想要開發新的硬體時，
+			它可以參考標準組織所發布與維護的文件資料，透過這些文件資料後，該公司就知道要製作的硬體需要符合哪些標準，
+			同時也知道如何設計這些硬體，讓它可以『相容』於目前的機器，讓使用者不會無所適從啊。
+			包括軟體也有標準，早期 Linux 在開發時就是透過了解 POSIX 這個標準來設計核心的，
+			也使得 Linux 上面可以執行大多數的標準介面軟體呢！您說，標準是否真的很重要啊！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		當然啦，乙太網路的成功除了加入成為國際標準之外，他持續發展成為星型連線也是一個相當重要的影響。
+		之後 Novell 的 NetWare 這個網路作業系統支援乙太網路，加上 NetWare 的強大功能與支援 IBM 的個人電腦，
+		都導致乙太網路的流行！直到現在，乙太網路是整個辦公室與家庭內部的相當重要的一項硬體配備呢！
+		他也是等同於基本網路設備的同義字了吶！ ^_^<br /><br />
+
+		除了硬體之外，TCP/IP 這個 Internet 的通訊協定也是有標準的，那就是底下的網站所提供的基本文件︰
+		<ul><li><a href="http://www.rfc-editor.org/" 
+			target="_blank">http://www.rfc-editor.org/</a></li></ul>
+
+		透過這些文件的輔助，任何人只要會寫程式語言的話，就有可能發展出自己的 TCP/IP 軟體，
+		並且連接上 Internet 。早期的 Linux 為了要連接上 Internet ，Linux 團隊就自己撰寫出 TCP/IP 的程式碼，
+		透過的就是這些基礎文件的標準依據啊！舉例來說︰ <a href="ftp://ftp.rfc-editor.org/in-notes/rfc1122.txt"
+		target="_blank">RFC1122</a> 這個建議文件就指出一些基本需求，
+		讓人們可以了解啊！<br /><br />
+		</div>
+
+		透過這些軟硬體的標準以及實際上很多公司的支援，讓現今的網路世界很容易就串接在一起。
+		而目前我們最常談到的就是上面提到的咚咚，硬體就屬『乙太網路』最為常見，
+		軟體當然就是 TCP/IP 這個 Internet 最通用的通訊協定囉。那麼乙太網路是啥？
+		為甚麼有高速乙太網路、超高速乙太網路？ TCP/IP 是啥？
+		通訊協定是啥？瀏覽器又是啥？他們之間的關係是怎樣？這些東西我們就慢慢來了解一下囉。<br /><br />
+	</div>
+
+	<hr><a NAME="whatisnetwork_ethernet"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">乙太網路</span><br />
+	<div class=block2>
+		在目前的網路社會當中，常見的網路硬體包括有最常見的乙太網路，當然還有速度算是最快的光纖網路，
+		別忘了還有藍芽無線技術以及 ATM (Asynchronous Transfer Mode, 可不是自動提款機啊！！)
+		等硬體。會有這麼多網路硬體的原因有很多，
+		只要是將各個網路硬體的使用場合分類吧！舉例來說，一般家庭使用的網路速度並不需要太高，
+		若使用光纖網路，貴的哩！用不起～而企業場合如果僅使用乙太網路作為整合介面，
+		又可能造成頻寬的不足！所以囉，這些硬體各有其優缺點啦！<br /><br />
+		因此，在談乙太網路之前您必須要了解的是，<span class=text_import2>整個網路世界並非僅有乙太網路這個硬體介面</span>，
+		只是由於個人電腦的成功以及相關作業系統的支援度，加上乙太網路加入成為標準，
+		使得乙太網路成為目前最為熱門的網路硬體技術。
+		因此，我們當然得就乙太網路來聊一聊啦！事實上，整個乙太網路的發展建議您可以直接參考風信子與張民人先生翻譯的
+		『Switched & Fast 乙太網路』一書，該書內容相當的有趣，挺適合閱讀的吶。
+		底下我們僅做個簡單的介紹而已說。<br /><br />
+
+		就像前一小節提到的，乙太網路最早是由全錄這家公司為了自家的硬體設備而發展起來的，
+		經由發明者 Metcalfe 大力推動乙太網路成為業界的標準後，
+		再經由 3Com 發展大量的乙太網路硬體，配合越來越流行的相容於 IBM 的個人電腦，
+		以及支援網路的作業系統的流行，最後使得大家都參與乙太網路這個介面的發展吶，
+		也由於多數公司的量產，使得乙太網路設備越來越便宜。早期的一張 10/100 Mbps 的網路卡要價上千元，
+		目前最便宜的只要 150 台幣就能購買到了！<br /><br />
+
+		<span class=text_import1>乙太網路的速度</span><br />
+		<div class=block2>
+			前面說到，乙太網路的流行除了相關的硬體以及作業系統的流行之外，『標準』也是一個很重要的因素。
+			早先 IEEE 所制訂的乙太網路標準為 802.3 的 <span class=text_import2>IEEE 10BASE5</span> ，
+			這個標準主要的定義是：『<span class=text_import2>10 代表傳輸速度為 10Mbps，
+			BASE 表至採用基頻信號來進行傳輸，至於 5 則是指每個網路節點之間最長可達 500 公尺。</span>』
+			網路的傳輸資訊就是 0 與 1 啊，因此，<span class=text_import2>資料傳輸的單位為每秒多少 bit ，
+			亦即是 M bits/second, Mbps 的意思。</span>那麼為何制訂成為 10Mbps 呢？
+			這是因為早期的網路線壓製的方法以及相關的製作方法，還有乙太網路卡製作的技術並不是很好，
+			加上當時的資料傳輸需求並沒有像現在這麼高，所以 10Mbps 已經可以符合大多數人的需求了。<br /><br />
+
+			當時的網路線使用的是舊式的同軸電纜線，這種線路在現在幾乎已經看不到了。
+			取而代之的是類似傳統電話線的雙絞線 (Twisted Pair Ethernet) ，
+			IEEE 並將這種線路的乙太網路傳輸方法制訂成為 <span class=text_import2>10BASE-T</span>
+			的標準。 10BASE-T 使用的是 10 Mbps 全速運作且採用無遮蔽式雙絞線 (UTP) 的網路線。此外， 
+			10BASE-T 的 UTP	網路線可以使用<span class=text_import2>星形連線(star)，
+			也就是以一個集線器為中心來串連各網路設備的一個方法</span>，
+			有點類似底下的圖示：<br /><br />
+
+			<center>
+			<img src="0110network_basic/0110network_basic_what_01.png"
+			title="星形連線圖示" alt="星形連線圖示"><br />
+			圖一、星形連線 (star) 簡易圖示
+			</center><br />
+
+			不同於早期以一條同軸電纜線連結所有的電腦的 bus 連線，
+			透過星形連線的幫助，我們可以很簡單的加裝其他的設備或者是移除其他設備，
+			而不會受到其他裝置的影響，這對網路設備的擴充性與除錯來說，都是一項相當棒的設計！
+			也因此 10BASE-T 讓乙太網路設備的銷售額大幅提昇啊！<br /><br />
+
+			後來 IEEE 更制訂了 <span class=text_import2>802.3u 這個支援到 100Mbps 傳輸速度的 
+			100BASE-T 標準，</span>這個標準與 10BASE-T 差異不大，
+			只是雙絞線線材製作需要更精良，同時也已經支援使用了四對絞線的網路線了，
+			也就是目前很常見的八蕊網路線吶！這種網路線我們常稱為等級五 (Category 5, CAT5) 的網路線。
+			這種傳輸速度的乙太網路就被稱為 Fast ethernet 。至於目前我們常常聽到的 Gigabit 網路速度
+			1000 Mbps 又是什麼吶？那就是 Gigabit ethernet 哩！只是 Gigabit ethernet 
+			的網路線就需要更加的精良。<br /><br />
+
+			為什麼每當傳輸速度增加時，網路線的要求就更嚴格呢？
+			這是因為當傳輸速度增加時，線材的電磁效應相互干擾會增強，
+			因此在網路線的製作時就得需要特別注意線材的質料以及內部線蕊心之間的纏繞情況配置等，
+			以使電子流之間的電磁干擾降到最小，才能使傳輸速度提升到應有的 Gigabit 。
+			所以說，在乙太網路世界當中，如果您想要提升原有的 fast ethernet 到 gigabit ethernet 的話，
+			除了網路卡 (Network Internet Card, NIC) 需要升級之外，主機與主機之間的網路線，
+			以及連接主機線路的集線器/交換器等，都必須要提升到可以支援 gigabit 速度等級的設備才行喔！<br /><br />
+		</div>
+
+		<span class=text_import1>乙太網路的網路線接頭</span><br />
+		<div class=block2>
+			前面提到，網路的速度與線材是有一定程度的相關性的，那麼線材的接頭又是怎樣呢？
+			目前在乙太網路上最常見到的接頭就是 RJ-45 的網路接頭，共有八蕊的接頭，有點像是胖了的電話線接頭，
+			如下所示：<br />
+
+			<center>
+			<img src="0110network_basic/rj45.png"
+			title="RJ-45 接頭示意圖" alt="RJ-45 接頭示意圖"><br />
+			圖二、RJ-45 接頭示意圖
+			</center><br />
+
+			而 RJ-45 接頭又因為每條蕊線的對應不同而分為 568A 與 568B 接頭，
+			這兩款接頭內的蕊線對應如下表：<br /><br />
+
+			<table BORDER COLS=2 WIDTH="500" border=1 cellspacing=0 cellpadding=3>
+			<tr><td WIDTH="100" align=center>
+				<font face="細明體">接頭名稱</font></td>
+				<td><font face="細明體">　1　　2　　3　　4　　5　　6　　7　　8</font></td></tr>
+			<tr><td BGCOLOR="#CCFFFF" align=center>
+				<font face="細明體">568A</font></td>
+				<td BGCOLOR="#CCFFFF"><font face="細明體">白綠　綠　白橙　藍　白藍　橙　白棕　棕</font></td>
+			</tr>
+			<tr><td BGCOLOR="#66FFFF" align=center>
+				<font face="細明體">568B</font></td>
+				<td BGCOLOR="#66FFFF"><font face="細明體">白橙　橙　白綠　藍　白藍　綠　白棕　棕</font></td>
+			</tr>
+			</table><br />
+
+			事實上，雖然目前的乙太網路線有八蕊且兩兩成對，但實際使用的只有 1,2,3,6 蕊而已，
+			其他的則是某些特殊用途的場合才會使用到。但由於主機與主機的連線以及主機與集線器的連線時，
+			所使用的網路線腳位定義並不相同，因此由於接頭的不同網路線又可分為兩種：<br />
+			<ul><span class=text_import2>
+			<li>平行線：兩邊接頭同為 568A 或同為 568B 時稱為平行線，用在連結主機網路卡與集線器之間的線材；</li>
+			<li>跳線：一邊為 568A 一邊為 568B 的接頭時稱為跳線，用在直接連結兩部主機的網路卡。</li>
+			</span></ul>
+			而不同等級的線材除了針對線材材質的電阻等規格加以規範之外，有時為了更好的電磁效應屏蔽功能，
+			會將四對蕊線以金屬薄膜包覆，以提供更佳的抗干擾能力。
+			<span class=text_import2>沒有屏蔽的我們就稱為無遮蔽雙絞線(UTP)，
+			有屏蔽的就被稱為有遮蔽雙絞線(sheild Twisted Pair, STP)。</span>
+			STP 的網路線由於加上屏蔽物質，所以較硬、較貴也較不易佈線，不過優點則是對於電磁效應屏蔽較佳。
+			那麼網路線如何選擇？以目前來說，由於我們想到達到 Gigabit Ethernet 的網路速度，
+			所以必須使用 CAT 5e 以上等級包含 CAT 6 的網路線材才行！那麼如何區分？
+			其實在網路線上面的纜線表面都會寫上這條網路線的相關規範，看一看就知道啦！
+			而且還得要看看該條線段是『跳線』還是『平行線』喔！<br /><br />
+		</div>
+
+		<a name="csmacd"></a>
+		<span class=text_import1>資料在乙太網路間的傳送 (MAC)</span><br />
+		<div class=block2>
+			接下來要談的是那麼乙太網路到底是如何傳輸資料的呢？
+			由於目前辦公室內部的乙太網路多是利用集線器以及交換器(Hub/Switch)做為中心，
+			利用星形連線達成網路環境的一種方式，因此網路線是一個很重要的媒體喔！
+			那麼網路線裡頭最多就是電子訊號在跑嘛(就是 0 與 1 啊)！而如果同時有兩部電腦要使用這個網路線時，
+			怎麼可能同時發出兩個電子訊號出來呢？這個時候是會發生訊號碰撞的問題的，
+			因此，<span class=text_import2>網路共享媒體(包括網路線、集線器等)在單一時間點內，
+			僅能被一部主機所使用</span>這個概念必須要先瞭解才行。<br /><br />
+
+			為了杜絕這種訊號碰撞產生的問題，所以乙太網路在發展時就使用一種名為<span class=text_import2>
+			CSMA/CD (Carrier-Sense Multiple Access with Collision Detection)</span> 的技術。
+			這種技術的特點就是當節點想要在網路媒體上面傳輸資料時，
+			會先偵測該媒體上面是否有其他的節點正在使用，確定沒有其他節點在使用該媒體時，該節點才會開始傳送資料。
+			並且，當節點開始傳送資料時，節點也能夠同時偵測是否有發生碰撞的現象。
+			<span class=text_vbird>(註：任何一個具有 MAC 的網路媒體接在該網路上面，就稱為一個節點"node"，
+			所以，一部主機就是一個 node ！)</span>
+			不過，事實上在這樣的共享媒體環境下，當網路相當忙碌時，
+			資料的碰撞 (collision) 還是會發生的啦！<br /><br />
+
+			再來，我們還是得要知道一下『那電子訊號由一部主機發出後，這個訊號怎麼知道要傳到哪裡去？』
+			既然有來源也有目標，那當然就得需要一個可以判別訊號來源與等待接受的主機的相關資訊囉？
+			沒錯！在乙太網路內，我們就是以 <span class=text_import2>MAC 
+			(Media Access Control, 媒體存取控制)</span>來管理資料傳送的。
+			而 <a name=frame></a><span class=text_import2>MAC 其實就是一個訊框( frame )</span>，
+			你可以把他想成是一個在網路線上面傳遞的包裹，
+			而這個包裹是<span class=text_import2>整個網路硬體上面傳送資料的最小單位了</span>。
+			也就是說，網路線可想成是一條『一次僅可通過一個人』的獨木橋，
+			而 MAC 就是在這個獨木橋上面動的人啦！那 MAC 又該如何判斷這獨木橋的兩端分別是何處呢？
+			這就得要看一看 MAC 這個訊框的內容了：<br /><br />
+
+			<center><a name="fig_mac"></a>
+			<img src="0110network_basic/mac.png" 
+			title="乙太網路的 MAC 訊框" alt="乙太網路的 MAC 訊框"><br />
+			圖三、乙太網路的 MAC 訊框
+			</center><br />
+
+			在這個 MAC 當中，最重要的就是那個 6 Bytes 的目的與來源位址了！
+			事實上，在所有的乙太網路卡當中都有一個獨一無二的網路卡卡號，
+			那就是上頭的『目的與來源位址』，這個位址是硬體位址( hardware address )，
+			共有 6 bytes ，分別由 00:00:00:00:00:00 到 FF:FF:FF:FF:FF:FF，
+			這 6 bytes 當中，前 3bytes 為廠商的代碼，後 3bytes 則是該廠商自行設定的裝置碼了。
+			在 Linux 當中，你可以使用 ifconfig 這個指令來查閱你的網路卡卡號喔！
+			不過，由於 MAC 主要是與網路卡卡號有關，所以我們也常常將 MAC 作為網路卡卡號的代稱。
+			<span class=text_import2>特別注意，在這個 MAC 的傳送中，他僅在區域網路內生效，
+			如果跨過不同的網域 (這個後面 IP 的部分時會介紹)，那麼來源與目的的位址就會跟著改變了。
+			這是因為變成不同網路卡之間的交流了嘛！所以卡號當然不同了！</span>如下所示：<br /><br />
+
+			<center>
+			<img src="0110network_basic/mac-2.png" 
+			title="在不同主機間持續傳送相同資料" alt="在不同主機間持續傳送相同資料"><br />
+			圖四、在不同主機間持續傳送相同資料的 MAC 訊框變化
+			</center><br />
+
+			例如上面的圖示，我的資料要由電腦 A 通過 B 後才送達 C ，而 B 電腦有兩塊網路卡，
+			其中 MAC-2 與 A 電腦的 MAC-1 互通，至於 MAC-3 則與 C 電腦的 MAC-4 互通。
+			但是 MAC-1 不能與 MAC-3 與 MAC-4 互通，為啥？因為 MAC-1 這塊網路卡並沒有與 
+			MAC-3 及 MAC-4 使用同樣的 switch/hub 相接嘛！所以，資料的流通會變成：<br />
+
+			<ol><li>先由 MAC-1 傳送到 MAC-2 ，此時來源是 MAC-1 而目的地是 MAC-2；
+			<li>B 電腦接收後，察看該訊框，發現目標其實是 C 電腦，而為了與 C 電腦溝通，
+			所以他會將訊框內的來源 MAC 改為 MAC-3 ，而目的改為 MAC-4 ，如此就可以直接傳送到 C 電腦了。</ol>
+
+			也就是說，只要透過 B (就是路由器) 才將封包送到另一個網域 (IP 部分會講) 去的時候，
+			那麼訊框內的硬體位址就會被改變，然後才能夠在同一個網域裡面直接進行 frame 的流通啊！<br /><br />
+
+			另外，這個 MAC 訊框可以容納多大的資料啊？？在正規的乙太網路當中，
+			就如同上<a href="#fig_mac">圖三</a>所標示的，一個訊框標準容量最大可達 1500Bytes，
+			也就是說，在整條網路上面，一個訊框最大就僅能達到 1500bytes。
+			那如果我有 100M Bytes 的資料要傳送怎辦呢？那您的作業系統會主動的將該 100M bytes 
+			的資料拆解成為多個 1500bytes 的訊框後，傳送到目的地，再重新組合成為原本 100Mbytes 的檔案！
+			這裡也就可以解釋，為什麼網路共享媒體一次只能有一部主機使用，
+			但是區域網路內的兩部電腦卻可以同時下載檔案？這是因為『每次要發出一個訊框時，
+			都需要進行 <a href="#csmacd">CSMA/CD</a> 的監聽，而剛剛成功發出訊框的那部主機，
+			也需要再使用 <a href="#csmacd">CSMA/CD</a> 來跟大家搶。』
+			所以囉，誰能搶到呢？有時後因為網路太忙碌，那麼 frame 與 frame 就可能會碰撞啦。<br /><br />
+
+			在早期 10/100 Mbps 的年代，這個 1500 bytes 的網路媒體傳輸數值還沒有多大的影響，
+			但到了 gigabit 的年代，如果使用的還是 1500 bytes 時，大型的檔案將會被拆解成多個 frame ，
+			而多個 frame 就意味著主機需要進行多次資料的拆解，網路也需要進行多次的傳輸。
+			如果可以將這個 MAC 的資料存放處加大的話，那麼不就可以節省系統資源，
+			並且網路傳遞的次數也會降低，呵呵！沒錯～在這樣的思考邏輯下，於是目前的 Gigabit Ethernet 
+			通常都已經支援大的訊框架構，那就是 Jumbo Frame 囉～
+			一般來說，只要是 Gigabit 乙太網路卡都會支援 Jumbo frame 的 (請參考文末的參考文獻連結)，
+			他的大小通常是定義在 9000 bytes 的，
+			不過其他的乙太網路媒體可就不一定了。由於網路媒體支援 Jumbo frame 後，
+			他的效能是會有所改善的，所以挑選乙太網路媒體時，記得查閱一下該媒體的說明喔！<br />
+			<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">			由於網路卡卡號是跟著網路卡走的，並不會因為重灌作業系統而改變，
+			所以防火牆軟體大多也能夠針對網路卡來進行抵擋的工作喔！
+			不過抵擋網卡僅能在區域網路內進行而已，因為 MAC 不能跨 router 嘛！！
+			</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<a name="switch_hub"></a>
+		<span class=text_import1>共不共享很重要，集線器還是交換器？</span><br />
+		<div class=block2>
+		剛剛我們上面提到了，當一個很忙碌的網路在運作時，網路共享媒體就可能會發生碰撞的情況，
+		這是因為 <a href="#csmacd">CSMA/CD</a> 的緣故。那我們也知道在一個星形連線當中，
+		正中央的那個設備是集線器或交換器來連接各 PC 的。
+		那麼 Hub 與 Switch 有啥不同啊？其實，<span class=text_import2>那個 Hub 就是網路共享媒體，
+		Hub 僅是將所有來自 PC 的 frame 再次送出去給所有的 PC 而已，所以他是個共享媒體。</span><br /><br />
+
+		Switch 則不然喔！Switch 內部具有微處理器以及記憶體，這個<span class=text_import2>記憶體可以記錄每個
+		switch port 與其連接的 PC 的 MAC 位址</span>，所以，當來自 switch 兩端的 PC 要互傳資料時，
+		每個 frame 將不會透過 <a href="#csmacd">CSMA/CD</a> 的監聽，而是透過 switch 
+		直接將該 frame 送到目標主機上頭去吶！
+		也就是說， switch 不是個共享媒體，且 switch 的每個埠口 (port) 都具有獨立的頻寬喔！
+		舉例來說，10/100 的 Hub 上連結 5 部主機，那麼整個 10/100Mbps 是分給這五部主機的，
+		所以這五部主機總共只能使用 10/100Mbps 而已。那如果是 switch 呢？由於『每個 port 都具有 10/100Mbps 的頻寬』，
+		所以就看您當時的傳輸行為是如何囉！舉例來說，如果是底下的狀況時，每個連線都是 10/100 Mbps 的。<br /><br />
+
+			<center>
+			<img src="0110network_basic/switch.png" 
+			title="Switch 的頻寬簡介" alt="Switch 的頻寬簡介"><br />
+			圖五、Switch 的頻寬簡介
+			</center><br />
+		A 傳送到 D 與 B 傳送到 C 都獨自擁有 10/100Mbps 的頻寬，兩邊並不會互相影響！
+		不過，如果是 A 與 D 都傳給 C 時，由於 C port 就僅有 10/100Mbps ，等於 A 與 D 都需要搶 C 節點的 10/100Mbps 來用的意思。
+		總之，你就是得要記得的是，switch 已經克服了封包碰撞的問題，因為他有個 switch port 對應 MAC 的相關功能，
+		所以 switch 並非共享媒體喔！同時需要記得的是，現在的 switch 規格很多，
+		在選購的時候，千萬記得選購可以支援全雙工/半雙工，以及支援 Jumbo frame 的為佳！</br /><br />
+
+		<a name="duplex"></a>
+		那什麼是<span class=text_import2>全雙工/半雙工(full-duplex, half-duplex)</span>？
+		前面談到網路線時，我們知道八蕊的網路線實際上僅有兩對被使用，一對是用在傳送，另一對則是在接收。
+		如果兩端的 PC 同時支援全雙工時，那表示 Input/Output 均可達到 10/100Mbps，
+		亦即資料的傳送與接收同時均可達到 10/100bps 的意思，總頻寬則可達到 20/200Mbps 囉
+		(其實是有點語病的，因為 Input 可達 10/100Mbps， output 可達 10/100Mbps ，
+		而不是 Input 可直接達到 20/200Mbps 喔！)如果您的網路環境想要達到全雙工時，
+		使用共享媒體的 Hub 是不可能的，因為網路線腳位的關係，無法使用共享媒體來達到全雙工的！
+		如果你的 switch 也支援全雙工模式，那麼在 switch 兩端的 PC 才能達到全雙工喔！<br /><br />
+
+		</div>
+
+		<span class=text_import1>一些常見的乙太網路技術</span><br />
+		<div class=block2>
+		如果您常常在網路上搜尋一些硬體資訊時，或者是常常跑到資訊賣場去看看新鮮貨時，
+		應該會注意到一些網路硬體，尤其是越來越普及的 switch 這玩意兒的相關硬體資訊吧！
+		而且，我們知道網路線因為接頭的關係而有平行線與跳線，這兩種網路線使用的時機並不相同，
+		那麼你是否一定需要購買特殊的線段才能夠連結 PC 與 switch 呢？呵呵！不需要～
+		因為現在的硬體實在太聰明了！底下的功能您應該都可以在新的硬體上面發現的！<br /><br />
+
+		<a name=n-way></a>
+		<span class=text_import1>自動協調速度機制</span>：<br />
+		我們都知道現在的乙太網路卡是可以向下支援的，亦即是 Gigabit 網路卡可以與早期的 10/100Mbps 
+		網路卡連結而不會發生問題。但是，此時的網路速度是怎樣判定呢？
+		早期的 switch/hub 必須要手動切換速度才行，新的 hub/switch 因為有支援 auto-negotiation 又稱為 N-Way
+		的功能，他可自動的協調出最高的傳輸速度來溝通喔！如果有 Gigabit 與 10/100Mbps 在 switch 上面，
+		則 N-Way 會先使用最高的速度 (gigabit) 測試是否能夠全部支援，如果不行的話，就降速到下一個等級亦即
+		100 Mbps 的速度來運作的！<br /><br />
+
+		<a name="auto_mdi"></a>
+		<span class=text_import1>Auto MDI/MDIX</span>：<br />
+		那麼我們是否需要自行分辨平行線與跳線呢？不需要啦！因為 switch 若含有auto MDI/MDIX 的功能時，
+		會自動分辨網路線的腳位來調整連線的，所以您就不需要管你的網路線是跳線還是平行線囉！方便吧！ ^_^<br /><br />
+		</div>
+
+		<span class=text_import1>訊號衰減造成的問題</span><br />
+		<div class=block2>
+		由於電子訊號是會衰減的，所以當網路線過長導致電子訊號衰減的情況嚴重時，
+		就會導致連線品質的不良了。因此，連結各個節點的網路線長度是有限制的喔！
+		不過，一般來說，現今的乙太網路 CAT5 等級的網路線大概都可以支援到 100 公尺的長度，
+		所以應該無庸擔心才是吶！<br /><br />
+
+		但是，造成訊號衰減的情況並非僅有網路線長度而已！如果您的網路線折得太嚴重(例如在門邊常常被門板壓，導致變形)
+		，或者是自行壓製網路線接頭，但是接頭部分的八蕊蕊線纏繞度不足導致電磁干擾嚴重，
+		或者是網路線放在戶外風吹日曬導致脆化的情況等等，都會導致電子訊號傳遞的不良而造成連線品質惡劣，
+		此時常常就會發現偶而可以連線、有時卻又無法連線的問題了！因此，當您需要針對企業內部來架設整體的網路時，
+		注意結構化佈線可是很重要的喔！<br /><br />
+		</div>
+
+		<span class=text_import1>結構化佈線</span><br />
+		<div class=block2>
+		所謂的結構化佈線指的是將各個網路的元件分別拆開，分別安裝與布置到企業內部，
+		則未來想要提升網路硬體等級或者是移動某些網路設備時，只需要更動類似配線盤的機櫃處，
+		以及末端的牆上預留孔與主機設備的連線就能夠達到目的了。例如底下的圖示：<br /><br />
+
+			<center>
+			<img src="0110network_basic/structure.png" 
+			title="結構化佈線簡易圖示" alt="結構化佈線簡易圖示"><br />
+			圖六、結構化佈線簡易圖示
+			</center><br />
+
+		在牆內的佈線需要很注意，因為可能一佈線完成後就使用 5-10 年以上喔！
+		那您需要注意的僅有末端牆上的預留孔以及配線端部分。
+		事實上，光是結構化佈線所需要選擇的網路媒體與網路線的等級，
+		還有機櫃、機架，以及美化與隱藏網路線的材料等等的挑選，以及實際施工所需要注意的事項，
+		還有所有硬體、施工所需要注意的標準規範等等，
+		已經可以寫滿厚厚一本書，而鳥哥這裡的文章旨在介紹一個中小企業內部主機數量較少的環境，
+		所以僅提到最簡單的以一個或兩個交換器 (swtich) 串接所有網路設備的小型星形連線狀態而已，
+		如果您有需要相關硬體結構化佈線的資訊，可以參考風信子兄翻譯的『Swtich and Fast 
+		乙太網路』一書的後半段！至於網路上的高手嗎？您可以前往酷學園請教 
+		<a href="http://phorum.study-area.org/profile.htm?mode=viewprofile&u=801"
+		target="_blank">ZMAN</a> 大哥喔！<br />
+		</div>
+	</div>
+
+	<hr><a NAME="whatisnetwork_osi"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">OSI 七層協定</span><br />
+	<div class=block2>
+		目前我們的主機只要能夠取得正確的 IP 與相關參數設定時，你就可以連上 Internet 了，
+		根本不管你的網路硬體是乙太網路還是光纖網路。而且，你主機的作業系統是啥， Internet 也是不管的！
+		這是為什麼呢？因為網路的傳輸是有分層架構的，每個分層 (layer) 是可以獨立的。
+		同時每個分層都有獨自的標準可供依循，例如在網路媒體的硬體部分就可以參考 IEEE 的 802.3 的標準！
+		如此一來，大家都可以在自己的分層當中找到相關的標準來設定自己的資料，如此網路連結就變的更容易了。
+		關於網路的分層我們最喜歡拿 <span class=text_import2>OSI (Open system Interconnection)</span>
+		七層協定來說明喔！
+		事實上， OSI 七層協定只是一個參考的模型 (model)，不過，由於 OSI 所定義出來的七層協定相當良好，
+		所以拿來當作網路連線解釋真是太棒了！底下就來說說吧！<br /><br />
+
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width="150">分層</td><td>負責內容</td></tr>
+<tr><td align=center>Layer 1<br />實體層<br />Physical Layer, PHY</td>
+	<td>在這個層級當中主要定義了最基礎的網路硬體標準，包括各種網路線、各種無線連線方式，各種設備規範、
+	以及各種接頭的規則，還有傳輸訊號的電壓等等，反正與硬體有關的標準大多都在這個層級當中定義的！</td></tr>
+<tr bgcolor=lightgreen><td align=center>Layer 2<br />資料連接層<br />Data-Link Layer</td>
+	<td><a name=arp></a>由於傳送資料的網路媒體是以電子訊號進行傳送，所以我們的資料要使用這樣的訊號傳送時，
+	就需要制訂各種網路型態的訊框 (frame) 了，才能確保資料可以在不同的網路媒體進行傳送的動作。
+	所以，在這一層當中就制訂了 frame 的格式以及通過網路的方式。
+	包括訊框的資料格式、錯誤控制、流量控制、檢查資料傳輸錯誤的方法等等，都在這裡控制。
+	既然與訊框有關，當然這個層級就與前面提到的 MAC 有很強烈的相關性囉！<br /><br />
+	但我們知道事實上目前的 Internet 使用的其實是 IP 來進行連線的啊！但硬體資料卻是由訊框所傳送的。
+	為了要將兩者對應 (MAC 與 IP 的對應)，就必須要經由 <span class=text_import2>Address Resolution Protocol (ARP)</span>
+	這個協定來幫忙解析出對應才行！</td></tr>
+<tr><td align=center>Layer 3<br />網路層<br />Network Layer</td>
+	<td>這一層是我們最感興趣的囉～因為我們提及的 IP (Internet Protocol) 就是在這一層定義的，
+	同時也定義出電腦之間的連線建立、終止與維持等，資料封包 (packet) 的傳輸路徑選擇等等，
+	因此這個層級當中最重要的除了 IP 之外，就是封包能否到達目的地的路由 (route) 概念了！
+	此外，這一個網路層可以涵蓋實體層與資料連結層，通常我們不需要設定硬體與相關 MAC 的資料，
+	就是因為網路層已經 (有點類似) 隱藏了底下兩層，讓我們只要設定好 IP 就能夠上網吶！
+	IP 與 route 的部分我們會在下一小節加以介紹的。</td></tr>
+<tr bgcolor=lightgreen><td align=center>Layer 4<br />傳送層<br />Transport Layer</td>
+	<td>這一個分層定義了發送端與接收端的連線技術(如 TCP 技術)，
+	同時包括該技術的封包格式，資料封包的傳送、流程的控制、傳輸過程的偵測檢查與復原重新傳送等等，
+	以確保各個資料封包可以正確無誤的到達目的端。</td></tr>
+<tr><td align=center>Layer 5<br />會談層<br />Session Layer</td>
+	<td>在這個層級當中主要定義了兩個位址之間的連線通道之連接與掛斷，此外，亦可建立應用程式之對談、
+	提供其他加強型服務如網路管理、簽到簽退、對談之控制等等。如果說傳送層是在判斷資料封包是否可以正確的到達目標，
+	那麼會談層則是在確定網路服務建立連線的確認，例如三向交握。這部分我們會在底下的 TCP 技術當中做個說明。</td></tr>
+<tr bgcolor=lightgreen><td align=center>Layer 6<br />表現層<br />Presentation Layer</td>
+	<td>我們在應用程式上面所製作出來的資料格式不一定符合網路傳輸的標準編碼格式的！
+	所以，在這個層級當中，主要的動作就是：將來自本地端應用程式的資料格式轉換(或者是重新編碼)成為網路的標準格式，
+	然後再交給底下傳送層等的協定來進行處理。所以，在這個層級上面主要定義的是網路服務(或程式)之間的資料格式的轉換，
+	包括資料的加解密也是在這個分層上面處理。</td></tr>
+<tr><td align=center>Layer 7<br />應用層<br />Application Layer</td>
+	<td>完全與程式有關的囉，包括定義出檔案的讀取、複製、開啟、關閉等等，
+	常見的程式包括有瀏覽器、資料庫處理系統與電子郵件系統等等。</td></tr>
+</table><br />
+
+		事實上，在上述的七層協定當中，前兩層(實體與資料連接層)主要就是由一些硬體標準所規範出來的，
+		像我們前一小節提到的乙太網路之 MAC 訊框相關的格式，以及一些類似乙太網路線接頭規範、
+		<a href="#csmacd">CSMA/CD</a> 的技術等等，都是在前兩層進行規範的。<br /><br />
+
+		至於網路層與傳送層則與 TCP/IP 有關。我們知道目前的 Internet 相關的 IP 與 TCP 封包格式是由
+		Internet Network Information Center (INTERNIC) 所統一整理與維護的，至於 
+		TCP/IP 的標準則主要以 Request For Comment (RFC) 技術報告的形式公開。
+		而會談、表現與應用層則主要與作業系統及應用程式有關了。<br /><br />
+
+		那麼這七層到底是如何運作的呢？我們以常見的 WWW 瀏覽器來進行說明好了。
+		假設你想要由奇摩雅虎(tw.yahoo.com)下載一個大於 10Mbytes 的檔案，
+		那麼你必須要由你的主機打開瀏覽器，並且輸入相關的網址列後才能開始下載，對吧！
+		不過，我們知道由於網路媒體的關係，標準乙太網路的硬體最大僅能支援 1500 bytes 的訊框大小，
+		而我要去奇摩雅虎時，必須要知道奇摩雅虎那部主機的 IP 才行，而我們的瀏覽器使用的是 TCP
+		的封包格式。這樣一層一層下來，你可以將各個分層想成是一個一個的大袋子，
+		而且每個袋子都必須要包含在下一個袋子內，例如 IP 的袋子必須要裝在 MAC 訊框的袋子內。<br />
+
+		<ul>
+		<li>所以，由於最後被傳送的袋子(實體層)的限制，我必須要將 10Mbytes 的檔案先切成數個小包，
+		然後將這些小包給他包到 TCP 的袋子內，這個袋子記載了我的資料內容。</li>
+		<li>然後這個袋子還要裝到 IP 這個袋子內，IP 這個袋子會記錄我的住址以及要傳送到的目的地的住址，</li>
+		<li>最後再將這個 IP 的袋子裝到 MAC 的訊框袋子內，
+		這個袋子就記錄了可以在同一區域內傳遞袋子的網卡卡號了。</li>
+		</ul>
+		之後這個 MAC 的大袋子就會被帶到下個傳遞點去，
+		當然啦， MAC 這個袋子的傳遞是需要符合 <a href="#csmacd">CSMA/CD</a> 以及乙太網路的相關定義的喔！
+		當傳到目的地後，對方會一個袋子一個袋子的解開，最後拿到他們的資料。不過，由於我的 10Mbytes 
+		已經被分成多個小袋子了，所以每個小袋子內需要有序號，這樣當所有的小袋子都到達目的地後，
+		對方才可以依照這些序號將所有小袋子內的資料給他整合成為原來的資料啊！<br /><br />
+
+		所以啊，這些分層可以使用底下的圖示來看：<br /><br />
+
+			<center>
+			<img src="0110network_basic/osi_7layer.png" 
+			title="OSI 七層協定的相關性" alt="OSI 七層協定的相關性"><br />
+			圖七、OSI 七層協定的相關性
+			</center><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題一：請找出您 Linux 主機上面的網路卡硬體位址(Hardware Address, 或 MAC)，
+如果已經連上網路的話，請找出您區域網路內其他電腦的網路卡卡號。<br /><br />
+答：<ul>
+在 Linux 底下網路卡的裝置代號一般是 eth0 ，所以想要瞭解您的網路卡卡號時，可以使用：
+『 ifconfig eth0 』這個指令來查閱，在出現的資料中第一行最右邊搜尋 HWaddr 的後面接的那串咚咚，就是你的卡號。
+至於其他的卡號與 IP 的對應方面，直接輸入『 arp -n 』應該就可以查閱的到相關的對應表囉！
+更多說明請先使用 man 來查詢，後續章節我們也會繼續加以介紹的。
+</ul>
+</td></tr></table>
+
+	</div>
+</div>
+
+
+<hr><a NAME="ipandmac"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">IP 與 MAC</span><br />
+<div class=block1>
+	我們現在知道要有網路的話，必須要有網路相關的硬體，而目前最常見的網路硬體介面為乙太網路，
+	包括網路線、網路卡、Hub/Switch 等等。而乙太網路上面的傳輸使用網路卡卡號為基準的 MAC 訊框，
+	配合 <a href="#csmacd">CSMA/CD</a> 的監聽技術來傳送訊框，這是硬體部分。那麼在軟體部分，我們知道 Internet
+	其實就是 TCP/IP 這個通訊協定的通稱，Internet 是由 INTERNIC 所統一管理的，
+	但其實他僅是負責分配 Internet 上面的 IP 以及提供相關的 TCP/IP 技術文件而已，
+	另外，在 TCP/IP 上面還有很多的應用程式，包括 FTP, HTTP, EMAIL 等等的技術！
+	底下我們就先來談一談最底層的 MAC 與 IP 吧！<br /><br />
+
+	<hr><a NAME="ipandmac_mac"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">傳輸單位與 MAC</span><br />
+	<div class=block2>
+		想一想，如果沒有電的話，我們的網路是否能夠通行無阻？當然不行！
+		因為網路其實就是電子訊號的傳送啊！如果沒有電，當然就沒有辦法傳送訊息了。而電子訊號只有
+		0 跟 1 啊，所以在網路單位的計算上，一般通常是以二進位的 bit 為單位的。那麼這個
+		bit 與我們通常用來計算檔案大小的單位 bytes 有什麼關連性？其實：<br />
+		<ul><span class=text_import2><b><font face="細明體">1byte = 8bits</font></b></span></ul>
+		所以啦，一般來說，我們看到的網路提供者<span class=text_import2> (Internet
+		Services Provider, ISP)</span> 所宣稱他們的 ADSL 傳輸速度可以達到 下行/上行
+		2Mbps/128Kbps ( Kbits per second) 時，那個 Kb 指的可不是 bytes 而是 bits
+		喔！所以 2M/128K 在實際的檔案大小傳輸速度上面，最大理論的傳輸為 256KBps/16
+		KBps(KBytes per second)，所以正常下載的速度約在每秒 100~200 KBytes 之間吶！
+		同樣的道理，在網路卡或者是一些網路媒體的廣告上面，他們都會宣稱自己的產品可以自動辨識傳輸速度為
+		10/100 Mbps ( Mega-bits per second)，呵呵！該數值還是得再除以 8 才是我們一般常用的檔案容量計算的單位
+		bytes 喔！這樣可以瞭解傳輸單位的意義了嗎？！<br /><br />
+
+		那麼 MAC 呢？MAC 是 Media Access Control (媒體存取控制)，我們在前小節的
+		<a href="#fig_mac">圖三</a>已經介紹過該訊框的資料格式，
+		且 MAC 常用來做為硬體位址 (Hardware address) 的代稱。我們自己主機上面的 MAC 很好解決，
+		假設您的網路卡僅有一張，則 Linux 系統內網卡的代號預設由 eth0 開始編號，
+		因此當你輸入 ifconfig eth0 這個指令時，就會出現如下的訊息了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>在 Linux 環境下</span>
+[root@linux ~]# <span class=term_command>ifconfig eth0</span>
+eth0      Link encap:Ethernet  <span class=term_write>HWaddr 00:01:03:43:E5:34</span>
+          inet addr:192.168.1.100   Bcast:192.168.1.255   Mask:255.255.255.0
+          inet6 addr: fe80::201:3ff:fe43:e534/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  <span class=term_write>MTU:1500</span>  Metric:1
+.....
+
+<span class=term_hd>在 Windows 環境下</span>
+C:\Documents and Settings\admin..&gt; <span class=term_command>ipconfig /all</span>
+....
+        Physical Address. . . . . . . . . : <span class=term_write>00-01-03-43-E5-34</span>
+....
+</pre></td></tr></table>
+
+		<a name=arp2></a>
+		事實上，這個 MAC 幾乎都是銲死在網路卡上面的，所以不能夠被修改。
+		不過，近來有些筆記型電腦上面的網路卡可以透過軟體來進行 MAC 的修改囉～
+		好，在我們的主機上網路卡可以透過 ifconfig 來查詢到 MAC ，但我們知道訊框是在兩張網路卡之間傳訊的，
+		那我如何知道其他主機的網路卡卡號呢？此時就得要透過
+		<a href="#arp">ARP (Address Resolution Protocol)</a> 的幫忙了。
+		由於 TCP/IP 的通訊協定內大多僅需要瞭解 IP 即可，但訊框卻是透過 MAC 來傳遞，
+		因此 IP 與 MAC 就得要透過一個解析的功能囉！那就是 ARP 啦！<br /><br />
+
+		當我們的主機想要找出目標 IP 時，就會對整個區域網路進行廣播封包(broadcast)的傳送，
+		這個廣播封包可以對所有區域網路內的電腦要求回報他的 IP 與 MAC ，
+		當目標 IP 看到這個廣播封包時，就會回應您主機相關的 MAC 資訊，如果非目標主機接到這個封包，
+		就會主動的忽略！如此一來，你就可以取得目標主機的 MAC 囉！
+		而這個目標主機的 MAC 就會被記錄到你的主機內的 ARP table (ARP table 在記憶體中)，
+		不過還是要再次的提醒， MAC 是不能跨路由的，請參考圖四的相關說明喔！
+		如果想要查閱你的 ARP 記錄，可以使用 arp 這個指令即可。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>arp -[nd] hostname</span>
+[root@linux ~]# <span class=term_command>arp -s hostname(IP) Hardware_address</span>
+<span class=term_say>參數：
+-n ：將主機名稱以 IP 的型態顯示
+-d ：將 hostname 的 hardware_address 由 ARP table 當中刪除掉
+-s ：設定某個 IP 或 hostname 的 MAC 到 ARP table 當中 </span>
+<span class=term_hd>範例一：</span>
+[root@linux ~]# <span class=term_command>arp -n</span>
+Address            HWtype  HWaddress           Flags Mask    Iface
+192.168.1.100      ether   00:01:03:01:02:03      C          eth0
+192.168.1.240      ether   00:01:03:01:DE:0A      C          eth0
+192.168.1.254      ether   00:01:03:55:74:AB      C          eth0
+<span class=term_hd>範例二：</span>
+[root@linux ~]# <span class=term_command>arp -s 192.168.1.100  01:00:2D:23:A1:0E</span>
+<span class=term_say># 這個指令的目的在建立靜態 ARP </span>
+</pre></td></tr></table>
+
+		如同上面的表格，我主機上面的 ARP 記錄著這麼多的 IP 與 MAC 的對應，
+		這個 ARP 的好處可多了！由於有記錄 MAC 與 IP 的對應，因此當下回我的資料又傳送到同一部主機時，
+		我的主機會主動的傳送到同一個 MAC 去，而不需要再次透過 broadcast 來查詢 MAC，
+		所以省去了很多網路延遲的時間喔！此外，特別注意的是，
+		<span class=text_import2>ARP table 是動態的資訊</span>，他會隨時隨著您的網域裡面電腦的
+		IP 更動而變化，所以，即使您常常更動您的電腦 IP，不要擔心，因為 ARP table
+		會自動的重新對應 IP 與 MAC 的表格內容！但如果你有特殊需求的話，
+		也可以利用『 arp -s 』這個參數來定義靜態的 ARP 對應喔！<br /><br />
+	</div>
+
+	<hr><a NAME="ipandmac_ip"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">IP 的組成</span><br />
+	<div class=block2>
+		好了，接下來可以開始介紹那個可愛的 TCP/IP 裡頭的 IP 啦！這個 IP 是
+		Internet Protocol 的縮寫，他的功能有點像是『門牌號碼』，主要是在網路層( Layer 3 )的功能，
+		那麼這個 IP 有哪些重要的地方需要瞭解的呢？底下我們就來談一談吧！<br /><br />
+
+		IP 是一種資料封包的格式，這個 IP 資料封包最大可以到達 65535 bytes ，
+		然而就如同<a href="#fig_mac">圖三</a>乙太網路訊框的資料所示，
+		由於標準乙太網路訊框可包含的資料最大僅達 1500 bytes ，
+		並且依照不同的網路媒體而有不同的 MAC 訊框大小，我們前面也談到的 OSI 七層協定當中，
+		由於 IP 封包必須要放到 MAC 訊框當中，因此 IP 封包在 Internet 上面應該是不可能達到 65535 bytes
+		這個值的(因為必須小於 MAC 訊框所能容許的最大值)。另外，
+		由於網路連線過程當中封包所經過的網路媒體各不相同，因此 MAC 訊框大小當然也不同，
+		而為了讓 IP 封包可以適用在所有的網路媒體訊框當中，因此， 
+		<span class=text_import2>IP 封包是可以被『重組的』</span>！<br /><br />
+
+		我們知道 MAC 訊框表頭 (將他想成是一個信封袋外面的記錄資料) 當中最重要的就是網路卡卡號 
+		(hardware address) 這個咚咚！(參考<a href="#fig_mac">圖三</a> )，那麼 IP 
+		表頭最重要的是什麼呢？呵呵！那就是 IP 位址 (address) 了！目前我們在 Internet 上面使用的 IP
+		協定是第四版，通稱為 <span class=text_import2>IPv4</span> ，這個版本的 <span class=text_import2>IP 
+		位址主要是由 32 bits 的資料所組成的一組數據</span>，也就是 32 個 0 跟 1 
+		所組成的數據資料，因為只有零跟一，所以
+		IP 的組成當然就是電腦認識的二進位的表示方式了。<br /><br />
+
+		不過，因為人類對於二進位實在是不怎麼熟悉，所以為了順應人們對於十進位的依賴性，因此，就將
+		32 bits 的 IP 分成四小段，每段含有 8 個 bits ，將 8 個 bits 
+		計算成為十進位，並且每一段中間以小數點隔開，那就成了目前大家所熟悉的
+		IP 的書寫模樣了。如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>IP 的表示式：</span>
+00000000.00000000.00000000.00000000   ==> <span class=term_write>0.0.0.0</span>
+11111111.11111111.11111111.11111111   ==> <span class=term_write>255.255.255.255</span>
+</pre></td></tr></table>
+
+		所以 IP 最小可以由 0.0.0.0 一直到 255.255.255.255 哩！事實上， IP 的組成當中，除了以
+		32 bits 的組成方式來說明外，還具有所謂的『網域』的概念存在。底下就來談一談什麼是網域吧！<br /><br />
+	</div>
+
+	<hr><a NAME="ipandmac_network"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">網域的概念與 IP 的分級</span><br />
+	<div class=block2>
+		事實上在 IP 的 32 bits 資料中，主要分為 HOST_ID 與 Net_ID 兩部份，我們先以
+		192.168.0.0 ~ 192.168.0.255 這個 C Class 的網域當作例子來說明好了：
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>192.168.0.0~192.168.0.255 這個 C Class 的說明：</span>
+11000000.10101000.00000000.00000000
+11000000.10101000.00000000.11111111
+<span class=term_write>|----------Net_ID---------|-host--|</span>
+</pre></td></tr></table>
+
+		在 C Class 的範例當中，前面三組數字 (192.168.0) 稱為網域號碼 (Net_ID) ，最後面一組數字則稱為
+		主機號碼 (Host_ID)。同一個網域當中的定義是『<span class=text_import2>在同一個物理網段內，主機的
+		IP 具有相同的 Net_ID ，並且具有獨特的 Host_ID</span>』，那麼這些 IP 群就是同一個網域內的
+		IP 網段啦！ <br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		什麼是物理網段呢？當所有的主機都是使用同一個網路媒體串在一起，
+		這個時候這些主機在實體裝置上面其實是連線在一起的，那麼就可以稱為這些主機在同一個物理網段內了！
+		同時並請注意，同一個物理網段之內，可以依據不同的
+		IP 的設定，而設定成多個『IP 網段』喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		上面例子當中的 192.168.0.1, 192.168.0.2, ...., 192.168.0.255 這些 IP 就是同一個網域內的
+		IP 群(同一個網域也稱為同一個網段！)，請注意，同一個 Net_ID 內，不能具有相同的
+		Host_ID ，否則就會發生 IP 衝突，可能會造成兩部主機都沒有辦法使用網路的問題！
+		那麼同一個網域該怎麼設定，與將 IP 設定在同一個網域之內有什麼好處呢？<br />
+
+		<ul><span class=text_import2>
+		<li>在同一個網段內，Net_ID 是不變的，而 Host_ID 則是不可重複，此外，
+		Host_ID 在二進位的表示法當中，不可同時為 0 也不可同時為 1 ，例如上面的例子當中，
+		192.168.0.0 ( Host_ID 全部為 0 )以及 192.168.0.255 ( Host_ID 全部為 1 )
+		不可用來作為網段內主機的 IP 設定，也就是說，這個網段內可用來設定主機的
+		IP 是由 192.168.0.1 到 192.168.0.254；<br /><br /></li>
+
+		<li>在同一個網域之內，每一部主機都可以透過 MAC 訊框的格式傳遞資料，
+		並透過 ARP 協定與廣播封包 (broadcast) 取得 MAC 與 IP 的對應後，直接利用 MAC 訊框傳遞資料。
+		<br /><br /></li>
+
+		<li>在同一個物理網段之內，如果兩部主機設定成不同的 IP
+		網段，則兩部主機無法直接以 MAC 訊框格式進行資料的傳遞，因為廣播封包無法查詢到 MAC 與 IP 的對應。
+		<br /><br /></li>
+
+		<li>當 Host_ID 所佔用的位元越大，亦即 Host_ID 數量越多時，表示同一個網域內可用以設定主機的 IP 
+		數量越多。<br /></li></span></ul>
+
+		所以說，貴單位公司內的電腦群，或者是您宿舍或家裡面的所有電腦，當然都設定在同一個網域內是最方便的，
+		因為如此一來每一部電腦都可以直接透過 MAC 來進行資料的交流，而不必經由
+		Router ( 路由器 ) 來進行封包的轉遞呢！( Router 這部份在後續才會提及！ )。<br /><br />
+
+		<span class=text_import1>IP 的分級</span><br />
+		<div class=block2>
+		好了，現在我們知道 Net_ID 越大時，表示 Host_ID 越少，亦即網域內可以分配的 IP 數量就越少了！
+		咦！這表示 Net_ID 是有分級的喔！是啊！沒錯～剛剛上面那個 192.168.0.0~192.168.0.255 稱為 Class C，
+		那還有哪些等級啊？目前 Internet 將 IP 簡單的分類成為三種常見的等級，亦即所謂的 A, B, C class，
+		他們代表的意義如下：
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>以二進位說明 Network 第一個數字的定義：</span>
+A Class : <span class=term_write>0</span>xxxxxxx.xxxxxxxx.xxxxxxxx.xxxxxxxx  <span class=term_say>==> NetI_D 的開頭是 0
+          |--net--|---------host------------|</span>
+B Class : <span class=term_write>10</span>xxxxxx.xxxxxxxx.xxxxxxxx.xxxxxxxx  <span class=term_say>==> NetI_D 的開頭是 10
+          |------net-------|------host------|</span>
+C Class : <span class=term_write>110</span>xxxxx.xxxxxxxx.xxxxxxxx.xxxxxxxx  <span class=term_say>==> NetI_D 的開頭是 110
+          |-----------net-----------|-host--|</span>
+
+<span class=term_hd>三種分級在十進位的表示：</span>
+A Class : <span class=term_write>  0.xx.xx.xx ~ 126.xx.xx.xx</span>
+B Class : <span class=term_write>128.xx.xx.xx ~ 191.xx.xx.xx</span>
+C Class : <span class=term_write>192.xx.xx.xx ~ 223.xx.xx.xx</span>
+</pre></td></tr></table>
+
+		在上表中，可能您會覺得很奇怪，咦！那個
+		127.xx.xx.xx 怎麼不見了？！他應該也是 A Class 的一段吧？！沒錯，是不見了，
+		因為這個網段被拿去給作業系統做為<span class=text_import2>內部迴圈網路
+		( <a href="#loopback">loopback</a> )</span> 之用了！在各個作業系統當中，不管該主機的硬體有沒有網路卡，
+		為了讓作業確認自己的網路沒有問題，所以將
+		127.xx.xx.xx 這個 A Class 的網段拿到作業系統當中，來做為內部的回路測試！所以啦，這個
+		127.0.0.1 就不可以用來做為其他網路卡的網路網域之設定喔。<br /><br />
+	</div>
+	</div>
+
+	<hr><a NAME="ipandmac_netmask"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">Netmask 的用途與子網路的切分</span><br />
+	<div class=block2>
+		在上一小節當中提到的 A, B, C 三個層級的網域是由 IP 協定預設分配的，在這樣的層級當中，我們可以發現
+		A Class 可以用於設定電腦主機的 IP 數量 ( Host ) 真的是很多，在同一個 A
+		Class 的網域內，主機的數量可以達到『 <span class=text_import2>256 X 256 X
+		256 - 2(Host_ID 全為 0 或 1 ) = 16777214</span>』，不過，
+		這樣的設定情況對於一般網路的效能卻是不太好的！為什麼呢？<br /><br />
+
+		讓我們回到前面<a href="#csmacd">乙太網路的 MAC 運作模式</a>那個小節，我們知道在共享媒體上面，
+		每當任何一部主機想要使用該網路媒體時，就得要利用 <a href="#csmacd">CSMA/CD</a> 
+		的方式去進行網路監聽的工作，此時對於這麼大的一個網路架構來說，每部主機要發出 MAC 訊框前要進行的這個
+		<a href="#csmacd">CSMA/CD</a> 實在會造成系統上面很嚴重的停頓問題啊！
+		因為封包碰撞 (collision) 以及在進行 MAC 與 IP 對應的廣播 (broadcast) 時，
+		要回應的主機數量也真是太多了點吧！
+		如此一來，整個網路的效能將會變的很糟糕！所以，一般來說，我們最多都僅設定
+		C Class 做為整個區域網路的架構，其實就連 C Class 也都太大了！不過不打緊，只要記得一個網域內不要超過
+		30 部以上的主機數量，那樣網路的效能就會比較好一點～<br /><br />
+
+		其實，除了 C Class 之外，我們還是可以繼續將網路切的更細的！上個小節我們提到
+		IP 這個 32 bits 的數值中分為 Net_ID 與 Host_ID，其中 C Class 的 Net_ID 佔了 
+		24 bits ，而其實我們還可以將這樣的網域切的更細，<span class=text_import1>就是讓第一個
+		Host_ID 被拿來作為 Net_ID</span> ，所以，整個 Net_ID 就有 25 bits ，至於 Host_ID
+		則減少為 7 bits 。在這樣的情況下，<span class=text_import2>原來的一個 C Class 
+		的網域就可以被切分為兩個子網域</span>，而每個子網域就有『
+		<span class=text_import2>256/2 - 2 = 126</span> 』個可用的 IP 
+		了！這樣一來，在這個網域當中的主機在進行邏輯廣播時，回應的主機數量就少了一半，
+		當然對於網路的效能多多少少有點好處的啦！<br /><br />
+
+		<a name=netmask></a>
+		好了，知道了子網路切分的大致情況後，現在要談的是，那麼到底是什麼參數來達成子網路的切分呢？呵呵！那就是
+		Netmask ( 子網路遮罩 ) 的用途啦！這個 Netmask 是用來定義出網域的最重要的一個參數了！不過他也最難理解了～
+		@_@。為了幫助大家比較容易記憶住 Netmask 的設定依據，底下我們介紹一個比較容易記憶的方法。同樣以
+		192.168.0.0~192.168.0.255 這個網域為範例好了，如下所示，這個 IP 網段可以分為
+		Net_ID 與 Host_ID，既然 Net_ID 是不可變的，那就假設他所佔據的 bits 已經被用光了
+		( 全部為 1 )，而 Host_ID 是可變的，就將他想成是保留著 ( 全部為 0 )，所以，
+		Netmask 的表示就成為：
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>192.168.0.0~192.168.0.255 這個 C Class 的 Netmask 說明</span>
+11000000.10101000.00000000.00000000
+11000000.10101000.00000000.11111111<span class=term_write>
+|----------Net_ID---------|-host--|
+11111111.11111111.11111111.00000000  &lt;== Netmask 二進位
+  255   .  255   .  255   .   0      &lt;== Netmask 十進位</span>
+</pre></td></tr></table>
+
+		將他轉成十進位的話，就成為『<span class=text_import2>255.255.255.0</span>』啦！
+		這樣記憶簡單多了吧！照這樣的記憶方法，那麼 A, B, C Class 的 Netmask 表示就成為這樣：
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>Class A, B, C 三個等級的 Netmask 表示方式：</span>
+A Class : <span class=term_write>11111111.</span>00000000.00000000.00000000 ==> 255.  0.  0.  0
+B Class : <span class=term_write>11111111.11111111.</span>00000000.00000000 ==> 255.255.  0.  0
+C Class : <span class=term_write>11111111.11111111.11111111.</span>00000000 ==> 255.255.255.  0
+</pre></td></tr></table>
+
+		所以說， 192.168.0.0~192.168.0.255 這個 C Class 的網域中，他的 Netmask
+		就是 255.255.255.0 了！再來，我們剛剛提到了<span class=text_import2>當 Host_ID 全部為 0 以及全部為
+		1 的時後該 IP 是不可以使用的，因為 Host_ID 全部為 0 的時後，表示 IP 是該網段的
+		Network ，至於全部為 1 的時後就表示該網段最後一個 IP ，也稱為 Broadcast</span>
+		，所以說，在 192.168.0.0 ~ 192.168.0.255 這個 IP 網段裡面的相關網路參數就有：
+
+<table class="term"><tr><td class="term"><pre>
+Netmask:   255.255.255.0   <span class=term_say>&lt;==網域定義中，最重要的參數</span>
+Network:   192.168.0.0     <span class=term_say>&lt;==第一個 IP</span>
+Broadcast: 192.168.0.255   <span class=term_say>&lt;==最後一個 IP</span>
+可用以設定成為主機的 IP 數：
+<span class=term_write>192.168.0.1 ~ 192.168.0.254</span>
+</pre></td></tr></table>
+
+		一般來說，如果我們知道了 Network 以及 Netmask 之後，就可以定義出該網域的所有
+		IP 了！因為由 Netmask 就可以推算出來 Broadcast 的 IP 啊！因此，我們常常會以
+		Network 以及 Netmask 來表示一個網域，例如這樣的寫法：
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>Network/Netmask
+192.168.0.0/255.255.255.0
+192.168.0.0/24</span>    <span class=term_say>&lt;==因為 Net_ID 共有 24 個 bits</span>
+</pre></td></tr></table>
+
+		另外，既然 Netmask 裡面的 Net_ID 都是 1 ，那麼 C Class 共有 24 bits
+		的 Net_ID ，所以啦，就有類似上面 192.168.0.0/24 這樣的寫法囉！這就是一般網域的表示方法。好了，剛剛提到
+		C Class 還可以繼續進行子網域 ( Subnet ) 的切分啊，以 192.168.0.0/24 
+		這個情況為例，他要如何再細分為兩個子網域呢？我們已經知道
+		Host_ID 可以拿來當作 Net_ID，那麼 Net_ID 使用了 25 bits 時，就會如下所示：
+
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>原本的 C Class 的 Net_ID 與 Host_ID 的分別</span>
+11000000.10101000.00000000.00000000     <span class=term_say> Network:   192.168.0.0</span>
+11000000.10101000.00000000.11111111     <span class=term_say> Broadcast: 192.168.0.255</span>
+<span class=term_write>|----------Net_ID---------|-host--|</span>
+
+<span class=term_hd>切成兩個子網路之後的 Net_ID 與 Host_ID 為何？</span>
+<span class=term_write>11000000.10101000.00000000.0</span> 0000000  <span class=term_say>多了一個 Net_ID 了, 為0</span>
+<span class=term_write>11000000.10101000.00000000.1</span> 0000000  <span class=term_say>多了一個 Net_ID 了, 為1
+|----------Net_ID-----------|-host--|</span>
+
+<span class=term_hd>第一個子網路</span>
+Network:   <span class=term_write>11000000.10101000.00000000.0 0000000</span>   192.168.0.0
+Broadcast: <span class=term_write>11000000.10101000.00000000.0 1111111</span>   192.168.0.127
+           |----------Net_ID-----------|-host-|
+Netmask:   <span class=term_write>11111111.11111111.11111111.1 0000000</span>   255.255.255.128
+所有 IP 與網域表示式：
+<span class=term_write>192.168.0.0/25 或 192.168.0.0/255.255.255.128</span>
+
+<span class=term_hd>第二個子網路</span>
+Network:   <span class=term_write>11000000.10101000.00000000.1 0000000</span>   192.168.0.128
+Broadcast: <span class=term_write>11000000.10101000.00000000.1 1111111</span>   192.168.0.255
+           |----------Net_ID-----------|-host-|
+Netmask:   <span class=term_write>11111111.11111111.11111111.1 0000000</span>   255.255.255.128
+所有 IP 與網域表示式：
+<span class=term_write>192.168.0.128/25 或 192.168.0.128/255.255.255.128</span>
+</pre></td></tr></table>
+
+		所以說，當再細分下去時，就會得到兩個子網域，而兩個子網域還可以再細分下去喔
+		(Net_ID 用掉 26 bits ....)。呵呵！如果您真的能夠理解 IP, Network, Broadcast,
+		Netmask 的話，恭喜您，未來的伺服器學習之路已經順暢了一半啦！ ^_^<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題二：請試著計算出 172.16.0.0/23 這個網域的 Netmask, Network, Broadcast 等參數<br /><br />
+答：<ul>
+由於 172.16.xxx.xxx 是在 Class B 的等級當中，亦即 172.16.0.0/16 才對。不過題目中詢問的是 172.16.0.0/23，
+等於是向 Host_ID 借了 7 個 bits 用在 Net_ID 當中。所以整個 IP 
+的位址會變成這樣：<span class=text_import2><pre>預設：       172  .  16    .0000000 <b>0.00000000</b>
+          |----Net_ID--------------|<b>--Host---|</b>
+Network:     172  .  16    .0000000 <b>0.00000000</b>   172.16.0.0
+Broadcast:   172  .  16    .0000000 <b>1.11111111</b>   172.16.1.255
+Netmask:  11111111.11111111.1111111 <b>0.00000000</b>   255.255.254.0</pre></span>
+鳥哥在這裡有偷懶，因為這個 IP 段的前 16 個 bits 不會被改變，所以並沒有計算成二進位( 172.16 )，
+真是不好意思啊～至於粗體部分則是代表 host_ID 啊！
+</ul>
+</td></tr></table><br />
+
+	</div>
+
+	<hr><a NAME="ipandmac_type"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">IP 的種類與取得方式</span><br />
+	<div class=block2>
+		接下來要跟大家談一談也是很容易造成大家困擾的一個部分，那就是 IP 的種類！很多朋友常常聽到什麼『真實IP,
+		實體 IP, 虛擬 IP, 假的 IP....』煩都煩死了～其實不要太緊張啦！實際上，在
+		IPv4 裡面就只有兩種 IP 的類別，分別是：
+		<ul><li><span class=text_import1>Public IP</span> : 公共 IP ，經由 INTERNIC 所統一規劃的 IP，
+			有這種 IP 才可以連上 Internet ；<br /><br /></li>
+		<li><span class=text_import1>Private IP</span> : 私有 IP 或保留 IP，不能直接連上 Internet 的 IP ，
+			主要用於區域網路內的主機連線規劃。</li></ul>
+
+		早在 IPv4 規劃的時候就擔心 IP 會有不足的情況，而且為了應付某些私有網路的網路設定，於是就有了私有
+		IP ( Private IP ) 的產生了。私有 IP 也分別在 A, B, C 三個 Class 當中各保留一段作為私有
+		IP 網段，那就是：
+
+		<ul><span class=text_import2><font face="細明體">
+		<li>A Class：10.0.0.0&nbsp;&nbsp;&nbsp; - 10.255.255.255</li>
+		<li>B Class：172.16.0.0&nbsp; - 172.31.255.255</li>
+		<li>C Class：192.168.0.0 - 192.168.255.255</li>
+		</font></span></ul>
+
+		由於這三個 Class 的 IP 是預留使用的，所以<span class=text_import2>並不能直接作為
+		Internet 上面的連接之用</span>，不然的話，到處都有相同的
+		IP 囉！那怎麼行！網路豈不混亂？所以囉，這三個 IP 網段就只做為內部私有網域的
+		IP 溝通之用，也就是說，他有底下的幾個限制：
+		<ul><span class=text_import2>
+		<li>私有位址的路由資訊不能對外散播 （就是內部網路咯）；</li>
+		<li>使用私有位址作為來源或目的地址的封包，不能透過 Internet 來轉送 （呵呵！當然囉！不然網路會混亂）；</li>
+		<li>關於私有位址的參考紀錄(如DNS)，只能限于內部網路使用（一樣的原理啦！）</li>
+		</span></ul>
+
+		這個私有 IP 有什麼好處呢？呵呵！由於他的私有路由不能對外直接提供資訊，所以呢，
+		你的內部網路將不會直接被 Internet 上面的 Cracker 所攻擊！但是，你也就無法以私有
+		IP 來『直接上網』囉！所以相當適合一些尚未具有
+		Public IP 的企業內部用來規劃其網路之設定之用！否則當你隨便指定一些可能是
+		Public IP 的網段來規劃你企業內部的網路設定時，萬一哪一天真的連上
+		Internet 了，那麼啟不是可能會造成跟 Internet 上面的 Public IP 相同了嗎？
+		這可不是鬧著玩的，要將你原先規劃的
+		IP 網段整個重新調整過呢！哈哈！累死了！<br /><br />
+
+		那麼萬一你又要將這些私有 IP 送上 Internet 呢？呵呵！這個簡單，設定一個簡單的防火牆加上 NAT ( Network
+		Address Transfer ) 主機設定，你就可以透過
+		IP 偽裝(不要急，這個在後面也會提到！)來使你的私有
+		IP 的電腦也可以連上 Internet 囉(雖然不是真的直接，但是很像『直接上網』呢！)<br /><br />
+
+		<a name=loopback></a><span class=text_import1>特殊的 loopback IP 網段</span><br />
+		<div class=block2>
+		好了，那麼除了這個預留的 IP 網段的問題之外，還有沒有什麼其他的怪東西呢？呵呵！
+		當然是有啦！不然鳥哥幹嘛花時間來唬 XX 呢！？沒錯，還有一個奇怪的 A Class 的網域，那就是 lo 
+		這個奇怪的網域啦( 注意：是小寫的 o 而不是零喔！ )這個 lo 
+		的網路是當初被用來作為測試作業系統內部迴圈所用的一個網域，
+		同時也能夠提供給系統內部原本就需要使用網路介面的服務(daemon)所使用。<br /><br />
+
+		簡單的說，如果你沒有安裝網路卡在的機器上面，
+		但是你又希望可以測試一下在你的機器上面設定的伺服器環境到底可不可以順利運作，這個時候怎麼辦，
+		嘿嘿！就是利用這個所謂的內部迴圈網路啦！這個網段在
+		127.0.0.0/8 這個 A Class ，而且預設的主機 ( localhost ) 的 IP 是 127.0.0.1
+		呦！所以囉，當你啟動了你的 WWW 伺服器，然後在你的主機的 X-Window 上面執行
+		http://localhost 就可以直接看到你的主頁囉！而且不需要安裝網路卡呢！測試很方便吧！<br /><br />
+
+		此外，你的內部使用的 mail 怎麼運送郵件呢？例如你的主機系統如何
+		mail 給 root 這個人呢？嘿嘿！也就是使用這一個內部迴圈啦！當要測試你的
+		TCP/IP 封包與狀態是否正常時，可以使用這個呦！( 所以哪一天有人問你嘿！你的主機上面沒有網路卡，
+		那麼你可以測試你的 WWW 伺服器設定是否正確嗎？這個時候可得回答：當然可以囉！使用 127.0.0.1
+		這個 Address 呀！ ^_^... )<br /><br />
+		</div>
+
+		<span class=text_import1>IP 的取得方式</span><br />
+		<div class=block2>
+
+		談完了 IP 的種類與等級還有相關的子網域概念後，接下來我們得來瞭解一下，那麼主機的 IP 是如何設定的呢？
+		基本上，主機的 IP 與相關網域的設定方式主要有：<ul>
+		<li><span class=text_import2>固定制手動設定(static)</span>：
+			我們可以取得固定的 Public IP ，取得的管道可以是學術網路、或者是向 ISP 註冊固定的 
+			Public IP。不過，在使用固定的 Public IP 時，你必須要手動的在你的作業系統設定好網路參數；
+			<br /><br /></li>
+		<li><span class=text_import2>寬頻撥接制(ADSL)</span>：
+			除了上述的方法之外，傳統的以數據機撥接，以及目前很流行的
+			ADSL 撥接，都是另一個取得 Public IP 的方法。
+			早期的撥接制 ADSL 所取得的 IP 通常是由 ISP 隨機提供，因此每次撥接所取得的 IP 可能都不固定，
+			所以也有人稱這種取得 IP 的方式為浮動式 IP 取得方式。不過近來由於個人用戶架站風行，
+			為因應用戶的需求，某些 ISP 也提供很多不同的 IP 分配機制。
+			包括 hinet, seednet 等等都有提供 ADSL 撥接後取得固定 IP 的方式喔！
+			詳情請向您的 ISP 洽詢。<br /><br /></li>
+		<li><span class=text_import2>纜線(Cable modem)</span>：
+			利用單向或者是雙向 Cable 也可以向 ISP 註冊取得 Public IP；</li>
+		</ul>
+
+		請記得，IP 就只有 Public 與 Private IP 這兩種，而由於取得
+		IP 的方法不同，可能又有人喜歡宣稱浮動式、固定制、動態等等的 IP ，
+		這很容易造成剛剛接觸網路的朋友們的困擾！所以這裡僅告訴大家記得『<span class=text_import2>Public
+		與 Private IP</span>』而已！你只要記得他就對了！其他的，以後自然就會理解的啦！^_^<br />
+		</div>
+	</div>
+
+	<hr><a NAME="ipandmac_head"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">IP 封包的表頭</span><br />
+	<div class=block2>
+		現在我們知道 IP 這個資料封包 (packet) 是需要放置在 MAC 訊框裡面的，所以當然不能比 MAC 
+		所能容許的最大資料量還大！但是 IP 封包其實可以到 65535 bytes 那麼大的吶！
+		那麼 IP 封包除了資料之外，他的表頭資料 (head) 是長怎樣呢？
+		在<a href="#fig_mac">圖三的 MAC 訊框表頭</a>裡面最重要的莫過於那個網路卡硬體位址，
+		那麼在 IP 表頭裡面當然就以來源與目標的 IP 位址為最重要囉！
+		除此之外， IP 表頭裡面還含有哪些重要資料呢？如底下所示：(下圖第一行為每個欄位的 
+		<span class=text_import1>bit</span> 數)<br /><br />
+
+<center><a name="fig_ip"></a>
+<table style=" border-width:1; border-color:black; border-style: none;">
+<tr align=center>
+	<td style="width: 60; border-width:1; border-style: none solid none solid">4 bits</td>
+	<td style="width: 60; border-width:1; border-style: none solid none none ">4 bits</td>
+	<td style="width:110; border-width:1; border-style: none solid none none ">8 bits</td>
+	<td style="width: 45; border-width:1; border-style: none solid none none ">3 bits</td>
+	<td style="width:180; border-width:1; border-style: none solid none none ">13 bits</td>
+</tr>
+</table>
+
+<table width=480 border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow class="text_import2">
+<tr align=center>
+	<td width=60>Version</td>
+	<td width=60>IHL</td>
+	<td width=120>Type of Service</td>
+	<td width=240 colspan=2>Total Length</td>
+</tr>
+<tr align=center>
+	<td colspan=3>Identification</td>
+	<td width=45>Flags</td>
+	<td width=195>Fragmentation Offset</td>
+</tr>
+<tr align=center>
+	<td colspan=2 bgcolor=lightblue>Time To Live</td>
+	<td bgcolor="lightblue">Protocol</td>
+	<td colspan=2>Header Checksum</td>
+</tr>
+<tr align=center>
+	<td colspan=5 bgcolor=lightblue>Source Address</td></tr>
+<tr align=center>
+	<td colspan=5 bgcolor=lightblue>Destination Address</td></tr>
+<tr align=center>
+	<td colspan=4>Options</td>
+	<td>Padding</td>
+</tr>
+<tr align=center>
+	<td colspan=5 height=50 bgcolor=lightgreen>Data</td></tr>
+</table>
+		圖八、IP 封包的表頭資料</center><br />
+
+		在上面的圖示中有個地方要注意，那就是『<span class=text_import2>每一行所佔用的位元數為 32 bits</span>』，
+		也就是說， IP 封包的表頭資料是 32 bits 的倍數喔！那各個表頭的內容分別介紹如下：
+		<ul>
+		<li><span class=text_import1>Version(版本)</span><br />
+			宣告這個 IP 封包的版本，例如目前慣用的還是 IPv4 這個版本，在這裡宣告的。<br /><br /></li>
+		<li><span class=text_import1>IHL(Internet Header Length, IP表頭的長度)</span><br />
+			<a name=20080421></a>
+			告知這個 IP 封包的表頭長度，使用的單位應該是字組 (word) ，一個字組為 4bytes 大小喔。<br /><br /></li>
+		<li><span class=text_import1>Type of Service(服務類型)</span><br />
+			這個項目的內容為『PPPDTRUU』，表示這個 IP 封包的服務類型，主要分為：<br />
+			PPP：表示此 IP 封包的優先度；
+			D：若為 0 表示一般延遲(delay)，若為 1 表示為低延遲；<br />
+			T：若為 0 表示為一般傳輸量 (throughput)，若為 1 表示為高傳輸量；<br />
+			R：若為 0 表示為一般可靠度(reliability)，若為 1 表示高可靠度。<br />
+			UU：保留尚未被使用。<br />
+			我們前面談到 gigabit 乙太網路時曾提到 Jumbo frame 對吧！可以提高 MTU，
+			由於 gigabit 乙太網路的種種相關規格可以讓這個 IP 封包加速且降低延遲，
+			某些特殊的標誌就是在這裡說明的。<br /><br /></li>
+		<li><span class=text_import1>Total Length(總長度)</span><br />
+			指這個 IP 封包的總容量，包括表頭與內容 (Data) 部分。最大可達 65535 bytes。<br /><br /></li>
+		<li><span class=text_import1>Identification(辨別碼)</span><br />
+			我們前面提到 IP 袋子必須要放在 MAC 袋子當中。不過，如果 IP 袋子太大的話，
+			就得先要將 IP 再重組成較小的袋子然後再放到 MAC 當中。而當 IP 被重組時，
+			每個來自同一筆資料的小 IP 就得要有個識別碼以告知接收端這些小 IP 其實是來自同一個封包才行。
+			也就是說，假如 IP 封包其實是 65536 那麼大 (前一個 Total Length 有規定)，
+			那麼這個 IP 就得要再被分成更小的 IP 分段後才能塞進 MAC 訊框中。那麼每個小 IP 
+			分段是否來自同一個 IP 資料，呵呵！這裡就是那個識別碼啦！<br /><br /></li>
+		<li><span class=text_import1>Flags(特殊旗標)</span><br />
+			這個地方的內容為『0DM』，其意義為：<br />
+			D：若為 0 表示可以分段，若為 1 表示不可分段<br />
+			M：若為 0 表示此 IP 為最後分段，若為 1 表示非最後分段。<br /><br /></li>
+		<li><span class=text_import1>Fragment Offset(分段偏移)</span><br />
+			表示目前這個 IP 分段在原始的 IP 封包中所佔的位置。
+			就有點像是序號啦，有這個序號才能將所有的小 IP 分段組合成為原本的 IP 封包大小嘛！
+			透過 Total Length, Identification, Flags 以及這個 Fragment Offset
+			就能夠將小 IP 分段在收受端組合起來囉！<br /><br /></li>
+		<li><span class=text_import1>Time To Live(TTL, 存活時間)</span><br />
+			表示這個 IP 封包的存活時間，範圍為 0-255。當這個 IP 封包通過一個路由器時，
+			TTL 就會減一，當 TTL 為 0 時，這個封包將會被直接丟棄。說實在的，要讓 IP 封包通過
+			255 個路由器，還挺難的～ ^_^<br /><br /></li>
+		<li><span class=text_import1>Protocol Number(協定代碼)</span><br />
+			由於網路上面的封包協定太多了，每個協定都是裝在 IP 當中的，
+			所以 IP 當然就得在表頭上面告知收受端，這個 IP 內含有的資料是什麼協定才行。
+			一般常見的網路協定如下所示：<br />
+<a name=internet_protocol></a>
+<table width=80% border=1 cellspacing=0 cellpadding=3>
+<tr bgcolor=lightblue align=center><td width=100>IP 內的號碼</td><td>協定名稱(全名)</td></tr>
+<tr bgcolor=lightyellow><td align=center>1</td><td>ICMP (Internet Control Message Protocol)</td></tr>
+<tr><td align=center>2</td><td>IGMP (Internet Group Management Protocol)</td></tr>
+<tr><td align=center>3</td><td>GGP (Gateway-to-Gateway Protocol)</td></tr>
+<tr><td align=center>4</td><td>IP (IP in IP encapsulation)</td></tr>
+<tr bgcolor=lightyellow><td align=center>6</td><td>TCP (Transmission Control Protocol)</td></tr>
+<tr><td align=center>8</td><td>EGP (Exterior Gateway Protocol)</td></tr>
+<tr bgcolor=lightyellow><td align=center>17</td><td>UDP (User Datagram Protocol)</td></tr>
+</table>
+			當然啦，我們比較常見到的還是那個 TCP, UDP, ICMP 說！<br /><br /></li>
+		<li><span class=text_import1>Header Checksum(表頭檢查碼)</span><br />
+			用來檢查這個 IP 表頭的錯誤檢驗之用。<br /><br /></li>
+		<li><span class=text_import1>Source Address</span><br />
+			還用講嗎？當然是來源的 IP 位址，相關的 IP 我們之前提過囉！<br /><br /></li>
+		<li><span class=text_import1>Destination Address</span><br />
+			有來源還需要有目標才能傳送，這裡就是目標的 IP 位址。<br /><br /></li>
+		<li><span class=text_import1>Options (其他參數)</span><br />
+			這個是額外的功能，提供包括安全處理機制、路由紀錄、時間戳記、
+			嚴格與寬鬆之來源路由等。<br /><br /></li>
+		<li><span class=text_import1>Padding(補齊項目)</span><br />
+			由於 Options 的內容不一定有多大，但是我們知道 IP 每個資料都必須要是 32 bits，
+			所以，若 Options 的資料不足 32 bits 時，則由 padding 主動補齊。<br /><br /></li>
+		</ul>
+
+		你只要知道 IP 表頭裡面還含有： TTL, Protocol, 來源 IP 與目標 IP 也就夠了！
+		而這個 IP 表頭的來源與目標 IP ，以及那個判斷通過多少路由器的 TTL ，就能瞭解到這個 IP 
+		將被如何傳送到目的端吶。下一節我們將介紹一下那麼 IP 封包是如何被傳送到目的地？
+	</div>
+</div>
+
+
+<hr><a NAME="route"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">網路層之路由概念</span><br />
+<div class=block1>
+	我們在前面兩個小節提到了乙太網路在物理網段內可以使用 MAC 的訊框資料直接在兩張網路卡之間傳遞資料，
+	那在前一節提到的 IP 相關概念裡面，也知道在 Internet 的環境中，同一個網域 (Net_ID 相同的網段)
+	內可以直接使用廣播的方式以 ARP 協定來取得 IP 與 MAC 的對應，好讓我們的資料可以在同一個網域內進行傳輸。
+	好了，那問題來了，如果我想要向非同一個網域的主機要求資料呢？這個時候封包要如何傳遞？
+	呵呵～這可就需要路由(route)的幫忙啦！這個也是在網路層 (Layer 3) 裡面的重要概念喔！<br /><br />
+
+	<hr><a NAME="route_route"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">什麼是路由</span><br />
+	<div class=block2>
+		什麼是『非同一個網域』呢？剛剛上一小節提到的 IP 應該還沒有忘記吧？
+		所謂的非同一個網域就是 Network/Netmask 不在同一個位址，
+		也就是兩部主機間的 Net_ID 不相同的意思。例如參考底下的練習：<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題三：請問 192.168.10.100/25 與 192.168.10.200/25 是否在同一個網域內？<br /><br />
+答：<ul>
+	如果經過計算，會發現 192.168.10.100 的 Network 為 192.168.10.0 ，但是 192.168.10.200 的
+	Network 卻是 192.168.10.128，由於 Net_ID 不相同，所以當然不在同一個網段內！
+	關於 Network 與 Netmask  的算法則請參考上一小節。
+</ul>
+</td></tr></table><br />
+
+		那麼萬一兩部不在同一個網段內的主機想要互通資訊時，該如何做？
+		此時就得要經過 IP 的路徑選擇 (routing) 功能啦！我們以下面圖示的例子來做說明。
+		下列圖示當中共有兩個不同的網段，分別是 Network A 與 Network B，這兩個網段是經由一部路由器
+		(Server A) 來進行資料轉遞的，好了，那麼當 PC01 這部主機想要傳送資料到 PC11 時，
+		他的 IP 封包該如何傳輸呢？<br />
+
+			<center>
+			<img src="0110network_basic/route_1.jpg" 
+			title="簡易的路由示意圖" alt="簡易的路由示意圖"><br />
+			圖九、簡易的路由示意圖
+			</center><br />
+
+		我們知道 Network A(192.168.0.0/24) 與 Network B(192.168.1.0/24) 是不同網段，
+		所以 PC01 與 PC11 是不能互通資料的。不過， PC01 與 PC11 是如何知道他們兩個不在同一個網段內？
+		呵呵！這當然是透過 Net_ID 來發現的！那麼當主機想要傳送資料時，他主要的參考是啥？
+		很簡單！是『路由表 (route table)』，<span class=text_import1>每部主機都有自己的路由表</span>』，
+		讓我們來看一看預設的情況下， PC01 要如何將資料傳送到 PC02 呢？<br />
+
+		<ol><span class=text_import2>
+		<li>當 PC01 有 IP 封包需要傳送時，主機會查閱 IP 封包表頭的目標 IP 位址；<br /><br /></li>
+		<li>PC01 主機會分析自己的路由表，當發現目標 IP 與本機 IP 的 Net_ID 相同時(同一網域)，
+			則 PC01 會參考本身的 ARP 記錄，而直接利用 MAC 來互相傳遞資訊。<br /><br /></li>
+		<li>但在本案例中， PC01 與 PC11 並非同一網域，因此 PC01 會分析路由表當中是否有相符合的路由設定，
+			如果沒有的話，就直接將該 IP 封包送到預設路由器 (default gateway) 上頭去，
+			在本案例當中 default gateway 則是 Server A 這一部。<br /><br /></li>
+		<li>當 IP 封包被送至 Server A 之後，Server A 同樣分析該 IP 封包的目標位址，
+			然後檢查 Server A 自己的路由設定，注意，通常 Server A 這個作為路由器的主機，
+			都會擁有兩個以上的介面來溝通不同的網域的。在這個案例當中，
+			Server A 會發現這個 IP 目標是 192.168.1.11 ，剛好是 Network B 這個相同網段的區域，
+			因此 Server A 會直接以 MAC 訊框將資料送給 PC11 去。</li>
+		</span></ol>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		Gateway / Router ：網關/路由器的功能就是在負責不同網域之間的封包轉遞
+		( IP Forwarder )，由於路由器具有 IP Forwarder 的功能，並且具有管理路由的能力，
+		所以可以將來自不同網域之間的封包進行轉遞的功能。此外，您的主機與您主機設定的 
+		Gateway 必定是在同一個網段內喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<br />大致的情況就是這樣，所以啦，每一部主機裡面都會存在著一個路由表 ( Route
+		table )，資料的傳遞將依據這個路由表進行傳送！而一旦封包已經經由路由表的規則傳送出去後，
+		那麼主機本身就已經不再管封包的流向了，因為該封包的流向將是下一個主機
+		(也就是那部 Router )來進行傳送，而 Router 在傳送時，也是依據 Router 
+		自己的路由表來判斷該封包應該經由哪裡傳送出去的！例如底下的圖例：<br />
+
+			<center>
+			<img src="0110network_basic/route_2.jpg" 
+			title="路由的概念" alt="路由的概念"><br />
+			圖十、路由的概念
+			</center><br />
+
+		PC 01 要將資料送到 Server Bingo 去，則依據自己的路由表，將該封包送到
+		Server A 去，Server A 再繼續送到 Server B ，然後在一個一個的接力給他送下去，最後總是可以到達
+		Server Bingo 的。<br /><br />
+
+		當然，上面的案例是一個很簡單的路由概念，事實上， Internet 上面的路由協定與變化是相當複雜的，因為
+		Internet 上面的路由並不是靜態的，他可以隨時因為環境的變化而修訂每個封包的傳送方向。
+		舉例來說，數年前在新竹因為土木施工導致台灣西部整個網路纜線的中斷。
+		不過南北的網路竟然還是能通，為什麼呢？因為路由已經判斷出西部纜線的終止，
+		因此他自動的導向台灣東部的花蓮路線，雖然如此一來繞了一大圈，而且造成網路的大塞車，
+		不過封包還是能通就是了！這個例子僅是想告訴大家，我們上面提的路由僅是一個很簡單的靜態路由情況，
+		如果想要更深入的瞭解 route ，請自行參考相關書籍喔！ ^_^ 。<br /><br />
+
+		此外，在屬於 Public 的 Internet 環境中，由於最早時的 IP 分配都已經配置妥當，
+		所以各單位的路由一經設定妥當後，上層的路由則無須擔心啊！
+		IP 的分配可以參考底下的網頁：
+		<ul>
+		<li>台灣地區 IP 核發情況：<a 
+			href="http://rms.twnic.net.tw/twnic/User/Member/Search/main7.jsp?Order=inet_aton(Startip)"
+			target="_blank">http://rms.twnic.net.tw/twnic/User/Member/Search/main7.jsp?Order=inet_aton(Startip)</a>
+		<li>全球 IPv4 的統計：<a href="http://www.twnic.net.tw/ipstats/ipv4stats.htm"
+			target="_blank">http://www.twnic.net.tw/ipstats/ipv4stats.htm</a>
+		</ul>
+	</div>
+
+	<hr><a NAME="route_host"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">觀察主機的路由</span><br />
+	<div class=block2>
+		既然路由是這麼的重要，而且『<span class=text_import2>路由一旦設定錯誤，
+		將會造成某些封包完全無法正確的送出去</span>！』
+		所以我們當然需要好好的來觀察一下我們主機的路由表啦！還是請再注意一下，
+		<span class=text_import2>每一部主機都有自己的路由表喔</span>！觀察路由表的指令很簡單，就是
+		route ，這個指令挺難的，我們在後面章節再繼續的介紹，這裡僅說明一些比較簡單的用法：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route [-n]</span>
+<span class=term_say>參數：
+-n ： 將主機名稱以 IP 的方式顯示
+範例：</span>
+
+[root@linux ~]# <span class=term_command>route</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref  Use Iface
+192.168.0.0     *               255.255.255.0   U     0      0      0 eth0
+127.0.0.0       *               255.0.0.0       U     0      0      0 lo
+default         192.168.0.254   0.0.0.0         UG    0      0      0 eth0
+
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref  Use Iface
+192.168.0.0     0.0.0.0         255.255.255.0   U     0      0      0 eth0
+127.0.0.0       0.0.0.0         255.0.0.0       U     0      0      0 lo
+0.0.0.0         192.168.0.254   0.0.0.0         UG    0      0      0 eth0
+
+<span class=term_say># 上面輸出的資料共有八個欄位，您需要注意的有幾個地方：
+# Destination ：其實就是 Network 的意思；
+# Gateway     ：就是該介面的 Gateway 那個 IP 啦！若為 0.0.0.0 表示不需要額外的 IP；
+# Genmask     ：就是 Netmask 啦！與 Destination 組合成為一部主機或網域；
+# Flags       ：共有多個旗標可以來表示該網域或主機代表的意義：
+#               U：代表該路由可用；
+#               G：代表該網域需要經由 Gateway 來幫忙轉遞；
+#               H：代表該行路由為一部主機，而非一整個網域；
+# Iface       ：就是 Interface (介面) 的意思。</span>
+</pre></td></tr></table>
+
+		在上面的例子當中，鳥哥是以 PC 01 這部主機的路由狀態來進行說明。由於 PC 01 為 192.168.0.0/24
+		這個網域，所以主機已經建立了這個網域的路由了，那就是『 <span class=text_import2>192.168.0.0
+		* 255.255.255.0 ... </span>』那一行所顯示的訊息！當您下達 route 時，
+		螢幕上說明了這部機器上面共有三個路由規則，第一欄為『<span class=text_import2>目的地的網域</span>』，例如
+		192.168.0.0 就是一個網域咯，最後一欄顯示的是
+		『<span class=text_import2>要去到這個目的地要使用哪一個網路介面</span>！』例如
+		eth0 就是網路卡的裝置代號啦。如果我們要傳送的封包在路由規則裡面的 192.168.0.0/255.255.255.0
+		或者 127.0.0.0/255.0.0.0 裡面時，因為第二欄 Gateway 為 * ，所以就會直接以後面的網路介面來傳送出去，而不透過
+		Gateway 咯！<br /><br />
+
+		萬一我們要傳送的封包目的地 IP 不在路由規則裡面，那麼就會將封包傳送到『default』所在的那個路由規則去，也就是
+		192.168.0.254 那個 Gateway 喔！所以，幾乎每一部主機都會有一個
+		default gateway 來幫他們負責所有非網域內的封包轉遞！這是很重要的概念喔！^_^！
+		關於更多的路由功能與設定方法，我們在後面的『<a href="0230router.htm">簡易 Router 架設</a>』
+		當中會再次的提及呢！<br /><br />
+	</div>
+</div>
+
+
+<hr><a NAME="protocol"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">常見的通訊協定</span><br />
+<div class=block1>
+	終於給他來到了封包格式的地方了！上面的咚咚大多是在網路最底層的基礎知識，
+	得自行好好的理解理解！第一次看不懂沒關係，多看幾次，或者是未來有些網路經驗後再回來這個章節好好看一看！
+	假設您已經知道了網路最底層的 IP 以及相關的參數的意義，那麼應該知道的是，
+	網路層的協定只是提供路由的判斷以確定封包的傳送路徑，
+	但是這些協定並沒有管理可能由於網路媒體的損壞問題，或者是網路的負荷過重以及其他不可預期的情況，
+	而造成封包損毀或者被丟棄的狀態。為了使封包的傳送過程中更具有穩定性與可靠性，
+	我們就得提供一套機制來讓資料可以沒有錯誤的到達到目的地。<br /><br />
+
+	在 TCP/IP 這個協定組合當中，<span class=text_import2>TCP ( Transmission Control Protocol )</span>
+	就是用來做為傳送的一個協定，當然啦，還有一個 UDP 的協定呢！在 TCP 這個協定當中，
+	他提供了較為穩定而且可靠的連線狀態，至於 UDP 則是一個比較沒有這麼可靠的連線型態了。
+	除了這個 TCP 與 UDP 之外，其他相關的網路協定請參考前一小節
+	<a href="#internet_protocol">IP 封包內的 Protocol 說明</a>。
+	底下我們就來分別談一談重要的 TCP/UDP/ICMP 吧！<br /><br />
+
+	<hr><a NAME="protocol_tcp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">TCP 協定</span><br />
+	<div class=block2>
+		在前幾個小節內談到的 IP 與路由的相關說明中，我們知道 IP 與路由僅能將資料封包傳送到正確的目標而已，
+		但是這個目的地是否真的能夠收下來這個封包？那可就不一定了。要確認該資料能否正確的被目的端所接收，
+		就必須要在資料封包上面多加一些參數來判斷才行。<br /><br />
+
+		在前面的 OSI 七層協定當中，在網路層的 IP 之上則是傳送層，而傳送層的資料打包成什麼？
+		最常見的就是 TCP 封包了。這個 TCP 封包資料必須要能夠放到 IP 的資料袋當中才行喔！
+		所以，我們可以將 MAC, IP 與 TCP 的封包資料這樣看：<br />
+
+			<center>
+			<img src="0110network_basic/packet_total.png" 
+			title="各封包之間的相關性" alt="各封包之間的相關性"><br />
+			圖十一、各封包之間的相關性
+			</center><br />
+
+		所以說，IP 除了表頭之外的 Data 內容其實就是 TCP 封包的表頭與內容；而 MAC 的 Data 內容，
+		就是一個完整的 IP 封包資料！這也是我們上頭提到的，最終還是得以 MAC 能夠支援的最大容許容量，
+		才能夠決定 IP 與 TCP 封包是否需要再進行分段的工作。那麼既然 MAC 與 IP 都有表頭資料，
+		想當然爾，TCP 也有表頭資料來記錄該封包的相關資訊囉？？沒錯啦～ TCP 封包的表頭是長這個樣子的：<br /><br />
+
+<center><a name="fig_tcp"></a>
+<table style=" border-width:1; border-color:black; border-style: none;">
+<tr align=center>
+	<td style="width: 64; border-width:1; border-style: none solid none solid">4 bits</td>
+	<td style="width: 92; border-width:1; border-style: none solid none none ">6 bits</td>
+	<td style="width: 92; border-width:1; border-style: none solid none none ">6 bits</td>
+	<td style="width:123; border-width:1; border-style: none solid none none ">8 bits</td>
+	<td style="width:125; border-width:1; border-style: none solid none none ">8 bits</td>
+</tr>
+</table>
+
+<table border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow class="text_import2">
+<tr align=center bgcolor=lightblue>
+	<td colspan=3>Source Port</td>
+	<td>Destination Port</td>
+</tr>
+<tr align=center>
+	<td colspan=4>Sequence Number</td>
+</tr>
+<tr align=center>
+	<td colspan=4>Acknowledge Number</td>
+</tr>
+<tr align=center>
+	<td width=60>Data<br> Offset</td>
+	<td width=90>Reserved</td>
+	<td width=90 bgcolor=lightblue>Code</td>
+	<td width=252>Window</td>
+</tr>
+<tr align=center>
+	<td colspan=3>Checksum</td>
+	<td>Urgent Pointer</td>
+</tr>
+<tr align=center>
+	<td colspan=3>Options</td>
+	<td>Padding</td>
+</tr>
+<tr align=center>
+	<td colspan=4 bgcolor=lightgreen height=40>Data</td>
+</tr>
+</table>
+		圖十二、TCP 封包的表頭資料</center><br />
+
+		上圖就是一個 TCP 封包的表頭資料，各個項目以 Source Port, Destination Port 及 Code 
+		算是比較重要的項目，底下我們就分別來談一談各個表頭資料的內容吧！<br />
+
+		<ul>
+		<li><span class=text_import1>Source Port & Destination Port ( 來源埠口 & 目標埠口 )</span></br>
+			什麼是埠口(port)？我們知道 IP 封包的傳送主要是藉由 IP 位址連接兩端，
+			但是到底這個連線的通道是連接到哪裡去呢？沒錯！就是連接到 port 上頭啦！
+			舉例來說，鳥站 (http://linux.vbird.org) 有開放 WWW 伺服器，
+			這表示鳥站的主機必須要啟動一個可以讓 client 端連接的端口，這個端口就是 port ，
+			中文翻譯成為埠口。同樣的，用戶端想要連接到鳥哥的鳥站時，就必須要在 client 
+			主機上面啟動一個 port ，這樣這兩個主機才能夠利用這條『通道』來傳遞封包資料喔！
+			這個目標與來源 port 的紀錄，可以說是 TCP 封包上最重要的參數了！
+			下個小單元我們還會繼續介紹。<br /><br /></li>
+		<li><span class=text_import1>Sequence Number ( 封包序號 )</span></br>
+			由於 TCP 封包必須要帶入 IP 封包當中，所以如果 TCP 資料太大時(大於 IP 封包的容許程度)，
+			就得要進行分段。這個 Sequence Number 就是記錄每個封包的序號，
+			可以讓收受端重新將 TCP 的資料組合起來。<br /><br /></li>
+		<li><span class=text_import1>Acknowledge Number ( 回應序號 ) </span></br>
+			為了確認主機端確實有收到我們 client 端所送出的封包資料，我們 client
+			端當然希望能夠收到主機方面的回應，那就是這個 Acknowledge Number 的用途了。
+			當 client 端收到這個確認碼時，就能夠確定之前傳遞的封包已經被正確的收下了。
+			<br /><br /></li>
+		<li><span class=text_import1>Data Offset (資料補償)</span></br>
+			在圖十二倒數第二行有個 Options 欄位對吧！那個 Options 的欄位長度是非固定的，
+			而為了要確認整個 TCP 封包的大小，就需要這個標誌來說明整個封包區段的起始位置。
+			<br /><br /></li>
+		<li><span class=text_import1>Reserved (保留)</span></br>
+			未使用的保留欄位。<br /><br /></li>
+		<li><span class=text_import1>Code (Control Flag, 控制標誌碼)</span></br>
+			當我們在進行網路連線的時候，必須要說明這個連線的狀態，好讓接收端瞭解這個封包的主要動作。
+			這可是一個非常重要的控制碼喔！這個欄位共有 6 個 bits ，分別代表
+			6 個控制碼，若為 1 則為啟動。分別說明如下：<br /><br />
+			<ul><li><span class=text_import2>URG(Urgent)</span>：若為 1 則代表該封包為緊急封包，
+			接收端應該要緊急處理，且圖十二當中的 Urgent Pointer 欄位也會被啟用。<br /><br /></li>
+			<li><span class=text_import2>ACK(Acknowledge)</span>：若為 1 代表這個封包為回應封包，
+			則與上面提到的 Acknowledge Number 有關。<br /><br /></li>
+			<li><span class=text_import2>PSH(Push function)</span>：若為 1 時，
+			代表要求對方立即傳送緩衝區內的其他對應封包，而無須等待緩衝區滿了才送。<br /><br /></li>
+			<li><span class=text_import2>RST(Reset)</span>：如果 RST 為 1 的時候，
+			表示連線會被馬上結束，而無需等待終止確認手續。這也就是說，這是個強制結束的連線，
+			且發送端已斷線。<br /><br /></li>
+			<li><span class=text_import2>SYN(Synchronous)</span>：若為 1 ，
+			表示發送端希望雙方建立同步處理，也就是要求建立連線。通常帶有 SYN 
+			標誌的封包表示『主動』要連接到對方的意思。<br /><br /></li>
+			<li><span class=text_import2>FIN(Finish)</span>：若為 1 ，表示傳送結束，
+			所以通知對方資料傳畢，是否同意斷線，只是發送者還在等待對方的回應而已。<br /><br /></li>
+			</ul>
+			其中比較常見到的應該是 ACK/SYN/FIN 等，這三個控制碼是務必要記下來的，
+			這樣未來在談到防火牆的時候，您才會比較清楚為啥每個 TCP 封包都有所謂的『狀態』條件！
+			那就是因為連線方向的不同所致啊！底下我們會進一步討論喔！
+			<br /><br /></li>
+		<li><span class=text_import1>Window (滑動視窗)</span></br>
+			主要是用來控制封包的流量的，可以告知對方目前本身有的緩衝器容量(Receive Buffer)
+			還可以接收封包。當 Window=0 時，代表緩衝器已經額滿，所以應該要暫停傳輸資料。
+			Window 的單位是 byte。<br /><br /></li>
+		<li><span class=text_import1>Checksum(確認檢查碼)</span></br>
+			當資料要由發送端送出前，會進行一個檢驗的動作，並將該動作的檢驗值標注在這個欄位上；
+			而接收者收到這個封包之後，會再次的對封包進行驗證，並且比對原發送的 Checksum 
+			值是否相符，如果相符就接受，若不符就會假設該封包已經損毀，進而要求對方重新發送此封包！
+			<br /><br /></li>
+		<li><span class=text_import1>Urgent Pointer(緊急資料)</span></br>
+			這個欄位是在 Code 欄位內的 URG = 1 時才會產生作用。可以告知緊急資料所在的位置。
+			<br /><br /></li>
+		<li><span class=text_import1>Options(任意資料)</span></br>
+			目前此欄位僅應用於表示接收端可以接收的最大資料區段容量，若此欄位不使用，
+			表示可以使用任意資料區段的大小。這個欄位較少使用。
+			<br /><br /></li>
+		<li><span class=text_import1>Padding(補足欄位)</span></br>
+			如同 IP 封包需要有固定的 32bits 表頭一樣， Options 由於欄位為非固定，
+			所以也需要 Padding 欄位來加以補齊才行。同樣也是 32 bits 的整數。<br /></li>
+		</ul>
+
+		<br /><hr /><a name="protocol_tcp_socket"></a><span class=text_import1>通訊埠口與 Socket</span>
+		<div class=block2>
+			在剛剛上頭提到的 TCP 表頭資料後，您大概也清楚了要建立一個 TCP 
+			封包時所需要檢驗的相關參數可不少啊！其中最重要的就屬通訊埠口 (port) 了。
+			這個 port 主要是由主機的程式所觸發的，網路上面的其他 client 端，
+			可以通過這個埠口直接與啟動該 port 的程式相互溝通，
+			而達到資料傳輸的目的。我們都知道二進位程式 (binary program) 才是真的主機認識的程式指令，
+			那麼<span class=text_import2>我們要啟動網路服務時，其實也就是啟動一個 program</span>
+			就是了。但是網路上面如何與您的
+			program 互通資料呢？就是透過在網路介面上面的 port 來達成的啦。<br /><br />
+
+			不過，必須要注意的是 <span class=text_import2>port 的溝通是雙向的</span>，
+			舉例來說，當我們要使用瀏覽器連接到奇摩雅虎查閱資料時，
+			我們必須要使用 client 端主機的瀏覽器連接到 Yahoo 主機的 WWW 伺服器軟體上面。
+			由於是透過網路介面，所以我們的瀏覽器也必須要啟動一個 port 並且透過這個 port
+			連接到 Yahoo 主機的 WWW port 上頭去，然後透過 TCP 封包上頭各項參數的確認後，
+			才能夠建立連線，並進一步開始傳輸資料啊！<br /><br />
+
+			現在來想一想，我們的主機上面有多少網路介面的 port 可用呢？
+			基本上就有 <span class=text_import2>65536 (2<sup>16</sup>)</span>。那我們連線到 Yahoo 時，
+			是連線到 Yahoo 主機的那個 port 啊？如果不知道幾號 port ，那又該如何建立起這個連線呢？
+			所以囉，Internet 上面已經有很多規範好的固定 port (well-known port)
+			在提供使用者建立伺服器時啟用的 port number 啦。這些 port number 通常小於 1024 ，
+			且是提供給許多知名的網路服務軟體用的。在我們的 Linux 環境下，
+			各網路服務與 port number 的對應預設給他寫在 
+			<span class=text_import1>/etc/services</span> 檔案內喔！
+			不過如果是 client 端的話，由於 client 端都是主動向 server 端要資料，
+			所以 client 端的 port number 就使用隨機取一個大於 1024 以上且沒有在用的 port number
+			來進行連線了。底下鳥哥列出幾個常見的 port number 與網路服務的對應：<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width=100>連接埠口</td><td>服務名稱與內容</td></tr>
+<tr><td align=center>20</td><td>FTP-data，檔案傳輸協定所使用的主動資料傳輸埠口</td></tr>
+<tr><td align=center>21</td><td>FTP，檔案傳輸協定的命令通道</td></tr>
+<tr><td align=center>22</td><td>SSH，較為安全的遠端連線伺服器</td></tr>
+<tr><td align=center>23</td><td>Telnet，早期的遠端連線伺服器軟體</td></tr>
+<tr><td align=center>25</td><td>SMTP，簡單郵件傳遞協定，用在作為 mail server 的埠口</td></tr>
+<tr><td align=center>53</td><td>DNS，用在作為名稱解析的領域名稱伺服器</td></tr>
+<tr><td align=center>80</td><td>WWW，這個重要吧！就是全球資訊網伺服器</td></tr>
+<tr><td align=center>110</td><td>POP3，郵件收信協定，辦公室用的收信軟體都是透過他</td></tr>
+<tr><td align=center>443</td><td>https，有安全加密機制的WWW伺服器</td></tr>
+</table><br />
+
+			另外一點比較值得注意的是，<span class=text_import2>小於 1023 以下的埠口要啟動時，
+			啟動者的身份必須要是 root 才行</span>！這個限制挺重要的，大家不要忘記了喔！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5 bgcolor="#ffcccc"><tr><td>
+曾經有一個朋友問過我說：『一部主機上面這麼多服務，那我們跟這部主機進行連線時，
+該主機怎麼知道我們要的資料是 WWW 還是 FTP 啊？！』呵呵！這就是 port
+的不同的結果啦！因為每種 Client 軟體他們所需要的資料都不相同，例如上面提到的瀏覽器( Netscape 
+以及 IE ) 他們所需要的資料是 WWW ，所以該軟體預設就會向主機的 80 port 
+索求資料；而如果您是使用 cuteftp 來進行與主機的 FTP 資料索求時， cuteftp 這個 Client 
+軟體當然預設就是向主機的 FTP 相關埠口 ( 預設就是 port 21 ) 
+進行連接的動作啦！所以當然就可以正確無誤的取得 Client 端所需要的資料了<br /><br />
+舉個例子來說，一部主機就好像是一間多功能銀行，該銀行內的每個負責不同業務的窗口就好像是通訊埠口，
+而我們民眾就好像是 Client 端來的封包。當您進入銀行想要繳納信用卡帳單時，
+一到門口服務人員就會指示您直接到該窗口去繳納，當然，如果您是要領錢，服務人員就會請您到領錢的窗口去填寫資料，
+您是不會跑錯的對吧！ ^_^。萬一跑錯了怎麼辦？呵呵！當然該窗口就會告訴您『我不負責這個業務，您請回去！』，
+呵呵！所以該次的連線就會『無法成功』咯！
+</td></tr></table><br />
+
+			談過了通訊埠口後，再來聊一聊每個封包的基本內容有哪些資料呢？這就得要談論到
+			<span class=text_import2>Socket Pair ( 成對的端口 )</span>了！
+			當本機發送出封包時，主機是根據 IP 封包內的 IP 位址來判別來源與目的地的行進路線，
+			並且，也需要 TCP 封包內的 port number 來告知 Client 與 Server 是以哪一個埠口來進行連線的對吧！
+			所以呢，一個連線過程所包含的底下這些咚咚就稱為成對插槽 (socket pair) 了：
+			<ul><span class=text_import2>
+			<li>來源 IP ( Source Address )
+			<li>目的 IP ( Destination Address )
+			<li>來源埠口 ( Source Port )
+			<li>目的埠口 ( Destination Port )
+			</span></ul>
+
+			這四個封包的基本資訊是相當重要的！您得必須要瞭解喔！
+		</div>
+
+		<br /><hr /><a name="protocol_tcp_connect"></a><span class=text_import1>封包的傳送</span>
+		<div class=block2>
+			OK，從前面這樣一路看下來，相信您對於 OSI 七層協定當中的 MAC 訊框與 IP 封包有一定程度的瞭解了，
+			也知道七層協定必須要在不同的主機之間一再地拿出來察看，因為 Internet 是用 IP 來傳遞封包資料，
+			而實體線路則是使用 MAC 訊框。那我們也瞭解 TCP 封包的表頭資料後，再來就是要瞭解一下，
+			那我如何利用 TCP 這個傳送層的協定來進行實際的封包接收呢？
+			當然是得要透過 TCP 表頭的 Sequence Number 來組合收集大的 TCP 封包，
+			也必須要透過 Code (Control Flags) 來瞭解到這個封包的特性才行。
+			說穿了，我們可以使用信封袋來說明，實際的內容 (data) 是在信封袋當中的，
+			而信封的外面的資訊就是各個封包的表頭資料啦！<br /><br />
+
+			那麼如何藉由 TCP 的表頭來確認這個封包有實際被對方接收，並進一部與對方主機達成連線？
+			我們以底下的圖示來作為說明。<br /><br />
+
+			<a name="protocol_tcp_3_handshake"></a>
+			<center>
+			<img src="0110network_basic/3_hand_shak.png" 
+			title="三向交握之封包連接模式" alt="三向交握之封包連接模式"><br />
+			圖十三、封包連接模式之三向交握
+			</center><br />
+
+			在上面的封包連接模式當中，在建立連線之前都必須要通過三個確認的動作，
+			所以<span class=text_import2>這種連線方式也就被稱為三向交握(Three-way handshake)</span>。
+			那麼我們將整個流程依據上面的 A, B, C, D 四個階段來說明一下：
+
+			<ul>
+			<li><span class=text_import2>A:封包發起</span><br />
+			當用戶端想要對伺服器端連線時，就必須要送出一個要求連線的封包，
+			此時用戶端必須隨機取用一個大於 1024 以上的埠口來做為程式溝通的介面。
+			然後在 TCP 的表頭當中，必須要帶有 SYN 的主動連線(SYN=1)，並且記下發送出連線封包給伺服器端的序號
+			(Sequence number = 10001 ) 。<br /><br /></li>
+			<li><span class=text_import2>B:封包接收與確認封包傳送</span><br />
+			當伺服器接到這個封包，並且確定要接收這個封包後，就會開始製作一個同時帶有 SYN=1, ACK=1 的封包，
+			其中那個 acknowledge 的號碼是要給 client 端確認用的，所以該數字會比(A 步驟)裡面的 
+			Sequence 號碼多一號 (ack = 10001+1 = 10002)，
+			那我們伺服器也必須要確認用戶端確實可以接收我們的封包才行，所以也會發送出一個 Sequence (seq=20001)
+			給用戶端，並且開始等待用戶端給我們伺服器端的回應喔！<br /><br /></li>
+			<li><span class=text_import2>C:回送確認封包</span><br />
+			當用戶端收到來自伺服器端的 ACK 數字後 (10002) 就能夠確認之前那個要求封包被正確的收受了，
+			接下來如果用戶端也同意與伺服器端建立連線時，就會再次的發送一個確認封包 (ACK=1) 
+			給伺服器，亦即是 acknowledge = 20001+1 = 20002 囉。
+			<br /><br /></li>
+			<li><span class=text_import2>D:取得最後確認</span><br />
+			若一切都順利，在伺服器端收到帶有 ACK=1 且 ack=20002 序號的封包後，就能夠建立起這次的連線了。
+			<br /></li>
+			</ul>
+
+			也就是說，你必須要瞭解『<span class=text_import2>網路是雙向的</span>』這個事實！
+			所以不論是伺服器端還是用戶端，都必須要透過一次 SYN 與 ACK 來建立連線，
+			所以總共會進行三次的交談！
+			在設定防火牆或者是追蹤網路連線的問題時，這個『雙向』的概念最容易被忽略，
+			而常常導致無法連線成功的問題啊！切記切記！<br /><br />
+
+			在建立了連線之後，該次連線通道就可以在用戶端與伺服器端建立起一對 socket pair ，
+			然後通過該 socket pair 進行 TCP 封包的 PSH、FIN 等資料傳輸與連線中斷等動作囉！
+		</div>
+	</div>
+
+	<hr><a NAME="protocol_udp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">UDP 協定</span><br />
+	<div class=block2>
+		UDP 的全名是：『<span class=text_import2>User Datagram Protocol, 用戶資料流協定</span>』，UDP 
+		與 TCP 不一樣， UDP 不提供可靠的傳輸模式，因為他不是連線導向的一個機制，這是因為在 UDP 
+		的傳送過程中，接受端在接受到封包之後，不會回覆回應封包 ( ACK ) 給發送端，所以封包並沒有像 
+		TCP 封包有較為嚴密的驗證機制。至於 UDP 的表頭資料如下表所示：<br /><br />
+
+<center><a name="fig_udp"></a>
+<table style=" border-width:1; border-color:black; border-style: none;">
+<tr align=center>
+	<td style="width:243; border-width:1; border-style: none solid none solid">16 bits</td>
+	<td style="width:243; border-width:1; border-style: none solid none none ">16 bits</td>
+</tr>
+</table>
+
+<table border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow class="text_import2">
+<tr align=center bgcolor=lightblue>
+	<td width=240>Source Port</td>
+	<td width=240>Destination Port</td>
+</tr>
+<tr align=center>
+	<td width=240>Message Length</td>
+	<td width=240>Checksum</td>
+</tr>
+<tr align=center bgcolor=lightgreen>
+	<td colspan=2 height=40>Data</td>
+</tr>
+</table>
+	圖十四、UDP 封包的表頭資料</center><br />
+
+		TCP 封包確實是比較可靠的，因為通過三向交握嘛！不過，也由於三向交握的緣故， TCP 封包的傳輸速度會較慢。
+		至於 UDP 封包由於不需要確認對方是否有正確的收到資料，故表頭資料較少，也因為如此所以 UDP 就可以在 Data 
+		處填入更多的資料了。同時 UDP 比較適合需要即時反應的一些資料流，例如即時通訊軟體或者是影像即時傳送軟體等，
+		就可以使用這類的封包傳送說。也就是說， UDP 傳輸協定並不考慮連線要求、連線終止與流量控制等特性，
+		所以使用的時機是當資料的正確性不很重要時，例如上面提到的即時通訊軟體啊！<br /><br />
+
+		另外，很多的軟體其實是同時提供 TCP 與 UDP 的傳輸協定的，舉例來說，查詢主機名稱的 DNS 
+		服務就同時提供了 UDP/TCP 協定。由於 UDP 較為快速，所以我們 client 端可以先使用 UDP 來與伺服器連線。
+		但是當使用 UDP 連線卻還是無法取得正確的資料時，便轉換為較為可靠的 TCP 傳輸協定來進行資料的傳輸囉。
+		這樣可以同時兼顧快速與可靠的傳輸說！<br /><br />
+	</div>
+
+	<hr><a NAME="protocol_icmp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">ICMP 協定</span><br />
+	<div class=block2>
+		ICMP 的全稱是『 <span class=text_import2>Internet Control Message Protocol, 網際網路訊息控制協定</span> 』。
+		基本上，ICMP 是一個錯誤偵測與回報的機制，最大的功能就是可以確保我們網路的連線狀態與連線的正確性！
+		同樣的，ICMP 封包也是必須要裝在 IP 封包的 Data 內才行喔！
+		因為在 Internet 上面有傳輸能力的就是 IP 封包啦！
+		ICMP 有相當多的類別可以偵測與回報，底下是比較常見的幾個 ICMP 的類別 (Type)：<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width=80>類別代號</td><td>類別名稱與意義</td></tr>
+<tr class="text_import1"><td align=center>0</td><td>Echo Reply (代表一個回應信息)</td></tr>
+<tr><td align=center>3</td><td>Destination Unreachable (表示目的地不可到達)</td></tr>
+<tr><td align=center>4</td><td>Source Quench (當 router 的負載過高時，此類別碼可用來讓發送端停止發送訊息)</td></tr>
+<tr><td align=center>5</td><td>Redirect (用來重新導向路由路徑的資訊)</td></tr>
+<tr class="text_import1"><td align=center>8</td><td>Echo Request (請求回應訊息)</td></tr>
+<tr><td align=center>11</td><td>Time Exceeded for a Datagram (當資料封包在某些路由傳送的現象中造成逾時狀態，此類別碼可告知來源該封包已被忽略的訊息)</td></tr>
+<tr><td align=center>12</td><td>Parameter Problem on a Datagram (當一個 ICMP 封包重複之前的錯誤時，會回覆來源主機關於參數錯誤的訊息)</td></tr>
+<tr><td align=center>13</td><td>Timestamp Request (要求對方送出時間訊息，用以計算路由時間的差異，以滿足同步性協定的要求)</td></tr>
+<tr><td align=center>14</td><td>Timestamp Reply (此訊息純粹是回應 Timestamp Request 用的)</td></tr>
+<tr><td align=center>15</td><td>Information Request (在 RARP 協定應用之前，此訊息是用來在開機時取得網路信息)</td></tr>
+<tr><td align=center>16</td><td>Information Reply (用以回應 Infromation Request 訊息)</td></tr>
+<tr><td align=center>17</td><td>Address Mask Request (這訊息是用來查詢子網路 mask 設定信息)</td></tr>
+<tr><td align=center>18</td><td>Address Mask Reply (回應子網路 mask 查詢訊息的)</td></tr>
+</table><br />
+
+		那麼我們是如何利用 ICMP 來檢驗網路的狀態呢？最簡單的指令就是 ping 與 traceroute  了，
+		這兩個指令可以透過 ICMP 封包的輔助來確認與回報網路主機的狀態。在設定防火牆的時候，
+		我們最容易忽略的就是這個 ICMP 的封包了，因為只會記住 TCP/UDP 而已～事實上，
+		ICMP 封包可以幫助連線的狀態回報，除了上述的 8 可以考慮關閉之外，基本上，
+		ICMP 封包也不應該全部都擋掉喔！<br /><br />
+	</div>
+
+	<hr><a NAME="protocol_mtu"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">MTU 的限制</span><br />
+	<div class=block2>
+		我們在本章的第一部份談到 MAC 時，不是有提到標準乙太網路封包的資訊容量大約在 1500bytes 嗎？
+		所以 IP 封包、TCP 封包以及其他相關的封包，如果能夠控制在 1500 bytes 內的話，
+		那麼 IP 封包將不需要重組成可以放進 MAC 訊框的分段了！<br /><br />
+
+		讓我們來想一個小案例，假設你的資料量大到 60000 bytes 好了，如果你使用的傳輸協定為 TCP 封包，
+		萬一你沒有考慮到 MAC 訊框的大小，而讓整筆資料放到可以容納最大 65535 bytes 的 IP 封包內，
+		此時 IP 封包已經建立好成為內含 60000 bytes 的資料包了，但是再往下到達資料連接層時，唉～
+		這個 IP 封包就得要進行重組，好讓 IP 封包可以放到 MAC 訊框當中！您說，這個時候不是又得讓系統多進行一段手續，
+		而導致網路效能的低落嗎？<br /><br />
+
+		此時，如果能夠規範 TCP 以及 IP 在包起來時就考慮訊框的最大容量時，
+		不就可以減少很多資料重組的問題囉？呵呵呵呵！沒錯啊！
+		<span class=text_import2>那就是最大傳輸單元 (Maximum Transmission Unit, MTU)</span>
+		這個設定值的重要性啊！<br /><br />
+
+		一般來說，我們的 Gigabit 網路卡已經可以支援 Jumbo frame ，所以 MTU 值都可以到達 9000 bytes 左右，
+		不過，不建議您設定 MTU 成為 9000 喔！為什麼呢？因為我們的封包總是需要在 Internet 上面跑吧？
+		您無法確認所有的網路媒體都是支援那麼大的 MTU 對吧！
+		如果您的 9000 bytes 封包通過一個不支援 Jumbo frame 的網路媒體時，
+		好一點的是該網路媒體 (例如 router ) 會主動的幫您重組封包而進行傳送，
+		差一點的可能就直接回報這個封包無效而丟棄了～那個時候可就糗大囉～
+		所以， MTU 設定為 9000 這種事情，大概僅能在內部網路的環境作作～
+		舉例來說，很多的內部叢集系統 (cluster) 就將他們的內部網路環境 MTU 設定為 9000，
+		但是對外的介面卡可還是原本的標準 1500 喔！ ^_^<br /><br />
+
+		也就是說，不論您的網路媒體支援 MTU 到多大，您必須要考量到您的封包需要傳到目的地時，
+		所需要經過的所有網路媒體，然後再來決定您的 MTU 設定才行。<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">			事實上，MTU 不會剛好等於 1500 吶！這是因為不論是 IP 封包或者是 TCP 封包都會有表頭資料，
+			這些表頭資料都會佔用去一些位元容量，所以 MTU 就會比標準乙太網路容量的 1500 小一些。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr><a NAME="protocol_firewall"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">封包過濾的防火牆概念</span><br />
+	<div class=block2>
+		由上面的說明當中，我們知道資料的傳送其實就是封包的發出與接受的動作啦！並且不同的封包上面都有不一樣的表頭
+		( header )，此外，封包上面通常都會具有四個基本的資訊，那就是
+		<a href="#protocol_tcp_socket">socket pair</a> 裡面提到的『來源與目的 IP 以及來源與目的端的 
+		port number』 。當然啦，如果是可靠性連線的
+		TCP 封包，還包含 Control Flag 裡面的 SYN/ACK 等等重要的資訊呢！好了，開始動一動腦筋，
+		有沒有想到『<span class="text_import2">網路防火牆</span>』的字眼啊？
+		網路防火牆可以抵擋掉一些可能有問題的封包，那麼在
+		Linux 系統上面是怎麼擋掉封包的呢？其實說來也是很簡單，既然封包的表頭上面已經有這麼多的重要資訊，
+		那麼我就利用一些防火牆機制與軟體來進行封包表頭的分析，並且設定分析的規則，當發現某些特定的
+		IP 、特定的埠口或者是特定的封包資訊(SYN/ACK等等)，那麼就將該封包給他丟棄，
+		那就是最基本的防火牆原理了！<br /><br />
+
+		舉例來說，大家都知道 Telnet 這個伺服器是挺危險的，而 Telnet 使用的
+		port number 為 23 ，所以，當我們使用軟體去分析要送進我們主機的封包時，
+		只要發現該封包的目的地是我們主機的
+		port 23 ，就將該封包丟掉去！那就是最基本的防火牆案例啦！
+		更多的防火牆資訊我們會在後頭的『<a href="0250simple_firewall.htm">簡易防火牆</a>』與
+		『<a href="0240network-secure-1.htm">認識網路安全</a>』當中進行更多的說明喔！<br /><br />
+	</div>
+</div>
+
+
+<hr><a NAME="prepare"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">連上 Internet 前的準備事項</span><br />
+<div class=block1>
+	講了這麼多，其實我們最需要的僅是『連接上 Internet 』啦！那麼在 Internet 上面其實使用的是 TCP/IP 
+	這個通訊協定，所以我們就需要 Public IP 來連接上 Internet 啊！您說對吧～
+	不過，您有沒有發現一件事，那就是『為啥我不知道 Yahoo 的主機 IP ，但是俺的主機卻可以連到 Yahoo 主機上？』
+	如果您有發現這個問題的話，哈哈！您可以準備開始設定網路囉～ ^_^<br /><br />
+
+	<hr><a NAME="prepare_dns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">什麼是主機名稱與 DNS</span><br />
+	<div class=block2>
+		除了上面提到的最基本的網路基礎概念之外，這裡還必須要先談一個基本的觀念，
+		否則後續的主機名稱查詢設定挺難說明白的！好了，我們知道電腦在網路上面要找尋主機的時後，是利用 
+		IP 來定址，而以 TCP/UDP/ICMP 等資料來進行傳送的，並且傳送的過程中還會去檢驗封包的資訊。
+		總歸一句話，網路是靠 TCP/IP 家族來達成的，所以必須要知道 IP 之後，電腦才能夠連上網路以及傳送資料。<br /><br />
+
+		問題是，電腦網路是依據人類的需要來建立的，不過人類對於 IP 這一類的數字並不具有敏感性，即使 
+		IP 已經被簡化為十進位了，但是人類就是對數字沒有辦法啊！怎麼辦？沒關係，反正電腦都有主機名稱嘛！
+		那麼我就將主機名稱與他的 IP 對應起來，未來要連接上該電腦時，只要知道該電腦的主機名稱就好了，因為 
+		IP 已經對應到主機名稱了嘛！所以人類也容易記憶文字類的主機名稱，電腦也可以藉由對應來找到他必須要知道的 
+		IP ，啊！真是皆大歡喜啊！<br /><br />
+
+		這個主機名稱 (Hostname) 對應 IP 的系統，就是鼎鼎有名的 <span class=text_import1>Domain Name System 
+		(DNS)</span> 咯！也就是說， DNS 這個服務的最大功能就是在進行『主機名稱與該主機的 IP 的對應』的一項協定。
+		DNS 在網路環境當中是相當常被使用到的一項協定喔！舉個例子來說，像鳥哥我常常會連到奇摩雅虎的 
+		WWW 網站去看最新的新聞，那麼我一定需要將奇摩雅虎的 WWW 網站的 IP 背下來嗎？！天吶，
+		鳥哥的忘性這麼好，怎麼可能將 IP 背下來？！不過，如果是要將奇摩站的主機名稱背下來的話，
+		那就容易的多了！不就是 http://tw.yahoo.com 嗎？！而既然電腦主機只認識 IP 而已，
+		因此當我在瀏覽器上面輸入了『http://tw.yahoo.com』的時後，我的電腦首先就會藉由向 
+		DNS 主機查詢 tw.yahoo.com 的 IP 後，再將查詢到的 IP 結果回應給我的瀏覽器，
+		那麼我的瀏覽器就可以藉由該 IP 來連接上主機啦！<br /><br />
+
+		發現了嗎？<span class=text_import2>我的電腦必須要向 DNS 主機查詢 Hostname 對應 IP 的資訊</span>
+		喔！那麼那部 DNS 主機的 IP 就必須要在我的電腦裡面設定好才行，並且必須要是輸入 IP 喔，不然我的電腦怎麼連到 DNS 
+		主機去要求資料呢？呵呵！在 Linux 裡面，DNS 主機 IP 的設定就是在 
+		<span class=text_import1>/etc/resolv.conf</span> 這個檔案裡面啦！<br /><br />
+
+		目前各大 ISP 都有提供他們的 DNS 主機 IP 給他們的用戶，好設定客戶自己電腦的 DNS 查詢主機，
+		不過，如果您忘記了或者是您使用的環境中並沒有提供 DNS 主機呢？呵呵！沒有關係，
+		那就設定 Hinet 那個最大的 DNS 主機吧！ <span class=text_import1>IP 是 168.95.1.1</span> 
+		咯！要設定好 DNS 之後，未來上網瀏覽時，才能使用主機名稱喔！不然就得一定需要使用 IP 
+		才能上網呢！DNS 是很重要的，他的原理也頂複雜的，更詳細的原理我們在後面的
+		『<a href="0350dns.htm">DNS 伺服器架設</a>』裡面進行更多更詳細的說明喔！這裡僅提個大綱！<br /><br />
+	</div>
+
+	<hr><a NAME="prepare_con"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">一組可以連上 Internet 的必要網路參數</span><br />
+	<div class=block2>
+		從上面的所有說明當中，我們知道一部主機要能夠使用網路，必須要有 IP ，而 IP
+		的設定當中，就必須要有 IP, Network, Broadcast, Netmask 等參數，此外，還需要考慮到路由裡面的
+		Default Gateway 才能夠正確的將非同網域的封包給他傳送出去。
+		此外，考慮到主機名稱與 IP 的對應，所以您還必須要給予系統一個 DNS 主機的 IP 才行～
+		所以說，一組合理的網路設定需要哪些資料呢？呵呵！就是：<br />
+		<ul><span class=text_import2>
+		<li>IP
+		<li>Netmask
+		<li>Network
+		<li>Broadcast
+		<li>Gateway
+		<li>DNS
+		</span></ul>
+
+		沒錯！就是這些資料！如果您是使用 ADSL 撥接來上網的話，上面這些資料都是由
+		ISP 直接給您的，那您只要使用撥接程式進行撥接到 ISP 的工作之後，
+		這些資料就自動的在您的主機上面設定完成了！但是如果是固定制
+		( 如學術網路 ) 的話，那麼就得自行使用上面的參數來設定您的主機囉！缺一不可呢！以
+		192.168.0.0/24 這個 C Class 為例的話，那麼您就必須要在您的主機上面設定好底下的參數：<br />
+
+		<ul><span class=text_import2>
+		<li>IP: 由 192.168.0~192.168.0.254
+		<li>Netmask: 255.255.255.0
+		<li>Network: 192.168.0.0
+		<li>Broadcast: 192.168.0.255
+		<li>Gateway: 每個環境都不同，請自行詢問網路管理員
+		<li>DNS: 也可以直接設定成 168.95.1.1
+		</span></ul>
+	</div>
+</div>
+
+
+<hr><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>重點回顧：</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>只要是能夠連接上 Internet 的主機，都有危險，不要以為小網站就不會被 cracker  所破解；</li>
+	<li>雖然目前的網路媒體多以乙太網路為標準，但網路媒體不只有乙太網路而已；</li>
+	<li>Internet 主要是由 Internet Network Information Center (INTERNIC) 所維護，但其僅維護一些技術文件的推展；</li>
+	<li>乙太網路的標準相當多，速度的定義亦不相同，購買時需要特別留意其速度標準。</li>
+	<li>乙太網路的 RJ-45 網路線，由於 568A/568B  接頭的不同而又分為平行線與跳線；</li>
+	<li>網路媒體都有其最大可接受的封包量，在乙太網路上可接收的封包為 MAC (Media Access Control) 訊框</li>
+	<li>乙太網路上最重要的傳輸資料為 Carrier Sence Multiple Access with Collision Detect (CSMA/CD) 技術，
+		至於傳輸過程當中，最重要的 MAC 訊框內以硬體位址 (hardware address) 資料最為重要；</li>
+	<li>乙太網路的交換技術 (switch) 已經可以克服 CSMA/CD 所發生的封包碰撞情況，因為 switch 為非共享媒體</li>
+	<li>透過八蕊的網路線 (Cat 5 以上等級)，現在的乙太網路可以支援全雙工模式；</li>
+	<li>OSI 七層協定為一個網路模型 ( model ) ，並非硬性規定。這七層協定可以協助軟硬體開發有一個基本的準則，
+		且每一分層各自獨立，方便使用者開發；</li>
+	<li>現今的網路基礎是架構在 TCP/IP 這個通訊協定上面；</li>
+	<li>資料連接層裡重要的資訊為 MAC (Media Access Control)，亦可稱為硬體位址，而
+		ARP Table 可以用來對應 MAC 與軟體位址 ( IP ) ；</li>
+	<li>網路的傳輸單位使用 bit 而不是 byte ；</li>
+	<li>在網路媒體方面， Hub 為共享媒體，因此可能會有封包碰撞的問題，至於
+		Switch 由於加入了 switch port 與 MAC 的對應，因此已經克服了封包碰撞的問題，也就是說，Switch
+		並不是共享媒體；</li>
+	<li>IP 為 32 bits 所組成的，為了適應人類的記憶，因此轉成四組十進位的數據；</li>
+	<li>IP 主要分為 Net ID 與 Host ID 兩部份，加上 Netmask
+		這個參數後，可以設定『網域』的概念；</li>
+	<li>所謂的同一網域指的是 Net_ID 相同，但 Host_ID 不同的環境下；</li>
+	<li>根據 IP 網域的大小，可將 IP 的等級分為 A, B, C 三種常見的等級；</li>
+	<li>Loopback 這個網段在 127.0.0.0/8 ，用在每個作業系統內部的迴圈測試中。</li>
+	<li>網域可繼續分成更小的網域 (subnetwork)，主要是透過將 Host_ID 借位成為 Net_ID 的技術；</li>
+	<li>若 IP 封包大於 MAC 可接受的最大值時，就得將該 IP 封包重組分段；</li>
+	<li>IP 只有兩種，就是 Public IP 與 Private IP ，中文應該翻譯為
+		公共 IP 與 私有(或保留) IP，私有 IP 與私有路由不可以直接連接到 Internet 上；</li>
+	<li>每一部主機都有自己的路由表，這個路由表規定了封包的傳送途徑，在路由表當中，最重要者為預設的通訊閘
+		( Gateway/Router )；</li>
+	<li>TCP 協定的表頭資料當中，那個 Code (control flags) 所帶有的 ACK, SYN, FIN 等為常見的旗標，
+		可以控制封包的連線成功與否；</li>
+	<li>TCP 與 IP 的 IP address/Port 可以組成一對 socket pair </li>
+	<li>網路連線都是雙向的，在 TCP 的連線當中，需要進行用戶端與伺服器端兩次的 SYN/ACK 封包發送與確認，
+		所以一次 TCP 連線確認時，需要進行三向交握的流程；</li>
+	<li>UDP 通訊協定由於不需要連線確認，因此適用於快速即時傳輸且不需要資料可靠的軟體中，例如即時通訊；</li>
+	<li>ICMP 封包最主要的功能在回報網路的偵測狀況，故不要使用防火牆將他完全擋掉；</li>
+	<li>MTU 可以用來規範各種封包打包時的最大單位，單位為 byte。</li>
+	<li>一般來說，一部主機裡面的網路參數應該具備有：IP, Netmask,
+		Network, Broadcast, Gateway 等；</li>
+	<li>目前常見的資料封包格式有 TCP/UDP/ICMP 等，TCP 為較可靠的封包格式，
+		透過多種確認手段來使封包可以準確的到達目的地，至於
+		UDP 則略過這些確認手續，因此傳送速度較快。</li>
+	<li>在主機的 port 當中，只有 root 可以啟用小於 1023 以下的 port ；</li>
+	<li>DNS 主要的目的在於進行 Hostname 對應 IP 的功能；</li>
+</span></ul>
+</div>
+
+
+<hr><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>課後練習：</span><br />
+<div class=block1>
+<ul>
+	<li>請簡述 OSI 網路七層協定每一層的功能；</li>
+	<div class=block2><font color=white size=-1>
+	請參考本章<a href="#whatisnetwork_osi"><font color=white size=-1>第一節</font></a>的相關內容。
+	</font></div>
+
+	<li>在 ISP 提供的網路服務中，他們提到傳輸速度為 1.5M/382K ，請問這個數據的單位為何？
+	<div class=block2><font color=white size=-1>
+	數據單位為 bits/second, 與慣用的 bytes 差 8 倍。
+	</font></div>
+
+	<li>什麼是 MAC ( Media Access Control ) ，MAC 主要的功能是什麼？</li>
+	<div class=block2><font color=white size=-1>
+	Media Access Control 的縮寫，為乙太網路硬體訊框的規格，乙太網路就是以 MAC 訊框進行資料的傳送。
+	目前 MAC 也常被用為乙太網路卡卡號的代稱。
+	</font></div>
+
+	<li>什麼是封包碰撞？為什麼會發生封包碰撞？</li>
+	<div class=block2><font color=white size=-1>
+	當主機要使用網路時，必須要先進行 CSMA/CD 監聽網路，如果(1)網路使用頻繁 (2)網路間隔太大，
+	則可能會發生監聽時均顯示無主機使用，但發出封包後卻發生同步發送封包的情況，此時兩個封包就會產生碰撞，
+	造成資料損毀。
+	</font></div>
+
+	<li>ARP Table 的作用為何？如何在我的 Linux 察看我的 ARP 表格？</li>
+	<div class=block2><font color=white size=-1>
+	ARP 協定主要在分析 MAC 與 IP 的對應，而解析完畢後的資料會存在系統的記憶體中，
+	下次要傳送到相同的 IP 時，就會主動的直接以該 MAC 傳送，而不發送廣播封包詢問整個網域了。<br />
+	利用 arp -n 即可
+	</font></div>
+
+	<li>簡略說明 Netmask 的作用與優點；</li>
+	<div class=block2><font color=white size=-1>
+	Netmask 可以用來區分網域，且 Netmask 可以有效的增加網路的效率，這是因為 Netmask 
+	可以定義出一個網域的大小，那麼 broadcast 的時間就可以降低很多！一般來說，
+	我們如果要將一個大網域再細分為小網域，也需要藉由 Netmask 來進行 subnet 的切割。 
+	</font></div>
+
+	<li>我有一組網域為： 192.168.0.0/28 ，請問這個網域的 Network, Netmask, Broadcast
+		各為多少？而可以使用的 IP 數量與範圍各是多少？</li>
+	<div class=block2><font color=white size=-1>
+	因為共有 28 個 bits 是不可動的，所以 Netmask 位址的最後一個數字為 11110000，也就是 (128+64+32+16=240) ，所以：<br />
+Network：192.168.0.0<br />
+Netmask：255.255.255.240<br />
+Broadcast：192.168.0.15<br />
+IP：由 192.168.0.1 ~ 192.168.0.14 共 14 個可用 IP 喔！ 
+	</font></div>
+
+	<li>承上題，如果網域是 192.168.0.128/29 呢？</li>
+	<div class=block2><font color=white size=-1>
+	因為是 29 個 bits 不可動，所以最後一個 Netmask 的位址為： 11111000 也就是 (128+64+32+16+8=248)，所以：<br />
+Network：192.168.0.128<br />
+Netmask：255.255.255.248<br />
+Broadcast：192.168.0.135<br />
+IP：由 192.168.0.129 ~ 192.168.0.134 共 6 個可用的 IP 喔！ <br />
+	</font></div>
+
+	<li>我要將 192.168.100.0/24 這個 C Class 的網域分為 4 個子網域，請問這四個子網域要如何表示？</li>
+	<div class=block2><font color=white size=-1>
+	既然要分為四個網域，也就是還需要藉助 Netmask 的兩個 bits (2的2次方為4啊！)，所以 
+	Netmask 會變成 255.255.255.192 ，每個子網域會有 256/4=64 個 IP ，而必須要扣除 
+	Network 與 Broadcast ，所以每個子網域會有 62 個可用 IP 喔！因此，四個子網域的表示方法為：<br />
+	192.168.100.0/26, 192.168.100.64/26, 192.168.100.128/26, 192.168.100.192/26。
+	</font></div>
+
+	<li>如何觀察 Linux 主機上面的路由資訊 ( route table )？</li>
+	<div class=block2><font color=white size=-1>
+	路由資訊的觀察可以下達 route 來直接察看！或者是下達 route -n 亦可
+	</font></div>
+
+	<li>TCP 封包上面的 SYN 與 ACK 標誌代表的意義為何？</li>
+	<div class=block2><font color=white size=-1>
+	SYN 代表該封包為該系列連線的第一個封包，亦即是主動連線的意思；<br />
+	ACK 則代表該封包為確認封包，亦即是回應封包！ <br />
+	</font></div>
+
+	<li>什麼是三向交握？在哪一種封包格式上面才會有三向交握？</li>
+	<div class=block2><font color=white size=-1>
+	使用 TCP 封包才會有三向交握。TCP 封包的三向交握是一個確認封包正確性的重要步驟，通過 SYN, SYN/ACK, 
+	ACK 三個封包的確認無誤後，才能夠建立連線。至於 UDP 封包則沒有三向交握喔！ 
+	</font></div>
+
+	<li>參考合勤科技網頁上的說明 (<a href="http://www.zyxel.com.tw/product/category.htm?indexFlagvalue=1028014886"
+		target="_blank">http://www.zyxel.com.tw/product/category.htm?indexFlagvalue=1028014886</a> )
+		試說明何謂有網管？無網管的 switch ？此外，這些 switch 的硬體應算在 OSI 七層協定的第幾層？</li>
+	<div class=block2><font color=white size=-1>
+	有網管者，會在 switch 內部加入其他的小型 OS，藉以控管 IP 或 MAC 的流通；
+	通常基礎的 switch 僅達控管 MAC ，故為 OSI 第二層(資料連接層)
+	</font></div>
+
+	<li>為何 ISP 有時後會談到『申請固定 8 個 IP ，其中只有 5 個可以用』，你覺得問題出在哪裡？
+		如果以網域的觀念來看，他的 netmask 會是多少？</li>
+	<div class=block2><font color=white size=-1>
+	因為如果是一個網域的話，那麼八個 IP 前後(Host_ID 全為 0 與 1 的條件)為 Network 及 Broadcast ，
+	加上一個在 ISP 處的 Gateway ，所以僅有 5 個可以用。因為有 8 個 IP ，所以其 netmask 後八 bits 為 11111000
+	，故為 255.255.255.248。
+	</font></div>
+
+	<li>Internet 協定中共包含 "Network Access Layer", "Internet Layer", "Transport Layer", "Application Layer"，
+		請將這四層與 OSI 七層協定的內容進行連結 (自行上網查詢相關文章說明)；</li>
+	<div class=block2><font color=white size=-1>
+	Network Access Layer: 涵蓋 Data-Link 及 Physical Layer<br />
+	Internet Layer: 也是 Network Layer<br />
+	Transport Layer: 也是 Transport Layer<br />
+	Application Layer: 涵蓋 Application Layer, Persentatin Layer, Session Layer.
+	</font></div>
+
+	<li>請自行上網查詢關於 NetBIOS 這個通訊協定的相關理論基礎，並請說明 NetBIOS 是否可以跨路由？</li>
+	<div class=block2><font color=white size=-1>
+	請自行參考<a href="http://www.study-area.org/network/network_protocol.htm"
+	target="_blank"><font size=-1 color=white>網中人的網路基礎</font></a>文章
+	</font></div>
+
+	<li>什麼是 Socket pair ？包含哪些基本資料？</li>
+	<div class=block2><font color=white size=-1>
+	由 IP 封包的 IP address 與 TCP 封包的 port number 達成，分別為目的端的 IP/port 與本地端的 IP/port。
+	</font></div>
+
+	<li>分別說明 568A 及 568B 這兩種 RJ-45 接頭的蕊線顏色排列順序；</li>
+	<div class=block2><font color=white size=-1>
+	568A: 白綠　綠　白橙　藍　白藍　橙　白棕　棕<br />
+	568B:白橙　橙　白綠　藍　白藍　綠　白棕　棕
+	</font></div>
+
+	<li>IP 有一段 A Class 的網段分給系統做為測試用，請問該網段為？設定的名稱為？</li>
+	<div class=block2><font color=white size=-1>
+	127.0.0.0/8, loopback
+	</font></div>
+
+	<li>ICMP 這個協定最主要的目的為？同時做為『回應』的類別為第幾類？</li>
+	<div class=block2><font color=white size=-1>
+	做為網路檢測之用，為第 8 類 (echo request)
+	</font></div>
+
+	<li>IP 封包表頭有個 TTL 的標誌，請問該標誌的基本說明為何？其數據有何特性？</li>
+	<div class=block2><font color=white size=-1>
+	為該封包的存活時間，該時間每經過一個 node 都會減少一，當 TTL 為 0 時，該封包會被路由器所丟棄。
+	該數據最大為 255。
+	</font></div>
+
+	<li>在 Linux 當中，如何查詢每個 port number 對於服務的對應 (filename)</li>
+	<div class=block2><font color=white size=-1>
+	/etc/services 檔案中有紀錄
+	</font></div>
+
+	<li>什麼是星形連線？優點為何？</li>
+	<div class=block2><font color=white size=-1>
+	利用一 hub/switch 連結所有的網路設備的一種連線方式，最大的好處是，每個『網路設備與 switch 之間』都是獨立的，
+	所以所以每個主機故障時均不會影響其他主機的連線。
+	</font></div>
+
+	<li>請說明 CSMA/CD 的運作原理？
+	<div class=block2><font color=white size=-1>
+	發送流程
+	<ol><li>主機欲使用網路時，會先監聽網路，若網路沒有被使用時，才會準備傳送，否則繼續監聽；
+	<li>當資料傳送鐘，發現有碰撞情況時，則會重新監聽網路，並且重新發送一次該封包；
+	<li>若重複發生碰撞 16 次，則網路會癱瘓；</ol>
+	接收流程
+	<ol><li>主機如果沒有在傳送資料，則會監聽網路，並且主動在接收的狀態下；
+	<li>若接收到一個封包，並且該表頭所載 MAC 為本身的網卡卡號，則開始接收該封包，否則將該封包丟棄；
+	<li>接收過程當中如果發生封包碰撞，則會通知原發送主機碰撞的資料；
+	<li>封包接收完畢後，會以 MAC 表頭所載長度同時分析本封包長度，若發生問題，則會通知對方重新傳送。
+	</font></div>
+
+	<li>TCP/IP 這兩個通訊協定必須要在一起才能生效，為什麼？</li>
+	<div class=block2><font color=white size=-1>
+	因為 IP 協定僅定位出 IP 的所在處與路由，並沒有溝通協調的能力，
+	至於 TCP 封包則具有目的端、本地端程式之間溝通的能力，但無法直接傳送封包。
+	故 TCP/IP 常會放在一起講。
+	</font></div>
+</ul>
+</div>
+
+
+<hr><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>參考資料</span><br />
+<div class=block1>
+	<span class=text_import1>特別感謝：</span><br />
+	本文在 2002/07 發出之後，收到相當多朋友的關心，也從而發現了自己誤會的一些基礎的網路理論，真的是感謝好朋友
+	Netman 兄與 ZMAN 兄的指導！這篇短文在 2003/08/03 做了相當大幅度的修訂，與原來的文章
+	( 上次更新日期 2002/09 ) 已經有一定程度的差異了，希望網友們如果有時間的話，能夠再次的閱讀，
+	以釐清一些基本概念喔！<br />
+<ul>
+	<li>Study Area 之網路基礎：<a href="http://www.study-area.org/network/network.htm" 
+		target="_blank">http://www.study-area.org/network/network.htm</a></li>
+	<li>Request For Comment (RFC) 技術文件：<a href="ftp://nic.merit.edu/internet/documents/rfc" 
+		target="_blank">ftp://nic.merit.edu/internet/documents/rfc</a></li>
+	<li>Request For Comment (RFC) 技術文件：<a href="http://www.rfc-editor.org/" 
+		target="_blank">http://www.rfc-editor.org/</a></li>
+	<li>Hub 與 Switch 的迷思：<a href="http://www.study-area.org/tips/hub_switch.htm" 
+		target="_blank">http://www.study-area.org/tips/hub_switch.htm</a></li>
+	<li>BBS 上的問答收集</li>
+	<li>Robert Breyer & Sean Riley 著、風信子、張民人譯，『Switched & Fast 乙太網路』，
+		旗標出版社</li>
+	<li>粘添壽著，『Internet 網路原理與實務』，旗標出版社。</li>
+	<li>Phil Dykstra, Gigabit Ethernet Jumbo Frames：
+		<a href="http://sd.wareonearth.com/~phil/jumbo.html" 
+		target="_blank">http://sd.wareonearth.com/~phil/jumbo.html</a></li>
+	<li>台灣地區 IP 核發情況：<a 
+		href="http://rms.twnic.net.tw/twnic/User/Member/Search/main7.jsp?Order=inet_aton(Startip)"
+		target="_blank">http://rms.twnic.net.tw/twnic/User/Member/Search/main7.jsp?Order=inet_aton(Startip)</a>
+	<li>全球 IPv4 的統計：<a href="http://www.twnic.net.tw/ipstats/ipv4stats.htm"
+		target="_blank">http://www.twnic.net.tw/ipstats/ipv4stats.htm</a>
+	<li>維基百科：<a href="http://en.wikipedia.org/wiki/IPv4"
+		target="_blank">http://en.wikipedia.org/wiki/IPv4</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/07/18：第一次完成日期！<br />
+2002/09/26：修改了部分可能引起誤解的文章部分！<br />
+2003/08/03：重新編排版面，並且重新檢視文章內容，修訂文章！<br />
+2003/08/20：增加重點回顧與課後練習<br />
+2003/09/06：加入<a href="1000results.htm#0110network_basic">參考用解答</a><br />
+2004/03/16：修訂 <a href="#n-way">N-Way</a> 的錯誤，訂正為 <a href="#auto_mdi">Auto MDI/MDIX</a> 的功能！<br />
+2006/02/09：將舊的文章移動到 <a href="0110network_basic/0110network_basic.htm">此處</a><br />
+2006/07/12：參考了粘教授與風信子兄的書籍，修改了很多基礎資料喔！還有重點整理，不過，練習尚未更新<br />
+2006/07/16：加入習題練習囉！<br />
+2007/10/21：圖14那個 UDP 的表頭資料中，16 bits 誤植為 16 bytes，感謝討論區 ricky.liu 的告知！<br />
+2008/04/21：經由網友 chyanlong 兄的指點，<a href="20080421">IHL</a> 的大小單位誤植為 byte，應該是字組 (word) 才對。<br />
+</span>
+<hr><span class="text_date">2002/07/18以來統計人數</span><br />
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0110network_basic.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

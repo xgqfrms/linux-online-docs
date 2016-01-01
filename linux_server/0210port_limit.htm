@@ -1,0 +1,573 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 限制 Linux 對外的埠口 port limit</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0210port_limit.htm">
+    <span class="text_head0">主機基本安全之一：限制<span class="text_head_en"> Linux </span>對外連線的埠口</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0210port_limit.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/08/08</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	為什麼我們的主機會回應網路上面的一些要求封包呢？例如我們設定了一部
+	WWW 主機後，當有來自 Internet 的 WWW 要求時，我們的主機就會予以回應，這是因為我們的主機有啟用了
+	WWW 的監聽埠口 (port) 啊！這裡就要特別留意了，當我們啟用了一個 daemon 時，就可能會造成主機的
+	Port 在進行 Listen 的動作，此時該 daemon 就是已經對網路上面提供服務了！萬一這個
+	daemon 有漏洞，因為他提供 Internet 的服務，所以就容易被 Internet 上面的
+	cracker 所入侵了！所以說，仔細的檢查自己系統上面的 port 到底開了多少個，並且予以嚴格的管理，
+	才能夠降低被入侵的可能性啊！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#ports">Linux 的埠口 (port)</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#ports_whatis">什麼是 port ？</a><br />
+	　　1.2 <a href="#ports_look">觀察 port</a>： 
+		<a href="#netstat">netstat</a>, <a href="#nmap">nmap</a><br />
+	</span>
+2. <a href="#daemon">port 的啟動與關閉</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#daemon_what">stand alone 與 super daemon</a><br />
+	　　2.2 <a href="#daemon_boot">設定開機時啟動服務</a><br />
+	　　2.3 <a href="#daemon_close">安全性的考量</a><br />
+	</span>
+3. <a href="#ex">課後練習</a><br />
+<span class=text_h2>
+4. <a href="http://phorum.vbird.org/viewtopic.htm?p=112964"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=112964</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="ports"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 的埠口 (port)</span><br />
+<div class=block1>
+	我們在<a href="0110network_basic.htm#protocol">網路基礎的通訊協定</a>那個小節曾經談到 TCP
+	封包表頭最重要的就是來源與目標的埠口 (port) 了，若再加上來源與目標的 IP 就可成為一組
+	<a href="0110network_basic.htm#protocol_tcp_socket">Socket pair</a> ，這個 port 
+	就是用在網路連線時提供連線接口的咚咚囉，在開始這一節之前，請您先前往網路基礎那一章再瞧一瞧先。
+	除了這個之外，還有沒有其他需要注意的事項呢？底下我們就來談一談先！<br /><br />
+
+	<hr /><a NAME="ports_whatis"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 port</span><br />
+	<div class=block2>
+		你或許常常會在網路上聽說『<span class=text_import2>我的主機開了多少的 port ，會不會被入侵呀？</span>』
+		或者是說『<span class=text_import2>開那個 port 會比較安全？又，我的服務應該對應什麼 port 
+		呀？</span>』呵呵！很神奇吧！怎麼一部主機上面有這麼多的奇怪的 port 呢？<br /><br />
+
+		其實也不怎麼難啦！在<a href="0110network_basic.htm">網路基礎</a>裡面我們曾經介紹過很多的網路概念，
+		所以你會知道要達成一條 server/client 的連線，需要一組
+		<a href="0110network_basic.htm#protocol_tcp_socket">Socket pair</a> 來建立連線，
+		這也就是說，<span class=text_import2>網路連線是『雙向』的</span>。
+		此外，既然我們想要連線到主機端，那麼主機勢必得要啟動一個大家都知道的 port 在『監聽』吧，
+		否則如何達成連線呢？您說是吧！另外， client 端是否要啟用固定的 port 來連線？
+		當然不需要啊～那共有多少 port 呢？底下我們就先來談一談。<br />
+
+		<ul><li><span class=text_import1>主機端的監聽 (Listen)</span>：<br />想一想，你要如何連上 Yahoo 
+		的網站去看新聞？首先當然是要打開瀏覽器，然後輸入 Yahoo 的網址，之後我們的瀏覽器就會連接到 Yahoo
+		的 WWW 網站去要求資料了。既然如此的話，那麼那部 Yahoo 的 WWW 主機當然就得要啟動 WWW 的服務啦，
+		然後我們的瀏覽器才能夠連接到該服務。這也就是說『<span class=text_import2>主機所啟用的 port 
+		其實是由某些網路服務 (program) 所啟動的</span>』。而為了連接上的方便，因此很多服務所開啟的 port
+		是固定的，例如 WWW 開啟在 port 80 ，mail 開啟在 port 25 等等；<br /><br /></li>
+
+		<li><span class=text_import1>用戶端的 port</span>：<br />用戶端啟動的 port 是隨機產生的，
+		主要是開啟在大於 1024 以上的埠口，這個 port 也是由某些軟體所產生的，例如上面提到的例子，
+		我們的瀏覽器想要連接到 Yahoo 的 WWW 主機，那麼瀏覽器就得要啟用一個 port 來與主機進行連線，
+		以組成一組 Socket pair 來傳輸資料嘛！</li></ul>
+
+		所謂的『監聽』是某個服務程式會一直常駐在記憶體當中，所以該程式啟動的 port 就會一直存在。
+		至於 port 在傳輸過程中的判斷，那就由 TCP/UDP 等通訊協定的表頭資料來記錄的啊，
+		我們的主機透過分析 TCP/UDP 的表頭資料就能夠瞭解到該連線所需要連接的軟體是那個，
+		而給予正確的資料回應。所以，一部主機上面當然可以同時啟動很多不同的服務啊！ ^_^。<br /><br />
+
+		還有上面提到的一些重點你也得再瞭解一下，那就是：<br />
+		<ul>
+		<li><span class=text_import1>共 65536 個 port</span>：<br />
+		預設的情況下，我們的主機會有 65536 個 port，而這些 port 又分成兩個部分，以 port 1024 作區隔：<br /><br /></li>
+
+		<li><span class=text_import1>只有 root 才能啟動的保留的 port</span>：<br />
+		在小於 1023 (連同 1023) 的埠口，都是需要以 root 的身份才能啟動的，
+		這些 port 主要是用於一些常見的通訊服務，在 Linux 系統下，常見的協定與 port 的對應是記錄在
+		<a href="0110network_basic.htm#protocol_tcp_socket">/etc/services</a> 裡面的。
+		一般來說，這些 port  最好保留給一些預設的服務來使用，不要自己隨意使用到這些 port，
+		因為這些 port 是目前 Internet 上面所慣用的，所以一些程式開發者在進行軟體的開發時，
+		就能夠針對這些 well know 的埠口直接來開發，大家也比較容易使用伺服器的功能啊！<br /><br /></li>
+
+		<li><span class=text_import1>大於 1024 用於 client 端的 port</span>：<br />
+		在大於 1024 以上的 port 主要是作為 client 端的軟體啟動的 port 。這些 port 幾乎都是依序隨機使用的，
+		例如前面談到的瀏覽器，就是使用大於 1024  以上的 port。那如果用到 port 65535 後，
+		系統會主動再由前面沒有使用到的埠口 (如 1024) 再重新依序使用。<br /><br /></li>
+
+		<li><span class=text_import1>是否需要三向交握</span>：<br />
+		建立可靠的連線服務需要使用到 TCP 協定，也就需要所謂的
+		<a href="0110network_basic.htm#protocol_tcp_3_handshake">三向交握</a>了，
+		如果是非可靠的連線服務，例如 DNS ，那只要使用 UDP 協定即可。<br /><br />
+
+		<li><span class=text_import1>通訊協定啟用在非正規的 port</span>：<br />
+		我們知道瀏覽器預設會連接到 WWW 主機的 port 80，那麼你的 WWW 是否可以啟動在非 80 的其他埠口？
+		當然可以啊！你可以透過 WWW 軟體的設定功能將該軟體使用的 port 啟動在非正規的埠口，
+		只是如此一來，您的用戶端要連接到你的主機時，就得要在瀏覽器的地方額外指定你所啟用的非正規的埠口才行。
+		這個啟動在非正規的埠口功能，常常被用在一些所謂的地下網站啦！^_^。另外，
+		某些軟體預設就啟動在大於 1024 以上的埠口，如 MySQL 資料庫軟體就啟動在 3306。<br /><br /></li>
+
+		<li><span class=text_import1>所謂的 port 的安全性</span>：<br />
+		事實上，<span class=text_import2>沒有所謂的 port 的安全性！因為『Port 的啟用是由服務軟體所造成的』</span>，
+		也就是說，真正影響網路安全的並不是 port ，而是啟動 port 的那個軟體 (程式)！
+		或許你偶而會聽到：『沒有修補過漏洞的 bind 8.x 版，很容易被黑客所入侵，請盡快升級到 
+		bind 9.x 以後版本』，所以囉，<span class=text_import2>對安全真正有危害的是『某些不安全的服務』
+		而不是『開了哪些 port 』</span>才是！因此，沒有必要的服務就將他關閉吧！
+		尤其某些網路服務還會啟動一些 port 哩！另外，那些已啟動的軟體也需要持續的保持更新喔！
+		</ul>
+	</div>
+
+	<hr /><a NAME="ports_look"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">觀察 port</span><br />
+	<div class=block2>
+		好了，我們現在知道這個 port 是什麼鬼東西了，再來就是要去『看他到底在幹啥？』沒錯！
+		再來就是要來瞭解一下，我們的主機到底是開了多少的 port 呢？如同我們前面說的，
+		您得要先瞭解一下，我們的『服務』跟『 port 』對應的檔案是哪一個？再提醒一次呦！是『
+		<span class=text_import2>/etc/services</span> 』啦！
+		而常用來觀察 port 的則有底下兩個程式：<br />
+		<ul><span class=text_import2>
+		<li>netstat：在本機上面以自己的程式監測自己的 port；
+		<li>nmap：透過網路的偵測軟體輔助，可偵測非本機上的其他網路主機，但有違法之虞。</span></ul>
+		見他的大頭王！怎麼使用 nmap 會違法？呵呵！由於 nmap 的功能太強大了，所以很多 
+		cracker (怪客，網路上面的閒人) 會直接以他來偵測別人的主機，這個時候就可能造成違法啦！
+		只要您使用 nmap 的時候不要去偵測別人的電腦主機，那麼就不會有問題啦！
+		底下我們分別來說一說這兩個寶貝吧！<br /><br />
+
+		<a name="netstat"></a><hr><li><span class=text_import1>netstat</span><br />
+		<div class=block2>
+		在做為主機的 Linux 系統中，<span class=text_import2>開啟的網路服務越少越好</span>！
+		因為較少的服務可以較容易除錯 (debug) 與瞭解安全漏洞，並可避免不必要的入侵管道！
+		所以，這個時候請瞭解一下您的系統當中有沒有哪些服務被開啟了呢？
+		要瞭解自己的系統當中的服務項目，最簡便的方法就是使用
+		<a href="0140networkcommand.htm#netstat">netstat</a> 了！這個東西不但簡單 
+		(每一部 Linux 機器當中預設都會安裝的程式喔！) ，而且功能也是很不錯的。
+		這個指令的使用方法在 <a href="0140networkcommand.htm">Linux 常用網路功能</a>指令介紹當中提過了，
+		底下我們僅提供如何使用這個工具的方法囉！<br /><br />
+
+		<span class=text_import1>列出在監聽的網路服務：</span><br />
+		列出網路服務的方式簡單，如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -tunl</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address       Foreign Address     State
+tcp        0      0 0.0.0.0:25          0.0.0.0:*           LISTEN
+tcp        0      0 :::80               :::*                LISTEN
+tcp        0      0 :::22               :::*                LISTEN
+tcp        0      0 :::25               :::*                LISTEN
+</pre></td></tr></table>
+
+		上面說明了我的主機有啟動 port 25, 80, 22 等，而且觀察各連線介面，可發現這三個 port 
+		都有對外提供連線的能力喔！<br /><br />
+
+		<span class=text_import1>列出已連線的網路連線狀態：</span><br />
+		如果僅是要列出網路介面上已經連線的或者是一些連線過程掛斷、連接程序的網路狀態，
+		可以使用如下的方式來處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -tun</span>
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address        Foreign Address      State
+tcp        0      0 192.168.10.100:25    192.168.10.5:3151    TIME_WAIT
+tcp        0      0 192.168.10.100:22    192.168.10.150:1832  ESTABLISHED
+</pre></td></tr></table>
+
+		從上面的資料來看，我的主機 (192.168.10.100) 目前僅有一條已建立的連線，
+		那就是與 192.168.10.150 那部主機連接的連線，並且連線方線是由對方連接到我主機的 port 22 
+		來取用我主機的服務吶！至於那個 TIME_WAIT 則是在等待該連線掛斷啦！<br /><br />
+
+		<span class=text_import1>刪除已建立或在監聽當中的連線：</span><br />
+		如果想要將已經建立，或者是正在監聽當中的網路服務關閉的話，最簡單的方法當然就是找出該連線的 PID，
+		然後將他 kill 掉即可啊！例如下面的範例：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -tunp</span>
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address     Foreign Address      State       PID/P name
+tcp        0     68 192.168.10.100:22 192.168.10.150:1832  ESTABLISHED <span class=term_write>13247/sshd</span>
+</pre></td></tr></table>
+
+		如上面的範例，我們可以找出來該連線是由 sshd 這個程式來啟用的，並且他的 PID 是 13247，
+		希望你不要心急的用 <a href="../linux_basic/0440processcontrol.htm#killall">killall</a> 
+		這個指令，否則容易刪錯人 (因為你的主機裡面可能會有多個 sshd 存在)，
+		應該要使用 <a href="../linux_basic/0440processcontrol.htm#kill">kill</a> 這個指令才對喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>kill -9 13247</span>
+</pre></td></tr></table>
+		</div>
+
+		<a name="nmap"></a><hr><li><span class=text_import1>nmap</span><br />
+		<div class=block2>
+		如果你要偵測的設備並沒有自己的作業系統，舉例來說，你想要瞭解一下公司的網路印表機是否有開放某些協定時，
+		那該如何處理啊？現在你知道 <a href="#netstat">netstat</a> 可以用來查閱本機上面的許多監聽中的通訊協定，
+		那例如網路印表機這樣的非本機的設備，要如何查詢啊？呵呵！用 nmap 就對了！<br /><br />
+
+		nmap 的套件說明之名稱為：『Network exploration tool and security scanner』，顧名思義，
+		這個東西是被系統管理員用來管理系統安全性查核的工具！他的具體描述當中也提到了， 
+		nmap 可以經由程式內部自行定義的幾個 port 對應的指紋資料，來查出該 port 
+		的服務為何，所以我們也可以藉此瞭解我們主機的 port 到底是幹嘛用的！如果您是安裝 Linux 是 Red Hat 
+		系統的話，那麼這個 nmap 套件應該已經安裝妥當了，萬一沒有這個套件的話，也可以來到底下的網站下載：<br />
+		<ul><li><a href="http://insecure.org/nmap/" 
+		target="_blank">http://insecure.org/nmap/</a></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nmap [掃瞄類型] [掃瞄參數] [hosts 位址與範圍]</span>
+<span class=term_say>參數：
+[掃瞄類型]：主要的掃瞄類型有底下幾種：
+    -sT：掃瞄 TCP 封包已建立的連線 connect() ！
+    -sS：掃瞄 TCP 封包帶有 SYN 標籤的資料
+    -sP：以 ping 的方式進行掃瞄
+    -sU：以 UDP 的封包格式進行掃瞄
+    -sO：以 IP 的協定 ( protocol ) 進行主機的掃瞄
+[掃瞄參數]：主要的掃瞄參數有幾種：
+    -PT：使用 TCP 裡頭的 ping 的方式來進行掃瞄，可以獲知目前有幾部電腦存活(較常用)
+    -PI：使用實際的 ping (帶有 ICMP 封包的) 來進行掃瞄
+    -p ：這個是 port range ，例如 1024-, 80-1023, 30000-60000 等等的使用方式
+[Hosts 位址與範圍]：這個有趣多了，有幾種類似的類型
+    192.168.0.100  ：直接寫入 HOST IP 而已，僅檢查一部；
+    192.168.0.0/24 ：為 C Class 的型態，
+    192.168.*.*　　：嘿嘿！則變為 B Class 的型態了！掃瞄的範圍變廣了！
+    192.168.0.0-50,60-100,103,200 ：這種是變形的主機範圍啦！很好用吧！</span>
+
+<span class=term_hd>範例一：使用預設參數掃瞄本機所啟用的 port</span>
+[root@linux ~]# <span class=term_command>nmap localhost</span>
+PORT     STATE SERVICE
+22/tcp   open  ssh
+25/tcp   open  smtp
+80/tcp   open  http
+139/tcp  open  netbios-ssn
+<span class=term_say># 在預設的情況下， nmap 僅會掃瞄 TCP 的協定喔！</span>
+</pre></td></tr></table>
+
+		nmap 的用法很簡單吶！就直接在指令後面接上 IP 或者是主機名稱即可。不過，在預設的情況下 nmap 
+		僅會幫你分析 TCP 這個通訊協定而已，像上面這個例子，他只會幫我列出 4 個已經開啟的 TCP 的埠口號碼，
+		但優點是順道也將開啟該埠口的服務也列出來了，真是好！ ^_^！那如果想要同時分析
+		TCP/UDP 這兩個常見的通訊協定呢？可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nmap -sTU localhost</span>
+PORT      STATE         SERVICE
+22/tcp    open          ssh
+25/tcp    open          smtp
+80/tcp    open          http
+137/udp   open|filtered netbios-ns
+138/udp   open|filtered netbios-dgm
+139/tcp   open          netbios-ssn
+</pre></td></tr></table>
+
+		嘿嘿！與前面的範例比較一下，你會發現這次多了兩個 UDP 的埠口，分別是 137 與 138 ，
+		這樣分析好多了吧！然後，如果你想要瞭解一下到底有幾部主機活在你的網路當中時，
+		則可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nmap -sP 192.168.10.0/24</span>
+Host 192.168.10.171 appears to be up.
+MAC Address: 00:01:E6:B3:AA:CC (Hewlett-Packard Company)
+Host 192.168.10.174 appears to be up.
+MAC Address: 00:04:75:FF:CC:DD (3 Com)
+Host 192.168.10.175 appears to be up.
+MAC Address: 00:0C:6E:BA:11:22 (Asustek Computer)
+</pre></td></tr></table>
+
+		看到否？你的環境當中有三部主機活著吶！並且該 IP 所對應的 MAC 也會被記錄下來，
+		很不錯吧！如果你還想要將各個主機的啟動的 port 作一番偵測的話，那就得要使用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nmap 192.168.10.0/24</span>
+</pre></td></tr></table>
+
+		之後你就會看到一堆 port number 被輸出到螢幕上囉～如果想要隨時記錄整個網段的主機是否不小心開放了某些服務，
+		嘿嘿！利用 nmap 配合資料流重導向 (>, >> 等) 來輸出成為檔案，
+		那隨時可以掌握住您區域網路內每部主機的服務啟動狀況啊！ ^_^<br /><br />
+
+		請特別留意，這個 nmap 的功能相當的強大，也是因為如此，
+		所以很多剛在練習的黑客會使用這個軟體來偵測別人的電腦，這個時候請您特別留意，
+		目前很多的人已經都有『特別的方式』來進行登錄的工作！例如以 
+		<a href="0250simple_firewall.htm#TCP_Wrappers">TCP_Wrappers</a> 
+		(/etc/hosts.allow, /etc/hosts.deny) 的功能來記錄曾經偵測過該 port 的 IP！
+		這個軟體用來『偵測自己機器的安全性』是很不錯的一個工具，但是如果用來偵測別人的主機，
+		可是會『吃上官司』的！特別留意！！
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="daemon"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Port 的啟動與關閉</span><br />
+<div class=block1>
+	現在你知道<span class=text_import2>其實 port 是由某些程式所啟動的，所以要關閉某些 port 
+	時，那就直接將某個程式給他關閉就是了</span>！
+	那關閉的方法你當然可以使用 <a href="../linux_basic/0440processcontrol.htm#kill">kill</a>
+	，不過，畢竟不是正統的解決之道，因為 kill 
+	這個指令通常具有強制關閉某些程式的功能，但我們想要正常的關閉該程式啊！
+	所以，就利用系統給我們的 script  來關閉就好了啊。
+	在此同時，我們就得再來稍微複習一下，一般傳統的服務有哪幾種類型？<br /><br />
+
+	<hr /><a NAME="daemon_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">stand alone 與 super daemon</span><br />
+	<div class=block2>
+		我們在<a href="../linux_basic">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>內談到，
+		在一般正常的 Linux 系統環境下，服務的啟動與管理主要有兩種方式：<br />
+		<ul>
+		<li><span class=text_import1>stand alone</span><br />
+		顧名思義，stand alone 就是直接執行該服務的執行檔，讓該執行檔直接載入到記憶體當中運作，
+		用這種方式來啟動可以讓該服務具有較快速回應的優點。一般來說，這種服務的啟動 script 都會放置到
+		<span class=text_import2>/etc/init.d/</span> 這個目錄底下，所以你通常可以使用：『
+		/etc/init.d/sshd restart 』之類的方式來啟動這種服務；<br /><br /></li>
+		<li><span class=text_import1>Super daemon</span><br />
+		用一個超級服務作為總管，以管理一些網路服務。在 CentOS 4.x 裡面使用的則是 xinetd 這個
+		super daemon 啊！這種方式啟動的網路服務雖然在回應上速度會比較慢，
+		不過，可以透過 super daemon 額外提供一些控管，例如控制何時啟動、何時可以進行連線、
+		那個 IP 可以連進來、是否允許同時連線等等。通常設定檔放置在
+		<span class=text_import2>/etc/xinetd.d/</span> 當中，但設定完畢後需要重新以『
+		/etc/init.d/xinetd restart 』重新來啟動才行！</ul>
+
+		關於更詳細的服務說明，請參考基礎篇的 <a href="../linux_basic/0560daemons.htm">認識服務</a> 一文，
+		鳥哥在這裡不再贅述。好，那麼如果我想要將我系統上面的 port 25 關掉的話，
+		那應該如何關閉呢？最簡單的作法就是先找出那個 port 25 的啟動程式喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -tnlp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address Foreign Address State   PID/Program name
+tcp        0      0 127.0.0.1:25  0.0.0.0:*       LISTEN  <span class=term_write>2030/master</span>
+tcp        0      0 :::22         :::*            LISTEN  1961/sshd
+<span class=term_say># 咦！怎麼會是 master 這個玩意兒？用 which 這個指令還找不到這個 master
+# 那怎辦？沒關係，我們可以透過 locate 配合正規表示法找到這個指令的！</span>
+
+[root@linux ~]# <span class=term_command>locate master | grep '/master$'</span>
+/usr/libexec/postfix/<span class=term_write>master</span>
+<span class=term_say># 嘿嘿！那個正規表示法就可以找到上述的輸出結果，然後再由 rpm 來處理！</span>
+
+[root@linux ~]# <span class=term_command>rpm -qf /usr/libexec/postfix/master</span>
+postfix-2.2.2-2
+<span class=term_say># 找到了！就是這個套件！所以將他關閉的方法可能就是：</span>
+
+[root@linux ~]# <span class=term_command>rpm -qc postfix | grep init</span>
+/etc/rc.d/init.d/postfix
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix stop</span>
+</pre></td></tr></table>
+
+		透過上面的這個分析的流程，你可以利用系統提供的很多方便的工具來達成某個服務的關閉！
+		為啥這麼麻煩？不是利用 kill -9 2030 就可以刪掉該服務了嗎？
+		是沒錯啦！不過，你知道該服務是做啥用的嗎？你知道將他關閉之後，你的系統會出什麼問題嗎？
+		如果不知道的話，那麼利用上面的流程不就可以找出該服務套件，再利用 rpm 查詢功能，
+		不就能夠知道該服務的作用了？所以說，這個方式還是對您會有幫助的啦！
+		底下請您試著將您 CentOS 或者是其他版本的 Linux 的 Telnet 打開試看看。<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：我們知道系統的 Telnet 服務通常是以 super daemon 來控管的，請您啟動您系統的 telnet 試看看。<br /><br />
+答：<ol>
+<li>要啟動 telnet 首先必須要已經安裝了 telnet 的伺服器才行，所以請先以 rpm 查詢看看是否有安裝 telnet-server 呢？
+『rpm -qa | grep telnet-server』如果沒有安裝的話，請利用原版光碟來安裝，或者使用『yum install telnet-server』
+安裝一下先；
+<li>由於是 super daemon 控管，所以請編輯 /etc/xinetd.d/telnet 這個檔案，將其中的『disable = yes』改成
+『disable = no』之後以『/etc/init.d/xinetd restart』重新啟動 super daemon 吧！
+<li>利用 netstat -tnlp 察看是否有啟動 port 23 呢？
+</ol>
+</td></tr></table><br />
+	</div>
+
+	<hr /><a NAME="daemon_boot"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定開機時啟動服務</span><br />
+	<div class=block2>
+		如果剛剛你已經利用類似前一節的方法將一些服務關閉了，但是下次再重新開機後，咦！
+		怎麼那些被關閉的服務又『春風吹又生』的給他『長』出來了？呵呵～沒錯啊，
+		因為前一節的作法是可以立即將某個服務關閉，但是卻不會影響到開機時是否會啟動與否的設定。
+		唉～傷腦筋～<br /><br />
+
+		如果你想要在開機的時候就啟動或不啟動某項服務時，那就得要瞭解一下
+		<a href="../linux_basic/0510osloader.htm">基礎學習篇裡面談到的開機流程管理</a> 的內容啦！
+		在 Unix like 的系統當中我們都是透過 run level 來設定某些執行等級需要啟動的服務，
+		以 Red Hat 系統來說，這些 run level 啟動的資料都是放置在 
+		<span class=text_import2>/etc/rc.d/rc[0-6].d/</span> 裡面的，那如何管理該目錄下的 script 呢？
+		手動處理嗎？會瘋掉的吶！所以你必須要熟悉
+		<a href="../linux_basic/0560daemons.htm#chkconfig">chkconfig</a> 或 
+		<a href="../linux_basic/0560daemons.htm#ntsysv">Red Hat 系統的 ntsysv</a> 這幾個指令才行！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		這幾個指令不熟嗎？這個時候鳥哥不得不說了：『有 man 堪用直需用，莫待無 man 空自猜』趕緊給他 man 下去啦！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：(1)如何查閱 portmap 這個程式一開機就執行？ (2)如果開機就執行，如何將他改為開機時不要啟動？ 
+(3)如何立即關閉這個 portmap 服務？<br /><br />
+答：<ol>
+<li>可以透過『 chkconfig --list | grep portmap 』與『 runlevel 』確認一下你的環境與 portmap 是否啟動？
+<li>如果有啟動，可透過『 chkconfig --level 35 portmap off 』來設定開機時不要啟動；
+<li>可以透過『 /etc/init.d/portmap stop 』來立即關閉他！
+</ol>
+</td></tr></table><br />
+
+		聰明的你一定會問說：『鳥哥，你的意思是只要將系統所有的服務都關閉，那系統就會安全囉？』
+		當然....不是！因為『<span class=text_import2>很多的系統服務是必須要存在的，否則系統將會出問題</span>』
+		舉例來說，那個保持系統可以具有工作排程的 
+		<a href="../linux_basic/0430cron.htm">crond</a> 服務就一定要存在，而那個記錄系統狀況的 
+		<a href="../linux_basic/0570syslog.htm">syslogd</a>
+		也當然要存在～否則怎知道系統出了啥問題？
+		底下鳥哥列出幾個常見的必須要存在的系統服務給大家參考參考先！這些服務請不要關閉啊！<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width="100">服務名稱</td><td>服務內容</td></tr>
+<tr><td>acpid</td><td>新版的電源管理模組，通常建議開啟，不過，某些筆記型電腦可能不支援此項服務，那就得關閉</td></tr>
+<tr><td>atd</td><td>在管理單一預約命令執行的服務，應該要啟動的</td></tr>
+<tr><td>crond</td><td>在管理工作排程的重要服務，請務必要啟動啊！</td></tr>
+<tr><td>iptables</td><td>Linux 內建的防火牆軟體，這個也可以啟動啦！</td></tr>
+<tr><td>keytables</td><td>如果你的鍵盤非正規的格式時，這個服務的啟動或許可以幫助你喔！</td></tr>
+<tr><td>network</td><td>這個重要了吧？要網路就要有他啊！</td></tr>
+<tr><td>sshd</td><td>這是系統預設會啟動的，可以讓你在遠端以文字型態的終端機登入喔！</td></tr>
+<tr><td>syslog</td><td>系統的登錄檔記錄，很重要的，務必啟動啊！</td></tr>
+<tr><td>xinetd</td><td>就是那個 super daemon 嘛！所以也要啟動啦！</td></tr>
+<tr><td>xfs</td><td>用來管理 X Window 字形資料的服務，如果你會需要 X Window 時，這個服務要啟動。</td></tr>
+</table><br />
+
+		沒錯！不要懷疑！只要這些就可以啦！這幾個服務是必須要啟動的！
+		至於其他服務則都先不用啟動！例如 sendmail 啦！其他林林總總的資料，都先擺著！
+		我們會在後續的章節當中提到如何啟動這些服務的啦！<br /><br />
+	</div>
+
+	<hr /><a NAME="daemon_close"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">安全性的考量</span><br />
+	<div class=block2>
+		我們的 Linux distribution 很好心的幫使用者想到很多了，所以在一安裝完畢之後，
+		系統會開啟一堆有的沒有的網路服務，例如那個 portmap 之類的咚咚，以及網路印表機的 cups 服務等等，
+		這些東西你或許知道或許不知道，不過他就是有開啟～但我們的主機明明就是用來做為伺服器的，
+		所以這些本來預計要給 client 使用的服務其實有點『多此一舉』的感覺～
+		所以啦，請你將他關閉吧！就利用 ntsysv 或 chkconfig 來關閉他！
+		只留下前一節咱們建議的那些服務就好了～其他的以後再說啊！<br /><br />
+
+		不過要記得， ntsysv 及 chkconfig 都是在管理開機是否啟動某些服務的 script 而已，
+		所以使用 chkconfig 管理完畢後，請記得最好使用 reboot 來完整的重新載入這些服務，
+		然後以『 netstat -tunpl 』來看看是否有什麼其他的網路服務在啟動啊？
+		如果有的話，在一樣一樣的將他關閉吧！ ^_^
+	</div>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>如何觀察您 Linux 主機上面已經有多少 port 被打開了？</li>
+	<div class=block2><font color=white size=-1>
+	1. 如果是 Linux 這個作業系統上面的話，可以利用『 netstat -tunlp 』觀察已經在監聽的 port 與服務的對應；<br />
+	2. 如果是想要查閱所有的 port (包含已建立的連線)，可以使用『 netstat -tunp 』來查閱；<br />
+	3. 如果不在 Linux 本機上，可以用『 nmap IP 』來處理啊！
+	</font></div>
+
+	<li>如何觀察程序？</li>
+	<div class=block2><font color=white size=-1>
+	利用『 ps -aux 』或『 top 』都可以，另外，『 pstree -p 』則可以瞭解所有的程序相依性，而『 lsof 』
+	則可以察看所有程序所開的檔案喔！
+	</font></div>
+
+	<li>請問 LISTEN 的 port 與 daemon 的關係為何？</li>
+	<div class=block2><font color=white size=-1>
+	正在 LISTEN 當中的埠口均是由某些服務(daemons)所啟動的，所以要啟動埠口就得啟用某個服務，
+	要瞭解某個埠口是由那個 daemon 所啟動的，就利用 netstat -tulp 來查閱。 
+	</font></div>
+
+	<li>請問 stand alone 與 super daemon 各是什麼？</li>
+	<div class=block2><font color=white size=-1>
+	Linux 系統的服務有獨立啟動(stand alone)及超級服務員(super daemon)兩種啟動的方式。掛在 super daemon 
+	底下的服務可以經由 super daemon 的控管，以加強一些安全功能，不過由於還要經過 super daemon 
+	的管理，所以服務的連接速度上會比 stand alone 慢一點。
+	</font></div>
+
+	<li>請問您的 Linux 主機 (不論是那個 distributions ) 有關 daemon 啟動與關閉的
+		scripts 與檔案放置在那個目錄下？</li>
+	<div class=block2><font color=white size=-1>
+	各個 daemons 的啟動與關閉的 scripts 是放置在 /etc/init.d/ 內， Red Hat 系統則是放到 /etc/rc.d/init.d 
+	裡面，至於 super daemon 的控管參數檔案則在 /etc/xinetd.d 裡面！ 
+	</font></div>
+
+	<li>為什麼阻斷式服務 (DDoS) 會造成系統的當機與網路癱瘓？試由三向交握的角度來探討。</li>
+	<div class=block2><font color=white size=-1>
+	所謂的阻斷式服務是利用三向交握程序的漏洞，多個 cient 端持續發送 tcp 封包的連線要求，
+	但卻不理會 server 端的 SYN/ACK 的封包，導致 server 端會持續啟動很多的 port 在等待 client 端的回應，
+	那我們知道一般 port  有 65536 個，萬一用完了，那系統網路就癱瘓了！所以 DDoS 會造成系統網路癱瘓的問題。
+	另外，由於多個 client 同時要求，所以網路頻寬也會被用光！
+	</font></div>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/02：首次完成釋出<br />
+2003/08/21：重新編輯，並且加入課後練習。<br />
+2003/09/19：加入參考用解答了。<br />
+2006/08/08：將舊的文章移動到 <a href="0210port_limit/0210port_limit.htm">此處</a><br />
+</span>
+<hr><span class="text_date">2002/08/02以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0210port_limit.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,3422 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="在 Linux 系統下管理使用者的身份與帳號！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 帳號管理</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十四章、<span class="text_head_en">Linux </span>帳號管理與<span class="text_head_en"> ACL </span>權限設定</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/09</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	要登入 Linux 系統一定要有帳號與密碼才行，否則怎麼登入，您說是吧？不過，
+	不同的使用者應該要擁有不同的權限才行吧？我們還可以透過 user/group 的特殊權限設定，
+	來規範出不同的群組開發專案呢～在 Linux 的環境下，我們可以透過很多方式來限制使用者能夠使用的系統資源，
+	包括 <a href="/linux_basic/0320bash.php">十一章、bash</a> 提到的 <a
+	href="/linux_basic/0320bash.php#variable_ulimit">ulimit</a> 限制、還有特殊權限限制，如 <a
+	href="/linux_basic/0220filemanager.php#umask">umask</a> 等等。
+	透過這些舉動，我們可以規範出不同使用者的使用資源。另外，還記得系統管理員的帳號嗎？對！
+	就是 root 。請問一下，除了 root 之外，是否可以有其他的系統管理員帳號？
+	為什麼大家都要盡量避免使用數字型態的帳號？如何修改使用者相關的資訊呢？這些我們都得要瞭解瞭解的！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#account">Linux 的帳號與群組</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#account_id">使用者識別碼： UID 與 GID</a><br />
+	　　1.2 <a href="#account_user">使用者帳號</a>：<a href="#passwd_file">/etc/passwd 檔案結構</a>, 
+		<a href="#shadow_file">/etc/shadow 檔案結構</a><br />
+	　　1.3 <a href="#account_group">關於群組</a>： <a href="#group_file">/etc/group 檔案結構</a>,
+		<a href="#account_group_init">有效與初始群組</a>, <a href="#groups">groups</a>, 
+		<a href="#newgrp">newgrp</a>, <a href="#gshadow_file">/etc/gshadow</a><br />
+	</span>
+2. <a href="#users">帳號管理</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#users_adduser">新增與移除使用者</a>： <a href="#useradd">useradd</a>, 
+		<a href="#users_adduser_env">useradd 參考檔</a>, <a href="#passwd">passwd</a>, 
+		<a href="#chage">chage</a>, <a href="#usermod">usermod</a>, <a href="#userdel">userdel</a><br />
+	　　2.2 <a href="#normal_user">使用者功能</a>：<a href="#finger">finger</a>,
+		<a href="#chfn">chfn</a>, <a href="#chsh">chsh</a>, <a href="#id">id</a><br />
+	　　2.3 <a href="#group_add">新增與移除群組</a>：<a href="#groupadd">groupadd</a>, 
+		<a href="#groupmod">groupmod</a>, <a href="#groupdel">groupdel</a>,
+		<a href="#gpasswd">gpasswd 群組管理員</a><br />
+	　　2.4 <a href="#user_ex">帳號管理實例</a><br />
+	</span>
+3. <a href="#acl_talk">主機的細部權限規劃：ACL 的使用</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#acl_talk_what">什麼是 ACL</a><br />
+	　　3.2 <a href="#acl_talk_how">如何啟動 ACL</a><br />
+	　　3.3 <a href="#acl_talk_cmd">ACL 的設定技巧</a>：
+		<a href="#setfacl">setfacl</a>, <a href="#getfacl">getfacl</a>,
+		ACL 的設定(<a href="#acl_user">user</a>, <a href="#acl_group">group</a>
+		<a href="#acl_mask">mask</a>, <a href="#acl_default">default</a>)<br />
+	</span>
+4. <a href="#userswitch">使用者身份切換</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#su">su</a><br />
+	　　4.2 <a href="#sudo">sudo</a>： <a href="#sudo">sudo 指令</a>, <a href="#visudo">visudo (/etc/sudoers)</a> (
+		<font size="-1">
+		<a href="#sudo-1">帳號</a>, <a href="#sudo-2">群組</a>, <a href="#sudo-3">限制指令</a>, 
+		<a href="#sudo-4">別名</a>, <a href="#sudo-5">時間間隔</a>, <a href="#sudo-6">配合 su</a> </font>)<br />
+	</span>
+5. <a href="#usershell">使用者的特殊 shell 與 PAM 模組</a><br />
+	<span class="text_h2">
+	　　5.1 <a href="#nologin">特殊的 shell :/sbin/nologin</a>, <a href="#nologin.txt">nologin.txt</a><br />
+	　　5.2 <a href="#pam_what">PAM 模組簡介</a><br />
+	　　5.3 <a href="#pam_setting">PAM 模組設定語法</a>：驗證類別(type)、控制標準(flag)、模組與參數<br />
+	　　5.4 <a href="#pam_module">常用模組簡介</a>： <a href="#securetty">securetty</a>,
+		<a href="#nologin_pam">nologin</a>, <a href="#cracklib">pam_cracklib</a>,
+		<a href="#login_pam">login流程</a><br />
+	　　5.5 <a href="#pam_file">其他相關檔案</a>： <a href="#limits">limits.conf</a>,<br />
+	</span>
+6. <a href="#uselinux">Linux 主機上的使用者訊息傳遞</a><br />
+	<span class="text_h2">
+	　　6.1 <a href="#uselinux_find">查詢使用者： w, who, last, lastlog</a><br />
+	　　6.2 <a href="#uselinux_talk">使用者對談： write, mesg, wall</a><br />
+	　　6.3 <a href="#mail">使用者郵件信箱： mail</a><br />
+	</span>
+7. <a href="#manual">手動新增使用者</a><br />
+	<span class="text_h2">
+	　　7.1 <a href="#manual_tools">一些檢查工具</a>：<a href="#pwck">pwck</a>, 
+		<a href="#pwconv">pwconv</a>, <a href="#pwunconv">pwunconv</a>, <a href="#chpasswd">chpasswd</a><br />
+	　　7.2 <a href="#manual_normal">特殊帳號，如純數字帳號的手工建立</a><br />
+	　　7.3 <a href="#manual_account_1">大量建置帳號範本(適用 passwd --stdin 選項)</a><br />
+	　　7.4 <a href="#manual_amount">大量建置帳號的範例(適用於連續數字，如學號)</a><br />
+	</span>
+8. <a href="#hint">重點回顧</a><br />
+9. <a href="#ex">本章習題</a><br />
+10. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+11. <a href="http://phorum.vbird.org/viewtopic.php?t=23887"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23887</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="account"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 的帳號與群組</span><br />
+<div class="block1">
+	<p>管理員的工作中，相當重要的一環就是『管理帳號』啦！因為整個系統都是你在管理的，
+	並且所有一般用戶的帳號申請，都必須要透過你的協助才行！所以你就必須要瞭解一下如何管理好一個伺服器主機的帳號啦！
+	在管理 Linux 主機的帳號時，我們必須先來瞭解一下 Linux 到底是如何辨別每一個使用者的！<br /><br /></p>
+
+	<hr /><a name="account_id"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者識別碼： UID 與 GID</span><br />
+	<div class="block2">
+		<p>雖然我們登入 Linux 主機的時候，輸入的是我們的帳號，但是其實 Linux 
+		主機並不會直接認識你的『帳號名稱』的，他僅認識 ID 啊 (ID 就是一組號碼啦)。
+		由於電腦僅認識 0 與 1，所以主機對於數字比較有概念的；至於帳號只是為了讓人們容易記憶而已。
+		而你的 ID 與帳號的對應就在 /etc/passwd 當中哩。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		如果你曾經在網路上下載過 <a href="/linux_basic/0240tarcompress.php#pack">tarball</a> 類型的檔案，
+		那麼應該不難發現，在解壓縮之後的檔案中，檔案擁有者的欄位竟然顯示『不明的數字』？奇怪吧？這沒什麼好奇怪的，因為 Linux 
+		說實在話，他真的只認識代表你身份的號碼而已！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>那麼到底有幾種 ID 呢？還記得我們在<a href="/linux_basic/0210filepermission.php">第六章</a>內有提到過，
+		每一個檔案都具有『擁有人與擁有群組』的屬性嗎？沒錯啦～每個登入的使用者至少都會取得兩個 ID ，一個是使用者 
+		ID (User ID ，簡稱 UID)、一個是群組 ID (Group ID ，簡稱 GID)。</p>
+
+		<p>那麼檔案如何判別他的擁有者與群組呢？其實就是利用 UID 與 GID 啦！每一個檔案都會有所謂的擁有者 ID 
+		與擁有群組 ID ，當我們有要顯示檔案屬性的需求時，系統會依據 /etc/passwd 與 /etc/group 的內容，
+		找到 UID / GID 對應的帳號與群組名稱再顯示出來！我們可以作個小實驗，你可以用 root 的身份 
+		vi /etc/passwd ，然後將你的一般身份的使用者的 
+		ID 隨便改一個號碼，然後再到你的一般身份的目錄下看看原先該帳號擁有的檔案，你會發現該檔案的擁有人變成了
+		『數字了』呵呵！這樣可以理解了嗎？來看看底下的例子：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先察看一下，系統裡面有沒有一個名為 dmtsai 的用戶？</span>
+[root@www ~]# <span class="term_command">grep 'dmtsai' /etc/passwd</span>
+dmtsai:x:503:504::/home/dmtsai:/bin/bash   <span class="term_note">&lt;==是有這個帳號喔！</span>
+[root@www ~]# <span class="term_command">ll -d /home/dmtsai</span>
+drwx------ 4 <span class="term_write">dmtsai</span> dmtsai 4096 Feb  6 18:25 /home/dmtsai
+<span class="term_say"># 瞧一瞧，使用者的欄位正是 dmtsai 本身喔！</span>
+
+<span class="term_hd"># 2. 修改一下，將剛剛我們的 dmtsai 的 503 UID 改為 2000 看看：</span>
+[root@www ~]# <span class="term_command">vi /etc/passwd</span>
+<span class="term_say">....(前面省略)....</span>
+dmtsai:x:<span class="term_write">2000</span>:504::/home/dmtsai:/bin/bash <span class="term_note">&lt;==修改一下特殊字體部分，由 503 改過來</span>
+[root@www ~]# <span class="term_command">ll -d /home/dmtsai</span>
+drwx------ 4 <span class="term_write">503</span> dmtsai 4096 Feb  6 18:25 /home/dmtsai
+<span class="term_say"># 很害怕吧！怎麼變成 503 了？因為檔案只會記錄數字而已！
+# 因為我們亂改，所以導致 503 找不到對應的帳號，因此顯示數字！</span>
+
+<span class="term_hd"># 3. 記得將剛剛的 2000 改回來！</span>
+[root@www ~]# <span class="term_command">vi /etc/passwd</span>
+<span class="term_say">....(前面省略)....</span>
+dmtsai:x:<span class="term_write">503</span>:504::/home/dmtsai:/bin/bash <span class="term_note">&lt;==趕緊改回來！</span>
+</pre></td></tr></table>
+
+		<p>你一定要瞭解的是，上面的例子僅是在說明 UID 與帳號的對應性，<span 
+		class="text_import2">在一部正常運作的 Linux 主機環境下，上面的動作不可隨便進行</span>，
+		這是因為系統上已經有很多的資料被建立存在了，隨意修改系統上某些帳號的 UID 
+		很可能會導致某些程序無法進行，這將導致系統無法順利運作的結果。
+		因為權限的問題啊！所以，瞭解了之後，請趕快回到 /etc/passwd 裡面，將數字改回來喔！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		舉例來說，如果上面的測試最後一個步驟沒有將 2000 改回原本的 UID，那麼當 dmtsai 下次登入時將沒有辦法進入自己的家目錄！
+		因為他的 UID 已經改為 2000 ，但是他的家目錄 (/home/dmtsai) 卻記錄的是 503 ，由於權限是 700 ，
+		因此他將無法進入原本的家目錄！是否非常嚴重啊？
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="account_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者帳號</span><br />
+	<div class="block2">
+		<p>Linux 系統上面的使用者如果需要登入主機以取得 shell 的環境來工作時，他需要如何進行呢？
+		首先，他必須要在電腦前面利用 tty1~tty7 的終端機提供的 login 介面，並輸入帳號與密碼後才能夠登入。
+		如果是透過網路的話，那至少使用者就得要學習 ssh 這個功能了 (伺服器篇再來談)。
+		那麼你輸入帳號密碼後，系統幫你處理了什麼呢？</p>
+
+		<ol class="text_import2">
+		<li>先找尋 /etc/passwd 裡面是否有你輸入的帳號？如果沒有則跳出，如果有的話則將該帳號對應的
+		UID 與 GID (在 /etc/group 中) 讀出來，另外，該帳號的家目錄與 shell 設定也一併讀出；<br /><br /></li>
+		<li>再來則是核對密碼表啦！這時 Linux 會進入 /etc/shadow 裡面找出對應的帳號與 
+		UID，然後核對一下你剛剛輸入的密碼與裡頭的密碼是否相符？<br /><br /></li>
+		<li>如果一切都 OK 的話，就進入 Shell 控管的階段囉！</li>
+		</ol>
+
+		<p>大致上的情況就像這樣，所以當你要登入你的 Linux 主機的時候，那個 /etc/passwd 與 /etc/shadow 
+		就必須要讓系統讀取啦 (這也是很多攻擊者會將特殊帳號寫到 /etc/passwd 裡頭去的緣故)，所以呢，如果你要備份 
+		Linux 的系統的帳號的話，那麼這兩個檔案就一定需要備份才行呦！</p>
+
+		<p>由上面的流程我們也知道，跟使用者帳號有關的有兩個非常重要的檔案，一個是管理使用者 UID/GID 重要參數的
+		/etc/passwd ，一個則是專門管理密碼相關資料的 /etc/shadow 囉！那這兩個檔案的內容就非常值得進行研究啦！
+		底下我們會簡單的介紹這兩個檔案，詳細的說明可以參考 man 5 passwd 及 man 5 shadow (<a href="#ps1">註1</a>)。<br /><br /></p>
+
+		<a name="passwd_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">/etc/passwd 檔案結構</li></ul>
+
+		<p>這個檔案的構造是這樣的：<span class="text_import2">每一行都代表一個帳號，有幾行就代表有幾個帳號在你的系統中！
+		不過需要特別留意的是，裡頭很多帳號本來就是系統正常運作所必須要的，我們可以簡稱他為系統帳號，
+		例如 bin, daemon, adm, nobody 等等，這些帳號請不要隨意的殺掉他呢！</span>
+		這個檔案的內容有點像這樣：</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		鳥哥在接觸 Linux 之前曾經碰過 Solaris 系統 (1999 年)，當時鳥哥啥也不清楚！由於『聽說』Linux 
+		上面的帳號越複雜會導致系統越危險！所以鳥哥就將 /etc/passwd 上面的帳號全部刪除到只剩下 root 
+		與鳥哥自己用的一般帳號！結果你猜發生什麼事？那就是....呼叫昇陽的工程師來維護系統 @_@！糗到一個不行！大家不要學啊！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">head -n 4 /etc/passwd</span>
+<span class="term_write">root:x:0:0:root:/root:/bin/bash</span>  <span class="term_note">&lt;==等一下做為底下說明用</span>
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+</pre></td></tr></table>
+
+		<p>我們先來看一下每個 Linux 系統都會有的第一行，就是 root 這個系統管理員那一行好了，
+		你可以明顯的看出來，每一行使用『:』分隔開，共有七個咚咚，分別是：</p>
+
+		<ol>
+		<li><span class="text_import1">帳號名稱</span>：<br />
+		就是帳號啦！用來對應 UID 的。例如 root 的 UID 對應就是 0 (第三欄位)；<br /><br /></li>
+
+		<li><span class="text_import1">密碼</span>：<br />
+		早期 Unix 系統的密碼就是放在這欄位上！但是因為這個檔案的特性是<span 
+		class="text_import2">所有的程序都能夠讀取</span>，這樣一來很容易造成密碼資料被竊取，
+		因此後來就將這個欄位的密碼資料給他改放到 <a href="#shadow_file">/etc/shadow</a> 
+		中了。所以這裡你會看到一個『 x 』，呵呵！<br /><br /></li>
+
+		<li><span class="text_import1">UID</span>：<br />
+		這個就是使用者識別碼囉！通常 Linux 對於 UID 有幾個限制需要說給您瞭解一下：<br /><br />
+
+<table width="90%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="90">id 範圍</td><td>該 ID 使用者特性</td></tr>
+<tr><td align="center">0<br />(系統管理員)</td><td>當 UID 是 0 時，代表這個帳號是『系統管理員』！
+	所以當你要讓其他的帳號名稱也具有 root 的權限時，將該帳號的 UID 改為 0 即可。
+	這也就是說，一部系統上面的系統管理員不見得只有 root 喔！
+	不過，很不建議有多個帳號的 UID 是 0 啦～</td></tr>
+<tr><td align="center">1~499<br />(系統帳號)</td><td>保留給系統使用的 ID，其實<span 
+	class="text_import2">除了 0 之外，其他的 UID 權限與特性並沒有不一樣</span>。預設 500 
+	以下的數字讓給系統作為保留帳號只是一個習慣。<br /><br />
+	由於系統上面啟動的服務希望使用較小的權限去運作，因此不希望使用 root 的身份去執行這些服務，
+	所以我們就得要提供這些運作中程式的擁有者帳號才行。這些系統帳號通常是不可登入的，
+	所以才會有我們在<a href="/linux_basic/0320bash.php">第十一章</a>提到的 /sbin/nologin 這個特殊的 shell 存在。<br /><br />
+	根據系統帳號的由來，通常系統帳號又約略被區分為兩種：<br />
+	1~99：由 distributions 自行建立的系統帳號；<br />
+	100~499：若使用者有系統帳號需求時，可以使用的帳號 UID。</td></tr>
+<tr><td align="center">500~65535<br />(可登入帳號)</td><td>給一般使用者用的。事實上，目前的 linux 核心 (2.6.x 版)已經可以支援到
+	4294967295 (2^32-1) 這麼大的 UID 號碼喔！</td></tr>
+</table><br />
+
+		上面這樣說明可以瞭解了嗎？是的， UID 為 0 的時候，就是 root 呦！所以請特別留意一下你的 
+		/etc/passwd 檔案！<br /><br /></li>
+
+		<li><span class="text_import1">GID</span>：<br />
+		這個與 /etc/group 有關！其實 /etc/group 
+		的觀念與 /etc/passwd 差不多，只是他是用來規範群組名稱與 GID 的對應而已！<br /><br /></li>
+
+		<li><span class="text_import1">使用者資訊說明欄</span>：<br />
+		這個欄位基本上並沒有什麼重要用途，只是用來解釋這個帳號的意義而已！不過，如果您提供使用 finger 的功能時，
+		這個欄位可以提供很多的訊息呢！本章後面的 <a href="#chfn">chfn</a> 指令會來解釋這裡的說明。<br /><br /></li>
+
+		<li><span class="text_import1">家目錄</span>：<br />
+		這是使用者的家目錄，以上面為例， root 的家目錄在 /root ，所以當 root 登入之後，就會立刻跑到 /root 目錄裡頭啦！呵呵！
+		如果你有個帳號的使用空間特別的大，你想要將該帳號的家目錄移動到其他的硬碟去該怎麼作？
+		沒有錯！可以在這個欄位進行修改呦！預設的使用者家目錄在 /home/yourIDname<br /><br /></li>
+
+		<li><span class="text_import1">Shell</span>：<br />
+		我們在<a href="/linux_basic/0320bash.php">第十一章 BASH</a> 提到很多次，當使用者登入系統後就會取得一個 Shell
+		來與系統的核心溝通以進行使用者的操作任務。那為何預設 shell 會使用 bash 呢？就是在這個欄位指定的囉！
+		這裡比較需要注意的是，有一個 shell 可以用來替代成讓帳號無法取得 shell 環境的登入動作！那就是
+		/sbin/nologin 這個東西！這也可以用來製作純 pop 郵件帳號者的資料呢！</li>
+		</ol><br />
+
+		<a name="shadow_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">/etc/shadow 檔案結構</li></ul>
+
+		<p>我們知道很多程式的運作都與權限有關，而權限與 UID/GID 有關！因此各程式當然需要讀取 /etc/passwd 來瞭解不同帳號的權限。
+		<span class="text_import2">因此 /etc/passwd 的權限需設定為 -rw-r--r-- 這樣的情況</span>，
+		雖然早期的密碼也有加密過，但卻放置到 /etc/passwd 的第二個欄位上！這樣一來很容易被有心人士所竊取的，
+		加密過的密碼也能夠透過暴力破解法去 try and error (試誤) 找出來！</p>
+
+		<p>因為這樣的關係，所以後來發展出將密碼移動到 /etc/shadow 這個檔案分隔開來的技術，
+		而且還加入很多的密碼限制參數在 /etc/shadow 裡頭呢！在這裡，我們先來瞭解一下這個檔案的構造吧！
+		鳥哥的 /etc/shadow 檔案有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">head -n 4 /etc/shadow</span>
+<span class="term_write">root:$1$/30QpE5e$y9N/D0bh6rAACBEz.hqo00:14126:0:99999:7:::</span>  <span class="term_note">&lt;==底下說明用</span>
+bin:*:14126:0:99999:7:::
+daemon:*:14126:0:99999:7:::
+adm:*:14126:0:99999:7:::
+</pre></td></tr></table>
+
+		<p>基本上， shadow 同樣以『:』作為分隔符號，如果數一數，會發現共有九個欄位啊，這九個欄位的用途是這樣的：</p>
+
+		<ol>
+		<li><span class="text_import1">帳號名稱</span>：<br />
+		由於密碼也需要與帳號對應啊～因此，這個檔案的第一欄就是帳號，必須要與 /etc/passwd 相同才行！<br /><br /></li>
+
+		<li><span class="text_import1">密碼</span>：<br />
+		這個欄位內的資料才是真正的密碼，而且是<span class="text_import2">經過編碼的密碼 (加密) </span>啦！
+		你只會看到有一些特殊符號的字母就是了！需要特別留意的是，雖然這些加密過的密碼很難被解出來，
+		但是『很難』不等於『不會』，所以，這個檔案的預設權限是『-rw-------』或者是『-r--------』，亦即只有 root 
+		才可以讀寫就是了！你得隨時注意，不要不小心更動了這個檔案的權限呢！<br /><br />
+
+		另外，由於各種密碼編碼的技術不一樣，因此不同的編碼系統會造成這個欄位的長度不相同。
+		舉例來說，舊式的 DES 編碼系統產生的密碼長度就與目前慣用的 MD5 不同(<a href="#ps2">註2</a>)！MD5 
+		的密碼長度明顯的比較長些。由於固定的編碼系統產生的密碼長度必須一致，因此『<span 
+		class="text_import2">當你讓這個欄位的長度改變後，該密碼就會失效(算不出來)</span>』。
+		很多軟體透過這個功能，<span class="text_import2">在此欄位前加上 ! 或 * 改變密碼欄位長度，就會讓密碼『暫時失效』了。
+		</span><br /><br /></li>
+
+		<li><span class="text_import1">最近更動密碼的日期</span>：<br />
+		這個欄位記錄了『更動密碼那一天』的日期，不過，很奇怪呀！在我的例子中怎麼會是 14126 
+		呢？呵呵，這個是因為計算 Linux 日期的時間是以 1970 年 1 月 1 日作為 1 而累加的日期，1971 年 1 月 1 日則為 366 啦！
+		得注意一下這個資料呦！上述的 14126 指的就是 2008-09-04 那一天啦！瞭解乎？
+		而想要瞭解該日期可以使用本章後面 <a href="#chage">chage</a> 指令的幫忙！至於想要知道某個日期的累積日數，
+		可使用如下的程式計算：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">echo $(($(date --date="2008/09/04" +%s)/86400+1))</span>
+14126
+</pre></td></tr></table>
+
+		上述指令中，2008/09/04 為你想要計算的日期，86400 為每一天的秒數， %s 為 1970/01/01 以來的累積總秒數。
+		由於 bash 僅支援整數，因此最終需要加上 1 補齊 1970/01/01 當天。<br /><br /></li>
+
+		<li><span class="text_import1">密碼不可被更動的天數</span>：(與第 3 欄位相比)<br />
+		第四個欄位記錄了：這個帳號的密碼在最近一次被更改後需要經過幾天才可以再被變更！如果是 0 的話，
+		表示密碼隨時可以更動的意思。這的限制是為了怕密碼被某些人一改再改而設計的！如果設定為 
+		20 天的話，那麼當你設定了密碼之後， 20 天之內都無法改變這個密碼呦！<br /><br /></li>
+
+		<li><span class="text_import1">密碼需要重新變更的天數</span>：(與第 3 欄位相比)<br />
+		經常變更密碼是個好習慣！為了強制要求使用者變更密碼，這個欄位可以指定在最近一次更改密碼後，
+		在多少天數內需要再次的變更密碼才行。<span 
+		class="text_import2">你必須要在這個天數內重新設定你的密碼，否則這個帳號的密碼將會『變為過期特性』</span>。
+		而如果像上面的 99999 (計算為 273 年) 的話，那就表示，呵呵，密碼的變更沒有強制性之意。<br /><br /></li>
+
+		<li><span class="text_import1">密碼需要變更期限前的警告天數</span>：(與第 5 欄位相比)<br />
+		當帳號的密碼有效期限快要到的時候 (第 5 欄位)，系統會依據這個欄位的設定，發出『警告』言論給這個帳號，提醒他『再過 n 
+		天你的密碼就要過期了，請盡快重新設定你的密碼呦！』，如上面的例子，則是密碼到期之前的 
+		7 天之內，系統會警告該用戶。<br /><br /></li>
+
+		<li><span class="text_import1">密碼過期後的帳號寬限時間(密碼失效日)</span>：(與第 5 欄位相比)<br />
+		密碼有效日期為『更新日期(第3欄位)』+『重新變更日期(第5欄位)』，過了該期限後使用者依舊沒有更新密碼，那該密碼就算過期了。
+		雖然密碼過期但是該帳號還是可以用來進行其他工作的，包括登入系統取得 bash 。<span class="text_import2">不過如果密碼過期了，
+		那當你登入系統時，系統會強制要求你必須要重新設定密碼才能登入繼續使用喔，這就是密碼過期特性</span>。<br /><br />
+
+		那這個欄位的功能是什麼呢？是在密碼過期幾天後，如果使用者還是沒有登入更改密碼，那麼這個帳號的密碼將會『失效』，
+		亦即該帳號再也無法使用該密碼登入了。要注意<span class="text_import2">密碼過期與密碼失效並不相同</span>。<br /><br /></li>
+
+		<li><span class="text_import1">帳號失效日期</span>：<br />
+		這個日期跟第三個欄位一樣，都是使用 1970 年以來的總日數設定。這個欄位表示：
+		<span class="text_import2">這個帳號在此欄位規定的日期之後，將無法再使用</span>。
+		就是所謂的『帳號失效』，此時不論你的密碼是否有過期，這個『帳號』都不能再被使用！
+		這個欄位會被使用通常應該是在『收費服務』的系統中，你可以規定一個日期讓該帳號不能再使用啦！<br /><br /></li>
+
+		<li><span class="text_import1">保留</span>：<br />
+		最後一個欄位是保留的，看以後有沒有新功能加入。</li>
+		</ol>
+
+		<p>舉個例子來說好了，假如我的 dmtsai 這個使用者的密碼欄如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+dmtsai:$1$vyUuj.eX$omt6lKJvMcIZHx4H7RI1V.:14299:5:60:7:5:14419:
+</pre></td></tr></table>
+
+		<p>這表示什麼呢？先要注意的是 14299 是 2009/02/24 。所以 dmtsai 這個使用者的密碼相關意義是：</p>
+
+		<ul>
+		<li>由於密碼幾乎僅能單向運算(由明碼計算成為密碼，無法由密碼反推回明碼)，因此由上表的資料我們<span 
+			class="text_import2">無法得知 dmstai 的實際密碼明文</span>；<br /><br /></li>
+
+		<li>此帳號最近一次更動密碼的日期是 2009/02/24 (14299)；<br /><br /></li>
+
+		<li>能夠再次修改密碼的時間是 5 天以後，也就是 <span class="text_import2">2009/03/01 以前 dmtsai 
+			不能修改自己的密碼</span>；如果使用者還是嘗試要更動自己的密碼，系統就會出現這樣的訊息：<br />
+<table class="term"><tr><td class="term"><pre>
+You must wait longer to change your password
+passwd: Authentication token manipulation error
+</pre></td></tr></table>
+			畫面中告訴我們：你必須要等待更久的時間才能夠變更密碼之意啦！<br /><br /></li>
+
+		<li>由於密碼過期日期定義為 60 天後，亦即累積日數為： 14299+60=14359，經過計算得到此日數代表日期為 2009/04/25。
+			這表示：『<span class="text_import2">使用者必須要在 2009/03/01 到 2009/04/25 之間的 60 
+			天限制內去修改自己的密碼，若 2009/04/25 之後還是沒有變更密碼時，該密碼就宣告為過期</span>』了！<br /><br /></li>
+
+		<li>警告日期設為 7 天，亦即是密碼過期日前的 7 天，在本例中則代表 2009/04/19 ~ 2009/04/25 這七天。
+			如果使用者一直沒有更改密碼，那麼在這 7 天中，只要 dmtsai 登入系統就會發現如下的訊息：<br /> 
+<table class="term"><tr><td class="term"><pre>
+Warning: your password will expire in 5 days
+</pre></td></tr></table><br /></li>
+
+		<li>如果該帳號一直到 2009/04/25 都沒有更改密碼，那麼密碼就過期了。但是由於有 5 天的寬限天數，
+			因此 <span class="text_import2">dmtsai 在 2009/04/30 前都還可以使用舊密碼登入主機。
+			不過登入時會出現強制更改密碼的情況</span>，畫面有點像底下這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+You are required to change your password immediately (password aged)
+WARNING: Your password has expired.
+You must change your password now and login again!
+Changing password for user dmtsai.
+Changing password for dmtsai
+(current) UNIX password:
+</pre></td></tr></table>
+
+			你必須要輸入一次舊密碼以及兩次新密碼後，才能夠開始使用系統的各項資源。如果你是在 2009/04/30 以後嘗試以 
+			dmtsai 登入的話，那麼就會出現如下的錯誤訊息且無法登入，因為此時你的密碼就失效去啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+Your account has expired; please contact your system administrator
+</pre></td></tr></table><br /></li>
+
+		<li>如果使用者在 2009/04/25 以前變更過密碼，那麼第 3 個欄位的那個 14299 的天數就會跟著改變，因此，
+			所有的限制日期也會跟著相對變動喔！^_^<br /><br /></li>
+
+		<li>無論使用者如何動作，到了 14419 (大約是 2009/07/24 左右) 該帳號就失效了～</li>
+		</ul>
+
+		<p>透過這樣的說明，您應該會比較容易理解了吧？由於 shadow 有這樣的重要性，因此可不能隨意修改喔！
+		但在某些情況底下你得要使用各種方法來處理這個檔案的！舉例來說，常常聽到人家說：『我的密碼忘記了』，
+		或者是『我的密碼不曉得被誰改過，跟原先的不一樣了』，這個時候怎麼辦？</p>
+
+		<ul>
+		<li><span class="text_import2">一般用戶的密碼忘記了</span>：這個最容易解決，請系統管理員幫忙，
+		他會重新設定好你的密碼而不需要知道你的舊密碼！利用 root 的身份使用 <a href="#passwd">passwd</a> 
+		指令來處理即可。<br /><br /></li>
+
+		<li><span class="text_import2">root 密碼忘記了</span>：這就麻煩了！因為你無法使用 root 的身份登入了嘛！
+		但我們知道 root 的密碼在 /etc/shadow 當中，因此你可以使用各種可行的方法開機進入 Linux 再去修改。
+		例如重新開機進入單人維護模式(<a href="/linux_basic/0510osloader.php">第二十章</a>)後，系統會主動的給予 root 權限的 bash 介面，
+		此時再以 passwd 修改密碼即可；或以 Live CD 開機後掛載根目錄去修改 /etc/shadow，將裡面的 root 的密碼欄位清空，
+		再重新開機後 root 將不用密碼即可登入！登入後再趕快以 passwd 指令去設定 root 密碼即可。</li>
+		</ul>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		曾經聽過一則笑話，某位老師主要是在教授 Linux 作業系統，但是他是兼任的老師，因此對於該系的電腦環境不熟。
+		由於當初安裝該電腦教室 Linux 作業系統的人員已經離職且找不到聯絡方式了，也就是說 root 密碼已經沒有人曉得了！
+		此時該老師就對學生說：『在 Linux 裡面 root 密碼不見了，我們只能重新安裝』...感覺有點無力～
+		又是個被 Windows 制約的人才！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="account_group"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關於群組：
+	有效與初始群組、groups, newgrp</span>
+	<div class="block2">
+		<p>認識了帳號相關的兩個檔案 /etc/passwd 與 /etc/shadow 之後，你或許還是會覺得奇怪，
+		那麼群組的設定檔在哪裡？還有，在 /etc/passwd 的第四欄不是所謂的 GID 嗎？那又是啥？
+		呵呵～此時就需要瞭解 /etc/group 與 /etc/gshadow 囉～<br /><br /></p>
+
+		<a name="group_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">/etc/group 檔案結構</li></ul>
+
+		<p>這個檔案就是在記錄 GID 與群組名稱的對應了～鳥哥測試機的 /etc/group 內容有點像這樣：</p>
+
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">head -n 4 /etc/group</span>
+<span class="term_write">root:x:0:root</span>
+bin:x:1:root,bin,daemon
+daemon:x:2:root,bin,daemon
+sys:x:3:root,bin,adm
+</pre></td></tr></table>
+
+		<p>這個檔案每一行代表一個群組，也是以冒號『:』作為欄位的分隔符號，共分為四欄，每一欄位的意義是：</p>
+
+		<ol>
+		<li><span class="text_import1">群組名稱</span>：<br />
+		就是群組名稱啦！<br /><br /></li>
+
+		<li><span class="text_import1">群組密碼</span>：<br />
+		通常不需要設定，這個設定通常是給『群組管理員』使用的，目前很少有這個機會設定群組管理員啦！
+		同樣的，密碼已經移動到 /etc/gshadow 去，因此這個欄位只會存在一個『x』而已；<br /><br /></li>
+
+		<li><span class="text_import1">GID</span>：<br />
+		就是群組的 ID 啊。我們 /etc/passwd 第四個欄位使用的 GID 對應的群組名，就是由這裡對應出來的！<br /><br /></li>
+
+		<li><span class="text_import1">此群組支援的帳號名稱</span>：<br />
+		我們知道一個帳號可以加入多個群組，那某個帳號想要加入此群組時，將該帳號填入這個欄位即可。
+		舉例來說，如果我想要讓 dmtsai 也加入 root 這個群組，那麼在第一行的最後面加上『,dmtsai』，注意不要有空格，
+		使成為『 root:x:0:root,dmtsai 』就可以囉～</li>
+		</ol>
+
+		<p>談完了 /etc/passwd, /etc/shadow, /etc/group 之後，我們可以使用一個簡單的圖示來瞭解一下 UID / GID 與密碼之間的關係，
+		圖示如下。其實重點是 /etc/passwd 啦，其他相關的資料都是根據這個檔案的欄位去找尋出來的。
+		下圖中， root 的 UID 是 0 ，而 GID 也是 0 ，去找 /etc/group 可以知道 GID 為 0  時的群組名稱就是 root 哩。
+		至於密碼的尋找中，會找到 /etc/shadow 與 /etc/passwd 內同帳號名稱的那一行，就是密碼相關資料囉。</p>
+
+		<center><img src="0410accountmanager/id_link.gif" alt="帳號相關檔案之間的 UID/GID 與密碼相關性示意圖" 
+		title="帳號相關檔案之間的 UID/GID 與密碼相關性示意圖" border="0" /><br />
+		圖 1.3.1 、帳號相關檔案之間的 UID/GID 與密碼相關性示意圖<br /></center>
+
+		<p>至於在 /etc/group 比較重要的特色在於第四欄啦，因為每個使用者都可以擁有多個支援的群組，這就好比在學校唸書的時候，
+		我們可以加入多個社團一樣！ ^_^。不過這裡你或許會覺得奇怪的，那就是：『<span 
+		class="text_import2">假如我同時加入多個群組，那麼我在作業的時候，到底是以那個群組為準？</span>』
+		底下我們就來談一談這個『有效群組』的概念。<br /><br /></p>
+
+		<a name="account_group_init"></a>
+		<hr /><ul class="list1"><li class="text_import1">有效群組(effective group)與初始群組(initial group)</li></ul>
+
+		<p>還記得每個使用者在他的 /etc/passwd 裡面的第四欄有所謂的 GID 吧？那個 GID 就是所謂的『初始群組 
+		(initial group) 』！也就是說，當使用者一登入系統，立刻就擁有這個群組的相關權限的意思。
+		舉例來說，我們上面提到 dmtsai 這個使用者的 /etc/passwd 與 /etc/group 還有 /etc/gshadow 
+		相關的內容如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">usermod -G users dmtsai</span>  <span class="term_note">&lt;==先設定好次要群組</span>
+[root@www ~]# <span class="term_command">grep dmtsai /etc/passwd /etc/group /etc/gshadow</span>
+/etc/passwd:dmtsai:x:503:<span class="term_write">504</span>::/home/dmtsai:/bin/bash
+/etc/group:users:x:100:<span class="term_write">dmtsai</span>  <span class="term_note">&lt;==次要群組的設定</span>
+/etc/group:dmtsai:x:<span class="term_write">504</span>:       <span class="term_note">&lt;==因為是初始群組，所以第四欄位不需要填入帳號</span>
+/etc/gshadow:users:::<span class="term_write">dmtsai</span>    <span class="term_note">&lt;==次要群組的設定</span>
+/etc/gshadow:dmtsai:!::
+</pre></td></tr></table>
+
+		<p>仔細看到上面這個表格，在 /etc/passwd 裡面，dmtsai 這個使用者所屬的群組為 GID=504 ，搜尋一下 /etc/group
+		得到 504 是那個名為 dmtsai 的群組啦！這就是 initial group。因為是初始群組，
+		使用者一登入就會主動取得，不需要在 /etc/group 的第四個欄位寫入該帳號的！</p>
+
+		<p>但是非 initial group 的其他群組可就不同了。舉上面這個例子來說，我將 dmtsai 加入 users
+		這個群組當中，由於 users 這個群組並非是 dmtsai 的初始群組，因此，
+		我必須要在 /etc/group 這個檔案中，找到 users 那一行，並且將 dmtsai 這個帳號加入第四欄，
+		這樣 dmtsai 才能夠加入 users 這個群組啊。</p>
+
+		<p>那麼在這個例子當中，因為我的 dmtsai 帳號同時支援 dmtsai 與 users 這兩個群組，
+		因此，在讀取/寫入/執行檔案時，針對群組部分，只要是 users 與 dmtsai 這兩個群組擁有的功能，
+		我 dmtsai 這個使用者都能夠擁有喔！這樣瞭呼？不過，這是針對已經存在的檔案而言，
+		如果今天我要建立一個新的檔案或者是新的目錄，請問一下，<span class="text_import2">新檔案的群組是 dmtsai 還是 
+		users</span> ？呵呵！這就得要檢查一下當時的有效群組了 (effective group)。<br /><br /></p>
+
+		<a name="groups"></a>
+		<hr /><ul class="list1"><li class="text_import1">groups: 有效與支援群組的觀察</li></ul>
+
+		<p>如果我以 dmtsai 這個使用者的身份登入後，該如何知道我所有支援的群組呢？
+		很簡單啊，直接輸入 groups 就可以了！注意喔，是 groups 有加 s 呢！結果像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@www ~]$ <span class="term_command">groups</span>
+dmtsai users
+</pre></td></tr></table>
+
+		<p>在這個輸出的訊息中，可知道 dmtsai 這個用戶同時屬於 dmtsai 及 users 這個兩個群組，而且，
+		<span class="text_import2">第一個輸出的群組即為有效群組 (effective group) 了</span>。
+		也就是說，我的有效群組為 dmtsai 啦～此時，如果我以 touch 去建立一個新檔，例如：
+		『 touch test 』，那麼這個檔案的擁有者為 dmtsai ，而且群組也是 dmtsai 的啦。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@www ~]$ <span class="term_command">touch test</span>
+[dmtsai@www ~]$ <span class="term_command">ll</span>
+-rw-rw-r-- 1 dmtsai <span class="term_write">dmtsai</span> 0 Feb 24 17:26 test
+</pre></td></tr></table>
+
+		<p>這樣是否可以瞭解什麼是有效群組了？通常有效群組的作用是在新建檔案啦！那麼有效群組是否能夠變換？<br /><br /></p>
+
+		<a name="newgrp"></a>
+		<hr /><ul class="list1"><li class="text_import1">newgrp: 有效群組的切換</li></ul>
+
+		<p>那麼如何變更有效群組呢？就使用 newgrp 啊！不過使用 newgrp 是有限制的，那就是<span 
+		class="text_import2">你想要切換的群組必須是你已經有支援的群組。</span>舉例來說， dmtsai 可以在 dmtsai/users 
+		這兩個群組間切換有效群組，但是 dmtsai 無法切換有效群組成為 sshd 啦！使用的方式如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@www ~]$ <span class="term_command">newgrp users</span>
+[dmtsai@www ~]$ <span class="term_command">groups</span>
+users dmtsai
+[dmtsai@www ~]$ <span class="term_command">touch test2</span>
+[dmtsai@www ~]$ <span class="term_command">ll</span>
+-rw-rw-r-- 1 dmtsai dmtsai 0 Feb 24 17:26 test
+-rw-r--r-- 1 dmtsai <span class="term_write">users</span>  0 Feb 24 17:33 test2
+</pre></td></tr></table>
+
+		<p>此時，dmtsai 的有效群組就成為 users 了。
+		我們額外的來討論一下 newgrp 這個指令，這個指令可以變更目前使用者的有效群組，
+		而且是<span class="text_import2">另外以一個 shell 來提供這個功能</span>的喔，所以，以上面的例子來說，
+		dmtsai 這個使用者目前是以另一個 shell 登入的，而且新的 shell 給予 dmtsai 有效 GID 為
+		users 就是了。如果以圖示來看就是如下所示：</p>
+
+		<center><img src="0410accountmanager/newgrp.gif" alt="newgrp 的運作示意圖" 
+		title="newgrp 的運作示意圖" border="0" /><br />
+		圖 1.3.2 、newgrp 的運作示意圖<br /></center>
+
+		<p>雖然使用者的環境設定(例如環境變數等等其他資料)不會有影響，但是使用者的『群組權限』將會重新被計算。
+		但是需要注意，由於是新取得一個 shell ，因此如果你想要回到原本的環境中，請輸入 exit 回到原本的 shell 喔！</p>
+
+		<p>既然如此，也就是說，只要我的用戶有支援的群組就是能夠切換成為有效群組！好了，
+		那麼如何讓一個帳號加入不同的群組就是問題的所在囉。你要加入一個群組有兩個方式，一個是透過系統管理員 (root) 利用
+		<a href="#usermod">usermod</a> 幫你加入，如果 root 太忙了而且你的系統有設定群組管理員，那麼你可以透過群組管理員以 
+		<a href="#gpasswd">gpasswd</a> 幫你加入他所管理的群組中！詳細的作法留待下一小節再來介紹囉！<br /><br /></p>
+
+		<a name="gshadow_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">/etc/gshadow</li></ul>
+
+		<p>剛剛講了很多關於『有效群組』的概念，另外，也提到 newgrp 這個指令的用法，
+		但是，如果 /etc/gshadow 這個設定沒有搞懂得話，那麼 newgrp 是無法動作的呢！
+		鳥哥測試機的 /etc/gshadow 的內容有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">head -n 4 /etc/gshadow</span>
+<span class="term_write">root:::root</span>
+bin:::root,bin,daemon
+daemon:::root,bin,daemon
+sys:::root,bin,adm
+</pre></td></tr></table>
+
+		<p>這個檔案內同樣還是使用冒號『:』來作為欄位的分隔字元，而且你會發現，這個檔案幾乎與 /etc/group 
+		一模一樣啊！是這樣沒錯～不過，要注意的大概就是第二個欄位吧～第二個欄位是密碼欄，
+		如果密碼欄上面是『!』時，表示該群組不具有群組管理員！至於第四個欄位也就是支援的帳號名稱囉～
+		這四個欄位的意義為：</p>
+		<ol class="text_import2">
+		<li>群組名稱</li>
+		<li>密碼欄，同樣的，開頭為 ! 表示無合法密碼，所以無群組管理員</li>
+		<li>群組管理員的帳號 (相關資訊在 <a href="#gpasswd">gpasswd</a> 中介紹)</li>
+		<li>該群組的所屬帳號 (與 /etc/group 內容相同！)</li></ol>
+
+		<p>以系統管理員的角度來說，這個 gshadow 最大的功能就是<span class="text_import2">建立群組管理員</span>啦！
+		那麼什麼是群組管理員呢？由於系統上面的帳號可能會很多，但是我們 root 可能平時太忙碌，所以當有使用者想要加入某些群組時，
+		root 或許會沒有空管理。此時如果能夠建立群組管理員的話，那麼<span 
+		class="text_import2">該群組管理員就能夠將那個帳號加入自己管理的群組中</span>！
+		可以免去 root 的忙碌啦！不過，由於目前有類似 <a href="#sudo">sudo</a> 之類的工具，
+		所以這個群組管理員的功能已經很少使用了。我們會在後續的 gpasswd 中介紹這個實作。</p>
+	</div>
+</div>
+
+
+<hr /><a name="users"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">帳號管理</span><br />
+<div class="block1">
+	<p>好啦！既然要管理帳號，當然是由新增與移除使用者開始的囉～底下我們就分別來談一談如何新增、
+	移除與更改使用者的相關資訊吧～<br /><br /></p>
+
+	<hr /><a name="users_adduser"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">新增與移除使用者： 
+	useradd, 相關設定檔, passwd, usermod, userdel</span><br />
+	<div class="block2">
+		<p>要如何在 Linux 的系統新增一個使用者啊？呵呵～真是太簡單了～我們登入系統時會輸入 (1)帳號與 (2)密碼，
+		所以建立一個可用的帳號同樣的也需要這兩個資料。那帳號可以使用 useradd 來新建使用者，密碼的給予則使用 passwd 
+		這個指令！這兩個指令下達方法如下：<br /><br /></p>
+
+		<a name="useradd"></a>
+		<hr /><ul class="list1"><li class="text_import1">useradd</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">useradd [-u UID] [-g 初始群組] [-G 次要群組] [-mM]\</span>
+&gt; <span class="term_command"> [-c 說明欄] [-d 家目錄絕對路徑] [-s shell] 使用者帳號名</span>
+<span class="term_say">選項與參數：
+-u  ：後面接的是 UID ，是一組數字。直接指定一個特定的 UID 給這個帳號；
+-g  ：後面接的那個群組名稱就是我們上面提到的 initial group 啦～
+      該群組的 GID 會被放置到 /etc/passwd 的第四個欄位內。
+-G  ：後面接的群組名稱則是這個帳號還可以加入的群組。
+      這個選項與參數會修改 /etc/group 內的相關資料喔！
+-M  ：強制！不要建立使用者家目錄！(系統帳號預設值)
+-m  ：強制！要建立使用者家目錄！(一般帳號預設值)
+-c  ：這個就是 /etc/passwd 的第五欄的說明內容啦～可以隨便我們設定的啦～
+-d  ：指定某個目錄成為家目錄，而不要使用預設值。務必使用絕對路徑！
+-r  ：建立一個系統的帳號，這個帳號的 UID 會有限制 (參考 /etc/login.defs)
+-s  ：後面接一個 shell ，若沒有指定則預設是 /bin/bash 的啦～
+-e  ：後面接一個日期，格式為『YYYY-MM-DD』此項目可寫入 shadow 第八欄位，
+      亦即帳號失效日的設定項目囉；
+-f  ：後面接 shadow 的第七欄位項目，指定密碼是否會失效。0為立刻失效，
+      -1 為永遠不失效(密碼只會過期而強制於登入時重新設定而已。)</span>
+
+<span class="term_hd">範例一：完全參考預設值建立一個使用者，名稱為 vbird1</span>
+[root@www ~]# <span class="term_command">useradd vbird1</span>
+[root@www ~]# <span class="term_command">ll -d /home/vbird1</span>
+drwx------ 4 vbird1 vbird1 4096 Feb 25 09:38 /home/vbird1
+<span class="term_say"># 預設會建立使用者家目錄，且權限為 700 ！這是重點！</span>
+
+[root@www ~]# <span class="term_command">grep vbird1 /etc/passwd /etc/shadow /etc/group</span>
+/etc/passwd:vbird1:x:504:505::/home/vbird1:/bin/bash
+/etc/shadow:vbird1:!!:14300:0:99999:7:::
+/etc/group:vbird1:x:505:    <span class="term_note">&lt;==預設會建立一個與帳號一模一樣的群組名</span>
+</pre></td></tr></table>
+
+		<p>其實系統已經幫我們規定好非常多的預設值了，所以我們可以簡單的使用『 useradd 帳號 』來建立使用者即可。
+		CentOS 這些預設值主要會幫我們處理幾個項目：</p>
+
+		<ul class="text_import2">
+		<li>在 /etc/passwd 裡面建立一行與帳號相關的資料，包括建立 UID/GID/家目錄等；</li>
+		<li>在 /etc/shadow 裡面將此帳號的密碼相關參數填入，但是尚未有密碼；</li>
+		<li>在 /etc/group 裡面加入一個與帳號名稱一模一樣的群組名稱；</li>
+		<li>在 /home 底下建立一個與帳號同名的目錄作為使用者家目錄，且權限為 700</li>
+		</ul>
+
+		<p>由於在 /etc/shadow 內僅會有密碼參數而不會有加密過的密碼資料，因此我們在建立使用者帳號時，
+		還需要使用『 passwd 帳號 』來給予密碼才算是完成了使用者建立的流程。如果由於特殊需求而需要改變使用者相關參數時，
+		就得要透過上述表格中的選項來進行建立了，參考底下的案例：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：假設我已知道我的系統當中有個群組名稱為 users ，且 UID 700 並不存在，
+        請用 users 為初始群組，以及 uid 為 700 來建立一個名為 vbird2 的帳號</span>
+[root@www ~]# <span class="term_command">useradd -u 700 -g users vbird2</span>
+[root@www ~]# <span class="term_command">ll -d /home/vbird2</span>
+drwx------ 4 vbird2 <span class="term_write">users</span> 4096 Feb 25 09:59 /home/vbird2
+
+[root@www ~]# <span class="term_command">grep vbird2 /etc/passwd /etc/shadow /etc/group</span>
+/etc/passwd:vbird2:x:<span class="term_write">700:100</span>::/home/vbird2:/bin/bash
+/etc/shadow:vbird2:!!:14300:0:99999:7:::
+<span class="term_say"># 看一下，UID 與 initial group 確實改變成我們需要的了！</span>
+</pre></td></tr></table>
+
+		<p>在這個範例中，我們建立的是指定一個已經存在的群組作為使用者的初始群組，因為群組已經存在，
+		<span class="text_import2">所以在 /etc/group 裡面就不會主動的建立與帳號同名的群組了！</span>
+		此外，我們也指定了特殊的 UID 來作為使用者的專屬 UID 喔！瞭解了一般帳號後，我們來瞧瞧那啥是系統帳號 (system
+		account) 吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：建立一個系統帳號，名稱為 vbird3</span>
+[root@www ~]# <span class="term_command">useradd -r vbird3</span>
+[root@www ~]# <span class="term_command">ll -d /home/vbird3</span>
+ls: /home/vbird3: No such file or directory  <span class="term_note">&lt;==不會主動建立家目錄</span>
+
+[root@www ~]# <span class="term_command">grep vbird3 /etc/passwd /etc/shadow /etc/group</span>
+/etc/passwd:vbird3:x:<span class="term_write">100:103</span>::/home/vbird3:/bin/bash
+/etc/shadow:vbird3:!!:14300::::::
+/etc/group:vbird3:x:<span class="term_write">103</span>:
+</pre></td></tr></table>
+
+		<p>我們在談到 UID 的時候曾經說過一般帳號應該是 500 號以後，那使用者自己建立的系統帳號則一般是由 100 號以後起算的。
+		所以在這裡我們加上 -r 這個選項以後，系統就會主動將帳號與帳號同名群組的 UID/GID 都指定小於 500 以下，
+		在本案例中則是使用 100(UID) 與 103(GID) 囉！此外，由於系統帳號主要是用來進行運作系統所需服務的權限設定，
+		所以<span class="text_import2">系統帳號預設都不會主動建立家目錄的</span>！</p>
+
+		<p>由這幾個範例我們也會知道，使用 useradd 建立使用者帳號時，其實會更改不少地方，至少我們就知道底下幾個檔案：</p>
+		<ul class="text_import2">
+		<li>使用者帳號與密碼參數方面的檔案：/etc/passwd, /etc/shadow</li>
+		<li>使用者群組相關方面的檔案：/etc/group, /etc/gshadow</li>
+		<li>使用者的家目錄：/home/帳號名稱</li>
+		</ul>
+
+		<p>那請教一下，你有沒有想過，為何『 useradd vbird1 』會主動在 /home/vbird1 
+		建立起使用者的家目錄？家目錄內有什麼資料且來自哪裡？為何預設使用的是 /bin/bash 這個 shell 
+		？為何密碼欄位已經都規範好了 (0:99999:7 那一串)？呵呵！這就得要說明一下 useradd 所使用的參考檔案囉！<br /><br /></p>
+
+		<a name="users_adduser_env"></a>
+		<hr /><ul class="list1"><li class="text_import1">useradd 參考檔</li></ul>
+
+		<p>其實 useradd 的預設值可以使用底下的方法呼叫出來：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">useradd -D</span>
+GROUP=100		<span class="term_note">&lt;==預設的群組</span>
+HOME=/home		<span class="term_note">&lt;==預設的家目錄所在目錄</span>
+INACTIVE=-1		<span class="term_note">&lt;==密碼失效日，在 shadow 內的第 7 欄</span>
+EXPIRE=			<span class="term_note">&lt;==帳號失效日，在 shadow 內的第 8 欄</span>
+SHELL=/bin/bash		<span class="term_note">&lt;==預設的 shell</span>
+SKEL=/etc/skel		<span class="term_note">&lt;==使用者家目錄的內容資料參考目錄</span>
+CREATE_MAIL_SPOOL=yes   <span class="term_note">&lt;==是否主動幫使用者建立郵件信箱(mailbox)</span>
+</pre></td></tr></table>
+
+		<p>這個<span class="text_import2">資料其實是由 /etc/default/useradd</span> 呼叫出來的！你可以自行用 vim 
+		去觀察該檔案的內容。搭配上頭剛剛談過的範例一的運作結果，上面這些設定項目所造成的行為分別是：</p>
+
+		<ul style="padding-left: 20px">
+		<li><span class="text_import1">GROUP=100：新建帳號的初始群組使用 GID 為 100 者</span><br /><br />
+		系統上面 GID 為 100 者即是 users 這個群組，此設定項目指的就是讓新設使用者帳號的初始群組為 users 這一個的意思。
+		但是我們知道 CentOS 上面並不是這樣的，在 CentOS 上面<span class="text_import2">預設的群組為與帳號名相同的群組</span>。
+		舉例來說， vbird1 的初始群組為 vbird1 。怎麼會這樣啊？這是因為針對群組的角度有兩種不同的機制所致，
+		這兩種機制分別是：<br /><br />
+		<ul style="padding-left : 20px">
+		<li><span class="text_import2">私有群組機制</span>：系統會建立一個與帳號一樣的群組給使用者作為初始群組。
+		這種群組的設定機制會比較有保密性，這是因為使用者都有自己的群組，而且家目錄權限將會設定為 700 
+		(僅有自己可進入自己的家目錄) 之故。使用這種機制將不會參考 GROUP=100 這個設定值。代表性的 distributions 
+		有 RHEL, Fedora, CentOS 等；<br /><br /></li>
+		<li><span class="text_import2">公共群組機制</span>：就是以 GROUP=100 
+		這個設定值作為新建帳號的初始群組，因此每個帳號都屬於 users 這個群組，
+		且預設家目錄通常的權限會是『 drwxr-xr-x ... username users ... 』，由於每個帳號都屬於 users 
+		群組，因此大家都可以互相分享家目錄內的資料之故。代表 distributions 如 SuSE等。</li>
+		</ul><br />
+		由於我們的 CentOS 使用私有群組機制，因此這個設定項目是不會生效的！不要太緊張啊！<br /><br /></li>
+
+		<li><span class="text_import1">HOME=/home：使用者家目錄的基準目錄(basedir)</span><br /><br />
+		使用者的家目錄通常是與帳號同名的目錄，這個目錄將會擺放在此設定值的目錄後。所以 vbird1 的家目錄就會在
+		/home/vbird1/ 了！很容易理解吧！<br /><br /></li>
+
+		<li><span class="text_import1">INACTIVE=-1：密碼過期後是否會失效的設定值</span><br /><br />
+		我們在 <a href="#shadow_file">shadow</a> 檔案結構當中談過，第七個欄位的設定值將會影響到密碼過期後，
+		在多久時間內還可使用舊密碼登入。這個項目就是在指定該日數啦！如果是 0 代表密碼過期立刻失效，
+		如果是 -1 則是代表密碼永遠不會失效，如果是數字，如 30 ，則代表過期 30 天後才失效。<br /><br /></li>
+
+		<li><span class="text_import1">EXPIRE=：帳號失效的日期</span><br /><br />
+		就是 <a href="#shadow_file">shadow</a> 內的第八欄位，你可以直接設定帳號在哪個日期後就直接失效，而不理會密碼的問題。
+		通常不會設定此項目，但如果是付費的會員制系統，或許這個欄位可以設定喔！<br /><br /></li>
+
+		<li><span class="text_import1">SHELL=/bin/bash：預設使用的 shell 程式檔名</span><br /><br />
+		系統預設的 shell 就寫在這裡。假如你的系統為 mail server ，你希望每個帳號都只能使用 email 的收發信件功能，
+		而不許使用者登入系統取得 shell ，那麼可以將這裡設定為 /sbin/nologin ，如此一來，新建的使用者預設就無法登入！
+		也免去後續使用 <a href="#usermod">usermod</a> 進行修改的手續！<br /><br /></li>
+		
+		<li><span class="text_import1">SKEL=/etc/skel：使用者家目錄參考基準目錄</span><br /><br />
+		這個咚咚就是指定使用者家目錄的參考基準目錄囉～舉我們的範例一為例， vbird1 家目錄 /home/vbird1 
+		內的各項資料，都是由 /etc/skel 所複製過去的～所以呢，未來如果我想要讓新增使用者時，該使用者的環境變數 ~/.bashrc 
+		就設定妥當的話，您可以到 /etc/skel/.bashrc 去編輯一下，也可以建立 
+		/etc/skel/www 這個目錄，那麼未來新增使用者後，在他的家目錄下就會有 www
+		那個目錄了！這樣瞭呼？<br /><br /></li>
+
+		<li><span class="text_import1">CREATE_MAIL_SPOOL=yes：建立使用者的 mailbox</span><br /><br />
+		你可以使用『 ll /var/spool/mail/vbird1 』看一下，會發現有這個檔案的存在喔！這就是使用者的郵件信箱！</li>
+		</ul>
+
+		<a name="login.defs"></a>
+		<p>除了這些基本的帳號設定值之外， UID/GID 還有密碼參數又是在哪裡參考的呢？那就得要看一下 /etc/login.defs 啦！
+		這個檔案的內容有點像底下這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+MAIL_DIR        /var/spool/mail	<span class="term_note">&lt;==使用者預設郵件信箱放置目錄</span>
+
+PASS_MAX_DAYS   99999	<span class="term_note">&lt;==/etc/shadow 內的第 5 欄，多久需變更密碼日數</span>
+PASS_MIN_DAYS   0	<span class="term_note">&lt;==/etc/shadow 內的第 4 欄，多久不可重新設定密碼日數</span>
+PASS_MIN_LEN    5	<span class="term_note">&lt;==密碼最短的字元長度，已被 pam 模組取代，失去效用！</span>
+PASS_WARN_AGE   7	<span class="term_note">&lt;==/etc/shadow 內的第 6 欄，過期前會警告的日數</span>
+
+UID_MIN         500	<span class="term_note">&lt;==使用者最小的 UID，意即小於 500 的 UID 為系統保留</span>
+UID_MAX       60000	<span class="term_note">&lt;==使用者能夠用的最大 UID</span>
+GID_MIN         500	<span class="term_note">&lt;==使用者自訂群組的最小 GID，小於 500 為系統保留</span>
+GID_MAX       60000	<span class="term_note">&lt;==使用者自訂群組的最大 GID</span>
+
+CREATE_HOME     yes	<span class="term_note">&lt;==在不加 -M 及 -m 時，是否主動建立使用者家目錄？</span>
+UMASK           077     <span class="term_note">&lt;==使用者家目錄建立的 umask ，因此權限會是 700</span>
+USERGROUPS_ENAB yes     <span class="term_note">&lt;==使用 userdel 刪除時，是否會刪除初始群組</span>
+MD5_CRYPT_ENAB yes      <span class="term_note">&lt;==密碼是否經過 MD5 的加密機制處理</span>
+</pre></td></tr></table>
+
+		<p>這個檔案規範的資料則是如下所示：</p>
+
+		<ul>
+		<li><span class="text_import2">mailbox 所在目錄</span>：<br />
+		使用者的預設 mailbox 檔案放置的目錄在 /var/spool/mail，所以 vbird1 的 mailbox 就是在 
+		/var/spool/mail/vbird1 囉！<br /><br /></li>
+
+		<li><span class="text_import2">shadow 密碼第 4, 5, 6 欄位內容</span>：<br />
+		透過 PASS_MAX_DAYS 等等設定值來指定的！所以你知道為何預設的 /etc/shadow 內每一行都會有『
+		0:99999:7 』的存在了嗎？^_^！不過要注意的是，由於目前我們登入時改用 PAM 模組來進行密碼檢驗，所以那個 
+		PASS_MIN_LEN 是失效的！<br /><br /></li>
+
+		<li><span class="text_import2">UID/GID 指定數值</span>：<br />
+		雖然 Linux 核心支援的帳號可高達 2<sup>32</sup> 這麼多個，不過一部主機要作出這麼多帳號在管理上也是很麻煩的！
+		所以在這裡就針對 UID/GID 的範圍進行規範就是了。上表中的 UID_MIN 指的就是可登入系統的一般帳號的最小 UID ，至於 
+		UID_MAX 則是最大 UID 之意。<br /><br />
+		要注意的是，系統給予一個帳號 UID 時，他是 (1)先參考 UID_MIN 設定值取得最小數值； (2)由 /etc/passwd 搜尋最大的 UID 數值，
+		將 (1) 與 (2) 相比，找出最大的那個再加一就是新帳號的 UID 了。我們上面已經作出 UID 為 700 的 vbird2 ，
+		如果再使用『 useradd vbird4 』時，你猜 vbird4 的 UID 會是多少？答案是： 701 。
+		所以中間的 505~699 的號碼就空下來啦！<br /><br />
+		而如果我是想要建立系統用的帳號，所以使用 useradd -r sysaccount
+		這個 -r 的選項時，就會找『比 500 小的最大的那個 UID + 1 』就是了。 ^_^<br /><br /></li>
+
+		<li><span class="text_import2">使用者家目錄設定值</span>：<br />
+		為何我們系統預設會幫使用者建立家目錄？就是這個『CREATE_HOME = yes』的設定值啦！這個設定值會讓你在使用 useradd 時，
+		主動加入『 -m 』這個產生家目錄的選項啊！如果不想要建立使用者家目錄，就只能強制加上『 -M 』的選項在 useradd 
+		指令執行時啦！至於建立家目錄的權限設定呢？就透過 <a href="/linux_basic/0220filemanager.php#umask">umask</a> 
+		這個設定值啊！因為是 077 的預設設定，因此使用者家目錄預設權限才會是『 drwx------ 』哩！<br /><br /></li>
+
+		<li><span class="text_import2">使用者刪除與密碼設定值</span>：<br />
+		使用『USERGROUPS_ENAB yes』這個設定值的功能是：<span class="text_import2">
+		如果使用 userdel 去刪除一個帳號時，且該帳號所屬的初始群組已經沒有人隸屬於該群組了，
+		那麼就刪除掉該群組</span>，舉例來說，我們剛剛有建立 vbird4 這個帳號，他會主動建立 vbird4 這個群組。
+		若 vbird4 這個群組並沒有其他帳號將他加入支援的情況下，若使用 userdel vbird4 時，該群組也會被刪除的意思。
+		至於『MD5_CRYPT_ENAB yes』則表示使用 MD5 來加密密碼明文，而不使用舊式的 DES(<a href="#ps2">註2</a>) 。</li>
+		</ul>
+
+		<p>現在你知道啦，使用 useradd 這支程式在建立 Linux 上的帳號時，至少會參考：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>/etc/default/useradd</li>
+		<li>/etc/login.defs</li>
+		<li>/etc/skel/*</li></ul>
+
+		<p>這些檔案，不過，最重要的其實是建立 /etc/passwd, /etc/shadow, /etc/group, /etc/gshadow 
+		還有使用者家目錄就是了～所以，如果你瞭解整個系統運作的狀態，也是可以手動直接修改這幾個檔案就是了。
+		OK！帳號建立了，接下來處理一下使用者的密碼吧！<br /><br /></p>
+
+		<a name="passwd"></a>
+		<hr /><ul class="list1"><li class="text_import1">passwd</li></ul>
+
+		<p>剛剛我們講到了，使用 useradd 建立了帳號之後，在預設的情況下，該帳號是暫時被封鎖的，
+		也就是說，該帳號是無法登入的，你可以去瞧一瞧 /etc/shadow 內的第二個欄位就曉得囉～
+		那該如何是好？怕什麼？直接給他設定新密碼就好了嘛！對吧～設定密碼就使用 passwd 囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">passwd [--sdtin]</span>  <span class="term_note">&lt;==所有人均可使用來改自己的密碼</span>
+[root@www ~]# <span class="term_command">passwd [-l] [-u] [--sdtin] [-S] \</span>
+&gt;  <span class="term_command">[-n 日數] [-x 日數] [-w 日數] [-i 日期] 帳號</span> <span class="term_note">&lt;==root 功能</span>
+<span class="term_say">選項與參數：
+--stdin ：可以透過來自前一個管線的資料，作為密碼輸入，對 shell script 有幫助！
+-l  ：是 Lock 的意思，會將 /etc/shadow 第二欄最前面加上 ! 使密碼失效；
+-u  ：與 -l 相對，是 Unlock 的意思！
+-S  ：列出密碼相關參數，亦即 shadow 檔案內的大部分資訊。
+-n  ：後面接天數，shadow 的第 4 欄位，多久不可修改密碼天數
+-x  ：後面接天數，shadow 的第 5 欄位，多久內必須要更動密碼
+-w  ：後面接天數，shadow 的第 6 欄位，密碼過期前的警告天數
+-i  ：後面接『日期』，shadow 的第 7 欄位，密碼失效日期</span>
+
+<span class="term_hd">範例一：請 root 給予 vbird2 密碼</span>
+[root@www ~]# <span class="term_command">passwd vbird2</span>
+Changing password for user vbird2.
+New UNIX password: <span class="term_note">&lt;==這裡直接輸入新的密碼，螢幕不會有任何反應</span>
+BAD PASSWORD: it is WAY too short <span class="term_note">&lt;==密碼太簡單或過短的錯誤！</span>
+Retype new UNIX password:  <span class="term_note">&lt;==再輸入一次同樣的密碼</span>
+passwd: all authentication tokens updated <span class="term_write">successfully</span>.  <span class="term_note">&lt;==竟然還是成功修改了！</span>
+</pre></td></tr></table>
+
+		<p>root 果然是最偉大的人物！當我們要給予使用者密碼時，透過 root 來設定即可。
+		root 可以設定各式各樣的密碼，系統幾乎一定會接受！所以您瞧瞧，如同上面的範例一，明明鳥哥輸入的密碼太短了，
+		但是系統依舊可接受 vbird2 這樣的密碼設定。這個是 root 幫忙設定的結果，那如果是使用者自己要改密碼呢？
+		包括 root 也是這樣修改的喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：用 vbird2 登入後，修改 vbird2 自己的密碼</span>
+[vbird2@www ~]$ <span class="term_command">passwd</span>   <span class="term_note">&lt;==後面沒有加帳號，就是改自己的密碼！</span>
+Changing password for user vbird2.
+Changing password for vbird2
+(current) UNIX password: <span class="term_note">&lt;==這裡輸入『原有的舊密碼』</span>
+New UNIX password: <span class="term_note">&lt;==這裡輸入新密碼</span>
+BAD PASSWORD: it is based on a dictionary word <span class="term_note">&lt;==密碼檢驗不通過，請再想個新密碼</span>
+New UNIX password: <span class="term_note">&lt;==這裡再想個來輸入吧</span>
+Retype new UNIX password: <span class="term_note">&lt;==通過密碼驗證！所以重複這個密碼的輸入</span>
+passwd: all authentication tokens updated <u>successfully</u>. <span class="term_note">&lt;==有無成功看關鍵字</span>
+</pre></td></tr></table>
+
+		<p>passwd 的使用真的要很注意，尤其是 root 先生啊！鳥哥在課堂上每次講到這裡，說是要幫自己的一般帳號建立密碼時，
+		有一小部分的學生就是會忘記加上帳號，結果就變成改變 root 自己的密碼，最後.... root 密碼就這樣不見去！唉～
+		<span class="text_import2">要幫一般帳號建立密碼需要使用『 passwd 帳號 』的格式，使用『 
+		passwd 』表示修改自己的密碼</span>！拜託！千萬不要改錯！</p>
+
+		<p>與 root 不同的是，一般帳號在更改密碼時需要先輸入自己的舊密碼 (亦即 current 那一行)，然後再輸入新密碼 (New 那一行)。
+		要注意的是，密碼的規範是非常嚴格的，尤其新的 distributions 大多使用 PAM 模組來進行密碼的檢驗，包括太短、
+		密碼與帳號相同、密碼為字典常見字串等，都會被 PAM 模組檢查出來而拒絕修改密碼，此時會再重複出現『 New 』這個關鍵字！
+		那時請再想個新密碼！若出現『 Retype 』才是你的密碼被接受了！重複輸入新密碼並且看到『 successfully
+		』這個關鍵字時才是修改密碼成功喔！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		與一般使用者不同的是， root 並不需要知道舊密碼就能夠幫使用者或 root 自己建立新密碼！
+		但如此一來有困擾～就是如果你的親密愛人老是告訴你『我的密碼真難記，幫我設定簡單一點的！』時，
+		千萬不要妥協啊！這是為了系統安全...
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>為何使用者要設訂自己的密碼會這麼麻煩啊？這是因為密碼的安全性啦！如果密碼設定太簡單，
+		一些有心人士就能夠很簡單的猜到你的密碼，如此一來人家就可能使用你的一般帳號登入你的主機或使用其他主機資源，
+		對主機的維護會造成困擾的！所以新的 distributions 是使用較嚴格的 PAM 模組來管理密碼，這個管理的機制寫在 /etc/pam.d/passwd 
+		當中。而<span class="text_import2">該檔案與密碼有關的測試模組就是使用：pam_cracklib.so，這個模組會檢驗密碼相關的資訊，
+		並且取代 /etc/login.defs 內的 PASS_MIN_LEN 的設定</span>啦！關於 PAM 我們在本章後面繼續介紹，這裡先談一下，
+		理論上，你的密碼最好符合如下要求：</p>
+
+		<ul class="text_import2">
+		<li>密碼不能與帳號相同；</li>
+		<li>密碼盡量不要選用字典裡面會出現的字串；</li>
+		<li>密碼需要超過 8 個字元；</li>
+		<li>密碼不要使用個人資訊，如身份證、手機號碼、其他電話號碼等；</li>
+		<li>密碼不要使用簡單的關係式，如 1+1=2， Iamvbird 等；</li>
+		<li>密碼盡量使用大小寫字元、數字、特殊字元($,_,-等)的組合。</li></ul>
+
+		<p>為了方便系統管理，新版的 passwd 還加入了很多創意選項喔！鳥哥個人認為最好用的大概就是這個『 --stdin 』了！
+		舉例來說，你想要幫 vbird2 變更密碼成為 abc543CC ，可以這樣下達指令呢！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：使用 standard input 建立用戶的密碼</span>
+[root@www ~]# <span class="term_command">echo "abc543CC" | passwd --stdin vbird2</span>
+Changing password for user vbird2.
+passwd: all authentication tokens updated successfully.
+</pre></td></tr></table>
+
+		<p>這個動作會直接更新使用者的密碼而不用再次的手動輸入！好處是方便處理，缺點是這個密碼會保留在指令中，
+		未來若系統被攻破，人家可以在 /root/.bash_history 找到這個密碼呢！所以這個動作通常僅用在 shell script 
+		的大量建立使用者帳號當中！要注意的是，這個選項並不存在所有 distributions 版本中，
+		請使用 man passwd 確認你的 distribution 是否有支援此選項喔！</p>
+
+		<p>如果你想要讓 vbird2 的密碼具有相當的規則，舉例來說你要讓 vbird2 每 60 天需要變更密碼，
+		密碼過期後 10 天未使用就宣告密碼失效，那該如何處理？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例四：管理 vbird2 的密碼使具有 60 天變更、10 天密碼失效的設定</span>
+[root@www ~]# <span class="term_command">passwd -S vbird2</span>
+vbird2 PS 2009-02-26 0 99999 7 -1 (Password set, MD5 crypt.)
+<span class="term_say"># 上面說明密碼建立時間 (2009-02-26)、0 最小天數、99999 變更天數、7 警告日數
+# 與密碼不會失效 (-1) 。</span>
+
+[root@www ~]# <span class="term_command">passwd -x 60 -i 10 vbird2</span>
+[root@www ~]# <span class="term_command">passwd -S vbird2</span>
+vbird2 PS 2009-02-26 0 <span class="term_write">60</span> 7 <span class="term_write">10</span> (Password set, MD5 crypt.)
+</pre></td></tr></table>
+
+		<p>那如果我想要讓某個帳號暫時無法使用密碼登入主機呢？舉例來說， vbird2 這傢伙最近老是胡亂在主機亂來，
+		所以我想要暫時讓她無法登入的話，最簡單的方法就是讓她的密碼變成不合法 (shadow 第 2 欄位長度變掉)！
+		處理的方法就更簡單的！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例五：讓 vbird2 的帳號失效，觀察完畢後再讓她失效</span>
+[root@www ~]# <span class="term_command">passwd -l vbird2</span>
+[root@www ~]# <span class="term_command">passwd -S vbird2</span>
+vbird2 <span class="term_write">LK</span> 2009-02-26 0 60 7 10 (<span class="term_write">Password locked</span>.)
+<span class="term_say"># 嘿嘿！狀態變成『 LK, Lock 』了啦！無法登入喔！</span>
+[root@www ~]# <span class="term_command">grep vbird2 /etc/shadow</span>
+vbird2:<span class="term_write">!!</span>$1$50MnwNFq$oChX.0TPanCq7ecE4HYEi.:14301:0:60:7:10::
+<span class="term_say"># 其實只是在這裡加上 !! 而已！</span>
+
+[root@www ~]# <span class="term_command">passwd -u vbird2</span>
+[root@www ~]# <span class="term_command">grep vbird2 /etc/shadow</span>
+vbird2:$1$50MnwNFq$oChX.0TPanCq7ecE4HYEi.:14301:0:60:7:10::
+<span class="term_say"># 密碼欄位恢復正常！</span>
+</pre></td></tr></table>
+
+		<p>是否很有趣啊！您可以自行管理一下你的帳號的密碼相關參數喔！接下來讓我們用更簡單的方法來查閱密碼參數喔！
+		<br /><br /></p>
+
+		<a name="chage"></a>
+		<hr /><ul class="list1"><li class="text_import1">chage</li></ul>
+
+		<p>除了使用 passwd -S 之外，有沒有更詳細的密碼參數顯示功能呢？有的！那就是 chage 了！
+		他的用法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chage [-ldEImMW] 帳號名</span>
+<span class="term_say">選項與參數：
+-l ：列出該帳號的詳細密碼參數；
+-d ：後面接日期，修改 shadow 第三欄位(最近一次更改密碼的日期)，格式 YYYY-MM-DD
+-E ：後面接日期，修改 shadow 第八欄位(帳號失效日)，格式 YYYY-MM-DD
+-I ：後面接天數，修改 shadow 第七欄位(密碼失效日期)
+-m ：後面接天數，修改 shadow 第四欄位(密碼最短保留天數)
+-M ：後面接天數，修改 shadow 第五欄位(密碼多久需要進行變更)
+-W ：後面接天數，修改 shadow 第六欄位(密碼過期前警告日期)</span>
+
+<span class="term_hd">範例一：列出 vbird2 的詳細密碼參數</span>
+[root@www ~]# <span class="term_command">chage -l vbird2</span>
+Last password change                               : Feb 26, 2009
+Password expires                                   : Apr 27, 2009
+Password inactive                                  : May 07, 2009
+Account expires                                    : never
+Minimum number of days between password change     : 0
+Maximum number of days between password change     : 60
+Number of days of warning before password expires  : 7
+</pre></td></tr></table>
+
+		<p>我們在 <a href="#passwd">passwd</a> 的介紹中談到了處理 vbird2 這個帳號的密碼屬性流程，使用 passwd -S 
+		卻無法看到很清楚的說明。如果使用 chage 那可就明白多了！如上表所示，我們可以清楚的知道 vbird2 的詳細參數呢！
+		如果想要修改其他的設定值，就自己參考上面的選項，或者自行 man chage 一下吧！^_^</p>
+
+		<p>chage 有一個功能很不錯喔！如果你想要讓『<span class="text_import2">使用者在第一次登入時，
+		強制她們一定要更改密碼後才能夠使用系統資源</span>』，可以利用如下的方法來處理的！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：建立一個名為 agetest 的帳號，該帳號第一次登入後使用預設密碼，
+        但必須要更改過密碼後，使用新密碼才能夠登入系統使用 bash 環境</span>
+[root@www ~]# <span class="term_command">useradd agetest</span>
+[root@www ~]# <span class="term_command">echo "agetest" | passwd --stdin agetest</span>
+[root@www ~]# <span class="term_command">chage -d 0 agetest</span>
+<span class="term_say"># 此時此帳號的密碼建立時間會被改為 1970/1/1 ，所以會有問題！</span>
+
+<span class="term_hd">範例三：嘗試以 agetest 登入的情況</span>
+You are required to change your password immediately (root enforced)
+WARNING: Your password has expired.
+You must change your password now and login again!
+Changing password for user agetest.
+Changing password for agetest
+(current) UNIX password:  <span class="term_note">&lt;==這個帳號被強制要求必須要改密碼！</span>
+</pre></td></tr></table>
+
+		<p>非常有趣吧！你會發現 agetest 這個帳號在第一次登入時可以使用與帳號同名的密碼登入，
+		但登入時就會被要求立刻更改密碼，更改密碼完成後就會被踢出系統。再次登入時就能夠使用新密碼登入了！
+		這個功能對學校老師非常有幫助！因為我們不想要知道學生的密碼，那麼在初次上課時就使用與學號相同的帳號/密碼給學生，
+		讓她們登入時自行設定她們的密碼，如此一來就能夠避免其他同學隨意使用別人的帳號，也能夠保證學生知道如何更改自己的密碼！
+		<br /><br /></p>
+
+		<a name="usermod"></a>
+		<hr /><ul class="list1"><li class="text_import1">usermod</li></ul>
+
+		<p>所謂這『人有失手，馬有亂蹄』，您說是吧？所以囉，當然有的時候會『不小心』在 useradd 
+		的時候加入了錯誤的設定資料。或者是，在使用 useradd 後，發現某些地方還可以進行細部修改。
+		此時，當然我們可以直接到 /etc/passwd 或 /etc/shadow 去修改相對應欄位的資料，
+		不過，Linux 也有提供相關的指令讓大家來進行帳號相關資料的微調呢～那就是 usermod 囉～</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">usermod [-cdegGlsuLU] username</span>
+<span class="term_say">選項與參數：
+-c  ：後面接帳號的說明，即 /etc/passwd 第五欄的說明欄，可以加入一些帳號的說明。
+-d  ：後面接帳號的家目錄，即修改 /etc/passwd 的第六欄；
+-e  ：後面接日期，格式是 YYYY-MM-DD 也就是在 /etc/shadow 內的第八個欄位資料啦！
+-f  ：後面接天數，為 shadow 的第七欄位。
+-g  ：後面接初始群組，修改 /etc/passwd 的第四個欄位，亦即是 GID 的欄位！
+-G  ：後面接次要群組，修改這個使用者能夠支援的群組，修改的是 /etc/group 囉～
+-a  ：與 -G 合用，可『增加次要群組的支援』而非『設定』喔！
+-l  ：後面接帳號名稱。亦即是修改帳號名稱， /etc/passwd 的第一欄！
+-s  ：後面接 Shell 的實際檔案，例如 /bin/bash 或 /bin/csh 等等。
+-u  ：後面接 UID 數字啦！即 /etc/passwd 第三欄的資料；
+-L  ：暫時將使用者的密碼凍結，讓他無法登入。其實僅改 /etc/shadow 的密碼欄。
+-U  ：將 /etc/shadow 密碼欄的 ! 拿掉，解凍啦！</span>
+</pre></td></tr></table>
+
+		<p>如果你仔細的比對，會發現 usermod 的選項與 <a href="#useradd">useradd</a> 非常類似！
+		這是因為 usermod 也是用來微調 useradd 增加的使用者參數嘛！不過 usermod 還是有新增的選項，
+		那就是 -L 與 -U ，不過這兩個選項其實與 passwd 的 -l, -u 是相同的！而且也不見得會存在所有的
+		distribution 當中！接下來，讓我們談談一些變更參數的實例吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：修改使用者 vbird2 的說明欄，加上『VBird's test』的說明。</span>
+[root@www ~]# <span class="term_command">usermod -c "VBird's test" vbird2</span>
+[root@www ~]# <span class="term_command">grep vbird2 /etc/passwd</span>
+vbird2:x:700:100:<span class="term_write">VBird's test</span>:/home/vbird2:/bin/bash
+
+<span class="term_hd">範例二：使用者 vbird2 密碼在 2009/12/31 失效。</span>
+[root@www ~]# <span class="term_command">usermod -e "2009-12-31" vbird2</span>
+[root@www ~]# <span class="term_command">grep vbird2 /etc/shadow</span>
+vbird2:$1$50MnwNFq$oChX.0TPanCq7ecE4HYEi.:14301:0:60:7:10:<span class="term_write">14609</span>:
+
+<span class="term_hd">範例三：我們建立 vbird3 這個系統帳號時並沒有給予家目錄，請建立他的家目錄</span>
+[root@www ~]# <span class="term_command">ll -d ~vbird3</span>
+ls: /home/vbird3: No such file or directory  <span class="term_note">&lt;==確認一下，確實沒有家目錄的存在！</span>
+[root@www ~]# <span class="term_command">cp -a /etc/skel /home/vbird3</span>
+[root@www ~]# <span class="term_command">chown -R vbird3:vbird3 /home/vbird3</span>
+[root@www ~]# <span class="term_command">chmod 700 /home/vbird3</span>
+[root@www ~]# <span class="term_command">ll -a ~vbird3</span>
+drwx------  4 vbird3 vbird3 4096 Sep  4 18:15 .  <span class="term_note">&lt;==使用者家目錄權限</span>
+drwxr-xr-x 11 root   root   4096 Feb 26 11:45 ..
+-rw-r--r--  1 vbird3 vbird3   33 May 25  2008 .bash_logout
+-rw-r--r--  1 vbird3 vbird3  176 May 25  2008 .bash_profile
+-rw-r--r--  1 vbird3 vbird3  124 May 25  2008 .bashrc
+drwxr-xr-x  3 vbird3 vbird3 4096 Sep  4 18:11 .kde
+drwxr-xr-x  4 vbird3 vbird3 4096 Sep  4 18:15 .mozilla
+<span class="term_say"># 使用 chown -R 是為了連同家目錄底下的使用者/群組屬性都一起變更的意思；
+# 使用 chmod 沒有 -R ，是因為我們僅要修改目錄的權限而非內部檔案的權限！</span>
+</pre></td></tr></table><br />
+
+		<a name="userdel"></a>
+		<hr /><ul class="list1"><li class="text_import1">userdel</li></ul>
+
+		<p>這個功能就太簡單了，目的在刪除使用者的相關資料，而使用者的資料有：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>使用者帳號/密碼相關參數：/etc/passwd, /etc/shadow</li>
+		<li>使用者群組相關參數：/etc/group, /etc/gshadow</li>
+		<li>使用者個人檔案資料： /home/username, /var/spool/mail/username..</li>
+		</ul>
+
+		<p>整個指令的語法非常簡單：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">userdel [-r] username</span>
+<span class="term_say">選項與參數：
+-r  ：連同使用者的家目錄也一起刪除</span>
+
+<span class="term_hd">範例一：刪除 vbird2 ，連同家目錄一起刪除</span>
+[root@www ~]# <span class="term_command">userdel -r vbird2</span>
+</pre></td></tr></table>
+
+		<p>這個指令下達的時候要小心了！通常我們要移除一個帳號的時候，你可以手動的將 /etc/passwd 與 /etc/shadow 
+		裡頭的該帳號取消即可！一般而言，如果該帳號只是『<span class="text_import2">暫時不啟用</span>』的話，那麼將 
+		/etc/shadow 裡頭帳號失效日期 (第八欄位) 設定為 0 就可以讓該帳號無法使用，但是所有跟該帳號相關的資料都會留下來！
+		使用 userdel 的時機通常是『<span class="text_import2">你真的確定不要讓該用戶在主機上面使用任何資料了</span>！』</p>
+
+		<p>另外，其實使用者如果在系統上面操作過一陣子了，那麼該使用者其實在系統內可能會含有其他檔案的。
+		舉例來說，他的郵件信箱 (mailbox) 或者是<a href="/linux_basic/0430cron.php">例行性工作排程 (crontab, 十六章)</a> 之類的檔案。
+		所以，如果想要完整的將某個帳號完整的移除，最好可以在下達 userdel -r username 之前，
+		先以『 find / -user username 』查出整個系統內屬於 username 的檔案，然後再加以刪除吧！</p>
+	</div>
+
+	<hr /><a name="normal_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者功能</span><br />
+	<div class="block2">
+		<p>不論是 useradd/usermod/userdel ，那都是系統管理員所能夠使用的指令，
+		如果我是一般身份使用者，那麼我是否除了密碼之外，就無法更改其他的資料呢？
+		當然不是啦！這裡我們介紹幾個一般身份使用者常用的帳號資料變更與查詢指令囉！<br /><br /></p>
+
+		<a name="finger"></a>
+		<hr /><ul class="list1"><li class="text_import1">finger</li></ul>
+
+		<p>finger 的中文字面意義是：『手指』或者是『指紋』的意思。這個 finger 可以查閱很多使用者相關的資訊喔！
+		大部分都是在 /etc/passwd 這個檔案裡面的資訊啦！我們就先來檢查檢查使用者資訊吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">finger [-s] username</span>
+<span class="term_say">選項與參數：
+-s  ：僅列出使用者的帳號、全名、終端機代號與登入時間等等；
+-m  ：列出與後面接的帳號相同者，而不是利用部分比對 (包括全名部分)</span>
+
+<span class="term_hd">範例一：觀察 vbird1 的使用者相關帳號屬性</span>
+[root@www ~]# <span class="term_command">finger vbird1</span>
+Login: vbird1                           Name: (null)
+Directory: /home/vbird1                 Shell: /bin/bash
+Never logged in.
+No mail.
+No Plan.
+</pre></td></tr></table>
+
+		<p>由於 finger 類似指紋的功能，他會將使用者的相關屬性列出來！如上表所示，其實他列出來的幾乎都是 /etc/passwd
+		檔案裡面的東西。列出的資訊說明如下：</p>
+		<ul>
+		<li>Login：為使用者帳號，亦即 /etc/passwd 內的第一欄位；</li>
+		<li>Name：為全名，亦即 /etc/passwd 內的第五欄位(或稱為註解)；</li>
+		<li>Directory：就是家目錄了；</li>
+		<li>Shell：就是使用的 Shell 檔案所在；</li>
+		<li>Never logged in.：figner 還會調查使用者登入主機的情況喔！</li>
+		<li>No mail.：調查 /var/spool/mail 當中的信箱資料；</li>
+		<li>No Plan.：調查 ~vbird1/.plan 檔案，並將該檔案取出來說明！</li>
+		</ul>
+
+		<p>不過是否能夠查閱到 Mail 與 Plan 則與權限有關了！因為 Mail / Plan 都是與使用者自己的權限設定有關，
+		root 當然可以查閱到使用者的這些資訊，但是 vbird1 就不見得能夠查到 vbird3 的資訊，
+		因為 /var/spool/mail/vbird3 與 /home/vbird3/ 的權限分別是 660, 700 ，那 vbird1 當然就無法查閱的到！
+		這樣解釋可以理解吧？此外，我們可以建立自己想要執行的預定計畫，當然，最多是給自己看的！可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：利用 vbird1 建立自己的計畫檔</span>
+[vbird1@www ~]$ <span class="term_command">echo "I will study Linux during this year." &gt; ~/.plan</span>
+[vbird1@www ~]$ <span class="term_command">finger vbird1</span>
+Login: vbird1                           Name: (null)
+Directory: /home/vbird1                 Shell: /bin/bash
+Never logged in.
+No mail.
+<span class="term_write">Plan:
+I will study Linux during this year.</span>
+
+<span class="term_hd">範例三：找出目前在系統上面登入的使用者與登入時間</span>
+[vbird1@www ~]$ <span class="term_command">finger</span>
+Login     Name       Tty      Idle  Login Time   Office     Office Phone
+root      root       tty1           Feb 26 09:53
+vbird1               tty2           Feb 26 15:21
+</pre></td></tr></table>
+
+		<p>在範例三當中，我們發現輸出的資訊還會有 Office, Office Phone 等資訊，那這些資訊要如何記錄呢？
+		底下我們會介紹 chfn 這個指令！來看看如何修改使用者的 finger 資料吧！<br /><br /></p>
+
+		<a name="chfn"></a>
+		<hr /><ul class="list1"><li class="text_import1">chfn</li></ul>
+
+		<p>chfn 有點像是： change finger 的意思！這玩意的使用方法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chfn [-foph] [帳號名]</span>
+<span class="term_say">選項與參數：
+-f  ：後面接完整的大名；
+-o  ：您辦公室的房間號碼；
+-p  ：辦公室的電話號碼；
+-h  ：家裡的電話號碼！</span>
+
+<span class="term_hd">範例一：vbird1 自己更改一下自己的相關資訊！</span>
+[vbird1@www ~]$ <span class="term_command">chfn</span>
+Changing finger information for vbird1.
+Password:                        <span class="term_note">&lt;==確認身份，所以輸入自己的密碼</span>
+Name []: <span class="term_write">VBird Tsai test</span>         <span class="term_note">&lt;==輸入你想要呈現的全名</span>
+Office []: <span class="term_write">Dic in Ksu. Tainan</span>    <span class="term_note">&lt;==辦公室號碼</span>
+Office Phone []: <span class="term_write">06-2727175#356</span>  <span class="term_note">&lt;==辦公室電話</span>
+Home Phone []: <span class="term_write">06-1234567</span>        <span class="term_note">&lt;==家裡電話號碼</span>
+
+Finger information changed.
+[vbird1@www ~]$ <span class="term_command">grep vbird1 /etc/passwd</span>
+vbird1:x:504:505:<span class="term_write">VBird Tsai test,Dic in Ksu. Tainan,06-2727175#356,06-1234567</span>:
+/home/vbird1:/bin/bash
+<span class="term_say"># 其實就是改到第五個欄位，該欄位裡面用多個『 , 』分隔就是了！</span>
+
+[vbird1@www ~]$ <span class="term_command">finger vbird1</span>
+Login: vbird1                           <span class="term_write">Name: VBird Tsai test</span>
+Directory: /home/vbird1                 Shell: /bin/bash
+<span class="term_write">Office: Dic in Ksu. Tainan              Office Phone: 06-2727175#356
+Home Phone: 06-1234567</span>
+On since Thu Feb 26 15:21 (CST) on tty2
+No mail.
+Plan:
+I will study Linux during this year.
+<span class="term_say"># 就是上面特殊字體呈現的那些地方是由 chfn 所修改出來的！</span>
+</pre></td></tr></table>
+
+		<p>這個指令說實在的，除非是你的主機有很多的用戶，否則倒真是用不著這個程式！這就有點像是 bbs 
+		裡頭更改你『個人屬性』的那一個資料啦！不過還是可以自己玩一玩！尤其是用來提醒自己相關資料啦！ ^_^<br /><br /></p>
+
+		<a name="chsh"></a>
+		<hr /><ul class="list1"><li class="text_import1">chsh</li></ul>
+
+		<p>這就是 change shell 的簡寫！使用方法就更簡單了！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[vbird1@www ~]$ <span class="term_command">chsh [-ls]</span>
+<span class="term_say">選項與參數：
+-l  ：列出目前系統上面可用的 shell ，其實就是 /etc/shells 的內容！
+-s  ：設定修改自己的 Shell 囉</span>
+
+<span class="term_hd">範例一：用 vbird1 的身份列出系統上所有合法的 shell，並且指定 csh 為自己的 shell</span>
+[vbird1@www ~]$ <span class="term_command">chsh -l</span>
+/bin/sh
+/bin/bash
+/sbin/nologin  <span class="term_note">&lt;==所謂：合法不可登入的 Shell 就是這玩意！</span>
+/bin/tcsh
+/bin/csh       <span class="term_note">&lt;==這就是 C shell 啦！</span>
+/bin/ksh
+<span class="term_say"># 其實上面的資訊就是我們在 <a href="/linux_basic/0320bash.php">bash</a> 中談到的 /etc/shells 啦！</span>
+
+[vbird1@www ~]$ <span class="term_command">chsh -s /bin/csh; grep vbird1 /etc/passwd</span>
+Changing shell for vbird1.
+Password:  <span class="term_note">&lt;==確認身份，請輸入 vbird1 的密碼</span>
+Shell changed.
+vbird1:x:504:505:VBird Tsai test,Dic in Ksu. Tainan,06-2727175#356,06-1234567:
+/home/vbird1:<span class="term_write">/bin/csh</span>
+
+[vbird1@www ~]$ <span class="term_command">chsh -s /bin/bash</span>
+<span class="term_say"># 測試完畢後，立刻改回來！</span>
+
+[vbird1@www ~]$ <span class="term_command">ll $(which chsh)</span>
+-rw<span class="term_write">s</span>--x--x 1 root root 19128 May 25  2008 /usr/bin/chsh
+</pre></td></tr></table>
+
+		<p>不論是 chfn 與 chsh ，都是能夠讓一般使用者修改 /etc/passwd 這個系統檔的！所以你猜猜，這兩個檔案的權限是什麼？
+		一定是 <a href="/linux_basic/0220filemanager.php#suid">SUID</a> 的功能啦！看到這裡，想到前面！
+		這就是 Linux 的學習方法～ ^_^<br /><br /></p>
+
+		<a name="id"></a>
+		<hr /><ul class="list1"><li class="text_import1">id</li></ul>
+
+		<p>id 這個指令則可以查詢某人或自己的相關 UID/GID 等等的資訊，他的參數也不少，不過，
+		都不需要記～反正使用 id 就全部都列出囉～ ^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">id [username]</span>
+
+<span class="term_hd">範例一：查閱 root 自己的相關 ID 資訊！</span>
+[root@www ~]# <span class="term_command">id</span>
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),
+10(wheel) context=root:system_r:unconfined_t:SystemLow-SystemHigh
+<span class="term_say"># 上面資訊其實是同一行的資料！包括會顯示 UID/GID 以及支援的所有群組！
+# 至於後面那個 context=... 則是 SELinux 的內容，先不要理會他！</span>
+
+<span class="term_hd">範例二：查閱一下 vbird1 吧～</span>
+[root@www ~]# <span class="term_command">id vbird1</span>
+uid=504(vbird1) gid=505(vbird1) groups=505(vbird1) context=root:system_r:
+unconfined_t:SystemLow-SystemHigh
+
+[root@www ~]# <span class="term_command">id vbird100</span>
+id: vbird100: No such user  <span class="term_note">&lt;== id 這個指令也可以用來判斷系統上面有無某帳號！</span>
+</pre></td></tr></table>
+	</div>
+
+	<hr /><a name="group_add"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">新增與移除群組</span><br />
+	<div class="block2">
+		<p>OK！瞭解了帳號的新增、刪除、更動與查詢後，再來我們可以聊一聊群組的相關內容了。
+		基本上，群組的內容都與這兩個檔案有關：<span class="text_import2">/etc/group, /etc/gshadow</span>。
+		群組的內容其實很簡單，都是上面兩個檔案的新增、修改與移除而已，
+		不過，如果再加上有效群組的概念，那麼 newgrp 與 gpasswd 則不可不知呢！<br /><br /></p>
+
+		<a name="groupadd"></a>
+		<hr /><ul class="list1"><li class="text_import1">groupadd</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">groupadd [-g gid] [-r] 群組名稱</span>
+<span class="term_say">選項與參數：
+-g  ：後面接某個特定的 GID ，用來直接給予某個 GID ～
+-r  ：建立系統群組啦！與 /etc/login.defs 內的 GID_MIN 有關。</span>
+
+<span class="term_hd">範例一：新建一個群組，名稱為 group1</span>
+[root@www ~]# <span class="term_command">groupadd group1</span>
+[root@www ~]# <span class="term_command">grep group1 /etc/group /etc/gshadow</span>
+/etc/group:group1:x:<span class="term_write">702</span>:
+/etc/gshadow:group1:!::
+<span class="term_say"># 群組的 GID 也是會由 500 以上最大 GID+1 來決定！</span>
+</pre></td></tr></table>
+
+		<p>曾經有某些版本的教育訓練手冊談到，為了讓使用者的 UID/GID 成對，她們建議<span 
+		class="text_import2">新建的與使用者私有群組無關的其他群組時，使用小於 500 以下的 GID 為宜</span>。
+		也就是說，如果要建立群組的話，最好能夠使用『 groupadd -r 群組名』的方式來建立啦！
+		不過，這見仁見智啦！看你自己的抉擇囉！<br /><br /></p>
+
+		<a name="groupmod"></a>
+		<hr /><ul class="list1"><li class="text_import1">groupmod</li></ul>
+
+		<p>跟 <a href="#usermod">usermod</a> 類似的，這個指令僅是在進行 group 相關參數的修改而已。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">groupmod [-g gid] [-n group_name] 群組名</span>
+<span class="term_say">選項與參數：
+-g  ：修改既有的 GID 數字；
+-n  ：修改既有的群組名稱</span>
+
+<span class="term_hd">範例一：將剛剛上個指令建立的 group1 名稱改為 mygroup ， GID 為 201</span>
+[root@www ~]# <span class="term_command">groupmod -g 201 -n mygroup group1</span>
+[root@www ~]# <span class="term_command">grep mygroup /etc/group /etc/gshadow</span>
+/etc/group:mygroup:x:201:
+/etc/gshadow:mygroup:!::
+</pre></td></tr></table>
+
+		<p>不過，還是那句老話，不要隨意的更動 GID ，容易造成系統資源的錯亂喔！<br /><br /></p>
+
+		<a name="groupdel"></a>
+		<hr /><ul class="list1"><li class="text_import1">groupdel</li></ul>
+
+		<p>呼呼！ groupdel 自然就是在刪除群組的囉～用法很簡單：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">groupdel [groupname]</span>
+
+<span class="term_hd">範例一：將剛剛的 mygroup 刪除！</span>
+[root@www ~]# <span class="term_command">groupdel mygroup</span>
+
+<span class="term_hd">範例二：若要刪除 vbird1 這個群組的話？</span>
+[root@www ~]# <span class="term_command">groupdel vbird1</span>
+groupdel: cannot remove user's primary group.
+</pre></td></tr></table>
+
+		<p>為什麼 mygroup 可以刪除，但是 vbird1 就不能刪除呢？原因很簡單，『<span 
+		class="text_import2">有某個帳號 (/etc/passwd) 的 initial group 使用該群組！</span>』
+		如果查閱一下，你會發現在 /etc/passwd 內的 vbird1 第四欄的 GID 就是 /etc/group 內的 vbird1
+		那個群組的 GID ，所以囉，當然無法刪除～否則 vbird1 這個使用者登入系統後，
+		就會找不到 GID ，那可是會造成很大的困擾的！那麼如果硬要要刪除 vbird1 這個群組呢？
+		你『<span class="text_import2">必須要確認 /etc/passwd 內的帳號沒有任何人使用該群組作為
+		initial group </span>』才行喔！所以，你可以：</p>
+		<ul>
+		<li>修改 vbird1 的 GID ，或者是：</li>
+		<li>刪除 vbird1 這個使用者。</li></ul><br />
+
+		<a name="gpasswd"></a>
+		<hr /><ul class="list1"><li class="text_import1">gpasswd：群組管理員功能</li></ul>
+
+		<p>如果系統管理員太忙碌了，導致某些帳號想要加入某個專案時找不到人幫忙！這個時候可以建立『群組管理員』喔！
+		什麼是群組管理員呢？就是讓某個群組具有一個管理員，這個群組管理員可以管理哪些帳號可以加入/移出該群組！
+		那要如何『建立一個群組管理員』呢？就得要透過 gpasswd 囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 關於系統管理員(root)做的動作：</span>
+[root@www ~]# <span class="term_command">gpasswd groupname</span>
+[root@www ~]# <span class="term_command">gpasswd [-A user1,...] [-M user3,...] groupname</span>
+[root@www ~]# <span class="term_command">gpasswd [-rR] groupname</span>
+<span class="term_say">選項與參數：
+    ：若沒有任何參數時，表示給予 groupname 一個密碼(/etc/gshadow)
+-A  ：將 groupname 的主控權交由後面的使用者管理(該群組的管理員)
+-M  ：將某些帳號加入這個群組當中！
+-r  ：將 groupname 的密碼移除
+-R  ：讓 groupname 的密碼欄失效</span>
+
+<span class="term_hd"># 關於群組管理員(Group administrator)做的動作：</span>
+[someone@www ~]$ <span class="term_command">gpasswd [-ad] user groupname</span>
+<span class="term_say">選項與參數：
+-a  ：將某位使用者加入到 groupname 這個群組當中！
+-d  ：將某位使用者移除出 groupname 這個群組當中。</span>
+
+<span class="term_hd">範例一：建立一個新群組，名稱為 testgroup 且群組交由 vbird1 管理：</span>
+[root@www ~]# <span class="term_command">groupadd testgroup</span>  <span class="term_note">&lt;==先建立群組</span>
+[root@www ~]# <span class="term_command">gpasswd testgroup </span>  <span class="term_note">&lt;==給這個群組一個密碼吧！</span>
+Changing the password for group testgroup
+New Password:
+Re-enter new password:
+<span class="term_say"># 輸入兩次密碼就對了！</span>
+[root@www ~]# <span class="term_command">gpasswd -A vbird1 testgroup</span>  <span class="term_note">&lt;==加入群組管理員為 vbird1</span>
+[root@www ~]# <span class="term_command">grep testgroup /etc/group /etc/gshadow</span>
+/etc/group:testgroup:x:702:
+/etc/gshadow:testgroup:<span class="term_write">$1$I5ukIY1.$o5fmW.cOsc8.K.FHAFLWg0:vbird1</span>:
+<span class="term_say"># 很有趣吧！此時 vbird1 則擁有 testgroup 的主控權喔！身份有點像板主啦！</span>
+
+<span class="term_hd">範例二：以 vbird1 登入系統，並且讓他加入 vbird1, vbird3 成為 testgroup 成員</span>
+[vbird1@www ~]$ <span class="term_command">id</span>
+uid=504(vbird1) gid=505(vbird1) groups=505(vbird1) ....
+<span class="term_say"># 看得出來，vbird1 尚未加入 testgroup 群組喔！</span>
+
+[vbird1@www ~]$ <span class="term_command">gpasswd -a vbird1 testgroup</span>
+[vbird1@www ~]$ <span class="term_command">gpasswd -a vbird3 testgroup</span>
+[vbird1@www ~]$ <span class="term_command">grep testgroup /etc/group</span>
+testgroup:x:702:<span class="term_write">vbird1,vbird3</span>
+</pre></td></tr></table>
+
+		<p>很有趣的一個小實驗吧！我們可以讓 testgroup 成為一個可以公開的群組，然後建立起群組管理員，
+		群組管理員可以有多個。在這個案例中，我將 vbird1 設定為 testgroup 的群組管理員，所以 vbird1
+		就可以自行增加群組成員囉～呼呼！然後，該群組成員就能夠使用 <a href="#newgrp">newgrp</a> 囉～</p>
+	</div>
+
+	<hr /><a name="user_ex"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">帳號管理實例</span><br />
+	<div class="block2">
+		<p>帳號管理不是隨意建置幾個帳號就算了！有時候我們需要考量到一部主機上面可能有多個帳號在協同工作！
+		舉例來說，在大學任教時，我們學校的專題生是需要分組的，這些同一組的同學間必須要能夠互相修改對方的資料檔案，
+		但是同時這些同學又需要保留自己的私密資料，因此直接公開家目錄是不適宜的。那該如何是好？
+		為此，我們底下提供幾個例子來讓大家思考看看囉：</p>
+
+		<p>任務一：單純的完成上頭交代的任務，假設我們需要的帳號資料如下，你該如何實作？</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>帳號名稱</td><td>帳號全名</td><td>支援次要群組</td><td>是否可登入主機</td><td>密碼</td></tr>
+<tr><td>myuser1</td><td>1st user</td><td>mygroup1</td><td>可以</td><td>password</td></tr>
+<tr><td>myuser2</td><td>2nd user</td><td>mygroup1</td><td>可以</td><td>password</td></tr>
+<tr><td>myuser3</td><td>3rd user</td><td>無額外支援</td><td>不可以</td><td>password</td></tr>
+</table>
+
+		<p>處理的方法如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 先處理帳號相關屬性的資料：</span>
+[root@www ~]# <span class="term_command">groupadd mygroup1</span>
+[root@www ~]# <span class="term_command">useradd -G mygroup1 -c "1st user" myuser1</span>
+[root@www ~]# <span class="term_command">useradd -G mygroup1 -c "2nd user" myuser2</span>
+[root@www ~]# <span class="term_command">useradd -c "3rd user" -s /sbin/nologin myuser3</span>
+
+<span class="term_hd"># 再處理帳號的密碼相關屬性的資料：</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin myuser1</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin myuser2</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin myuser3</span>
+</pre></td></tr></table>
+
+		<p>要注意的地方主要有：myuser1 與 myuser2 都有支援次要群組，但該群組不見得會存在，因此需要先手動建立他！
+		然後 myuser3 是『不可登入系統』的帳號，因此需要使用 /sbin/nologin 這個 shell 來給予，這樣該帳號就無法登入囉！
+		這樣是否理解啊！接下來再來討論比較難一些的環境！如果是專題環境該如何製作？</p>
+
+		<p class="text_import2">任務二：我的使用者 pro1, pro2, pro3 
+		是同一個專案計畫的開發人員，我想要讓這三個用戶在同一個目錄底下工作，
+		但這三個用戶還是擁有自己的家目錄與基本的私有群組。假設我要讓這個專案計畫在 /srv/projecta 目錄下開發，
+		可以如何進行？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 假設這三個帳號都尚未建立，可先建立一個名為 projecta 的群組，
+#    再讓這三個用戶加入其次要群組的支援即可：</span>
+[root@www ~]# <span class="term_command">groupadd projecta</span>
+[root@www ~]# <span class="term_command">useradd -G projecta -c "projecta user" pro1</span>
+[root@www ~]# <span class="term_command">useradd -G projecta -c "projecta user" pro2</span>
+[root@www ~]# <span class="term_command">useradd -G projecta -c "projecta user" pro3</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin pro1</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin pro2</span>
+[root@www ~]# <span class="term_command">echo "password" | passwd --stdin pro3</span>
+
+<span class="term_hd"># 2. 開始建立此專案的開發目錄：</span>
+[root@www ~]# <span class="term_command">mkdir /srv/projecta</span>
+[root@www ~]# <span class="term_command">chgrp projecta /srv/projecta</span>
+[root@www ~]# <span class="term_command">chmod 2770 /srv/projecta</span>
+[root@www ~]# <span class="term_command">ll -d /srv/projecta</span>
+<span class="term_write">drwxrws---</span> 2 root projecta 4096 Feb 27 11:29 /srv/projecta
+</pre></td></tr></table>
+
+		<p>由於此專案計畫只能夠給 pro1, pro2, pro3 三個人使用，所以 /srv/projecta 的權限設定一定要正確才行！
+		所以該目錄群組一定是 projecta ，但是權限怎麼會是 2770 呢還記得<a 
+		href="/linux_basic/0220filemanager.php#sgid">第七章談到的 SGID</a> 吧？為了讓三個使用者能夠互相修改對方的檔案，
+		這個 SGID 是必須要存在的喔！如果連這裡都能夠理解，嘿嘿！您的帳號管理已經有一定程度的概念囉！ ^_^</p>
+
+		<p>但接下來有個困擾的問題發生了！假如任務一的 myuser1 是 projecta 這個專案的助理，他需要這個專案的內容，
+		但是他『不可以修改』專案目錄內的任何資料！那該如何是好？你或許可以這樣做：</p>
+
+		<ul>
+		<li>將 myuser1 加入 projecta 這個群組的支援，但是這樣會讓 myuser1 具有完整的 /srv/projecta 的使用權限，
+		myuser1 是可以刪除該目錄下的任何資料的！這樣是有問題的；</li>
+		<li>將 /srv/projecta 的權限改為 2775 ，讓 myuser1 可以進入查閱資料。但此時會發生所有其他人均可進入該目錄查閱的困擾！
+		這也不是我們要的環境。</li>
+		</ul>
+
+		<p>真要命！傳統的 Linux 權限無法針對某個個人設定專屬的權限嗎？其實是可以啦！接下來我們就來談談這個功能吧！</p>
+	</div>
+</div>
+
+
+<hr /><a name="acl_talk"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">主機的細部權限規劃：ACL 的使用</span><br />
+<div class="block1">
+	<p>從<a href="/linux_basic/0210filepermission.php">第六章</a>開始，我們就一直強調 Linux 的權限概念是非常重要的！
+	但是傳統的權限僅有三種身份 (owner, group, others) 搭配三種權限 (r,w,x) 
+	而已，並沒有辦法單純的針對某一個使用者或某一個群組來設定特定的權限需求，例如前一小節最後的那個任務！
+	此時就得要使用 ACL 這個機制啦！這玩意挺有趣的，底下我們就來談一談：<br /><br /></p>
+
+	<hr /><a name="acl_talk_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 ACL</span>
+	<div class="block2">
+		<p class="text_import2">ACL 是 Access Control List 的縮寫，主要的目的是在提供傳統的 
+		owner,group,others 的 read,write,execute 權限之外的細部權限設定。ACL 
+		可以針對單一使用者，單一檔案或目錄來進行 r,w,x 的權限規範，對於需要特殊權限的使用狀況非常有幫助。</p>
+
+		<p>那 ACL 主要可以針對哪些方面來控制權限呢？他主要可以針對幾個項目：</p>
+
+		<ul>
+		<li>使用者 (user)：可以針對使用者來設定權限；</li>
+		<li>群組 (group)：針對群組為對象來設定其權限；</li>
+		<li>預設屬性 (mask)：還可以針對在該目錄下在建立新檔案/目錄時，規範新資料的預設權限；</li>
+		</ul>
+
+		<p>好了，再來看看如何讓你的檔案系統可以支援 ACL 吧！</p>
+	</div>
+
+	<hr /><a name="acl_talk_how"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">如何啟動 ACL</span><br />
+	<div class="block2">
+		<p>由於 ACL 是傳統的 Unix-like 作業系統權限的額外支援項目，因此要使用 ACL 
+		必須要有檔案系統的支援才行。目前絕大部分的檔案系統都有支援 ACL 的功能，包括 ReiserFS, EXT2/EXT3, JFS, XFS 
+		等等。在我們的 CentOS 5.x 當中，預設使用 Ext3 是啟動 ACL 支援的！至於察看你的檔案系統是否支援 ACL 可以這樣看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount</span>  <span class="term_note">&lt;==直接查閱掛載參數的功能</span>
+/dev/hda2 on / type ext3 <span class="term_write">(rw)</span>
+/dev/hda3 on /home type ext3 (rw)
+<span class="term_say"># 其他項目鳥哥都將他省略了！假設我們只要看這兩個裝置。但沒有看到 acl 喔！</span>
+
+[root@www ~]# <span class="term_command">dumpe2fs -h /dev/hda2</span>  <span class="term_note">&lt;==由 superblock 內容去查詢</span>
+<span class="term_say">....(前面省略)....</span>
+Default mount options:    user_xattr <span class="term_write">acl</span>
+<span class="term_say">....(後面省略)....</span>
+</pre></td></tr></table>
+
+		<p>由 mount 單純去查閱不見得可以看到實際的項目，由於目前新的 distributions 常常會主動加入某些預設功能，
+		如上表所示，其實 CentOS 5.x 在預設的情況下 (Default mount options:) 就幫你加入 acl 的支援了！
+		那如果你的系統預設不會幫你加上 acl 的支援呢？那你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -o remount,acl /</span>
+[root@www ~]# <span class="term_command">mount</span>
+/dev/hda2 on / type ext3 <span class="term_write">(rw,acl)</span>
+<span class="term_say"># 這樣就加入了！但是如果想要每次開機都生效，那就這樣做：</span>
+
+[root@www ~]# <span class="term_command">vi /etc/fstab</span>
+LABEL=/1   /   ext3    defaults<span class="term_write">,acl</span>    1 1
+</pre></td></tr></table>
+
+		<p>如果你不確定或者是不會使用 dumpe2fs 觀察你的檔案系統，那麼建議直接將上述的 /etc/fstab 裡面的內容修改一下即可！</p>
+	</div>
+
+	<hr /><a name="acl_talk_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ACL 的設定技巧： getfacl, setfacl</span><br />
+	<div class="block2">
+		<p>好了，讓你的 filesystem 啟動 ACL 支援後，接下來該如何設定與觀察 ACL 呢？ 很簡單，利用這兩個指令就可以了：</p>
+		<ul>
+		<li>getfacl：取得某個檔案/目錄的 ACL 設定項目；</li>
+		<li>setfacl：設定某個目錄/檔案的 ACL 規範。</li>
+		</ul>
+		<p>先讓我們來瞧一瞧 setfacl 如何使用吧！<br /><br /></p>
+
+		<a name="setfacl"></a>
+		<hr /><ul class="list1"><li class="text_import1">setfacl 指令用法</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">setfacl [-bkRd] [{-m|-x} acl參數] 目標檔名</span>
+<span class="term_say">選項與參數：
+-m ：設定後續的 acl 參數給檔案使用，不可與 -x 合用；
+-x ：刪除後續的 acl 參數，不可與 -m 合用；
+-b ：移除所有的 ACL 設定參數；
+-k ：移除預設的 ACL 參數，關於所謂的『預設』參數於後續範例中介紹；
+-R ：遞迴設定 acl ，亦即包括次目錄都會被設定起來；
+-d ：設定『預設 acl 參數』的意思！只對目錄有效，在該目錄新建的資料會引用此預設值</span>
+</pre></td></tr></table>
+
+		<p>上面談到的是 acl 的選項功能，那麼如何設定 ACL 的特殊權限呢？特殊權限的設定方法有很多，
+		我們先來談談最常見的，就是針對單一使用者的設定方式：</p>
+
+<a name="acl_user"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 針對特定使用者的方式：</span>
+<span class="term_say"># 設定規範：『 u:[使用者帳號列表]:[rwx] 』，例如針對 vbird1 的權限規範 rx ：</span>
+[root@www ~]# <span class="term_command">touch acl_test1</span>
+[root@www ~]# <span class="term_command">ll acl_test1</span>
+-rw-r--r-- 1 root root 0 Feb 27 13:28 acl_test1
+[root@www ~]# <span class="term_command">setfacl -m u:vbird1:rx acl_test1</span>
+[root@www ~]# <span class="term_command">ll acl_test1</span>
+<span class="term_write">-rw-r-xr--+</span> 1 root root 0 Feb 27 13:28 acl_test1
+<span class="term_say"># 權限部分多了個 + ，且與原本的權限 (644) 看起來差異很大！但要如何查閱呢？</span>
+
+[root@www ~]# <span class="term_command">setfacl -m u::rwx acl_test1</span>
+[root@www ~]# <span class="term_command">ll acl_test1</span>
+-rwxr-xr--+ 1 root root 0 Feb 27 13:28 acl_test1
+<span class="term_say"># 無使用者列表，代表設定該檔案擁有者，所以上面顯示 root 的權限成為 rwx 了！</span>
+</pre></td></tr></table>
+
+		<p>上述動作為最簡單的 ACL 設定，利用『 u:使用者:權限 』的方式來設定的啦！設定前請加上 -m 這個選項。
+		如果一個檔案設定了 ACL 參數後，他的權限部分就會多出一個 + 號了！但是此時你看到的權限與實際權限可能就會有點誤差！
+		那要如何觀察呢？就透過 getfacl 吧！<br /><br /></p>
+
+		<a name="getfacl"></a>
+		<hr /><ul class="list1"><li class="text_import1">getfacl 指令用法</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">getfacl filename</span>
+<span class="term_say">選項與參數：
+getfacl 的選項幾乎與 setfacl 相同！所以鳥哥這裡就免去了選項的說明啊！</span>
+
+<span class="term_hd"># 請列出剛剛我們設定的 acl_test1 的權限內容：</span>
+[root@www ~]# <span class="term_command">getfacl acl_test1</span>
+# file: acl_test1   <span class="term_note">&lt;==說明檔名而已！</span>
+# owner: root       <span class="term_note">&lt;==說明此檔案的擁有者，亦即 ll 看到的第三使用者欄位</span>
+# group: root       <span class="term_note">&lt;==此檔案的所屬群組，亦即 ll 看到的第四群組欄位</span>
+user::rwx           <span class="term_note">&lt;==使用者列表欄是空的，代表檔案擁有者的權限</span>
+<span class="term_write">user:vbird1:r-x</span>     <span class="term_note">&lt;==針對 vbird1 的權限設定為 rx ，與擁有者並不同！</span>
+group::r--          <span class="term_note">&lt;==針對檔案群組的權限設定僅有 r </span>
+mask::r-x           <span class="term_note">&lt;==此檔案預設的有效權限 (mask)</span>
+other::r--          <span class="term_note">&lt;==其他人擁有的權限囉！</span>
+</pre></td></tr></table>
+
+		<p>上面的資料非常容易查閱吧？顯示的資料前面加上 # 的，代表這個檔案的預設屬性，包括檔名、檔案擁有者與檔案所屬群組。
+		底下出現的 user, group, mask, other 則是屬於不同使用者、群組與有效權限(mask)的設定值。
+		以上面的結果來看，我們剛剛設定的 vbird1 對於這個檔案具有 r 與 x 的權限啦！這樣看的懂嗎？
+		如果看的懂的話，接下來讓我們在測試其他類型的 setfacl 設定吧！</p>
+
+<a name="acl_group"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 2. 針對特定群組的方式：</span>
+<span class="term_say"># 設定規範：『 g:[群組列表]:[rwx] 』，例如針對 mygroup1 的權限規範 rx ：</span>
+[root@www ~]# <span class="term_command">setfacl -m g:mygroup1:rx acl_test1</span>
+[root@www ~]# <span class="term_command">getfacl acl_test1</span>
+# file: acl_test1
+# owner: root
+# group: root
+user::rwx
+user:vbird1:r-x
+group::r--
+<span class="term_write">group:mygroup1:r-x</span>  <span class="term_note">&lt;==這裡就是新增的部分！多了這個群組的權限設定！</span>
+mask::r-x
+other::r--
+</pre></td></tr></table>
+
+		<a name="acl_mask"></a>
+		<p>基本上，群組與使用者的設定並沒有什麼太大的差異啦！如上表所示，非常容易瞭解意義。不過，你應該會覺得奇怪的是，
+		那個 mask 是什麼東西啊？其實他有點像是『有效權限』的意思！他的意義是：<span class="text_import2">
+		使用者或群組所設定的權限必須要存在於 mask 的權限設定範圍內才會生效，此即『有效權限 (effective permission)』</span>
+		我們舉個例子來看，如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 3. 針對有效權限 mask 的設定方式：</span>
+<span class="term_say"># 設定規範：『 m:[rwx] 』，例如針對剛剛的檔案規範為僅有 r ：</span>
+[root@www ~]# <span class="term_command">setfacl -m m:r acl_test1</span>
+[root@www ~]# <span class="term_command">getfacl acl_test1</span>
+# file: acl_test1
+# owner: root
+# group: root
+user::rwx
+<span class="term_write">user:vbird1:r-x        #effective:r--</span> <span class="term_note">&lt;==vbird1+mask均存在者，僅有 r 而已！</span>
+group::r--
+<span class="term_write">group:mygroup1:r-x     #effective:r--
+mask::r--</span>
+other::r--
+</pre></td></tr></table>
+
+		<p>您瞧，vbird1 與 mask 的集合發現僅有 r 存在，因此 vbird1 僅具有 r 的權限而已，並不存在 x 權限！這就是 mask 
+		的功能了！我們可以透過使用 mask 來規範最大允許的權限，就能夠避免不小心開放某些權限給其他使用者或群組了。
+		不過，通常鳥哥都是將 mask 設定為 rwx 啦！然後再分別依據不同的使用者/群組去規範她們的權限就是了。</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+將前一小節任務二中 /srv/projecta 這個目錄，讓 myuser1 可以進入查閱，但 myuser1 不具有修改的權力。
+</div>
+答：<div class="block2">
+由於 myuser1 是獨立的使用者與群組，而 /srv 是附屬於 / 之下的，因此 /srv 已經具有 acl 的功能。
+透過如下的設定即可搞定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先測試看看，使用 myuser1 能否進入該目錄？</span>
+[myuser1@www ~]$ <span class="term_command">cd /srv/projecta</span>
+-bash: cd: /srv/projecta: Permission denied  <span class="term_note">&lt;==確實不可進入！</span>
+
+<span class="term_hd"># 2. 開始用 root 的身份來設定一下該目錄的權限吧！</span>
+[root@www ~]# <span class="term_command">setfacl -m u:myuser1:rx /srv/projecta</span>
+[root@www ~]# <span class="term_command">getfacl /srv/projecta</span>
+# file: srv/projecta
+# owner: root
+# group: projecta
+user::rwx
+<span class="term_write">user:myuser1:r-x</span>  <span class="term_note">&lt;==還是要看看有沒有設定成功喔！</span>
+group::rwx
+mask::rwx
+other::---
+
+<span class="term_hd"># 3. 還是得要使用 myuser1 去測試看看結果！</span>
+[myuser1@www ~]$ <span class="term_command">cd /srv/projecta</span>
+[myuser1@www projecta]$ <span class="term_command">ll -a</span>
+drwxrws---+ 2 root projecta 4096 Feb 27 11:29 .  <span class="term_note">&lt;==確實可以查詢檔名</span>
+drwxr-xr-x  4 root root     4096 Feb 27 11:29 ..
+
+[myuser1@www projecta]$ <span class="term_command">touch testing</span>
+touch: cannot touch `testing': Permission denied <span class="term_note">&lt;==確實不可以寫入！</span>
+</pre></td></tr></table>
+請注意，上述的 1, 3 步驟使用 myuser1 的身份，2步驟才是使用 root 去設定的！
+</div>
+</td></tr></table><br />
+
+		<p>上面的設定我們就完成了之前任務二的後續需求喔！這麼簡單呢！接下來讓我們來測試一下，如果我用 root 
+		或者是 pro1 的身份去 /srv/projecta 增加檔案或目錄時，該檔案或目錄是否能夠具有 ACL 的設定？
+		意思就是說，<span class="text_import2">ACL 的權限設定是否能夠被次目錄所『繼承？』</span>先試看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cd /srv/projecta</span>
+[root@www ~]# <span class="term_command">touch abc1</span>
+[root@www ~]# <span class="term_command">mkdir abc2</span>
+[root@www ~]# <span class="term_command">ll -d abc*</span>
+-rw-r--r-- 1 root projecta    0 Feb 27 14:37 abc1
+drwxr-sr-x 2 root projecta 4096 Feb 27 14:37 abc2
+</pre></td></tr></table>
+
+		<p>你可以明顯的發現，權限後面都沒有 + ，代表這個 acl 屬性並沒有繼承喔！如果你想要讓 acl 
+		在目錄底下的資料都有繼承的功能，那就得如下這樣做了！</p>
+
+<a name="acl_default"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 4. 針對預設權限的設定方式：</span>
+<span class="term_say"># 設定規範：『 d:[ug]:使用者列表:[rwx] 』</span>
+
+<span class="term_hd"># 讓 myuser1 在 /srv/projecta 底下一直具有 rx 的預設權限！</span>
+[root@www ~]# <span class="term_command">setfacl -m d:u:myuser1:rx /srv/projecta</span>
+[root@www ~]# <span class="term_command">getfacl /srv/projecta</span>
+# file: srv/projecta
+# owner: root
+# group: projecta
+user::rwx
+user:myuser1:r-x
+group::rwx
+mask::rwx
+other::---
+default:user::rwx
+<span class="term_write">default:user:myuser1:r-x</span>
+default:group::rwx
+default:mask::rwx
+default:other::---
+
+[root@www ~]# <span class="term_command">cd /srv/projecta</span>
+[root@www projecta]# <span class="term_command">touch zzz1</span>
+[root@www projecta]# <span class="term_command">mkdir zzz2</span>
+[root@www projecta]# <span class="term_command">ll -d zzz*</span>
+<span class="term_write">-rw-rw----+</span> 1 root projecta    0 Feb 27 14:57 zzz1
+<span class="term_write">drwxrws---+</span> 2 root projecta 4096 Feb 27 14:57 zzz2
+<span class="term_say"># 看吧！確實有繼承喔！然後我們使用 getfacl 再次確認看看！</span>
+
+[root@www projecta]# <span class="term_command">getfacl zzz2</span>
+# file: zzz2
+# owner: root
+# group: projecta
+user::rwx
+user:myuser1:r-x
+group::rwx
+mask::rwx
+other::---
+default:user::rwx
+default:user:myuser1:r-x
+default:group::rwx
+default:mask::rwx
+default:other::---
+</pre></td></tr></table>
+
+		<p>透過這個『針對目錄來設定的預設 ACL 權限設定值』的項目，我們可以讓這些屬性繼承到次目錄底下呢！
+		非常方便啊！那如果想要讓 ACL 的屬性全部消失又要如何處理？透過『 setfacl -b 檔名 』即可啦！
+		太簡單了！鳥哥就不另外介紹了！請自行測試測試吧！</p>
+	</div>
+</div>
+
+
+<hr /><a name="userswitch"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">使用者身份切換</span><br />
+<div class="block1">
+	<p>什麼？在 Linux 系統當中還要作身份的變換？這是為啥？可能有底下幾個原因啦！</p>
+
+	<ul>
+	<li><span class="text_import1">使用一般帳號：系統平日操作的好習慣</span><br />
+	事實上，為了安全的緣故，一些老人家都會建議你，盡量以一般身份使用者來操作 Linux 的日常作業！等到需要設定系統環境時，
+	才變換身份成為 root 來進行系統管理，相對比較安全啦！避免作錯一些嚴重的指令，例如恐怖的『 
+	rm -rf / 』(千萬作不得！)<br /><br /></li>
+
+	<li><span class="text_import1">用較低權限啟動系統服務</span><br />
+	相對於系統安全，有的時候，我們必須要以某些系統帳號來進行程序的執行。
+	舉例來說， Linux 主機上面的一套軟體，名稱為 apache ，我們可以額外建立一個名為 apache 
+	的使用者來啟動 apache 軟體啊，如此一來，如果這個程序被攻破，至少系統還不至於就損毀了～<br /><br /></li>
+
+	<li><span class="text_import1">軟體本身的限制</span><br />
+	在遠古時代的 <a href="/linux_server/0310telnetssh.php#telnet">telnet</a> 
+	程式中，該程式預設是不許使用 root 的身份登入的，telnet 會判斷登入者的 UID，
+	若 UID 為 0 的話，那就直接拒絕登入了。所以，你只能使用一般使用者來登入 Linux 伺服器。
+	此外， <a href="/linux_server/0310telnetssh.php#ssh">ssh</a> (<a href="#ps3">註3</a>)
+	也可以設定拒絕 root 登入喔！那如果你有系統設定需求該如何是好啊？就變換身份啊！</li>
+	</ul>
+
+	<p>由於上述考量，所以我們都是使用一般帳號登入系統的，等有需要進行系統維護或軟體更新時才轉為 root 的身份來動作。
+	那如何讓一般使用者轉變身份成為 root 呢？主要有兩種方式喔：</p>
+
+	<ul>
+	<li>以『 su - 』直接將身份變成 root 即可，但是<span class="text_import2">這個指令卻需要 root 
+		的密碼</span>，也就是說，如果你要以 
+		su 變成 root 的話，你的一般使用者就必須要有 root 的密碼才行；<br /><br /></li>
+	<li>以『 sudo 指令 』執行 root 的指令串，由於 sudo  需要事先設定妥當，且 sudo 需要輸入使用者自己的密碼，
+		因此多人共管同一部主機時， sudo 要比 su 來的好喔！至少 root 密碼不會流出去！</li>
+	</ul>
+
+	<p>底下我們就來說一說 su 跟 sudo 的用法啦！<br /><br /></p>
+
+	<hr /><a name="su"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">su</span><br />
+	<div class="block2">
+		<p>su 是最簡單的身份切換指令了，他可以進行任何身份的切換唷！方法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">su [-lm] [-c 指令] [username]</span>
+<span class="term_say">選項與參數：
+-   ：單純使用 - 如『 su - 』代表使用 login-shell 的變數檔案讀取方式來登入系統；
+      若使用者名稱沒有加上去，則代表切換為 root 的身份。
+-l  ：與 - 類似，但後面需要加欲切換的使用者帳號！也是 login-shell 的方式。
+-m  ：-m 與 -p 是一樣的，表示『使用目前的環境設定，而不讀取新使用者的設定檔』
+-c  ：僅進行一次指令，所以 -c 後面可以加上指令喔！</span>
+</pre></td></tr></table>
+
+		<p>上表的解釋當中有出現之前<a href="/linux_basic/0320bash.php">第十一章</a>談過的 <a
+		href="/linux_basic/0320bash.php#settings_bashrc_shell">login-shell</a> 設定檔讀取方式，如果你忘記那是啥東西，
+		請先回去第十一章瞧瞧再回來吧！這個 su 的用法當中，有沒有加上那個減號『 - 』差很多喔！
+		因為涉及 login-shell 與 non-login shell 的變數讀取方法。這裡讓我們以一個小例子來說明吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：假設你原本是 vbird1 的身份，想要使用 non-login shell 的方式變成 root</span>
+[<u>vbird1</u>@www ~]$ <span class="term_command">su</span>       <span class="term_note">&lt;==注意提示字元，是 vbird1 的身份喔！</span>
+Password:                <span class="term_note">&lt;==這裡輸入 root 的密碼喔！</span>
+[root@www <u>vbird1</u>]# <span class="term_command">id</span>    <span class="term_note">&lt;==提示字元的目錄是 vbird1 喔！</span>
+<u>uid=0(root) gid=0(root)</u> groups=0(root),1(bin),...   <span class="term_note">&lt;==確實是 root 的身份！</span>
+[root@www vbird1]# <span class="term_command">env | grep 'vbird1'</span>
+USER=vbird1
+PATH=/usr/local/bin:/bin:/usr/bin:/home/vbird1/bin  <span class="term_note">&lt;==這個影響最大！</span>
+MAIL=/var/spool/mail/vbird1                         <span class="term_note">&lt;==收到的 mailbox 是 vbird1</span>
+PWD=/home/vbird1                                    <span class="term_note">&lt;==並非 root 的家目錄</span>
+LOGNAME=vbird1
+<span class="term_say"># 雖然你的 UID 已經是具有 root 的身份，但是看到上面的輸出訊息嗎？
+# 還是有一堆變數為原本 vbird1 的身份，所以很多資料還是無法直接利用。</span>
+[root@www vbird1]# <span class="term_command">exit</span>   <span class="term_note">&lt;==這樣可以離開 su 的環境！</span>
+</pre></td></tr></table>
+
+		<p>單純使用『 su 』切換成為 root 的身份，<span 
+		class="text_import2">讀取的變數設定方式為 non-login shell 的方式，這種方式很多原本的變數不會被改變</span>，
+		尤其是我們之前談過很多次的 PATH 這個變數，由於沒有改變成為 root 的環境 (一堆 /sbin, /usr/sbin 等目錄都沒有被包含進來)，
+		因此很多 root 慣用的指令就只能使用絕對路徑來執行咯。其他的還有 MAIL 這個變數，你輸入 mail 時，
+		收到的郵件竟然還是 vbird1 的，而不是 root 本身的郵件！是否覺得很奇怪啊！所以切換身份時，請務必使用如下的範例二：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：使用 login shell 的方式切換為 root 的身份並觀察變數</span>
+[vbird1@www ~]$ <span class="term_command">su -</span>
+Password:   <span class="term_note">&lt;==這裡輸入 root 的密碼喔！</span>
+[root@www ~]# <span class="term_command">env | grep root</span>
+USER=root
+MAIL=/var/spool/mail/root
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+PWD=/root
+HOME=/root
+LOGNAME=root
+<span class="term_say"># 瞭解差異了吧？下次變換成為 root 時，記得最好使用 su - 喔！</span>
+[root@www ~]# <span class="term_command">exit</span>   <span class="term_note">&lt;==這樣可以離開 su 的環境！</span>
+</pre></td></tr></table>
+
+		<p>上述的作法是讓使用者的身份變成 root 並開始操作系統，如果想要離開 root 的身份則得要利用 exit 離開才行。
+		那我如果只是想要執行『一個只有 root 才能進行的指令，且執行完畢就恢復原本的身份』呢？那就可以加上 -c 這個選項囉！
+		請參考底下範例三！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：vbird1 想要執行『 head -n 3 /etc/shadow 』一次，且已知 root 密碼</span>
+[vbird1@www ~]$ <span class="term_command">head -n 3 /etc/shadow</span>
+head: cannot open `/etc/shadow' for reading: Permission denied
+[vbird1@www ~]$ <span class="term_command">su - -c "head -n 3 /etc/shadow"</span>
+Password: <span class="term_note">&lt;==這裡輸入 root 的密碼喔！</span>
+root:$1$/30QpEWEBEZXRD0bh6rAABCEQD.BAH0:14126:0:99999:7:::
+bin:*:14126:0:99999:7:::
+daemon:*:14126:0:99999:7:::
+[vbird1@www ~]$ <span class="term_note">&lt;==注意看，身份還是 vbird1 喔！繼續使用舊的身份進行系統操作！</span>
+</pre></td></tr></table>
+
+		<p>由於 /etc/shadow 權限的關係，該檔案僅有 root 可以查閱。為了查閱該檔案，所以我們必須要使用 root 的身份工作。
+		但我只想要進行一次該指令而已，此時就使用類似上面的語法吧！好，那接下來，如果我是 root 或者是其他人，
+		想要變更成為某些特殊帳號，可以使用如下的方法來切換喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例四：原本是 vbird1 這個使用者，想要變換身份成為 dmtsai 時？</span>
+[vbird1@www ~]$ <span class="term_command">su -l dmtsai</span>
+Password: <span class="term_note">&lt;==這裡輸入 dmtsai 的密碼喔！</span>
+[<u>dmtsai</u>@www ~]$ <span class="term_command">su -</span>
+Password: <span class="term_note">&lt;==這裡輸入 root 的密碼喔！</span>
+[<u>root</u>@www ~]# <span class="term_command">id sshd</span>
+uid=74(sshd) gid=74(sshd) groups=74(sshd) ... <span class="term_note">&lt;==確實有存在此人</span>
+[root@www ~]# <span class="term_command">su -l sshd</span>
+This account is currently not available.      <span class="term_note">&lt;==竟然說此人無法切換？</span>
+[root@www ~]# <span class="term_command">finger sshd</span>
+Login: sshd                             Name: Privilege-separated SSH
+Directory: /var/empty/sshd              Shell: <span class="term_write">/sbin/nologin</span>
+[root@www ~]# <span class="term_command">exit</span>    <span class="term_note">&lt;==離開第二次的 su </span>
+[dmtsai@www ~]$ <span class="term_command">exit</span>  <span class="term_note">&lt;==離開第一次的 su </span>
+[vbird1@www ~]$ <span class="term_command">exit</span>  <span class="term_note">&lt;==這才是最初的環境！ </span>
+</pre></td></tr></table>
+
+		<p>su 就這樣簡單的介紹完畢，總結一下他的用法是這樣的：</p>
+
+		<ul>
+		<li>若要完整的切換到新使用者的環境，必須要使用『 su - username 』或『 su -l username 』，
+		才會連同 PATH/USER/MAIL 等變數都轉成新使用者的環境；<br /><br /></li>
+		<li>如果僅想要執行一次 root 的指令，可以利用『 su - -c "指令串" 』的方式來處理；<br /><br /></li>
+		<li>使用 root 切換成為任何使用者時，並不需要輸入新使用者的密碼；</li>
+		</ul>
+
+		<p>雖然使用 su 很方便啦，不過缺點是，<span class="text_import2">當我的主機是多人共管的環境時，如果大家都要使用 
+		su 來切換成為 root 的身份，那麼不就每個人都得要知道 root 的密碼</span>，這樣密碼太多人知道可能會流出去，
+		很不妥當呢！怎辦？透過 sudo 來處理即可！</p>
+	</div>
+
+	<hr /><a name="sudo"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">sudo</span><br />
+	<div class="block2">
+		<p>相對於 su 需要瞭解新切換的使用者密碼 (常常是需要 root 的密碼)， sudo 的執行則僅需要自己的密碼即可！
+		甚至可以設定不需要密碼即可執行 sudo 呢！由於 sudo 可以讓你以其他用戶的身份執行指令
+		(通常是使用 root 的身份來執行指令)，因此<span class="text_import2">並非所有人都能夠執行 sudo ，
+		而是僅有規範到 /etc/sudoers 內的用戶才能夠執行 sudo 這個指令</span>喔！說的這麼神奇，底下就來瞧瞧那 sudo 
+		如何使用？<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">sudo 的指令用法</li></ul>
+
+		<p>由於<span class="text_import2">一開始系統預設僅有 root 可以執行 sudo</span> ，因此底下的範例我們先以 root 
+		的身份來執行，等到談到 visudo 時，再以一般使用者來討論其他 sudo 的用法吧！ sudo 的語法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sudo [-b] [-u 新使用者帳號]</span>
+<span class="term_say">選項與參數：
+-b  ：將後續的指令放到背景中讓系統自行執行，而不與目前的 shell 產生影響
+-u  ：後面可以接欲切換的使用者，若無此項則代表切換身份為 root 。</span>
+
+<span class="term_hd">範例一：你想要以 sshd 的身份在 /tmp 底下建立一個名為 mysshd 的檔案</span>
+[root@www ~]# <span class="term_command">sudo -u sshd touch /tmp/mysshd</span>
+[root@www ~]# <span class="term_command">ll /tmp/mysshd</span>
+-rw-r--r-- 1 <span class="term_write">sshd sshd</span> 0 Feb 28 17:42 /tmp/mysshd
+<span class="term_say"># 特別留意，這個檔案的權限是由 sshd 所建立的情況喔！</span>
+
+<span class="term_hd">範例二：你想要以 vbird1 的身份建立 ~vbird/www 並於其中建立 index.html 檔案</span>
+[root@www ~]# <span class="term_command">sudo -u vbird1 sh -c <u>"mkdir ~vbird1/www; cd ~vbird1/www; \</u></span>
+&gt;  <span class="term_command"><u>echo 'This is index.html file' &gt; index.html"</u></span>
+[root@www ~]# <span class="term_command">ll -a ~vbird1/www</span>
+drwxr-xr-x 2 vbird1 vbird1 4096 Feb 28 17:51 .
+drwx------ 5 vbird1 vbird1 4096 Feb 28 17:51 ..
+-rw-r--r-- 1 vbird1 vbird1   24 Feb 28 17:51 index.html
+<span class="term_say"># 要注意，建立者的身份是 vbird1 ，且我們使用 sh -c "一串指令" 來執行的！</span>
+</pre></td></tr></table>
+
+		<p>sudo 可以讓你切換身份來進行某項任務，例如上面的兩個範例。範例一中，我們的 root 使用 sshd 的權限去進行某項任務！
+		要注意，因為我們無法使用『 su - sshd 』去切換系統帳號 (因為系統帳號的 shell 是 /sbin/nologin)，
+		這個時候 sudo 真是他 X 的好用了！立刻以 sshd 的權限在 /tmp 底下建立檔案！查閱一下檔案權限你就瞭解意義啦！
+		至於範例二則更使用多重指令串 (透過分號 ; 來延續指令進行)，使用 sh -c 的方法來執行一連串的指令，
+		如此真是好方便！</p>
+
+		<p>但是 sudo 預設僅有 root 能使用啊！為什麼呢？因為 sudo 的執行是這樣的流程：</p>
+
+		<ol class="text_import2">
+		<li>當使用者執行 sudo 時，系統於 /etc/sudoers 檔案中搜尋該使用者是否有執行 sudo 的權限；</li>
+		<li>若使用者具有可執行 sudo 的權限後，便讓使用者『輸入使用者自己的密碼』來確認；</li>
+		<li>若密碼輸入成功，便開始進行 sudo 後續接的指令(但 root 執行 sudo 時，不需要輸入密碼)；</li>
+		<li>若欲切換的身份與執行者身份相同，那也不需要輸入密碼。</li></ol>
+
+		<p>所以說，sudo 執行的重點是：『<span class="text_import2">能否使用 sudo 必須要看 /etc/sudoers 的設定值，
+		而可使用 sudo 者是透過輸入使用者自己的密碼來執行後續的指令串</span>』喔！由於能否使用與 /etc/sudoers 有關，
+		所以我們當然要去編輯 sudoers 檔案啦！不過，因為該檔案的內容是有一定的規範的，因此直接使用 vi 去編輯是不好的。
+		此時，我們得要透過 visudo 去修改這個檔案喔！<br /><br /></p>
+
+		<a name="visudo"></a>
+		<hr /><ul class="list1"><li class="text_import1">visudo 與 /etc/sudoers</li></ul>
+
+		<p>從上面的說明我們可以知道，<span class="text_import2">除了 root 之外的其他帳號，若想要使用 sudo
+		執行屬於 root 的權限指令，則 root 需要先使用 visudo 去修改 /etc/sudoers ，讓該帳號能夠使用全部或部分的
+		root 指令功能</span>。為什麼要使用 visudo 呢？這是因為 /etc/sudoers 
+		是有設定語法的，如果設定錯誤那會造成無法使用 sudo 指令的不良後果。因此才會使用 visudo 去修改，
+		並在結束離開修改畫面時，系統會去檢驗 /etc/sudoers 的語法就是了。</p>
+
+		<p>一般來說，visudo 的設定方式有幾種簡單的方法喔，底下我們以幾個簡單的例子來分別說明：</p>
+
+		<ol type="I">
+		<li><a name="sudo-1"></a><span class="text_import1">單一使用者可進行 root 所有指令，與 sudoers 
+		檔案語法：</span><br /><br />
+		假如我們要讓 vbird1 這個帳號可以使用 root 的任何指令，那麼可以簡單的這樣進行修改即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>
+<span class="term_say">....(前面省略)....</span>
+root    ALL=(ALL)       ALL  <span class="term_note">&lt;==找到這一行，大約在 76 行左右</span>
+<span class="term_write">vbird1  ALL=(ALL)       ALL  </span><span class="term_note">&lt;==這一行是你要新增的！</span>
+<span class="term_say">....(前面省略)....</span>
+</pre></td></tr></table>
+		有趣吧！其實 visudo 只是利用 vi 將 /etc/sudoers 檔案呼叫出來進行修改而已，所以這個檔案就是 /etc/sudoerds 啦！
+		這個檔案的設定其實很簡單，如上面所示，如果你找到 76 行 (有 root 設定的那行) 左右，看到的資料就是：<br />
+<table class="term"><tr><td class="term"><pre>
+使用者帳號  登入者的來源主機名稱=(可切換的身份)  可下達的指令
+root                         ALL=(ALL)           ALL   <span class="term_note">&lt;==這是預設值</span>
+</pre></td></tr></table>
+		上面這一行的四個元件意義是：<br /><br />
+		<ol>
+		<li>系統的哪個帳號可以使用 sudo 這個指令的意思，預設為 root 這個帳號；</li>
+		<li>當這個帳號由哪部主機連線到本 Linux 主機，意思是這個帳號可能是由哪一部網路主機連線過來的，
+			這個設定值可以指定用戶端電腦(信任用戶的意思)。預設值 root 可來自任何一部網路主機</li>
+		<li>這個帳號可以切換成什麼身份來下達後續的指令，預設 root 可以切換成任何人；</li>
+		<li>可用該身份下達什麼指令？<span class="text_import2">這個指令請務必使用絕對路徑撰寫</span>。
+			預設 root 可以切換任何身份且進行任何指令之意。</li>
+		</ol><br />
+
+		那個 ALL 是特殊的關鍵字，代表任何身份、主機或指令的意思。所以，我想讓 vbird1 可以進行任何身份的任何指令，
+		就如同上表特殊字體寫的那樣，其實就是複製上述預設值那一行，再將 root 改成 vbird1 即可啊！
+		此時『vbird1 不論來自哪部主機登入，他可以變換身份成為任何人，且可以進行系統上面的任何指令』之意。
+		修改完請儲存後離開 vi，並以 vbird1 登入系統後，進行如下的測試看看：<br />
+<table class="term"><tr><td class="term"><pre>
+[vbird1@www ~]$ <span class="term_command">tail -n 1 /etc/shadow</span>  <span class="term_note">&lt;==注意！身份是 vbird1</span>
+tail: cannot open `/etc/shadow' for reading: Permission denied
+<span class="term_say"># 因為不是 root 嘛！所以當然不能查詢 /etc/shadow</span>
+
+[vbird1@www ~]$ <span class="term_command">sudo tail -n 1 /etc/shadow</span> <span class="term_note">&lt;==透過 sudo</span>
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.  <span class="term_note">&lt;==這裡僅是一些說明與警示項目</span>
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+Password: <span class="term_note">&lt;==注意啊！這裡輸入的是『 <u>vbird1 自己的密碼</u> 』</span>
+pro3:$1$GfinyJgZ$9J8IdrBXXMwZIauANg7tW0:14302:0:99999:7::: 
+<span class="term_say"># 看！vbird1 竟然可以查詢 shadow ！</span>
+</pre></td></tr></table>
+
+		注意到了吧！vbird1 輸入自己的密碼就能夠執行 root 的指令！所以，系統管理員當然要瞭解 vbird1 這個用戶的『<span 
+		class="text_import2">操守</span>』才行！否則隨便設定一個使用者，他惡搞系統怎辦？另外，一個一個設定太麻煩了，
+		能不能使用群組的方式來設定呢？參考底下的方式吧。<br /><br /></li>
+
+		<li><a name="sudo-2"></a><span class="text_import1">利用群組以及免密碼的功能處理 visudo</span><br /><br />
+
+		我們在本章前面曾經建立過 pro1, pro2, pro3 ，這三個用戶能否透過群組的功能讓這三個人可以管理系統？
+		可以的，而且很簡單！同樣我們使用實際案例來說明：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>  <span class="term_note">&lt;==同樣的，請使用 root 先設定</span>
+<span class="term_say">....(前面省略)....</span>
+<span class="term_write">%wheel     ALL=(ALL)    ALL</span> <span class="term_note">&lt;==大約在 84 行左右，請將這行的 # 拿掉！</span>
+<span class="term_say"># 在最左邊加上 % ，代表後面接的是一個『群組』之意！改完請儲存後離開</span>
+
+[root@www ~]# <span class="term_command">usermod -a -G wheel pro1</span> <span class="term_note">&lt;==將 pro1 加入 wheel 的支援</span>
+</pre></td></tr></table>
+
+		上面的設定值會造成『任何加入 wheel 這個群組的使用者，就能夠使用 sudo 切換任何身份來操作任何指令』的意思。
+		你當然可以將 wheel 換成你自己想要的群組名。接下來，請分別切換身份成為 pro1 及 pro2 試看看 sudo 的運作。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[pro1@www ~]$ <span class="term_command">sudo tail -n 1 /etc/shadow</span> <span class="term_note">&lt;==注意身份是 pro1</span>
+<span class="term_say">....(前面省略)....</span>
+Password:  <span class="term_note">&lt;==輸入 pro1 的密碼喔！</span>
+pro3:$1$GfinyJgZ$9J8IdrBXXMwZIauANg7tW0:14302:0:99999:7:::
+
+[pro2@www ~]$ <span class="term_command">sudo tail -n 1 /etc/shadow</span> <span class="term_note">&lt;==注意身份是 pro2</span>
+Password:
+pro2 is not in the sudoers file.  This incident will be reported.
+<span class="term_say"># 仔細看錯誤訊息他是說這個 pro2 不在 /etc/sudoers 的設定中！</span>
+</pre></td></tr></table>
+
+		這樣理解群組了吧？如果你想要讓 pro3 也支援這個 sudo 的話，不需要重新使用 visudo ，只要利用 <a
+		href="#usermod">usermod</a> 去修改 pro3 的群組支援，讓 wheel 也支援 pro3 的話，那他就能夠進行 sudo 囉！
+		簡單吧！不過，既然我們都信任這些 sudo 的用戶了，能否提供『不需要密碼即可使用 sudo 』呢？
+		就透過如下的方式：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>  <span class="term_note">&lt;==同樣的，請使用 root 先設定</span>
+<span class="term_say">....(前面省略)....</span>
+<span class="term_write">%wheel     ALL=(ALL)   NOPASSWD: ALL</span> <span class="term_note">&lt;==大約在 87 行左右，請將 # 拿掉！</span>
+<span class="term_say"># 在最左邊加上 % ，代表後面接的是一個『群組』之意！改完請儲存後離開</span>
+</pre></td></tr></table>
+
+		重點是那個 NOPASSWD 啦！該關鍵字是免除密碼輸入的意思喔！<br /><br /></li>
+
+		<li><a name="sudo-3"></a><span class="text_import1">有限制的指令操作：</span><br /><br />
+
+		上面兩點都會讓使用者能夠利用 root 的身份進行任何事情！這樣總是不太好～如果我想要讓使用者僅能夠進行部分系統任務，
+		比方說，系統上面的 myuser1 僅能夠幫 root 修改其他使用者的密碼時，亦即『當使用者僅能使用 passwd 
+		這個指令幫忙 root 修改其他用戶的密碼』時，你該如何撰寫呢？可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>  <span class="term_note">&lt;==注意是 root 身份</span>
+<span class="term_write">myuser1	ALL=(root)  /usr/bin/passwd</span>  <span class="term_note">&lt;==最後指令務必用絕對路徑</span>
+</pre></td></tr></table>
+
+		上面的設定值指的是『myuser1 可以切換成為 root 使用 passwd 這個指令』的意思。其中要注意的是：
+		<span class="text_import2">指令欄位必須要填寫絕對路徑</span>才行！否則 visudo 會出現語法錯誤的狀況發生！
+		此外，上面的設定是有問題的！我們使用底下的指令操作來讓您瞭解：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[myuser1@www ~]$ <span class="term_command">sudo passwd myuser3</span>  <span class="term_note">&lt;==注意，身份是 myuser1</span>
+Password:  <span class="term_note">&lt;==輸入 myuser1 的密碼</span>
+Changing password for user myuser3. <span class="term_note">&lt;==底下改的是 myuser3 的密碼喔！這樣是正確的</span>
+New UNIX password:
+Retype new UNIX password:
+passwd: all authentication tokens updated successfully.
+
+[myuser1@www ~]$ <span class="term_command">sudo passwd</span>
+Changing password for user root.  <span class="term_note">&lt;==見鬼！怎麼會去改 root 的密碼？</span>
+</pre></td></tr></table>
+
+		恐怖啊！我們竟然讓 root 的密碼被 myuser3 給改變了！下次 root 回來竟無法登入系統...欲哭無淚～怎辦？
+		所以我們必須要限制使用者的指令參數！修改的方法為將上述的那行改一改先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>  <span class="term_note">&lt;==注意是 root 身份</span>
+<span class="term_write">myuser1	ALL=(root)  !/usr/bin/passwd, /usr/bin/passwd [A-Za-z]*, \
+                    !/usr/bin/passwd root</span>
+</pre></td></tr></table>
+
+		由於螢幕一行寫不完，我將這行寫成兩行，所以上面第一行最後加上反斜線囉。加上驚嘆號『 ! 』代表『不可執行』的意思。
+		因此上面這一行會變成：可以執行『 passwd 任意字元』，但是『 passwd 』與『 passwd root 』這兩個指令例外！
+		如此一來 myuser1 就無法改變 root 的密碼了！這樣這位使用者可以具有 root 的能力幫助你修改其他用戶的密碼，
+		而且也不能隨意改變 root 的密碼！很有用處的！<br /><br /></li>
+
+		<li><a name="sudo-4"></a><span class="text_import1">透過別名建置 visudo：</span><br /><br />
+
+		如上述第三點，如果我有 15 個用戶需要加入剛剛的管理員行列，那麼我是否要將上述那長長的設定寫入 15 行啊？
+		而且如果想要修改命令或者是新增命令時，那我每行都需要重新設定，很麻煩ㄟ！有沒有更簡單的方式？
+		是有的！透過別名即可！我們 visudo 的別名可以是『指令別名、帳號別名、主機別名』等。不過這裡我們僅介紹帳號別名，
+		其他的設定值有興趣的話，可以自行玩玩！<br /><br />
+
+		假設我的 pro1, pro2, pro3 與 myuser1, myuser2 要加入上述的密碼管理員的 sudo 列表中，
+		那我可以創立一個帳號別名稱為 ADMPW 的名稱，然後將這個名稱處理一下即可。處理的方式如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>  <span class="term_note">&lt;==注意是 root 身份</span>
+<span class="term_write">User_Alias ADMPW = pro1, pro2, pro3, myuser1, myuser2
+Cmnd_Alias ADMPWCOM = !/usr/bin/passwd, /usr/bin/passwd [A-Za-z]*, \
+                      !/usr/bin/passwd root
+ADMPW   ALL=(root)  ADMPWCOM</span>
+</pre></td></tr></table>
+
+		我透過 User_Alias 建立出一個新帳號，<span class="text_import2">這個帳號名稱一定要使用大寫字元來處理，包括 
+		Cmnd_Alias(命令別名)、Host_Alias(來源主機名稱別名) 都需要使用大寫字元的</span>！這個 ADMPW 代表後面接的那些實際帳號。
+		而該帳號能夠進行的指令就如同 ADMPWCOM 後面所指定的那樣！上表最後一行則寫入這兩個別名 (帳號與指令別名)，
+		未來要修改時，我只要修改 User_Alias 以及 Cmnd_Alias 這兩行即可！設定方面會比較簡單有彈性喔！<br /><br /></li>
+
+		<li><a name="sudo-5"></a><a name="20080426"></a><span class="text_import1">sudo 的時間間隔問題：</span><br /><br />
+
+		或許您已經發現了，那就是，如果我使用同一個帳號在短時間內重複操作 sudo 來運作指令的話，
+		在第二次執行 sudo 時，並不需要輸入自己的密碼！sudo 還是會正確的運作喔！為什麼呢？
+		第一次執行 sudo 需要輸入密碼，是擔心由於使用者暫時離開座位，但有人跑來你的座位使用你的帳號操作系統之故。
+		所以需要你輸入一次密碼重新確認一次身份。<br /><br />
+
+		兩次執行 sudo 的間隔在五分鐘內，那麼再次執行 sudo 時就不需要再次輸入密碼了，
+		這是因為系統相信你在五分鐘內不會離開你的作業，所以執行 sudo 的是同一個人！呼呼！真是很人性化的設計啊～ 
+		^_^。不過<span class="text_import2">如果兩次 sudo 操作的間隔超過 5 分鐘，那就得要重新輸入一次你的密碼了</span>
+		(<a href="#ps4">註4</a>)<br /><br />
+
+		另外要注意的是，因為使用一般帳號時，理論上不會使用到 /sbin, /usr/sbin 等目錄內的指令，所以 $PATH 
+		變數不會含有這些目錄，因此很多管理指令需要使用絕對路徑來下達比較妥當喔！<br /><br /></li>
+
+		<li><a name="sudo-6"></a><span class="text_import1">sudo 搭配 su 的使用方式：</span><br /><br />
+
+		很多時候我們需要大量執行很多 root 的工作，所以一直使用 sudo 覺得很煩ㄟ！那有沒有辦法使用 sudo 搭配 su ，
+		一口氣將身份轉為 root ，而且還用使用者自己的密碼來變成 root 呢？是有的！而且方法簡單的會讓你想笑！
+		我們建立一個 ADMINS 帳號別名，然後這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">visudo</span>
+<span class="term_write">User_Alias  ADMINS = pro1, pro2, pro3, myuser1
+ADMINS ALL=(root)  /bin/su -</span>
+</pre></td></tr></table>
+
+		接下來，上述的 pro1, pro2, pro3, myuser1 這四個人，只要輸入『 sudo su - 』並且輸入『自己的密碼』後，
+		立刻變成 root 的身份！不但 root 密碼不會外流，使用者的管理也變的非常方便！
+		這也是實務上面多人共管一部主機時常常使用的技巧呢！這樣管理確實方便，不過還是要強調一下大前提，
+		那就是『<span class="text_import2">這些你加入的使用者，全部都是你能夠信任的用戶</span>』！</li>
+		</ol>
+	</div>
+</div>
+
+
+<hr /><a name="usershell"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">使用者的特殊 shell 與 PAM 模組</span><br />
+<div class="block1">
+	<p>我們前面一直談到的大多是一般身份使用者與系統管理員 (root) 的相關操作，
+	而且大多是討論關於可登入系統的帳號來說。那麼換個角度想，如果我今天想要建立的，
+	是一個『<span class="text_import2">僅能使用 mail server 相關郵件服務的帳號，而該帳號並不能登入 Linux 
+	主機</span>』呢？如果不能給予該帳號一個密碼，那麼該帳號就無法使用系統的各項資源，當然也包括 mail 的資源，
+	而如果給予一個密碼，那麼該帳號就可能可以登入 Linux 主機啊！呵呵～傷腦筋吧～
+	所以，底下讓我們來談一談這些有趣的話題囉！</p>
+
+	<p>另外，在本章之前談到過 <a href="#login.defs">/etc/login.defs</a> 檔案中，關於密碼長度應該預設是 
+	5 個字串長度，但是我們上面也談到，該設定值已經被 PAM 模組所取代了，那麼 PAM 
+	是什麼？為什麼他可以影響我們使用者的登入呢？這裡也要來談談的！<br /><br /></p>
+
+	<hr /><a name="nologin"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">特殊的 shell, /sbin/nologin</span><br />
+	<div class="block2">
+		<p>在本章一開頭的 <a href="#passwd_file">passwd 檔案結構</a>裡面我們就談過系統帳號這玩意兒，這玩意兒的 shell 
+		就是使用 /sbin/nologin ，重點在於系統帳號是不需要登入的！所以我們就給他這個無法登入的合法 shell。
+		使用了這個 shell 的用戶即使有了密碼，你想要登入時他也無法登入，因為會出現如下的訊息喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+This account is currently not available.
+</pre></td></tr></table>
+
+		<p>我們所謂的『無法登入』指的僅是：『這個使用者無法使用 bash 或其他 shell 來登入系統』而已，
+		並不是說這個帳號就無法使用其他的系統資源喔！
+		舉例來說，各個系統帳號，列印工作由 lp 這個帳號在管理， WWW 服務由 apache 這個帳號在管理，
+		他們都可以進行系統程序的工作，但是『就是無法登入主機』而已啦！^_^</p>
+
+		<p>換個角度來想，如果我的 Linux 主機提供的是郵件服務，所以說，在這部 Linux 主機上面的帳號，
+		其實大部分都是用來收受主機的信件而已，並不需要登入主機的呢！
+		這個時候，我們就可以考慮讓單純使用 mail 的帳號以 /sbin/nologin 做為他們的 shell ，
+		這樣，最起碼當我的主機被嘗試想要登入系統以取得 shell 環境時，可以拒絕該帳號呢！</p>
+
+		<a name="nologin.txt"></a>
+		<p>另外，如果我想要讓某個具有 /sbin/nologin 的使用者知道，他們不能登入主機時，
+		其實我可以建立『 <span class="text_import2">/etc/nologin.txt</span> 』這個檔案，
+		並且在這個檔案內說明不能登入的原因，那麼下次當這個使用者想要登入系統時，
+		螢幕上出現的就會是 /etc/nologin.txt 這個檔案的內容，而不是預設的內容了！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+當使用者嘗試利用純 mail 帳號 (例如 myuser3) 時，利用 /etc/nologin.txt
+告知使用者不要利用該帳號登入系統。
+</div>
+答：<div class="block2">
+直接以 vi 編輯該檔案，內容可以是這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/nologin.txt</span>
+<span class="term_write">This account is system account or mail account.
+Please DO NOT use this account to login my Linux server.</span>
+</pre></td></tr></table>
+
+想要測試時，可以使用 myuser3 (此帳號的 shell 是 /sbin/nologin) 來測試看看！
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">su - myuser3</span>
+This account is system account or mail account.
+Please DO NOT use this account to login my Linux server.
+[root@www ~]#
+</pre></td></tr></table>
+結果會發現與原本的預設訊息不一樣喔！ ^_^
+</div>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a name="pam_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">PAM 模組簡介</span><br />
+	<div class="block2">
+		<p>在過去，我們想要對一個使用者進行認證 (authentication)，得要要求使用者輸入帳號密碼，
+		然後透過自行撰寫的程式來判斷該帳號密碼是否正確。也因為如此，我們常常得使用不同的機制來判斷帳號密碼，
+		所以搞的一部主機上面擁有多個各別的認證系統，也造成帳號密碼可能不同步的驗證問題！
+		為了解決這個問題因此有了 PAM (Pluggable Authentication Modules, 嵌入式模組) 的機制！</p>
+
+		<p><span class="text_import2">PAM 可以說是一套應用程式介面 (Application Programming Interface, 
+		API)，他提供了一連串的驗證機制，只要使用者將驗證階段的需求告知 PAM 後， PAM 就能夠回報使用者驗證的結果 
+		(成功或失敗)</span>。由於 PAM 僅是一套驗證的機制，又可以提供給其他程式所呼叫引用，因此不論你使用什麼程式，都可以使用 
+		PAM 來進行驗證，如此一來，就能夠讓帳號密碼或者是其他方式的驗證具有一致的結果！也讓程式設計師方便處理驗證的問題喔！
+		(<a href="#ps5">註5</a>)</p>
+
+		<center><img src="0410accountmanager/pam-1.gif" alt="PAM 模組與其他程式的相關性" 
+		title="PAM 模組與其他程式的相關性" border="0" /><br />
+		圖 5.2.1、 PAM 模組與其他程式的相關性<br /></center>
+
+		<p>如上述的圖示， PAM 是一個獨立的 API 存在，只要任何程式有需求時，可以向 PAM 發出驗證要求的通知，
+		PAM 經過一連串的驗證後，將驗證的結果回報給該程式，然後該程式就能夠利用驗證的結果來進行可登入或顯示其他無法使用的訊息。
+		這也就是說，你可以在寫程式的時候將 PAM 模組的功能加入，就能夠利用 PAM 的驗證功能囉。
+		因此目前很多程式都會利用 PAM 喔！所以我們才要來學習他啊！</p>
+
+		<p>PAM 用來進行驗證的資料稱為模組 (Modules)，每個 PAM 模組的功能都不太相同。舉例來說，
+		還記得我們在本章使用 <a href="#passwd">passwd</a> 指令時，如果隨便輸入字典上面找的到的字串，
+		passwd 就會回報錯誤資訊了！這是為什麼呢？這就是 PAM 的 pam_cracklib.so 模組的功能！他能夠判斷該密碼是否在字典裡面！
+		並回報給密碼修改程式，此時就能夠瞭解你的密碼強度了。</p>
+
+		<p>所以，當你有任何需要判斷是否在字典當中的密碼字串時，就可以使用 pam_cracklib.so 這個模組來驗證！
+		並根據驗證的回報結果來撰寫你的程式呢！這樣說，可以理解 PAM 的功能了吧？沒錯！ PAM 的模組也是很重要的一環！</p>
+	</div>
+
+	<hr /><a name="pam_setting"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">PAM 模組設定語法</span><br />
+	<div class="block2">
+		<p>PAM 藉由一個與程式相同檔名的設定檔來進行一連串的認證分析需求。我們同樣以 passwd 這個指令的呼叫 PAM 來說明好了。
+		當你執行 passwd 後，這支程式呼叫 PAM 的流程是：</p>
+		<ol class="text_import2">
+		<li>使用者開始執行 /usr/bin/passwd 這支程式，並輸入密碼；</li>
+		<li>passwd 呼叫 PAM 模組進行驗證；</li>
+		<li>PAM 模組會到 /etc/pam.d/ 找尋與程式 (passwd) 同名的設定檔；</li>
+		<li>依據 /etc/pam.d/passwd 內的設定，引用相關的 PAM 模組逐步進行驗證分析；</li>
+		<li>將驗證結果 (成功、失敗以及其他訊息) 回傳給 passwd 這支程式；</li>
+		<li>passwd 這支程式會根據 PAM 回傳的結果決定下一個動作 (重新輸入新密碼或者通過驗證！)</li>
+		</ol>
+
+		<p>從上頭的說明，我們會知道重點其實是 /etc/pam.d/ 裡面的設定檔，以及設定檔所呼叫的 PAM 模組進行的驗證工作！
+		既然一直談到 passwd 這個密碼修改指令，那我們就來看看 /etc/pam.d/passwd 這個設定檔的內容是怎樣吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/pam.d/passwd</span>
+#%PAM-1.0  <span class="term_note">&lt;==PAM版本的說明而已！</span>
+auth       include      system-auth <span class="term_note">&lt;==每一行都是一個驗證的過程</span>
+account    include      system-auth
+password   include      system-auth
+<span class="term_say">驗證類別   控制標準     PAM 模組與該模組的參數</span>
+</pre></td></tr></table>
+
+		<p>在這個設定檔當中，除了第一行宣告 PAM 版本之外，其他任何『 # 』開頭的都是註解，而每一行都是一個獨立的驗證流程，
+		每一行可以區分為三個欄位，分別是驗證類別(type)、控制標準(flag)、PAM的模組與該模組的參數。
+		底下我們先來談談驗證類別與控制標準這兩項資料吧！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		你會發現在我們上面的表格當中出現的是『 include 
+		(包括) 』這個關鍵字，他代表的是『請呼叫後面的檔案來作為這個類別的驗證』，
+		所以，上述的每一行都要重複呼叫 /etc/pam.d/system-auth 那個檔案來進行驗證的意思！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr /><ul class="list1"><li class="text_import1">第一個欄位：驗證類別 (Type)</li></ul>
+
+		<p>驗證類別主要分為四種，分別說明如下：</p>
+
+		<ul>
+		<li><span class="text_import1">auth</span><br />
+		是 authentication (認證) 的縮寫，所以這種類別主要用來檢驗使用者的身份驗證，這種類別通常是需要密碼來檢驗的，
+		所以後續接的模組是用來檢驗使用者的身份。<br /><br /></li>
+
+		<li><span class="text_import1">account</span><br />
+		account (帳號) 則大部分是在進行 authorization (授權)，這種類別則主要在檢驗使用者是否具有正確的使用權限，
+		舉例來說，當你使用一個過期的密碼來登入時，當然就無法正確的登入了。<br /><br /></li>
+
+		<li><span class="text_import1">session</span><br />
+		session 是會議期間的意思，所以 session 管理的就是使用者在這次登入 (或使用這個指令) 期間，PAM 所給予的環境設定。
+		這個類別通常用在記錄使用者登入與登出時的資訊！例如，如果你常常使用 su 或者是 sudo 指令的話，
+		那麼應該可以在 /var/log/secure 裡面發現很多關於 pam 的說明，而且記載的資料是『session open, session close』的資訊！
+		<br /><br /></li>
+
+		<li><span class="text_import1">password</span><br />
+		password 就是密碼嘛！所以這種類別主要在提供驗證的修訂工作，舉例來說，就是修改/變更密碼啦！</li>
+		</ul>
+
+		<p><span class="text_import2">這四個驗證的類型通常是有順序的</span>，不過也有例外就是了。
+		會有順序的原因是，(1)我們總是得要先驗證身份 (auth) 後，
+		(2)系統才能夠藉由使用者的身份給予適當的授權與權限設定 (account)，而且(3)登入與登出期間的環境才需要設定，
+		也才需要記錄登入與登出的資訊 (session)。如果在運作期間需要密碼修訂時，(4)才給予 password 的類別。這樣說起來，
+		自然是需要有點順序吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">第二個欄位：驗證的控制旗標 (control flag)</li></ul>
+
+		<p>那麼『驗證的控制旗標(control flag)』又是什麼？簡單的說，他就是『驗證通過的標準』啦！
+		這個欄位在管控該驗證的放行方式，主要也分為四種控制方式：</p>
+
+		<ul>
+		<li><span class="text_import1">required</span><br />
+		此驗證若成功則帶有 success (成功) 的標誌，若失敗則帶有 failure 的標誌，但不論成功或失敗都會繼續後續的驗證流程。
+		由於後續的驗證流程可以繼續進行，因此相當有利於資料的登錄 (log) ，這也是 PAM 最常使用 required 的原因。<br /><br /></li>
+
+		<li><span class="text_import1">requisite</span><br />
+		若驗證失敗則立刻回報原程式 failure 的標誌，並終止後續的驗證流程。若驗證成功則帶有 success 的標誌並繼續後續的驗證流程。
+		這個項目與 required 最大的差異，就在於失敗的時候還要不要繼續驗證下去？由於 requisite 是失敗就終止，
+		因此失敗時所產生的 PAM 資訊就無法透過後續的模組來記錄了。<br /><br /></li>
+
+		<li><span class="text_import1">sufficient</span><br />
+		若驗證成功則立刻回傳 success 給原程式，並終止後續的驗證流程；若驗證失敗則帶有 failure 標誌並繼續後續的驗證流程。
+		這玩意兒與 requisits 剛好相反！<br /><br /></li>
+
+		<li><span class="text_import1">optional</span><br />
+		這個模組控制項目大多是在顯示訊息而已，並不是用在驗證方面的。</li>
+		</ul>
+
+		<p>如果將這些控制旗標以圖示的方式配合成功與否的條件繪圖，會有點像底下這樣：</p>
+
+		<center><img src="0410accountmanager/pam-2.gif" alt="PAM 控制旗標所造成的回報流程" 
+		title="PAM 控制旗標所造成的回報流程" border="0" /><br />
+		圖 5.3.1、 PAM 控制旗標所造成的回報流程<br /></center>
+
+		<p>程式運作過程中遇到驗證時才會去呼叫 PAM ，而 PAM 驗證又分很多類型與控制，不同的控制旗標所回報的訊息並不相同。
+		如上圖所示， requisite 失敗就回報了並不會繼續，而 sufficient 則是成功就回報了也不會繼續。
+		至於驗證結束後所回報的資訊通常是『succes 或 failure 』而已，後續的流程還需要該程式的判斷來繼續執行才行。</p>
+	</div>
+
+	<hr /><a name="pam_module"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">常用模組簡介</span><br />
+	<div class="block2">
+		<p>談完了設定檔的語法後，現在讓我們來查閱一下 CentOS 5.x 提供的 PAM 預設檔案的內容是啥吧！
+		由於我們常常需要透過各種方式登入 (login) 系統，因此就來看看登入所需要的 PAM 流程為何：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/pam.d/login</span>
+#%PAM-1.0
+auth [user_unknown=ignore success=ok ignore=ignore default=bad] <span class="term_write">pam_securetty.so</span>
+auth       include      system-auth
+account    required     <span class="term_write">pam_nologin.so</span>
+account    include      system-auth
+password   include      system-auth
+# pam_selinux.so close should be the first session rule
+session    required     pam_selinux.so close
+session    include      system-auth
+session    required     pam_loginuid.so
+session    optional     pam_console.so
+# pam_selinux.so open should only be followed by sessions...
+session    required     pam_selinux.so open
+session    optional     pam_keyinit.so force revoke
+<span class="term_say"># 我們可以看到，其實 login 也呼叫多次的 system-auth ，所以底下列出該設定檔</span>
+
+[root@www ~]# <span class="term_command">cat /etc/pam.d/system-auth</span>
+#%PAM-1.0
+# This file is auto-generated.
+# User changes will be destroyed the next time authconfig is run.
+auth     required     pam_env.so
+auth     sufficient   pam_unix.so nullok try_first_pass
+auth     requisite    pam_succeed_if.so uid &gt;= 500 quiet
+auth     required     pam_deny.so
+
+account  required     pam_unix.so
+account  sufficient   pam_succeed_if.so uid &lt; 500 quiet
+account  required     pam_permit.so
+
+password requisite    <span class="term_write">pam_cracklib.so try_first_pass retry=3</span>
+password sufficient   pam_unix.so md5 shadow nullok try_first_pass use_authtok
+password required     pam_deny.so
+
+session  optional     pam_keyinit.so revoke
+session  required     <span class="term_write">pam_limits.so</span>
+session  [success=1 default=ignore] pam_succeed_if.so service in crond quiet \
+                      use_uid
+session  required     pam_unix.so
+</pre></td></tr></table>
+
+		<p>上面這個表格當中使用到非常多的 PAM 模組，每個模組的功能都不太相同，詳細的模組情報可以在你的系統中找到：</p>
+
+		<ul class="text_import2">
+		<li>/etc/pam.d/*：每個程式個別的 PAM 設定檔；</li>
+		<li>/lib/security/*：PAM 模組檔案的實際放置目錄；</li>
+		<li>/etc/security/*：其他 PAM 環境的設定檔；</li>
+		<li>/usr/share/doc/pam-*/：詳細的 PAM 說明文件。</li>
+		</ul>
+
+		<p>例如鳥哥使用未 update 過的 CentOS 5.2 ，pam_nologin 說明文件檔在： 
+		/usr/share/doc/pam-0.99.6.2/txts/README.pam_nologin。你可以自行查閱一下該模組的功能。
+		鳥哥這裡僅簡單介紹幾個較常使用的模組，詳細的資訊還得要您努力查閱參考書呢！ ^_^</p>
+
+		<ul>
+		<li><a name="securetty"></a><span class="text_import1">pam_securetty.so</span>：<br />
+			限制系統管理員 (root) 只能夠從安全的 (secure) 終端機登入；那什麼是終端機？例如 
+			tty1, tty2 等就是傳統的終端機裝置名稱。那麼<span class="text_import2">安全的終端機設定呢？
+			就寫在 /etc/securetty 這個檔案中</span>。你可以查閱一下該檔案，
+			就知道為什麼 root 可以從 tty1~tty7 登入，但卻無法透過 telnet 登入 Linux 主機了！<br /><br /></li>
+
+		<li><a name="nologin_pam"></a><span class="text_import1">pam_nologin.so</span>：<br />
+			這個模組可以限制一般使用者是否能夠登入主機之用。當 <span class="text_import2">/etc/nologin
+			這個檔案存在時，則所有一般使用者均無法再登入系統了</span>！若 /etc/nologin 存在，則一般使用者在登入時，
+			在他們的終端機上會將該檔案的內容顯示出來！所以，正常的情況下，這個檔案應該是不能存在系統中的。
+			但這個模組對 root 以及已經登入系統中的一般帳號並沒有影響。<br /><br /></li>
+
+		<li><span class="text_import1">pam_selinux.so</span>：<br />
+			SELinux 是個針對程序來進行細部管理權限的功能，SELinux 這玩意兒我們會在<a 
+			href="/linux_basic/0440processcontrol.php">第十七章</a>的時候再來詳細談論。由於 SELinux 
+			會影響到使用者執行程式的權限，因此我們利用 PAM 模組，將 SELinux 暫時關閉，等到驗證通過後，
+			再予以啟動！<br /><br /></li>
+
+		<li><span class="text_import1">pam_console.so</span>：<br />
+			當系統出現某些問題，或者是某些時刻你需要使用特殊的終端介面 (例如 RS232 之類的終端連線設備) 登入主機時，
+			這個模組可以幫助處理一些檔案權限的問題，讓使用者可以透過特殊終端介面 (console) 順利的登入系統。<br /><br /></li>
+
+		<li><span class="text_import1">pam_loginuid.so</span>：<br />
+			我們知道系統帳號與一般帳號的 UID 是不同的！一般帳號 UID 均大於 500 才合理。
+			因此，為了驗證使用者的 UID 真的是我們所需要的數值，可以使用這個模組來進行規範！<br /><br /></li>
+
+		<li><span class="text_import1">pam_env.so</span>：<br />
+			用來設定環境變數的一個模組，如果你有需要額外的環境變數設定，可以參考
+			/etc/security/pam_env.conf 這個檔案的詳細說明。<br /><br /></li>
+
+		<li><span class="text_import1">pam_unix.so</span>：<br />
+			這是個很複雜且重要的模組，這個模組可以用在驗證階段的認證功能，可以用在授權階段的帳號授權管理，
+			可以用在會議階段的登錄檔記錄等，甚至也可以用在密碼更新階段的檢驗！非常豐富的功能！
+			這個模組在早期使用得相當頻繁喔！<br /><br /></li>
+
+		<li><a name="cracklib"></a><span class="text_import1">pam_cracklib.so</span>：<br />
+			可以用來檢驗密碼的強度！包括密碼是否在字典中，密碼輸入幾次都失敗就斷掉此次連線等功能，都是這模組提供的！
+			這玩意兒很重要！<br /><br /></li>
+
+		<li><span class="text_import1">pam_limits.so</span>：<br />
+			還記得我們在<a href="/linux_basic/0320bash.php#variable_ulimit">十一章談到的 ulimit</a> 嗎？
+			其實那就是這個模組提供的能力！還有更多細部的設定可以參考：
+			/etc/security/limits.conf 內的說明。</li>
+		</ul>
+
+		<a name="login_pam"></a>
+		<p>瞭解了這些模組的大致功能後，言歸正傳，討論一下 login 的 PAM 驗證機制流程是這樣的：</p>
+
+		<ol>
+		<li>驗證階段 (auth)：首先，(a)會先經過 pam_securetty.so 判斷，如果使用者是 root 時，則會參考 /etc/securetty 的設定；
+			接下來(b)經過 pam_env.so 設定額外的環境變數；再(c)透過 pam_unix.so 檢驗密碼，若通過則回報 login 
+			程式；若不通過則(d)繼續往下以 pam_succeed_if.so 判斷 UID 是否大於 500 ，若小於 500則回報失敗，否則再往下
+			(e)以 pam_deny.so 拒絕連線。<br /><br /></li>
+
+		<li>授權階段 (account)：(a)先以 pam_nologin.so  判斷 /etc/nologin 是否存在，若存在則不許一般使用者登入；
+			(b)接下來以 pam_unix 進行帳號管理，再以 (c) pam_succeed_if.so 判斷 UID 是否小於 500 ，若小於 500 
+			則不記錄登錄資訊。(d)最後以 pam_permit.so 允許該帳號登入。<br /><br /></li>
+
+		<li>密碼階段 (password)：(a)先以 pam_cracklib.so 設定密碼僅能嘗試錯誤 3 次；(b)接下來以
+			pam_unix.so 透過 md5, shadow 等功能進行密碼檢驗，若通過則回報 login 程式，若不通過則 (c)以 pam_deny.so 
+			拒絕登入。<br /><br /></li>
+
+		<li>會議階段 (session)：(a)先以 pam_selinux.so 暫時關閉 SELinux；(b)使用 pam_limits.so 
+			設定好使用者能夠操作的系統資源； (c)登入成功後開始記錄相關資訊在登錄檔中； (d)以 pam_loginuid.so 
+			規範不同的 UID 權限；(e)開啟 pam_selinux.so 的功能。</li>
+		</ol>
+
+		<p>總之，就是依據驗證類別 (type) 來看，然後先由 login 的設定值去查閱，如果出現『 include system-auth 』
+		就轉到 system-auth 檔案中的相同類別，去取得額外的驗證流程就是了。然後再到下一個驗證類別，最終將所有的驗證跑完！
+		就結束這次的 PAM 驗證啦！</p>
+
+		<p>經過這樣的驗證流程，現在你知道為啥 /etc/nologin 存在會有問題，也會知道為何你使用一些遠端連線機制時，
+		老是無法使用 root 登入的問題了吧？沒錯！這都是 PAM 模組提供的功能啦！</p>
+
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+為什麼 root 無法以 telnet 直接登入系統，但是卻能夠使用 ssh 直接登入？
+</div>
+答：<div class="block2">
+一般來說， telnet 會引用 login 的 PAM 模組，而 login 的驗證階段會有 /etc/securetty 的限制！
+由於遠端連線屬於 pts/n (n 為數字) 的動態終端機介面裝置名稱，並沒有寫入到 /etc/securetty ，
+因此 root 無法以 telnet 登入遠端主機。至於 ssh 使用的是 /etc/pam.d/sshd 這個模組，
+你可以查閱一下該模組，由於該模組的驗證階段並沒有加入 pam_securetty ，因此就沒有 /etc/securetty 
+的限制！故可以從遠端直接連線到伺服器端。<br /><br />
+另外，關於 telnet 與 ssh 的細部說明，請參考<a href="/linux_server">鳥哥的 Linux 私房菜伺服器篇</a>
+</div>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a name="pam_file"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">其他相關檔案</span><br />
+	<div class="block2">
+		<p>除了前一小節談到的 /etc/securetty 會影響到 root 可登入的安全終端機， /etc/nologin
+		會影響到一般使用者是否能夠登入的功能之外，我們也知道 PAM 相關的設定檔在 /etc/pam.d ，
+		說明文件在 /usr/share/doc/pam-(版本) ，模組實際在 /lib/security/ 。那麼還有沒有相關的 PAM 檔案呢？
+		是有的，主要都在 /etc/security 這個目錄內！我們底下介紹幾個可能會用到的設定檔喔！<br /><br /></p>
+
+		<a name="limits"></a>
+		<a name="20070415"></a>
+		<hr /><ul class="list1"><li class="text_import1">limits.conf</li></ul>
+
+		<p>我們在第十一章談到的 <a href="/linux_basic/0320bash.php#variable_ulimit">ulimit</a> 功能中，
+		除了修改使用者的 ~/.bashrc 設定檔之外，其實系統管理員可以統一藉由 PAM 來管理的！
+		那就是 /etc/security/limits.conf 這個檔案的設定了。這個檔案的設定很簡單，你可以自行參考一下該檔案內容。
+		我們這裡僅作個簡單的介紹：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：vbird1 這個用戶只能建立 100MB 的檔案，且大於 90MB 會警告</span>
+[root@www ~]# <span class="term_command">vi /etc/security/limits.conf</span>
+<span class="term_write">vbird1	soft		fsize		 90000
+vbird1	hard		fsize		100000</span>
+<span class="term_say">#帳號   限制依據	限制項目 	限制值
+# 第一欄位為帳號，或者是群組！若為群組則前面需要加上 @ ，例如 @projecta
+# 第二欄位為限制的依據，是嚴格(hard)，還是僅為警告(soft)；
+# 第三欄位為相關限制，此例中限制檔案容量，
+# 第四欄位為限制的值，在此例中單位為 KB。
+# 若以 vbird1 登入後，進行如下的操作則會有相關的限制出現！</span>
+
+[vbird1@www ~]$ <span class="term_command">ulimit -a</span>
+<span class="term_say">....(前面省略)....</span>
+file size               (blocks, -f) <span class="term_write">90000</span>
+<span class="term_say">....(後面省略)....</span>
+
+[vbird1@www ~]$ <span class="term_command">dd if=/dev/zero of=test bs=1M count=110</span>
+File size limit exceeded
+[vbird1@www ~]$ <span class="term_command">ll -k test</span>
+-rw-rw-r-- 1 vbird1 vbird1 <span class="term_write">90000</span> Mar  4 11:30 test
+<span class="term_say"># 果然有限制到了</span>
+
+<span class="term_hd">範例二：限制 pro1 這個群組，每次僅能有一個使用者登入系統 (maxlogins)</span>
+[root@www ~]# <span class="term_command">vi /etc/security/limits.conf</span>
+<span class="term_write">@pro1   hard   maxlogins   1</span>
+<span class="term_say"># 如果要使用群組功能的話，這個功能似乎對初始群組才有效喔！
+# 而如果你嘗試多個 pro1 的登入時，第二個以後就無法登入了。
+# 而且在 /var/log/secure 檔案中還會出現如下的資訊：
+# pam_limits(login:session): Too many logins (max 1) for pro1</span>
+</pre></td></tr></table>
+
+		<p>這個檔案挺有趣的，而且是設定完成就生效了，你不用重新啟動任何服務的！
+		但是 PAM 有個特殊的地方，由於他是在程式呼叫時才予以設定的，因此你修改完成的資料，
+		對於已登入系統中的使用者是沒有效果的，要等他再次登入時才會生效喔！另外，
+		上述的設定請在測試完成後立刻註解掉，否則下次這兩個使用者登入就會發生些許問題啦！ ^_^<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">/var/log/secure, /var/log/messages</li></ul>
+
+		<p>如果發生任何無法登入或者是產生一些你無法預期的錯誤時，由於 PAM 模組都會將資料記載在
+		/var/log/secure 當中，所以發生了問題請務必到該檔案內去查詢一下問題點！舉例來說，
+		我們在 <a href="#limits">limits.conf</a> 的介紹內的範例二，就有談到多重登入的錯誤可以到 /var/log/secure 內查閱了！
+		這樣你也就知道為何第二個 pro1 無法登入啦！^_^</p>
+	</div>
+
+</div>
+
+
+<hr /><a name="uselinux"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 主機上的使用者訊息傳遞</span><br />
+<div class="block1">
+	<p>談了這麼多的帳號問題，總是該要談一談，那麼如何針對系統上面的使用者進行查詢吧？
+	想幾個狀態，如果你在 Linux 上面操作時，剛好有其他的使用者也登入主機，你想要跟他對談，該如何是好？
+	你想要知道某個帳號的相關資訊，該如何查閱？呼呼！底下我們就來聊一聊～<br /><br /></p>
+
+	<hr /><a name="uselinux_find"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">查詢使用者： 
+	w, who, last, lastlog</span><br />
+	<div class="block2">
+		<p>如何查詢一個使用者的相關資料呢？這還不簡單，我們之前就提過了 <a href="#id">id</a>, 
+		<a href="#finger">finger</a> 等指令了，都可以讓您瞭解到一個使用者的相關資訊啦！那麼想要知道使用者到底啥時候登入呢？
+		最簡單可以使用 last 檢查啊！這個玩意兒我們也在 <a href="/linux_basic/0320bash.php#last">第十一章 bash</a> 提過了，
+		您可以自行前往參考啊！簡單的很。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		早期的 Red Hat 系統的版本中， last 僅會列出當月的登入者資訊，不過在我們的 CentOS 5.x 版以後，
+		last 可以列出從系統建立之後到目前為止的所有登入者資訊！這是因為登錄檔輪替的設定不同所致。
+		詳細的說明可以參考後續的<a href="/linux_basic/0570syslog.php">第十九章登錄檔簡介</a>。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>那如果你想要知道目前已登入在系統上面的使用者呢？可以透過 w 或 who 來查詢喔！如下範例所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">w</span>
+ 13:13:56 up 13:00,  1 user,  load average: 0.08, 0.02, 0.01
+USER   TTY    FROM            LOGIN@   IDLE   JCPU   PCPU WHAT
+root   pts/1  192.168.1.100   11:04    0.00s  0.36s  0.00s -bash
+vbird1 pts/2  192.168.1.100   13:15    0.00s  0.06s  0.02s w
+<span class="term_say"># 第一行顯示目前的時間、開機 (up) 多久，幾個使用者在系統上平均負載等；
+# 第二行只是各個項目的說明，
+# 第三行以後，每行代表一個使用者。如上所示，root 登入並取得終端機名 pts/1 之意。</span>
+
+[root@www ~]# <span class="term_command">who</span>
+root     pts/1        2009-03-04 11:04 (192.168.1.100)
+vbird1   pts/2        2009-03-04 13:15 (192.168.1.100)
+</pre></td></tr></table>
+
+		<p>另外，如果您想要知道每個帳號的最近登入的時間，則可以使用 lastlog 這個指令喔！
+		lastlog 會去讀取 /var/log/lastlog 檔案，結果將資料輸出如下表：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lastlog</span>
+Username    Port   From           Latest
+root        pts/1  192.168.1.100  Wed Mar  4 11:04:22 +0800 2009
+bin                                        **Never logged in**
+<span class="term_say">....(中間省略)....</span>
+vbird1      pts/2  192.168.1.100  Wed Mar  4 13:15:56 +0800 2009
+<span class="term_say">....(以下省略)....</span>
+</pre></td></tr></table>
+
+		<p>這樣就能夠知道每個帳號的最近登入的時間囉～ ^_^</p>
+	</div>
+
+	<hr /><a name="uselinux_talk"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者對談： write, mesg, wall</span><br />
+	<div class="block2">
+		<p>那麼我是否可以跟系統上面的使用者談天說地呢？當然可以啦！利用 write 這個指令即可。
+		write 可以直接將訊息傳給接收者囉！舉例來說，我們的 Linux 目前有 vbird1 與 root 兩個人在線上，
+		我的 root 要跟 vbird1 講話，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">write 使用者帳號 [使用者所在終端介面]</span>
+
+[root@www ~]# <span class="term_command">who</span>
+root     pts/1    2009-03-04 11:04 (192.168.1.100)
+vbird1   pts/2    2009-03-04 13:15 (192.168.1.100)  <span class="term_note">&lt;==有看到 vbird1 在線上</span>
+
+[root@www ~]# <span class="term_command">write vbird1 pts/2</span>
+<span class="term_write">Hello, there:
+Please don't do anything wrong...</span>  <span class="term_note">&lt;==這兩行是 root 寫的資訊！</span>
+<span class="term_say"># 結束時，請按下 [crtl]-d 來結束輸入。此時在 vbird1 的畫面中，會出現：</span>
+
+Message from root@www.vbird.tsai on pts/1 at 13:23 ...
+Hello, there:
+Please don't do anything wrong...
+EOF
+</pre></td></tr></table>
+
+		<p>怪怪～立刻會有訊息回應給 vbird1 ！不過......當時 vbird1 正在查資料，哇！
+		這些訊息會立刻打斷 vbird1 原本的工作喔！所以，如果 vbird1 這個人不想要接受任何訊息，直接下達這個動作：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[vbird1@www ~]$ <span class="term_command">mesg n</span>
+[vbird1@www ~]$ <span class="term_command">mesg</span>
+is n
+</pre></td></tr></table>
+
+		<p>不過，這個 mesg 的功能對 root 傳送來的訊息沒有抵擋的能力！所以如果是 root 傳送訊息， vbird1 還是得要收下。
+		但是如果 root 的 mesg 是 n 的，那麼 vbird1 寫給 root 的資訊會變這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[vbird1@www ~]$ <span class="term_command">write root</span>
+write: root has messages disabled
+</pre></td></tr></table>
+
+		<p>瞭解乎？如果想要解開的話，再次下達『 mesg y 』就好啦！想要知道目前的 mesg 
+		狀態，直接下達『 mesg 』即可！瞭呼？
+		相對於 write 是僅針對一個使用者來傳『簡訊』，我們還可以『對所有系統上面的使用者傳送簡訊 (廣播)』哩～
+		如何下達？用 wall 即可啊！他的語法也是很簡單的喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">wall "I will shutdown my linux server..."</span>
+</pre></td></tr></table>
+
+		<p>然後你就會發現所有的人都會收到這個簡訊呢！</p>
+	</div>
+
+	<hr /><a name="mail"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者郵件信箱： mail</span><br />
+	<div class="block2">
+		<p>使用 wall, write 畢竟要等到使用者在線上才能夠進行，有沒有其他方式來聯絡啊？
+		不是說每個 Linux 主機上面的使用者都具有一個 mailbox 嗎？
+		我們可否寄信給使用者啊！呵呵！當然可以啊！我們可以寄、收 mailbox 內的信件呢！
+		一般來說， mailbox 都會放置在 /var/spool/mail 裡面，一個帳號一個 mailbox (檔案)。
+		舉例來說，我的 vbird1 就具有 /var/spool/mail/vbird1 這個 mailbox 喔！</p>
+
+		<p>那麼我該如何寄出信件呢？就直接使用 mail 這個指令即可！這個指令的用法很簡單的，直接這樣下達：『 
+		<span class="text_import2">mail username@localhost -s "郵件標題"</span> 』即可！
+		一般來說，如果是寄給本機上的使用者，基本上，連『 @localhost 』都不用寫啦！
+		舉例來說，我以 root 寄信給 vbird1 ，信件標題是『 nice to meet you 』，則：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mail vbird1 -s "nice to meet you"</span>
+<span class="term_write">Hello, D.M. Tsai
+Nice to meet you in the network.
+You are so nice.  byebye!
+.</span>    <span class="term_note">&lt;==這裡很重要喔，結束時，最後一行輸入小數點 . 即可！</span>
+Cc:  <span class="term_note">&lt;==這裡是所謂的『副本』，不需要寄給其他人，所以直接 [Enter]</span>
+[root@www ~]#  <span class="term_note">&lt;==出現提示字元，表示輸入完畢了！</span>
+</pre></td></tr></table>
+
+		<p>如此一來，你就已經寄出一封信給 vbird1 這位使用者囉，而且，該信件標題為：
+		nice to meet you，信件內容就如同上面提到的。不過，你或許會覺得 mail 這個程式不好用～
+		因為在信件編寫的過程中，如果寫錯字而按下 Enter 進入次行，前一行的資料很難刪除ㄟ！
+		那怎麼辦？沒關係啦！我們使用資料流重導向啊！呵呵！利用那個小於的符號 ( &lt; )
+		就可以達到取代鍵盤輸入的要求了。也就是說，你可以先用 vi 將信件內容編好，
+		然後再以 mail vbird1 -s "nice to meet you" &lt; filename 來將檔案內容傳輸即可。</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+請將你的家目錄下的環境變數檔 (~/.bashrc) 寄給自己！
+</div>
+答：<div class="block2">
+mail -s "bashrc file content" vbird &lt; ~/.bashrc
+</div>
+</td></tr></table><br />
+
+		<p>剛剛上面提到的是關於『寄信』的問題，那麼如果是要收信呢？呵呵！同樣的使用 mail 啊！
+		假設我以 vbird1 的身份登入主機，然後輸入 mail 後，會得到什麼？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[vbird1@www ~]$ <span class="term_command">mail</span>
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/vbird1": 1 message 1 new
+&gt;N  1 root@www.vbird.tsai   Wed Mar  4 13:36  18/663   "nice to meet you"
+&amp;  <span class="term_note">&lt;==這裡可以輸入很多的指令，如果要查閱，輸入 ? 即可！</span>
+</pre></td></tr></table>
+
+		<p>在 mail 當中的提示字元是 &amp; 符號喔，別搞錯了～輸入 mail 之後，我可以看到我有一封信件，
+		這封信件的前面那個 &gt; 代表目前處理的信件，而在大於符號的左邊那個 N 代表該封信件尚未讀過，
+		如果我想要知道這個 mail 內部的指令有哪些，可以在 &amp; 之後輸入『 ? 』，就可以看到如下的畫面：</p>
+
+<table class="term"><tr><td class="term"><pre>
+&amp; <span class="term_command">?</span>
+    Mail   Commands
+t &lt;message list&gt;                type messages
+n                               goto and type next message
+e &lt;message list&gt;                edit messages
+f &lt;message list&gt;                give head lines of messages
+d &lt;message list&gt;                delete messages
+s &lt;message list&gt; file           append messages to file
+u &lt;message list&gt;                undelete messages
+R &lt;message list&gt;                reply to message senders
+r &lt;message list&gt;                reply to message senders and all recipients
+pre &lt;message list&gt;              make messages go back to /usr/spool/mail
+m &lt;user list&gt;                   mail to specific users
+q                               quit, saving unresolved messages in mbox
+x                               quit, do not remove system mailbox
+h                               print out active message headers
+!                               shell escape
+cd [directory]                  chdir to directory or home if none given
+</pre></td></tr></table>
+
+		<p>&lt;message list&gt; 指的是每封郵件的左邊那個數字啦！而幾個比較常見的指令是：</p>
+
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="50">指令</td><td>意義</td></tr>
+<tr><td align="center">h</td><td>列出信件標頭；如果要查閱 40 封信件左右的信件標頭，可以輸入『 h 40 』</td></tr>
+<tr><td align="center">d</td><td>刪除後續接的信件號碼，刪除單封是『 d10 』，刪除 20~40 封則為『 d20-40 』。
+不過，這個動作要生效的話，必須要配合 q 這個指令才行(參考底下說明)！</td></tr>
+<tr><td align="center">s</td><td>將信件儲存成檔案。例如我要將第 5 封信件的內容存成 ~/mail.file:『s 5 ~/mail.file』</td></tr>
+<tr><td align="center">x</td><td>或者輸入 exit 都可以。這個是『不作任何動作離開 mail 程式』的意思。
+不論你剛剛刪除了什麼信件，或者讀過什麼，使用 exit 都會直接離開 mail，所以剛剛進行的刪除與閱讀工作都會無效。
+如果您只是查閱一下郵件而已的話，一般來說，建議使用這個離開啦！除非你真的要刪除某些信件。</td></tr>
+<tr><td align="center">q</td><td>相對於 exit 是不動作離開， q 則會進行兩項動作： 1. 將剛剛刪除的信件移出 
+mailbox 之外； 2. 將剛剛有閱讀過的信件存入 ~/mbox ，且移出 mailbox 之外。鳥哥通常不很喜歡使用 q 離開，
+因為，很容易忘記讀過什麼咚咚～導致信件給他移出 mailbox 說～</td></tr>
+</table><br />
+
+		<p>由於讀過的信件若使用『 q 』來離開 mail 時，會將該信件移動到 ~/mbox 中，所以你可以這樣想像：
+		/var/spool/mail/vbird1 為 vbird1 的『新件匣』，而 /home/vbird1/mbox 則為『收件匣』的意思。
+		那如何讀取 /home/vbird1/mbox 呢？就使用『mail -f /home/vbird1/mbox』即可。</p>
+	</div>
+</div>
+
+
+<hr /><a name="manual"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">手動新增使用者</span><br />
+<div class="block1">
+	<p>一般來說，我們不很建議大家使用手動的方式來新增使用者，為什麼呢？
+	因為使用者的建立涉及到 GID/UID 等權限的關係，而且，與檔案/目錄的權限也有關係，
+	使用 useradd 可以幫我們自動設定好 UID/GID 家目錄以及家目錄相關的權限設定，
+	但是，手動來增加的時候，有可能會忘東忘西，結果導致一些困擾的發生。</p>
+
+	<p>不過，要瞭解整個系統，最好還是手動來修改過比較好，至少我們的帳號問題可以完全依照自己的意思去修訂，
+	而不必遷就於系統的預設值啊！但是，還是要告誡一下朋友們，要手動設定帳號時，
+	您必須要真的很瞭解自己在作什麼，尤其是與權限有關的設定方面喔！好吧！底下就讓我們來玩一玩囉～ ^_^<br /><br /></p>
+
+	<hr /><a name="manual_tools"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一些檢查工具</span><br />
+	<div class="block2">
+		<p>既然要手動修改帳號的相關設定檔，那麼一些檢查群組、帳號相關的指令就不可不知道啊～
+		尤其是那個密碼轉換的 pwconv 及 pwuconv 這兩個玩意～可重要的很呢！底下我們稍微介紹一下這些指令吧！<br /><br /></p>
+
+		<a name="pwck"></a>
+		<hr /><ul class="list1"><li class="text_import1">pwck</li></ul>
+
+		<p>pwck 這個指令在檢查 /etc/passwd 這個帳號設定檔內的資訊，與實際的家目錄是否存在等資訊，
+		還可以比對 /etc/passwd /etc/shadow 的資訊是否一致，另外，如果 /etc/passwd 內的資料欄位錯誤時，會提示使用者修訂。
+		一般來說，我只是利用這個玩意兒來檢查我的輸入是否正確就是了。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">pwck</span>
+user adm: directory /var/adm does not exist
+user uucp: directory /var/spool/uucp does not exist
+user gopher: directory /var/gopher does not exist
+</pre></td></tr></table>
+
+		<p>瞧！上面僅是告知我，這些帳號並沒有家目錄，由於那些帳號絕大部分都是系統帳號，
+		確實也不需要家目錄的，所以，那是『正常的錯誤！』呵呵！不理他。 ^_^。
+		相對應的群組檢查可以使用 grpck 這個指令的啦！<br /><br /></p>
+
+		<a name="pwconv"></a>
+		<hr /><ul class="list1"><li class="text_import1">pwconv</li></ul>
+
+		<p>這個指令主要的目的是在『將 /etc/passwd 內的帳號與密碼，移動到 /etc/shadow 當中！』
+		早期的 Unix 系統當中並沒有 /etc/shadow 呢，所以，使用者的登入密碼早期是在 /etc/passwd
+		的第二欄，後來為了系統安全，才將密碼資料移動到 /etc/shadow 內的。使用 pwconv 後，可以：</p>
+
+		<ul>
+		<li>比對 /etc/passwd 及 /etc/shadow ，若 /etc/passwd 內存在的帳號並沒有對應的
+		/etc/shadow 密碼時，則 pwconv 會去 /etc/login.defs 取用相關的密碼資料，並建立該帳號的 /etc/shadow 資料；<br /><br /></li>
+
+		<li>若 /etc/passwd 內存在加密後的密碼資料時，則 pwconv 會將該密碼欄移動到 /etc/shadow 內，並將原本的 
+		/etc/passwd 內相對應的密碼欄變成 x ！</li>
+		</ul>
+		<p>一般來說，如果您正常使用 useradd 增加使用者時，使用 pwconv  並不會有任何的動作，因為 /etc/passwd 與 
+		/etc/shadow 並不會有上述兩點問題啊！ ^_^。不過，如果手動設定帳號，這個 pwconv 就很重要囉！<br /><br /></p>
+
+
+		<a name="pwunconv"></a>
+		<hr /><ul class="list1"><li class="text_import1">pwunconv</li></ul>
+		<p>相對於 pwconv ， pwunconv 則是『將 /etc/shadow 內的密碼欄資料寫回 /etc/passwd 當中，
+		並且刪除 /etc/shadow 檔案。』這個指令說實在的，最好不要使用啦！
+		因為他會將你的 /etc/shadow 刪除喔！如果你忘記備份，又不會使用 pwconv 的話，粉嚴重呢！<br /><br /></p>
+
+
+		<a name="chpasswd"></a>
+		<hr /><ul class="list1"><li class="text_import1">chpasswd</li></ul>
+
+		<p>chpasswd 是個挺有趣的指令，他可以『讀入未加密前的密碼，並且經過加密後，
+		將加密後的密碼寫入 /etc/shadow 當中。』這個指令很常被使用在大量建置帳號的情況中喔！
+		他可以由 Standard input 讀入資料，每筆資料的格式是『 username:password 』。
+		舉例來說，我的系統當中有個使用者帳號為 dmtsai ，我想要更新他的密碼 (update) ，
+		假如他的密碼是 abcdefg 的話，那麼我可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">echo "dmtsai:abcdefg" | chpasswd -m</span>
+</pre></td></tr></table>
+
+		<p>神奇吧！這樣就可以更新了呢！在預設的情況中， chpasswd 使用的是 DES 加密方法來加密，
+		我們可以使用 chpasswd -m 來使用 CentOS 5.x 預設的 MD5 加密方法。這個指令雖然已經很好用了，不過 CentOS 5.x
+		其實已經提供了『 passwd --stdin 』的選項，老實說，這個 chpasswd 可以不必使用了。但考慮其他版本不見得會提供
+		--stdin 給 passwd 這個指令，所以您還是得要瞭解一下這個指令用途！</p>
+	</div>
+
+	<hr /><a name="manual_normal"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">特殊帳號，如純數字帳號的手工建立</span><br />
+	<div class="block2">
+		<p>在我們瞭解了 UID/GID 與帳號的關係之後，基本上，您應該瞭解了，為啥<span 
+		class="text_import2">我們不建議使用純數字的帳號了！因為很多時候，系統會搞不清楚那組數字是『帳號』還是『 UID
+		』</span>，這不是很好啦～也因此，在早期某些版本底下，是沒有辦法使用數字來建立帳號的。例如在 Red Hat 9 的環境中，
+		使用『 useradd 1234 』他會顯示『 useradd: invalid user name '1234' 』瞭解了嗎？</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在較新的 distribution 當中，純數字的帳號已經可以被 useradd 建立了。不過鳥哥還是非常不建議使用純數字帳號。
+		例如在 setfacl 的設定值中，若使用『 setfacl -m u:501:rwx filename 』那個 501 代表的是 UID 還是帳號？
+		因為 setfacl 的設定是支援使用 UID 或帳號的，純數字帳號很容易造成系統的誤解！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>不過，有的時候，長官的命令難為啊 @_@ 有時還是得要建立這方面的帳號的，那該如何是好？
+		呵呵！當然可以手動來建立這樣的帳號啦！不過，為了系統安全起見，鳥哥還是不建議使用純數字的帳號的啦！
+		因此，底下的範例當中，我們使用手動的方式來建立一個名為 normaluser 的帳號，
+		而且這個帳號屬於 normalgroup 這個群組。OK！那麼整個步驟該如何是好呢？
+		由前面的說明來看，您應該瞭解了帳號與群組是與 /etc/group, /etc/shadow, /etc/passwd, /etc/gshadow 
+		有關，因此，整個動作是這樣的：</p>
+
+		<ol class="text_import2">
+		<li>先建立所需要的群組 ( vi /etc/group )；</li>
+		<li>將 /etc/group 與 /etc/gshadow 同步化 ( grpconv )；</li>
+		<li>建立帳號的各個屬性 ( vi /etc/passwd )；</li>
+		<li>將 /etc/passwd 與 /etc/shadow 同步化 ( pwconv )；</li>
+		<li>建立該帳號的密碼 ( passwd accountname )；</li>
+		<li>建立使用者家目錄 ( cp -a /etc/skel /home/accountname )；</li>
+		<li>更改使用者家目錄的屬性 ( chown -R accountname.group /home/accountname )。</li>
+		</ol>
+		夠簡單的咯吧！讓我們來玩一玩囉～<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">1. 建立群組 normalgroup ，假設 520 這個 GID 沒有被使用！並且同步化 gshadow</span>
+[root@www ~]# <span class="term_command">vi /etc/group</span>
+<span class="term_say"># 在最後一行加入底下這一行！</span>
+<span class="term_write">normalgroup:x:520:</span>
+[root@www ~]# <span class="term_command">grpconv</span>
+[root@www ~]# <span class="term_command">grep 'normalgroup' /etc/group /etc/gshadow</span>
+/etc/group:normalgroup:x:520:
+/etc/gshadow:normalgroup:x::
+<span class="term_say"># 最後確定 /etc/group, /etc/gshadow 都存在這個群組才行！搞定群組囉！</span>
+
+<span class="term_hd">2. 建立 normaluser 這個帳號，假設 UID 700 沒被使用掉！</span>
+[root@www ~]# <span class="term_command">vi /etc/passwd</span>
+<span class="term_say"># 在最後一行加入底下這一行！</span>
+<span class="term_write">normaluser:x:700:520::/home/normaluser:/bin/bash</span>
+
+<span class="term_hd">3. 同步化密碼，並且建立該使用者的密碼</span>
+[root@www ~]# <span class="term_command">pwconv</span>
+[root@www ~]# <span class="term_command">grep 'normaluser' /etc/passwd /etc/shadow</span>
+/etc/passwd:normaluser:x:700:520::/home/normaluser:/bin/bash
+/etc/shadow:normaluser:x:14307:0:99999:7:::
+<span class="term_say"># 確定 /etc/passwd, /etc/shadow 都含有 normaluser 的資訊了！但是密碼還不對～</span>
+[root@www ~]# <span class="term_command">passwd normaluser</span>
+Changing password for user normaluser.
+New UNIX password:
+Retype new UNIX password:
+passwd: all authentication tokens updated successfully.
+
+<span class="term_hd">4. 建立使用者家目錄，並且修訂權限！</span>
+[root@www ~]# <span class="term_command">cp -a /etc/skel /home/normaluser</span>
+[root@www ~]# <span class="term_command">chown -R normaluser:normalgroup /home/normaluser</span>
+[root@www ~]# <span class="term_command">chmod 700 /home/normaluser</span>
+</pre></td></tr></table>
+
+		<p>別懷疑！這樣就搞定了一個帳號的設定了！
+		從此以後，你可以建立任何名稱的帳號囉～不過，還是不建議您設定一些很怪很怪的帳號名稱啦！</p>
+	</div>
+
+
+	<hr /><a name="manual_account_1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">大量建置帳號範本(適用 passwd 
+	--stdin 選項)</span><br />
+	<div class="block2">
+		<p>由於 CentOS 5.x 的 passwd 已經提供了 --stdin 的功能，因此如果我們可以提供帳號密碼的話，
+		那麼就能夠很簡單的建置起我們的帳號密碼了。底下鳥哥製作一個簡單的 script 來執行新增用戶的功能喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi account1.sh</span>
+#!/bin/bash
+# 這支程式用來建立新增帳號，功能有：
+# 1. 檢查 account1.txt 是否存在，並將該檔案內的帳號取出；
+# 2. 建立上述檔案的帳號；
+# 3. 將上述帳號的密碼修訂成為『強制第一次進入需要修改密碼』的格式。
+# 2009/03/04    VBird
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# 檢查 account1.txt 是否存在
+if [ ! -f account1.txt ]; then
+        echo "所需要的帳號檔案不存在，請建立 account1.txt ，每行一個帳號名稱"
+        exit 1
+fi
+
+usernames=$(cat account1.txt)
+
+for username in $usernames
+do
+        useradd $username                         <span class="term_note">&lt;==新增帳號</span>
+        echo $username | passwd --stdin $username <span class="term_note">&lt;==與帳號相同的密碼</span>
+        chage -d 0 $username                      <span class="term_note">&lt;==強制登入修改密碼</span>
+done
+</pre></td></tr></table>
+
+		<p>接下來只要建立 account1.txt 這個檔案即可！鳥哥建立這個檔案裡面共有十行，你可以自行建立該檔案！
+		內容每一行一個帳號。注意，最終的結果會是每個帳號具有與帳號相同的密碼，且初次登入後，
+		必須要重新設定密碼後才能夠再次登入使用系統資源！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi account1.txt</span>
+std01
+std02
+std03
+std04
+std05
+std06
+std07
+std08
+std09
+std10
+
+[root@www ~]# <span class="term_command">sh account1.sh</span>
+Changing password for user std01.
+passwd: all authentication tokens updated successfully.
+<span class="term_say">....(後面省略)....</span>
+</pre></td></tr></table>
+
+		<p>這支簡單的腳本你可以在按如下的連結下載：</p>
+		<ul><li><a href="/linux_basic/0410accountmanager/account1.sh"
+		target="_blank">http://linux.vbird.org/linux_basic/0410accountmanager/account1.sh</a></li></ul>
+
+		<p>另外，鳥哥的 script 是在 zh_TW.big5 的語系下建立的，如果你需要轉成萬國碼 (utf8) 的編碼格式，
+		請下載上述檔案後，利用<a href="/linux_basic/0310vi.php#tips_translate">第十章談到的 iconv</a> 來處理語系的問題！</p>
+	</div>
+
+	<hr /><a name="manual_amount"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">大量建置帳號的範例(適用於連續數字，如學號)</span><br />
+	<div class="block2">
+		<p>前一小節的內容已經可以滿足很多朋友的帳號建置方法了，不過，某些時候上述的 script 還是很麻煩！
+		因為需要手動編輯 account1.txt 嘛！如果是類似學校單位這種學號非常類似的帳號時，有沒有更快的方案？
+		此外，如果需要每個班級同屬於一個群組，不同班級的群組不同，又該如何建置？這是比較麻煩啦！</p>
+
+		<p>目前很多網站都有提供大量建立帳號的工具，例如台南縣網中心的臥龍大師：</p>
+
+		<ul><li><a href="http://news.ols3.net/techdoc/old/howtouse_cmpwd101.htm" 
+		target="_blank">http://news.ols3.net/techdoc/old/howtouse_cmpwd101.htm</a></li></ul>
+
+		<p>提供的好用的 cmpwd 程式，但是小三大師的程式僅供學術單位使用，一般個人是無權使用的(參考上述連結的授權)。
+		不過，其實我們也可以利用簡單的 script 來幫我們達成喔！例如底下這支程式，
+		他的執行結果與小三大師提供的程式差不多啦～但是因為我是直接以 useradd 來新增的，
+		所以，即使不瞭解 UID ，也是可以適用的啦～整支程式的特色是：</p>
+
+		<ul>
+		<li>預設不允許使用純數字方式建立帳號；</li>
+		<li>可加入年級來區分帳號；</li>
+		<li>可設定帳號的起始號碼與帳號數量；</li>
+		<li>有兩種密碼建立方式，可以與帳號相同或程式自行以亂數建立密碼檔。</li>
+		</ul>
+
+		<p>執行方法也簡單的要命～請自行參考的啦！不再多說～使用時請注意，不要在公家使用的主機上面進行測試，因為.....
+		這支程式會大量建立帳號嘛！^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+#!/bin/bash
+#
+# 這支程式主要在幫您建立大量的帳號之用，更多的使用方法請參考：
+# http://linux.vbird.org/linux_basic/0410accountmanager.php#manual_amount
+#
+# 本程式為鳥哥自行開發，在 CentOS 5.x 上使用沒有問題，
+# 但不保證絕不會發生錯誤！使用時，請自行負擔風險～
+#
+# History:
+# 2005/09/05    VBird   剛剛才寫完，使用看看先～
+# 2009/03/04    VBird   加入一些語系的修改與說明，修改密碼產生方式 (用 openssl)
+export LANG=zh_TW.big5
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+accountfile="user.passwd"
+
+# 1. 進行帳號相關的輸入先！
+echo ""
+echo "例如我們崑山四技的學號為： 4960c001 到 4960c060 ，那麼："
+echo "帳號開頭代碼為         ：4"
+echo "帳號層級或年級為       ：960c"
+echo "號碼數字位數為(001~060)：3"
+echo "帳號開始號碼為         ：1"
+echo "帳號數量為             ：60"
+echo ""
+read -p "帳號開頭代碼 ( Input title name, ex&gt; std )======&gt; " username_start
+read -p "帳號層級或年級 ( Input degree, ex&gt; 1 or enter )=&gt; " username_degree
+read -p "號碼部分的數字位數 ( Input \# of digital )======&gt; " nu_nu
+read -p "起始號碼 ( Input start number, ex&gt; 520 )========&gt; " nu_start
+read -p "帳號數量 ( Input amount of users, ex&gt; 100 )=====&gt; " nu_amount
+read -p "密碼標準 1) 與帳號相同 2)亂數自訂 ==============&gt; " pwm
+if [ "$username_start" == "" ]; then
+        echo "沒有輸入開頭的代碼，不給你執行哩！" ; exit 1
+fi
+# 判斷數字系統
+testing0=$(echo $nu_nu     | grep '[^0-9]' )
+testing1=$(echo $nu_amount | grep '[^0-9]' )
+testing2=$(echo $nu_start  | grep '[^0-9]' )
+if [ "$testing0" != "" -o "$testing1" != "" -o "$testing2" != "" ]; then
+        echo "輸入的號碼不對啦！有非為數字的內容！" ; exit 1
+fi
+if [ "$pwm" != "1" ]; then
+        pwm="2"
+fi
+
+# 2. 開始輸出帳號與密碼檔案！
+[ -f "$accountfile" ] &amp;&amp; mv $accountfile "$accountfile"$(date +%Y%m%d)
+nu_end=$(($nu_start+$nu_amount-1))
+for (( i=$nu_start; i&lt;=$nu_end; i++ ))
+do
+        nu_len=${#i}
+        if [ $nu_nu -lt $nu_len ]; then
+                echo "數值的位數($i-&gt;$nu_len)已經比你設定的位數($nu_nu)還大！"
+                echo "程式無法繼續"
+                exit 1
+        fi
+        nu_diff=$(( $nu_nu - $nu_len ))
+        if [ "$nu_diff" != "0" ]; then
+                nu_nn=0000000000
+                nu_nn=${nu_nn:1:$nu_diff}
+        fi
+        account=${username_start}${username_degree}${nu_nn}${i}
+        if [ "$pwm" == "1" ]; then
+                password="$account"
+        else
+                password=$(openssl rand -base64 6)
+        fi
+        echo "$account":"$password" | tee -a "$accountfile"
+done
+
+# 3. 開始建立帳號與密碼！
+cat "$accountfile" | cut -d':' -f1 | xargs -n 1 useradd -m
+chpasswd &lt; "$accountfile"
+pwconv
+echo "OK！建立完成！"
+</pre></td></tr></table>
+
+		<p>如果有需要建立同一班級具有同一群組的話，可以先使用 <a href="#groupadd">groupadd</a> 建立群組後，
+		將該群組加入『 cat "$accountfile" | cut -d':' -f1 | xargs -n 1 useradd -m <span class="text_import2">-g 
+		groupname</span> 』那行！這支腳本可以在底下連結下載：</p>
+
+		<ul><li><a href="0410accountmanager/account2.sh" 
+		target="_blank">http://linux.vbird.org/linux_basic/0410accountmanager/account2.sh</a></li></ul>
+
+		<p>如果僅是測試而已，想要將剛剛建立的使用者整個刪除，則可以使用如下的腳本來進行刪除！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi delaccount2.sh</span>
+<span class="term_write">#!/bin/bash
+usernames=$(cat user.passwd | cut -d ':' -f 1)
+for username in $usernames
+do
+	echo "userdel -r $username"
+	userdel -r $username
+done</span>
+[root@www ~]# <span class="term_command">sh delaccount2.sh</span>
+</pre></td></tr></table>
+
+		<p>總之，帳號管理是很重要的！希望上面的說明能夠對大家有點幫助啦！</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>Linux 作業系統上面，關於帳號與群組，其實記錄的是 UID/GID 的數字而已；</li>
+	<li>使用者的帳號/群組與 UID/GID 的對應，參考 /etc/passwd 及 /etc/group 兩個檔案</li>
+	<li>/etc/passwd 檔案結構以冒號隔開，共分為七個欄位，分別是『帳號名稱、密碼、UID、GID、全名、家目錄、shell』</li>
+	<li>UID 只有 0 與非為 0 兩種，非為 0 則為一般帳號。一般帳號又分為系統帳號 (1~499) 即可登入者帳號 (大於 500)</li>
+	<li>帳號的密碼已經移動到 /etc/shadow 檔案中，該檔案權限為僅有 root 可以更動。該檔案分為九個欄位，內容為『
+		帳號名稱、加密密碼、密碼更動日期、密碼最小可變動日期、密碼最大需變動日期、密碼過期前警告日數、密碼失效天數、
+		帳號失效日、保留未使用』</li>
+	<li>使用者可以支援多個群組，其中在新建檔案時會影響新檔案群組者，為有效群組。而寫入 /etc/passwd 的第四個欄位者，
+		稱為初始群組。</li>
+	<li>與使用者建立、更改參數、刪除有關的指令為：useradd, usermod, userdel等，密碼建立則為 passwd；</li>
+	<li>與群組建立、修改、刪除有關的指令為：groupadd, groupmod, groupdel 等；</li>
+	<li>群組的觀察與有效群組的切換分別為：groups 及 newgrp 指令；</li>
+	<li>useradd 指令作用參考的檔案有： /etc/default/useradd, /etc/login.defs, /etc/skel/ 等等</li>
+	<li>觀察使用者詳細的密碼參數，可以使用『 chage -l 帳號 』來處理；</li>
+	<li>使用者自行修改參數的指令有： chsh, chfn 等，觀察指令則有： id, finger 等</li>
+	<li>ACL 可進行單一個人或群組的權限管理，但 ACL 的啟動需要有檔案系統的支援；</li>
+	<li>ACL 的設定可使用 setfacl ，查閱則使用 getfacl ；</li>
+	<li>身份切換可使用 su ，亦可使用 sudo ，但使用 sudo 者，必須先以 visudo 設定可使用的指令；</li>
+	<li>PAM 模組可進行某些程式的驗證程序！與 PAM 模組有關的設定檔位於 /etc/pam.d/* 及 /etc/security/*</li>
+	<li>系統上面帳號登入情況的查詢，可使用 w, who, last, lastlog 等；</li>
+	<li>線上與使用者交談可使用 write, wall，離線狀態下可使用 mail 傳送郵件！</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+<div class="block1">
+<ul>
+	<li>情境模擬題一：想將本伺服器的帳號分開管理，分為單純郵件使用，與可登入系統帳號兩種。其中若為純郵件帳號時，
+	將該帳號加入 mail 為初始群組，且此帳號不可使用 bash 等 shell 登入系統。若為可登入帳號時，
+	將該帳號加入 youcan 這個次要群組。<br /><br />
+	<ul>
+		<li>目標：瞭解 /sbin/nologin 的用途；</li>
+		<li>前提：可自行觀察使用者是否已經建立等問題；</li>
+		<li>需求：需已瞭解 useradd, groupadd 等指令的用法；</li>
+	</ul><br />
+
+	解決方案如下：<br /><br />
+
+	<ol>
+	<li>預先察看一下兩個群組是否存在？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep mail /etc/group</span>
+[root@www ~]# <span class="term_command">grep youcan /etc/group</span>
+[root@www ~]# <span class="term_command">groupadd youcan</span>
+</pre></td></tr></table>
+
+	可發現 youcan 尚未被建立，因此如上表所示，我們主動去建立這個群組囉。<br /><br /></li>
+
+	<li>開始建立三個郵件帳號，此帳號名稱為 pop1, pop2, pop3 ，且密碼與帳號相同。可使用如下的程式來處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim popuser.sh</span>
+#!/bin/bash
+for username in pop1 pop2 pop3
+do
+	useradd -g mail -s /sbin/nologin -M $username
+	echo $username | passwd --stdin $username
+done
+[root@www ~]# <span class="term_command">sh popuser.sh</span>
+</pre></td></tr></table><br /></li>
+
+	<li>開始建立一般帳號，只是這些一般帳號必須要能夠登入，並且需要使用次要群組的支援！所以：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim loginuser.sh</span>
+#!/bin/bash
+for username in youlog1 youlog2 youlog3
+do
+	useradd -G youcan -s -m $username
+	echo $username | passwd --stdin $username
+done
+[root@www ~]# <span class="term_command">sh loginuser.sh</span>
+</pre></td></tr></table><br /></li>
+
+	<li>這樣就將帳號分開管理了！非常簡單吧！</li>
+
+	</ol></li>
+</ul>
+
+<hr />簡答題部分
+<ul>
+	<li>root 的 UID 與 GID 是多少？而基於這個理由，我要讓 test 這個帳號具有 root 的權限，應該怎麼作？
+	<div class="blockex">
+		root 的 UID 與 GID 均為 0 ，所以要讓 test 變成 root 的權限，那麼就將 /etc/passwd 裡面， 
+		test 的 UID 與 GID 欄位變成 0 即可！
+	</div></li>
+
+	<li>假設我是一個系統管理員，我有一個用戶最近不乖，所以我想暫時將他的帳號停掉，
+	讓他近期無法進行任何動作，等到未來他乖一點之後，我再將他的帳號啟用，請問：我可以怎麼作比較好？？
+	<div class="blockex">
+		由於這個帳號是暫時失效的，所以不能使用 userdel
+		來刪除，否則很麻煩！那麼應該如何設定呢？再回去瞧一瞧 /etc/shadow 
+		的架構，可以知道有這幾個可使用的方法：<ul>
+		<li>將 /etc/passwd 的 shell 欄位寫成 /sbin/nologin ，即可讓該帳號暫時無法登入主機；</li>
+		<li>將 /etc/shadow 內的密碼欄位，增加一個 * 號在最前面，這樣該帳號亦無法登入！</li>
+		<li>將 /etc/shadow 的第八個欄位關於帳號取消日期的那個，設定小於目前日期的數字，那麼他就無法登入系統了！</li>
+		</ul>
+	</div></li>
+
+	<li>我在使用 useradd 的時候，新增的帳號裡面的 UID, GID 還有其他相關的密碼控制，都是在哪幾個檔案裡面設定的？
+	<div class="blockex">
+		在 /etc/login.defs 還有 /etc/default/useradd 裡面規定好的！
+	</div></li>
+
+	<li>我希望我在設定每個帳號的時候( 使用 useradd )，預設情況中，他們的家目錄就含有一個名稱為
+	www 的子目錄，我應該怎麼作比較好？
+	<div class="blockex">
+		由於使用 useradd 的時候，會自動以 /etc/skel 做為預設的家目錄，所以，我可以在
+		/etc/skel 裡面新增加一個名稱為 www 的目錄即可！
+	</div></li>
+
+	<li>簡單說明系統帳號與一般使用者帳號的差別？
+	<div class="blockex">
+		一般而言，為了讓系統能夠順利以較小的權限運作，系統會有很多帳號，
+		例如 mail, bin, adm 等等。而為了確保這些帳號能夠在系統上面具有獨一無二的權限，
+		一般來說 Linux 都會保留一些 UID 給系統使用。在 CentOS 5.x 上面，小於 500 
+		以下的帳號 (UID) 即是所謂的 System account。
+	</div></li>
+
+	<li>簡單說明，為何 CentOS 5.x 建立使用者時，他會主動的幫使用者建立一個群組，而不是使用 /etc/default/useradd 的設定？
+	<div class="blockex">
+		不同的 linux distributions 對於使用者 group 的建立機制並不相同。主要的機制分為：<ul>
+		<li>Public group schemes: 使用者將會直接給予一個系統指定的群組，一般來說即是 users ，
+			可以 SuSE Server 9 為代表；</li>
+		<li>Private group schemes: 系統會建立一個與帳號一樣的群組名稱！以 CentOS 5.x 為例！</li></ul>
+	</div></li>
+
+	<li>如何建立一個使用者名稱 alex, 他所屬群組為 alexgroup, 預計使用 csh, 他的全名為 "Alex Tsai"，
+	且他還得要加入 users 群組當中！
+	<div class="blockex">
+		groupadd alexgroup<br />
+		useradd -c "Alex Tsai" -g alexgroup -G users -m alex<br />
+		務必先建立群組，才能夠建立使用者喔！
+	</div></li>
+
+	<li>由於種種因素，導致你的使用者家目錄以後都需要被放置到 /account 這個目錄下。
+	請問，我該如何作，可以讓使用 useradd 時，預設的家目錄就指向 /account ？
+	<div class="blockex">
+		最簡單的方法，編輯 /etc/default/useradd ，將裡頭的 HOME=/home 改成 HOME=/account 即可。
+	</div></li>
+
+	<li>我想要讓 dmtsai 這個使用者，加入 vbird1, vbird2, vbird3 這三個群組，且不影響 dmtsai 原本已經支援的次要群組時，該如何動作？
+	<div class="blockex">
+		usermod -a -G vbird1,vbird2,vbird3 dmtsai
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：最完整與詳細的密碼檔說明，可參考各 distribution 內部的 man page。
+		本文中以 CentOS 5.x 的『 man 5 passwd 』及『 man 5 shadow 』的內容說明；</li>
+	<li><a name="ps2"></a>註2：MD5與DES均為加密的機制，詳細的解釋可參考維基百科的說明：<br />
+		MD5：<a href="http://zh.wikipedia.org/wiki/MD5" target="_blank">http://zh.wikipedia.org/wiki/MD5</a><br />
+		DES：<a href="http://en.wikipedia.org/wiki/Data_Encryption_Standard"
+		target="_blank">http://en.wikipedia.org/wiki/Data_Encryption_Standard</a><br />
+		在早期的 Linux 版本中，主要使用 DES 加密演算法，近期則使用 MD5 作為預設演算法。</li>
+	<li><a name="ps3"></a>註3：telnet 與 ssh 都是可以由遠端用戶主機連線到 Linux 伺服器的一種機制！詳細資料可查詢鳥站文章：
+		遠端連線伺服器：<a href="http://linux.vbird.org/linux_server/0310telnetssh.php"
+		target="_blank">http://linux.vbird.org/linux_server/0310telnetssh.php</a></li>
+
+	<li><a name="ps4"></a>註4：詳細的說明請參考 man sudo ，然後以 5 作為關鍵字搜尋看看即可瞭解。</li>
+	<li><a name="ps5"></a>註5：詳細的 PAM 說明可以參考如下連結：<br />
+		維基百科：<a href="http://en.wikipedia.org/wiki/Pluggable_Authentication_Modules"
+		target="_blank">http://en.wikipedia.org/wiki/Pluggable_Authentication_Modules</a><br />
+		Linux-PAM網頁： <a href="http://www.kernel.org/pub/linux/libs/pam/"
+		target="_blank">http://www.kernel.org/pub/linux/libs/pam/</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/05/15：第一次完成<br />
+2003/02/10：重新編排與加入 FAQ<br />
+2005/08/25：加入一個大量建置帳號的實例，簡單說明一下而已！<br />
+2005/08/29：將原本的舊文放置到 <a href="0410accountmanager/0410accountmanager.php">此處</a><br />
+2005/08/31：因為 <a href="0410accountmanager/0410accountmanager.php#userconf">userconf</a> 
+	    已經不再這麼好用了，使用指令模式比較簡單，所以，將他拿掉了～<br />
+2005/09/05：終於將大量建置帳號的那支程式寫完了～真是高興啊！<br />
+2006/03/02：更新使用者 UID 號碼，由 65535 升級到 2^32-1 這麼大！<br />
+2007/04/15：原本寫的 /etc/pam.d/limits.conf 錯了！應該是 <a href="#20070415">/etc/security/limits.conf</a> 才對！<br />
+2008/04/28：sudo 關於密碼重新輸入的部分寫錯了！已經更新，在<a href="#20080426">這裡</a>查閱看看。感謝網友 superpmo 的告知！<br />
+2009/02/18：將基於 FC4 版本的舊文章移動到 <a href="/linux_basic/0410accountmanager/0410accountmanager-fc4.php">此處</a>。<br />
+2009/02/26：加入 <a href="#chage">chage</a>  以及『 chage -d 0 帳號』的功能！<br />
+2009/02/27：加入 <a href="#acl_talk">acl</a> 的控制項目！<br />
+2009/03/04：加入一個簡單的帳號新增範例，以及修改原本的帳號新增範例！<br />
+2009/04/28：取消 sudo 內的 -c 選項功能說明！之前說的是錯的～<br />
+2009/09/09：加入一些模擬題，修改一些語詞的用法。<br />
+</span>
+<hr /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

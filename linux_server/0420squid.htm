@@ -1,0 +1,2567 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 代理伺服器 squid 設定</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+<td width="718">
+
+
+<center>
+<font color="#3333FF"><font size=+2><font face="標楷體">簡易</font>
+Proxy Server <font face="標楷體">架設</font></font></font></center>
+
+<div align=right><font face="新細明體"><font color="#3333FF"><font size=-1>最近更新日期：2004/11/12</font></font></font></div>
+<font face="新細明體"><font color="#3333FF"><font size=-2>　</font></font></font>
+<table BORDER COLS=1 WIDTH="100%" BGCOLOR="#FFCCCC" >
+<tr>
+<td><font color="#000099"><font size=-1>代理伺服器的功能可多的呢！在中大型的企業當中，可以藉由單點對外的
+Proxy 主機來達到『節省頻寬』的目的，同時，也可以透過這樣的 Proxy 架構來達成『高階防火牆』的設定，這裡的『高階』指的是
+OSI 七層協定裡面比較高階段的層級，那就是應用與表現層方面的防火牆啦！那如果對於小型的企業呢？這個
+Proxy 也可以達到分流的作用，讓不同的目標網站可以透過不同的上層 Proxy 來取得資料！啊！真是很不錯的一個伺服器啊！不過，這個
+Proxy 伺服器也是幾個常見的伺服器裡面，硬體要求相對比較高的一個咚咚！因為
+Proxy 要求的是『快速』，所以呢，呵呵！當然硬體等級的要求是相當的『蠻像一回事』的！^_^</font></font></td>
+</tr>
+</table>
+
+<font color="#000099"><font size=-2>　</font></font>
+<br><font color="#000099"><font size=+1><a href="#theory">原理</a>：</font></font>
+<br><font color="#000099">　　：<a href="#theory_whatisproxy">什麼是代理伺服器</a></font>
+<br><font color="#000099">　　：<a href="#theory_proxysworks">代理伺服器的運作方式</a></font>
+<br><font color="#000099">　　：<a href="#theory_things">代理伺服器的用途與優缺點</a></font>
+<br><font color="#000099">　　：<a href="#theory_parent_proxy">什麼是上層代理伺服器？哪裡有上層代理伺服器</a></font>
+
+<br><font color="#000099">　　：<a href="#theory_yesorno">我是否一定要設定
+Proxy </a>？</font>
+<br><font color="#000099">　　：<a href="#theory_hardware">所需要的硬體要求與最佳硬體配置方式</a></font>
+<br><font color="#000099">　　：<a href="#theory_proxynadnat">代理伺服器與
+NAT 主機的差異</a></font>
+<br><font color="#000099"><font size=+1><a href="#package">套件安裝</a>：</font></font>
+<br><font color="#000099">　　：<a href="#package_rpm">使用 RPM 方式安裝
+squid</a></font>
+<br><font color="#000099">　　：<a href="#package_tarball">使用 Tarball
+方式安裝 squid</a></font>
+
+<br><font color="#000099"><font size=+1><a href="#server">Server 端設定</a></font>：</font>
+<br><font color="#000099">　　：<a href="#server_contr">squid 的結構</a></font>
+<br><font color="#000099">　　：<a href="#server_permissions">squid 的
+process owner 與 cache directory owner</a></font>
+<br><font color="#000099">　　：<a href="#server_basic">最簡易的 squid
+設定方法</a></font>
+<br><font color="#000099">　　：<a href="#server_mem_cache">記憶體與磁碟快取留存百分比設定</a></font>
+<br><font color="#000099">　　：<a href="#server_acl">acl 的用法與用途</a></font>
+
+<br><font color="#000099">　　：<a href="#server_upper_proxy">上層 Proxy
+的選擇與負載分流的設定方法</a></font>
+
+<br><font color="#000099">　　：<a href="#server_time_par">與時間相關的設定值
+( connect_timeout, request_timeout )</a></font>
+<br><font color="#000099">　　：<a href="#server_always_direct">總是系統自己來捉資料(always_direct)</a></font>
+<br><font color="#000099">　　：<a href="#server_access_control">限制使用
+proxy 使用者與 proxy 目標的方式 (acl and http_access )</a></font>
+<br><font color="#000099">　　：<a href="#server_other_functions">額外的功能參數</a></font>
+<br><font color="#000099"><font size=+1><a href="#client">Client 端設定</a></font>：</font>
+
+<br><font color="#000099">　　：<a href="#client_netscape">Netscape</a></font>
+<br><font color="#000099">　　：<a href="#client_ie">Internet Explorer</a></font>
+<br><font color="#000099"><font size=+1><a href="#serverahead">Server 端進階設定</a>：</font></font>
+<br><font color="#000099">　　：<a href="#serverahead_pwebstats">末端資料分析
+pwebstat</a></font>
+<br><font color="#000099">　　：<a href="#serverahead_sarg">末端資料分析
+sarg</a></font>
+<br><font color="#000099">　　：<a href="#serverahead_firewall">防火牆的規劃</a></font>
+
+<br><font color="#000099">　　：<a href="#serverahead_transparent">NAT
+與 Proxy 透過 transparent proxy 設定加快網路傳輸</a></font>
+<br><font color="#000099">　　：<a href="#serverahead_beca">squid 的注意事項</a></font>
+<br><font color="#000099"><a href="#important">重點回顧</a></font>
+<br><font color="#000099"><a href="#reference">參考資源</a></font>
+<br><font color="#000099"><a href="#FAQ">本章習題練習</a></font>
+<br>
+<hr WIDTH="100%"><a NAME="theory"></a><font color="#000099"><font size=+1>原理：</font></font>
+<ul>代理伺服器的原理其實很簡單啦！就是以類似代理人的角度去取得使用者所需要的資料就是了！但是由於他的功用，使得我們可以透過代理伺服器來額外的達成防火牆的功能！此外，也可以藉由代理伺服器
+( Proxy ) 來達成節省頻寬的目的，以及加快內部網路的 WWW 存取速度！總之，
+Proxy 對於大型的企業來說，實在是一個很不錯的東西啊！
+<br>　
+
+<br>
+<hr WIDTH="100%"><a NAME="theory_whatisproxy"></a><font color="#000099"><font size=+1>什麼是代理伺服器</font></font>
+<br>　
+<br>在真實世界中，我們或許會幫忙家人去辦理一些雜務吧！舉個例子來說，例如繳費或者是申辦提款卡等等的，那麼由於你並不是『申請者本人』而是『代理人』的角色，因此有時候會需要秀出一些證件就是了。那麼在網路上面的代理伺服器是怎麼回事呢？他就是
+Proxy Server 囉！他最主要的功能就如同我們上面提的真實世界一樣， <font color="#000066">Proxy
+會幫 Client 端的用戶去向目的地取得用戶端所需要的資料</font>。所以，當 Client
+端指定代理伺服器之後，您的所有相關要求( 例如 WWW 的要求 )就會通過代理伺服器去捉取囉！整個代理伺服器與用戶端的相關性可以由下圖約略看出一個端倪：
+<center>　
+<br><img SRC="0420squid/0420squid_proxy1.jpg" NOSAVE height=320 width=291>
+<br><a NAME="fig_01"></a><font color="#000066">圖一、代理伺服器的示意圖</font>
+<br>　</center>
+在內部的電腦都是透過 Proxy 來向 Internet 求取資料的，這就是所謂的『代理伺服器』啦！當然，上面的架構僅只是一個案例，還有相當多的非
+Intranet 的 Proxy 架構，亦即是你的 PC 與 Proxy 均在 Internet 上面，但是您一樣可以透過這個
+Proxy 來幫您達到代理人身份的目的呢！
+<br>　
+<br>在 Proxy 與 Client 的相關性當中，您必需要瞭解的是：<font color="#000066">您向外部要求的資料事實上都是
+Proxy 幫你取得的</font>！怎麼說呢？舉個例子來說，假如我在我的瀏覽器 ( 假設是
+Netscape 好了 )設定了我們學校的代理伺服器主機 proxy.ncku.edu.tw 做為我的
+Proxy 好了，再假設我的 IP 是 140.116.44.125 ，那麼當我想要取得奇摩網站的新聞資訊時，事實上，都是
+proxy.ncku.edu.tw 幫我去取得的，所以在奇摩的網站上面看到向他要求資料的人是誰呢？呵呵！當然就是
+proxy.ncku.edu.tw 而不是我 140.116.44.125 囉！這樣可以瞭解 Proxy 的功能了嗎？
+
+<br>　
+<br>除了這點功能之外， <font color="#000066">Proxy 還有一個很棒的額外功能喔，那就是防火牆的功能</font>！怎麼說呢？看一下上面的圖示，您可以發現一件事情，那就是
+Client 端的個人電腦要連上 Internet 一定要經過 Proxy 伺服器，並且，如果有人想要入侵你的系統時，由於你的
+proxy 在最外部啊，所以攻擊者就會攻擊錯方向，如此一來，不就比較安全！此外，由於整個
+Intranet 對外都是經過 proxy ，也就是『單點對外』的情況，這種狀態底下要來管理防火牆也是比較簡單的喔！^_^
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="theory_proxysworks"></a><font color="#000099"><font size=+1>代理伺服器的運作方式</font></font>
+<br>　
+<br>瞭解的 Proxy 的功能之後，我們來談一談那麼 Proxy 到底是怎樣運作的呢？為何他會有『加快網路存取效率』的情況？這就必需要以底下的圖示來說明了！
+<br>　
+<center><img SRC="0420squid/0420squid_proxy2.jpg" NOSAVE height=232 width=518>
+<br><a NAME="fig_02"></a><font color="#000066">圖二、代理伺服器的運作方式流程圖</font></center>
+　
+<br>當 Client 端設定了代理伺服器之後，在 Client 端想要取得 Internet 上面的資訊時，他是這樣取得資料的
+(註：那個 Cache 表示為 Proxy 主機的硬碟的意思 )：
+<br>　
+
+<br><b><font color="#000066">一、Proxy 有使用者預計要求的資料時( Step 1,
+2, 3,4 )：</font></b>
+<ol>
+<li>
+<font color="#000066">Client 端向 Server 端發送一個資料需求封包；</font></li>
+
+<li>
+<font color="#000066">Server 端接收之後，先比對這個封包的『來源』與預計要前往的『目標』網站是否為可接受？如果來源與目標都是合法的，或者說，來源與目標網站我們的
+Proxy 都能幫忙取得資料時，那麼 Server 端會預計開始替 Client 取得資料。這個步驟中比較重要的就是『比對政策』啦，有點像是認證的感覺啦；</font></li>
+
+<li>
+<font color="#000066">Server 首先會到自己的硬碟裡面，也就是所謂的 cache
+(快取) 查看一下有沒有 Client 端所需要的資料，如果有的話，那就將資料直接送到
+Client 端 (步驟4) 而不經過向 Internet 要求資料的程序；</font></li>
+</ol>
+　
+<br><b><font color="#000066">二、Proxy 沒有使用者預計要求的資料時 ( Step
+1, 2, 3, 5, 6, 2, 3, 7 )：</font></b>
+
+<ol>
+<li>
+<font color="#000066">在經過 1, 2, 3 查尋知道 cache 沒有資料，或者資料過期之後，
+Proxy 會向 Internet 上面的目標網站要求資料；</font></li>
+
+<li>
+<font color="#000066">在將資料取回之後， proxy 會先將取得的資料『儲存一份到
+cache 當中』；</font></li>
+
+<li>
+<font color="#000066">最後才將資料傳回給 Client 端使用。</font></li>
+</ol>
+　
+<br>整個 Proxy 的工作流程就是這個樣子，所以，我們就可以知道的是， Proxy
+對於 cache 的速度是很要求的，而這個 cache 就是硬碟啦！當然，硬碟容量必需要足夠大，而且還要『足夠快』才行！因為由上面的流程當中，我們不難發現，
+Cache 是一直被重複存取的一個地方喔！所以硬碟的好壞就差別很大啦！可以說他是影響一個
+Proxy 效能好壞的關鍵點呢！
+<br>　
+<br>
+
+<hr WIDTH="100%"><a NAME="theory_things"></a><font color="#000099"><font size=+1>代理伺服器的用途與優缺點</font></font>
+<br>　
+<br>一般來說，代理伺服器的用途主要有兩個：
+<br>　
+<ul>
+<li>
+<font color="#000066"><b>WWW 網頁代理人</b>：最主要的用途當然就是做為網頁資料取得代理人囉，也就是說，
+Proxy 可以幫我們取得 Internet 上面的 WWW 資料就是了！那麼能不能取得其他非
+WWW 的資料呢？那就不一定了，要看 Proxy 主機是否有設定該服務。一般來說，
+Proxy 主要還是針對 WWW 網頁的代理取得；</font></li>
+</ul>
+<font color="#000066">　</font>
+<ul>
+<li>
+<font color="#000066"><b>做為 Intranet 的單點對外防火牆系統</b>：就如同前面的圖示，
+Proxy 如果架設在 Intranet 對外的連接點上面，那麼他就可以被用來做為『應用層』階段的防火牆了！而且，這個時候不需要設定
+
+<a href="0320nat.php">NAT</a>
+就可以讓 Intranet 內部的私有 IP 的電腦連接上 Internet 了！這是因為您想要的資料是向
+proxy 要求，所以真正去取得資料的人是『Proxy』而不是你的電腦啊！所以，只要
+Proxy 可以接受私有 IP 的電腦要求，那這些私有 IP 的電腦就可以連上 WWW 啦！不過，也由於
+Proxy 為一個 應用層 階段的防火牆系統，所以，他並無法進行較低階的封包過濾！因此，在內部電腦想要透過
+Proxy 來取得郵件、或者是其他的服務，呵呵！那就比較麻煩，簡直就是麻煩的多啦！</font></li>
+</ul>
+　
+<br>由於 Proxy 的這種特性，讓他很常被使用於大型的企業內部，因為可以達到杜絕內部人員上班時使用非
+WWW 以外的網路服務，而且還可以監測使用者的資料要求流向與流量呢！很不錯吧！
+^_^好了，接下來我們來談一談 Proxy 主要的優缺點吧：
+<br>　
+<ul>
+<li>
+<b><font color="#000066">快速的存取動作</font></b>：一般來說， Proxy 主機的頻寬以及硬體配備會比較高檔！所以
+Proxy 最大的優點就是可以提供用戶端較為快速的瀏覽！咦！但是我們向 Proxy
+要求資料的時候， Proxy 不是會自行再儲存一份嗎？這樣不是會多花很多時間？是這樣沒有錯，但是，換一個角度來想，<font color="#000066">如果在第一位使用者要求過
+A 資料後，由於 Proxy 就會自動放一放 A 資料在 Cache 當中，之後的所有使用者只要是重複要求這個
+A 資料， Proxy 可以立刻將資料傳給使用者</font>，您瞧！這樣這個 Client 等於是直接向
+Proxy 取得這份 A 資料了！是否更加的快速！這是因為 Proxy 就在您的 Intranet
+之內，傳輸速度可是相當快的！這也就是說：如果您要設定代理伺服器的時候，<font color="#000066">一定要找距離我們的機器最近的那一部</font>，否則就沒有達到代理伺服器的功用了！通常快速的存取動作最明顯的大概是連去國外的網站了！這裡要強烈的建議，<font color="#000066">如果你需要連上國外的網頁，請一定使用代理伺服器，因為不但可以節省頻寬，並且速度上會快上很多很多
+( </font>例如美國環保署, EPA 網站！ )</li>
+
+</ul>
+　
+<ul>
+<li>
+<b><font color="#000066">降低網路的負荷</font></b>：由於我們是向代理伺服器要求資料，如果代理伺服器內剛好有你要的資料，將會直接傳給你，則你的要求將不會到真實的那一個網頁去
+( 除非你在 IE 內按下『重新整理』這個按鈕 ) ，而如果沒有你要求的資料，那他也會去捉一份你要的資料給你，並存下來，以後如果有與你相同需要的用戶，那他就可以直接傳送給用戶，如此當可降低網路的負荷！(也就是上面<a href="#fig_02">圖二</a>的
+step 1, 2, 3, 4 )</li>
+</ul>
+　
+<ul>
+<li>
+<b><font color="#000066">資料分流</font></b>：由於各家 ISP 對於不同國家的頻寬是有差異的，因此，假設如果您要去美國時使用
+Proxy1 速度較快，而 Proxy2 則是去日本比較快，至於台灣本地則 Proxy3 較快，如此一來，我們可以透過設定將不同目標的代理伺服器分開來，以達到分流的目的！則你的網域中將可以達到很好的分流效果，網路『感覺上』會比較快速喔！</li>
+</ul>
+
+　
+<ul>
+<li>
+<b><font color="#000066">提供防火牆內部的電腦連上 Internet</font></b>：這個是一般企業比較常用的情況！由於企業內部害怕被駭客侵入，通常會設立一些比較嚴密的防火牆，然而如此一來公司內部的電腦可能面臨無法連上
+Internet 的窘境，那使用 proxy 讓你的內部電腦可以透過這一架主機的代理服務而取得
+Internet 上的資訊，就是一個很好的方法啦！</li>
+</ul>
+　
+<ul>
+<li>
+<b><font color="#000066">多層次的管道 ( 上層代理伺服器 )</font></b>：代理伺服器可以提供多重的管道設定，例如，當你需要國內的資料時，代理伺服器將直接去捉取，而需要國外的資料時，才連到上一層的代理伺服器！如此將可達到你的需求
+( 而不用常常在你的 IE 等瀏覽器上更改所需的代理伺服器 ) ，這個部分我們在底下還會進行額外的說明。</li>
+</ul>
+　
+<br>有利就有弊，當然 Proxy 也不是萬能的天神～他有什麼可能潛藏的缺點呢？
+<br>　
+
+<ul>
+<li>
+<b><font color="#000066">容易為 Intranet 的內部人員濫用</font></b>：因為
+Proxy 是對內部的電腦捉取資料 ( 當然也可以對 Internet 上面的使用者捉取資料啦！
+) ，而且在 Internet 上面看到的實際上是你的 Proxy 在捉資料喔！如果你的使用者大量的以瀏覽器下載
+A 圖啊，還是透過你的 Proxy 幹壞事啦，這樣一來可就累了～因為實在不容易輕易的管理！所以，為了杜絕這個狀況，強烈的建議多加安裝登錄檔案分析的軟體，在管理上面會輕鬆很多喔！</li>
+</ul>
+　
+<ul>
+<li>
+<b><font color="#000066">需要較高超的設定技巧與除錯程序</font></b>：在鳥哥設定過的
+Server 當中， Proxy 算是比較不容易設定好『效能』的一個伺服器了！由上面的傳輸過程中，您不難發現
+Proxy 的 Cache 與他的『上層代理伺服器』的關係是很緊密的，萬一設定錯誤的話，很有可能反而讓您的
+Proxy 拖垮 WWW 的瀏覽速度！最嚴重的是造成無法連線 ( 在上層 Proxy 與您的
+Proxy 之間構成 loop 而跑不出去！ )，因此，這對於管理員來說是比較困擾的一件事。</li>
+</ul>
+　
+<ul>
+<li>
+<b><font color="#000066">可能會取得舊的錯誤資料</font></b>：由前面的 Proxy
+運作過程當中不難發現，Client 端向 Server 端求取資料時，Server 會先向自己的
+cache 查尋，如果有該索求資料，就立即將資料送給 Client 。現在假設個例子來說明，萬一我的網頁三天兩頭改變一次，那麼那個
+cache 事實上並沒有天天更新啊！這個時候， Client 端所取得的資料就有可能是網頁修改之前的舊資料咯！所以，使用者得常常按下『更新』才能取得新的資料啊！</li>
+
+</ul>
+　
+<br>總之， Proxy 的優點是很多的，但是缺點卻需要網管人員的操心啊！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="theory_parent_proxy"></a><font color="#000099"><font size=+1>什麼是上層代理伺服器？哪裡有上層代理伺服器</font></font>
+<br>　
+<br><b><font color="#000099">什麼是上層代理伺服器：</font></b>
+<br>好了，上面提到過所謂的『上層代理伺服器』這又是什麼咚咚？事實上，上層代理伺服器就是一個
+Proxy 啦，只是，我們自己設定的這個區域 Proxy 會將自己當作 Client 而去要求另外一個
+Proxy 求取資料來給我們的使用者就是了！整個流程圖可以這樣看：
+<br>　
+<center><img SRC="0420squid/0420squid_proxy3.jpg" NOSAVE height=116 width=640>
+<br><a NAME="fig_03"></a><font color="#000066">圖三、上層 Proxy 示意圖</font></center>
+　
+<br>就是我們的 Local proxy 並不會主動的去捉資料，而是透過『上層代理伺服器』去向
+Internet 要求資料！這樣有什麼好處呢？剛剛上面也曾經提過了，由於這些上層代理伺服器才是真正對外頻寬最大的幾部機器之一，所以透過他來要求資料一定又比我們的
+Local proxy 還要來的快啊！所以我當然會喜歡設定上層 Proxy 嚕！這個現象最常發生在對國外的連線上面，有沒有設定
+Proxy 差異是相當大的呢！上層代理伺服器除了頻寬更大之外，還有沒有什麼好處啊？當然有，最大的好處就是達到分流的效應！例如下圖的說明：
+
+<br>　
+<center><img SRC="0420squid/0420squid_proxy4.jpg" NOSAVE height=346 width=488>
+<br><a NAME="fig_04"></a><font color="#000066">圖四、上層代理伺服器的分流動作示意圖</font></center>
+　
+<br>我總共設定了三個上層代理伺服器，由於這三個代理伺服器對外的速度都不相同，所以，當我要去美國時，就以
+Proxy1 來要求資料，要連歐洲就以 Proxy3 ，至於要連日本，就以 Proxy 2 來要求我所需要的資料，如此一來，呵呵！可以讓我的
+Proxy 達到最佳的效能喔！很不錯吧！ ^_^！所以上層代理伺服器是很重要的呢！
+<br>　
+<br><b><font color="#000099">哪裡有上層代理伺服器？</font></b>
+<br>目前有哪些流量大、然後又開放出來的 Proxy 呢？我這裡舉幾個網頁給大家參考參考：
+<br>　
+<ul>
+<li>
+<a href="http://service.seed.net.tw/dial/server.shtml" target="_blank">SeedNet
+的代理伺服器(http://service.seed.net.tw/dial/server.shtml)</a>；</li>
+
+<li>
+<a href="http://www.hinet.net/support/new_adsl04.htm" target="_blank">Hinet
+的代理伺服器(http://www.hinet.net/support/new_adsl04.htm)</a>；</li>
+
+<li>
+<a href="http://turtle.ee.ncku.edu.tw/~tung/proxy/proxylst.html" target="_blank">一些台灣學術網路的代理伺服器(http://turtle.ee.ncku.edu.tw/~tung/proxy/proxylst.html)</a>。</li>
+</ul>
+　
+<br>由前面的介紹中，我們不難發現 Proxy 有可能會被 Client 端過度的濫用，同時也有可能會被拿來為非作歹啊！所以，目前絕大部分的
+Proxy 已經『停止對外開放』了，僅針對自己的網域內的 Client 提供 Proxy 的服務而已～因此，如果您要自行設定
+Proxy 的時候，請記得去您當初申請網路的 ISP ( 如果是學術單位，就到上面介紹的學術網路查看看即可！)
+查尋一下，才能比較有效的設定好您的主機喔！因為設定錯誤的話，呵呵！上層
+Proxy 根本不提供服務，或者是上層 Proxy 的效能並不好，那個時候您的 Proxy
+也會連帶的受到很大的影響啊！慎選！慎選！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="theory_yesorno"></a><font color="#000099"><font size=+1>我是否一定要設定
+Proxy ？</font></font>
+<br>　
+
+<br>話又說回來，到底我應不應該設定 Proxy 呢？還是得由理論與實際上的狀態來進行說明。事實上，我們的
+Proxy 感覺上會加快傳輸的速度，主要的因素是來自於 cache 已經記錄了一份資料了，所以
+Client 端取得的其實是這一份資料，而不是真的來自於 Internet 上面的即時資料！這樣的好處前面提過了，就是可以增加內部網路傳輸的效能啊！但是，這要在一個前提之下，就是我的使用者很多時，那麼由於來自四面八方的人會四處去求取資料，讓我的
+Cache 擁有較大的資料庫，那麼內部傳輸的速度自然就會有所助益！所以，要架設
+Proxy 的情況可以是：
+<br>　
+<ul>
+<li>
+<font color="#000066">我的 Client 端用戶不少，而且大部分僅需要 WWW 這個網路服務而已；</font></li>
+
+<li>
+<font color="#000066">我的 Proxy 還兼做防火牆的任務；</font></li>
+
+<li>
+<font color="#000066">我的 Client 端常常需要連線到傳輸速度很慢的網站，例如國外的網站；</font></li>
+
+<li>
+<font color="#000066">我的 Client 端常常瀏覽的網站是『靜態』網站，而不是動態網站(例如討論區的
+PHP )。</font></li>
+
+</ul>
+　
+<br>相反的來說，要是 (1)我的 Client 端很少，那麼每次上去 WWW 都是求取新的資料，有沒有
+Proxy 反而看不出效益～此外，(2)Proxy 由於屬於應用層了，對於 Internet 的規劃上彈性較不足！不像
+NAT 主機可以進行很多的功能！(3)我常常上的網站是類似討論區那種一日多變的網站，在這樣的情況下，實在是沒有必要架設
+Proxy 的！
+<br>　
+<br>但是，如果對於學校單位那原本頻寬就不足的環境中，架設 Proxy 來讓校內的網路速度提昇，呵呵！就是有那個必要性的啦！所以要不要架設
+Proxy 呢？請好好的依據您的環境來考量喔！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="theory_hardware"></a><font color="#000099"><font size=+1>所需要的硬體要求與最佳硬體配置方式</font></font>
+<br>　
+<br>假設您一定需要架設 Proxy ，那麼到底什麼樣的配備是必需的呢？我們剛剛提到
+Proxy 對於硬體的要求相當的高！因為我們架設 Proxy 的目的就是希望能夠加快網路的傳輸效能嘛！因此，雖然
+Proxy Server 幾乎在任何的 Linux 系統上面都能跑 ( 例如我的 P 133 MMX ) ，但是您的
+Proxy Server 最好還是能有以下的硬體等級：
+<br>　
+<ul>
+<li>
+CPU 最好能夠 P III 550 以上等級；</li>
+
+<li>
+RAM 最好能夠大於 512 MB ，這也是很重要的一個硬體參數！</li>
+
+<li>
+Hard Disk 最好能用 SCSI 介面的，因為速度與穩定度都比較好！如果不能的話，那麼
+IDE 介面的硬碟由於目前速度也越來越快，所以使用 IDE 也沒有問題，但是最好是『<font color="#000066">多顆硬碟</font>』的架構，例如我總共需要
+30 GB 的硬碟空間，那麼最好是 10 GB 的硬碟三顆這樣的架構較佳！為什麼呢？由於
+cache 對於 Proxy 的重要性相當的大，所以 <font color="#000066">cache 讀取速度越快的話，代表
+Proxy 的效能也會越好</font>！那由於 Proxy 對每筆資料寫入 cache 時，是『<font color="#000066">平均分攤在各個
+cache 的目錄中</font> 』，所以當然硬碟數越多越好囉！例如我原本有 10 MB
+的資料要寫入 cache ，那麼這 10MB 寫入同一顆硬碟快？還是 10MB 被分散寫入三顆硬碟，因此每一顆硬碟僅記錄
+3.3MB ，那一個快？當然是三顆硬碟的架構會比較快，因為我有三個磁頭在幫我寫入資料嘛！^_^！請注意喔！<font color="#000066">這裡我們說的是『多顆硬碟』而不是『多個
+Partition 』喔</font>！因為如果我將 30GB 的硬碟切割成三塊 partition 的狀態下，由於還是只有一個磁頭啊，所以寫入的速度差異不會很大！這裡要特別留意與瞭解呢！</li>
+
+<li>
+網路卡與網路周邊最好使用 GBytes 的網路卡，當然啦，一般的公司行號應該不需要用到這樣的網路卡才是！我這裡指的是較高檔的配備啦！</li>
+</ul>
+　
+<br>事實上，最重要的還是 RAM 與 HD 這兩樣，當然，網路介面也絕對不能忽視就是了！針對硬碟來說，最好使用
+SCSI 這個穩定的介面，當然，使用 IDE 也是不錯啦！但是要注意保養就是了。此外，就如同上面提到的，在硬碟的架構上是相當的重要的！一般來說，使用磁碟陣列應該是不錯的想法，如果沒有辦法的話，使用多顆硬碟取代單顆硬碟的架構，在效能上也會有不錯的顯著提昇呢！
+<br>　
+<br>既然硬碟這麼重要，我們也約略談一談硬碟的基礎規劃應該有哪些需要注意的呢？
+<br>　
+<ul>
+<li>
+<font color="#000066">最好在架設 Proxy 時，將整體主機的規劃做好，並且讓
+Proxy 主機的服務簡單一點，就是僅負責 Proxy 就好了！</font></li>
+
+<li>
+<font color="#000066">每顆硬碟的容量不需要太大，大約在 9 GB 以內即可，此外，最好將硬碟分割一下，一塊
+Partition 差不多在 2~4 GB 之間即可，因為切太大的話資料的搜尋耗費時間較長，但是
+Partition 太小又可能造成空間的浪費～所以差不多的大小就限制在 2~4 GB 吧！</font></li>
+
+<li>
+<font color="#000066">我們剛剛上面有提過，cache 是放置在某個目錄下的，而最好一個目錄底下就是獨立的一個
+partition 。此外，由於 cache 所在的硬碟常常會有資料的存取，因此可能此一硬碟的損耗率會比較大，所以這個
+cache 所在的硬碟最好不要跟重要資料檔案，例如 /, /etc, /usr, /home 等等重要的系統檔案放在一起，以免危險啊！</font></li>
+
+<li>
+<font color="#000066">也由於 cache 所在的硬碟資料存取太密集了，所以，硬碟的選擇上面需要
+(1)轉速不能太低； (2)磁頭的機械臂需要可以忍受頻繁的動作； (3)發熱量不可太大，或者可以考慮加裝硬碟用風扇。</font></li>
+</ul>
+　
+<br>
+<hr WIDTH="100%"><a NAME="theory_proxynadnat"></a><font color="#000099"><font size=+1>代理伺服器與
+NAT 主機的差異</font></font>
+<br>　
+<br>或許您已經發現了一件事，那就是：在內部區域網路使用私有 IP 的 Client
+端不論透過 Proxy 或者 NAT 均可以直接取得 WWW 這個 Internet 的服務，那麼
+NAT 與 Proxy 有沒有什麼不同的地方啊？他們不都是可以讓內部的 Client 連接出去嗎？其實這兩個玩意兒差異性是『相當大』的：
+<br>　
+<ul>
+
+<li>
+<font color="#000066">NAT 是一個利用 TCP/IP 的 packet filter ( 封包過濾機制
+)來進行封包處理的一個機制，所以他是『直接分析 TCP/IP 』，所以在設定防火牆的時候，他的彈性比較高，只要能過
+NAT 這一關，那麼大部分的網路服務都可以使用，因為 TCP/IP 是比較底層的協定啊！要知道的是，TCP/IP
+上頭還有 port 、還有 IP 等等的資訊，單是 port 就可以讓我們使用很多的不同的協定了！例如
+port 20, 21 是 FTP 啊， 80 是 WWW 啊等等的！所以 NAT 能做的事情事很多的！</font></li>
+</ul>
+　
+<ul>
+<li>
+<font color="#000066">至於 Proxy 就不一樣了， Proxy 主要透過類似 Squid
+這一類的軟體來達成的一個服務，基本上，一般來說他是透過 port 3128 來進行資料的監聽與傳輸，單是看到這個
+port 3128 就應該要曉得他僅是一個 daemon 而已。Proxy 已經是應用層這個階段的網路項目了，所以他並沒有去分析
+TCP 的封包，只要 Client 來源合乎他的需求 (例如 IP 是被支援的 ) ，那麼他將透過
+daemon 的功能幫使用者達成使用者所想要的任務！所以說，能不能做某些事情，與
+Proxy 伺服器上面負責的那個 daemon 是有關的！萬一 daemon 無法進行 FTP 資料的取得，那麼您再怎麼努力的嘗試上網也是枉然的啊！</font></li>
+</ul>
+　
+<br>這樣說有沒有比較有點概念了呢？NAT 是由較底層的網路去進行分析的工作，至於通過
+NAT 的封包是幹嘛用的， NAT 不去管他！至於 proxy 則主要是由一個 daemon 的功能達成的，所以必需要符合該
+daemon 的需求，才能達到某些功能！
+<br>　
+<br>談完了這些基本的原理之後，我們可得來玩一玩 Proxy 了吧？！事實上，目前有很多的
+Proxy 軟體，例如 <a href="0360apache.php">apache</a> 也有提供 proxy 模組的功能喔！但是，最好不要用
+Apache 當作您的 Proxy server ，因為.....效能真的太差了～會讓您的網路停頓的更厲害～目前
+Proxy 的伺服器軟體當中，以 squid 這個咚咚最出名，會出名的原因是因為他的效能高！真的很不錯的一套軟體，所以底下我們就針對
+squid 來做說明吧！</ul>
+
+<hr WIDTH="100%"><a NAME="package"></a><font color="#000099"><font size=+1>套件安裝</font></font>
+<ul>我們的 Proxy 伺服器軟體選擇 squid 這個效能很高的套件來安裝，目前 (
+2003/03 ) Squid 已經出到了 2.5 版了，您可以到官方網站上面下載，或者是到中山大學的
+FTP 網站上面下載，底下提供一下聯繫的網址：
+<br>　
+<ul>
+<li>
+官方網站：<a href="http://www.squid-cache.org/Versions/v2/2.5/" target="_blank">http://www.squid-cache.org/Versions/v2/2.5/</a></li>
+
+<li>
+中山大學：<a href="http://ftp.nsysu.edu.tw/Unix/Proxy/squid/source/STABLE/" target="_blank">http://ftp.nsysu.edu.tw/Unix/Proxy/squid/source/STABLE/</a></li>
+</ul>
+　
+
+<br>同樣的， squid 也有兩種主要的安裝模式，分別是 RPM 版本與 Tarball 版本，不過，由於我們會加入一些不同的參數設定值，所以預設的
+RPM 檔案並無法滿足我們的需求，除非使用 SRPM 來進行重新 configuration 的動作，否則比較不能讓我們滿意啦！因此，習慣上我們都是以
+Tarball 的方式來進行編譯、設定與安裝，所以底下鳥哥會比較偏重以 Tarball
+的安裝來進行介紹，如果有興趣的話，可以嘗試以 SRPM 進行修訂的工作喔！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="package_rpm"></a><font color="#000099"><font size=+1>使用
+RPM 方式安裝 squid</font></font>
+<br>　
+<br>一般來說，使用您的 Linux distribution 提供的 Squid 也就夠了，但是，就如同上面提到的，可能會有一些設定值您無法自由自在的設定，不過。不過，無論如何，以
+RPM 來安裝是最簡便的啦！那麼就請拿出您的原版光碟，將他 Mount 上來，查詢一下是否有
+squid 字樣的檔案名稱？沒錯，就將他安裝上去吧！目前主要的幾個 distribution
+都有提供這個套件，所以應該可以很快的找到這個套件才是！怎麼使用 RPM 呢？沒這麼難吧！
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> rpm -ivh squidxxxxxxx</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>一再地強調， RPM 是粉重要的，請好好的使用他吧！ ^_^！這個指令就安裝完畢囉！只是要注意的是，由於
+squid&nbsp; 2.2 版以前的設定與 2.4 版以後的設定差異性很大，所以請特別留意您的
+squid 版本，如果是使用舊的 Linux distribution 的使用者，例如 Red Hat 6.xx
+版本，或者是 Mandrake 7.xx 版本，那麼就不要再以 RPM 來升級了！直接使用底下的
+Tarball 吧！反正才安裝一個檔案，還不會太難啦！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="package_tarball"></a><font color="#000099"><font size=+1>使用
+Tarball 方式安裝 squid</font></font>
+<br>　
+<br>一般來說，我還真是蠻喜歡中山大學的 FTP 站 ( 怪了，好像一直在幫人家打廣告！
+^_^ ) 沒辦法，我們南部人嘛！當然是南部的 FTP 站比較親切囉！這個時候，您可以直接在
+Linux 底下使用 wget 來取得我們所需要的 squid 喔！目前我取得的版本是 2.5.STABLE2
+版本，取得的方法如下：(註：您也可以到鳥哥的私房菜下載 <a href="../download/index.php#squid_ap">http://linux.vbird.org/download</a>)
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00">&nbsp; wget&nbsp; \</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http://ftp.nsysu.edu.tw/Unix/Proxy/squid/source/STABLE/squid-2.5.STABLE2.tar.gz</font></font></font></td>
+</tr>
+</table>
+　
+<br>好了，這個檔案應該就是 /root/squid-2.5.STABLE2.tar.gz 囉！那麼就開始來給他安裝吧！過程很簡單啦，重要的地方只有在下達
+./configure 的地方需要很多的額外參數支援就是了！
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1>0. 解壓縮：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">cd /usr/local/src</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">tar -zxvf /root/squid-2.5.STABLE2.tar.gz</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># ....(略)....會產生一個
+squid-2.5.STABLE2 的目錄</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">cd squid-2.5.STABLE2</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>1. 開始設定參數：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+squid-2.5.STABLE2]# </font><font color="#FFFF00">export CFLAGES='-O2 -mcpu=i586'</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這是一個額外的參數啦！因為我們使用的是
+Linux ，而我們的 GNU gcc&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 有針對每種不同的
+CPU 來進行套件的最佳化編譯！所以啦，就加入我們的</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># CPU 型號吧！因為我的
+CPU 是 P-166 ，反正是個小案例啦！所以才會是 i586，</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 您的 CPU
+只要超過賽揚等級以上，就會是 i686 囉！此外，除了</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1># i386, i486,
+i586, i686 還有 pentium, pentium3, pentium4, athlon,&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"># athlon-tbird,
+athlon-4, athlon-x, athlon-mp, k6, k6-2, k6-3</font><font color="#FF6666">
+等等！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 如果不確定您的
+CPU 那麼就用 ix86 之類的方式來命名吧！不過，即使沒有</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 寫入這個參數也無所謂啦！至於那個
+O2 是最佳化參數啦！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+squid-2.5.STABLE2]# </font><font color="#FFFF00">./configure --prefix=/usr/local/squid&nbsp;
+
+\</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><font color="#FFFF00">--enable-gnuregex
+--enable-async-io=80 --enable-icmp \</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><font color="#FFFF00">--enable-kill-parent-hack
+--enable-snmp&nbsp; \</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--disable-ident-lookups --enable-cahce-digests \</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--enable-err-language="Traditional_Chinese"&nbsp; \</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--enable-poll --enable-linux-netfilter</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這個咚咚就有趣啦！因為實在有相當多的參數可以使用，你可以使用&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># ./configure
+--help 來察看可以使用的許多參數啊！稍微解釋一下各個設定值：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--prefix=/usr/local/squid</b>：</font><font color="#FF6666">未來程式編譯完成後放置的安裝目錄；</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1><b>--enable-gnuregex</b>：使用
+GNU 提供的正規表示法的原則來進行編譯，請注意，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　因為在
+Proxy 未來的規劃當中，很可能會動用到正規表示法的方式來</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　抵擋一些惡意的網站，所以這裡應該要加入這個參數的！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-async-io=80</b>：</font><font color="#FF6666">這個項目主要在控制一些輸出入的元件，使用這個項目</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　可以讓您的
+Proxy 效能提升很多喔，因為是非同步輸出 (async) 的模式啊！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　後面接的數值是可以變動的，如果您的網站配備很高檔，可以嘗試將這個數字</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　提升到
+160 以上，如果是小網站的話，那麼可以考慮將他降低至 40 左右。</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-icmp</b>：</font><font color="#FF6666">要不要支援
+ICMP 啊！當然是要的！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enbale-kill-parent-hack</b>：</font><font color="#FF6666">在我關掉
+squid 的時候，要不要連同</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　parent
+process 一起關掉，當然也是要的啦！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-snmp</b>：</font><font color="#FF6666">這個與製圖的
+MRTG 比較有關啦！如果沒有用到的話，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　可以考慮將這個項目拿掉也沒有關係！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-cache-digests</b>：</font><font color="#FF6666">這個項目很重要的啦，我們在底下再進行說明。</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-err-language="Traditional_Chinese"</b>：</font><font color="#FF6666">不需要寫了吧？</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　只要有任何的錯誤訊息，網頁上面顯示的語系會是中文喔！</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-poll</b>
+：</font><font color="#FF6666">可以提升效能；</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF99"><b>--enable-linux-netfilter</b>：</font><font color="#FF6666">可以增加通透式
+Proxy 的設定！後面再提啦！</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>2. 開始編譯以及
+Install 囉！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">make &amp;&amp; make install</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>3. 開始設定其他的相關參數</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">vi /etc/man.config</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 在這個檔案當中新加入一行：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF00">MANPATH /usr/local/squid/man&nbsp;&nbsp;</font><font color="#FF6666">
+# 與 Squid 有關的 man page</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 可以讓 squid
+提供的說明文件讓 man 指令可以查到！</font></font></font></td>
+</tr>
+</table>
+
+　
+<br>就這樣幾個簡單的步驟就將 squid 給他安裝完畢啦！很快速吧！所以我說，使用
+Tarball 來安裝 squid 其實是很快的，不用太擔心囉！</ul>
+
+<hr WIDTH="100%"><a NAME="server"></a><font color="#000099"><font size=+1>Server
+端設定：</font></font>
+<ul><font color="#000000">終於來到了主機端的設定項目啦！以下我們會分門別類的介紹各個主要的參數值，這些參數不見得適合您的
+Proxy 環境，所以使用的時候敬請特別小心喔！每個項目都要好好的瞭解一下吶！另外，底下我主要是以
+Tarball 安裝的目錄為主要的介紹狀態，如果您是以 RPM 來安裝的話，那麼所有的檔案原理與設定還是一樣的，只不過檔案存放的路徑就不太一樣就是了！請以
+RPM 的指令或者是 locate 與 find 的方式找出來您的設定檔吧！</font>
+<br><font color="#000000">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="server_contr"></a><font color="#000099"><font size=+1>squid
+的結構</font></font>
+<br><font color="#000000">　</font>
+<br><font color="#000000">剛剛安裝的目錄其實是在 /usr/local/squid 這個目錄下，而這個目錄又分為幾個主要的子目錄，分別為：</font>
+
+<br><font color="#000000">　</font>
+<ul>
+<li>
+<font face="細明體"><font color="#000066">bin/ ：放置主要的 squid 執行
+scripts 的目錄，重要的是 RunCache 那個檔案；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">etc/ ：幾乎所有的 squid 設定檔都在這裡；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">libexec/ ：一些函式庫；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">man/ ：就是一些線上文件查尋檔啦！</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">sbin/ ：重要的就是那個 squid
+的執行檔！</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">share/ ：一些錯誤訊息代碼表示檔案，以及一些小圖示放置的目錄；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">var/ ：預設是放置 log file 的，不過我不喜歡放在這裡，這點等一下我們會修改的！</font></font></li>
+</ul>
+<font color="#000000">　</font>
+<br><font color="#000000">那麼主要的設定檔有哪些呢？其實可以說只有兩個啦：</font>
+
+<br><font color="#000000">　</font>
+<ul>
+<li>
+<font face="細明體"><font color="#000066">/usr/local/squid/etc/squid.conf</font></font><font color="#000000">
+：這個是主要的設定檔，所有的 squid 所需要的設定都是放置在這個檔案當中的！鳥哥底下提到的種種設定方法幾乎都是這個檔案裡面的說明喔！所以，如果您英文不錯，那麼就直接看一下這個檔案就知道如何設定
+squid 啦！</font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/usr/local/squid/etc/mime.conf</font></font><font color="#000000">
+：這個檔案則是在設定 squid 所支援的 Internet 上面的檔案格式，就是所謂的
+mime 格式囉！一般來說，這個檔案的預設內容已經能夠符合我們的需求了，所以不需要更動他，除非您很清楚的知道您所需要額外支援的
+mime 檔案格式。</font></li>
+</ul>
+<font color="#000000">　</font>
+
+<br><font color="#000000">而執行檔其實只有一個，那就是 squid 啦！不過，
+Squid 這個套件額外的提供了兩個可執行的 scripts 來幫助大家執行 squid ，那就是在
+bin/ 裡面的 RunAccel 與 RunCache ：</font>
+<br><font color="#000000">　</font>
+<ul>
+<li>
+<font face="細明體"><font color="#000066">/usr/local/squid/sbin/squid</font></font><font color="#000000">
+：就是我們說的 squid 的執行檔囉！要知道這個指令的參數嗎？就使用『</font><font face="細明體"><font color="#000066">
+./squid --help</font></font><font color="#000000"> 』就能知道有什麼參數啦！</font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/usr/local/squid/bin/RunCache</font></font><font color="#000000">
+
+：這個是主要的執行 squid 的一支簡單的 script ，主要是利用 squid.conf 設定檔案的內容來啟用
+squid 喔！</font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/usr/local/squid/bin/RunAccel</font></font><font color="#000000">
+：如果您的 WWW 服務也想要透過 Squid 來進行『加速』的話，那就可以使用 RunAccel
+來取代 RunCache 了，不過，我通常還是使用 RunCache 而已！</font></li>
+</ul>
+<font color="#000000">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="server_permissions"></a><font color="#000099"><font size=+1>squid
+的 process owner 與 cache directory owner</font></font>
+<br><font color="#000000">&nbsp;　</font>
+<br><font color="#000000">我們前面的原理部分稍微提過， squid 主要是以 daemon
+提供的 Proxy 功能，而這個 daemon 最大的功能就是將 Internet 上面捉取的資料給他放入
+Cache 目錄當中啦！而由於 daemon 會產生一些 processes ( 程序 )，這些程序都會有
+Owner 以及 Group 。這樣曉得我要講什麼了吧？呵呵！沒錯，那個放置 cache 的目錄
+( 底下簡稱 cache dir ) 的擁有者以及擁有群組就必需要與 squid 產生的 process
+的擁有者與群組相同才行！而為了保險起見，通常 squid 不會以 root 來啟動，最好是以
+nobody 或者是一些權限比較低的系統帳號來啟動他！假設我們的 squid 這個 daemon
+是由 nobody 所啟動的好了，而假設我的 cache dir 是放置在 /var/spool/squid
+下面，則這個 /var/spool/squid 的 Owner 與 group 就必需要是 nobody, nobody
+才行！這個很重要喔！因為大部分無法啟用 squid 的朋友都是這個動作沒有搞正確的原因啊！</font>
+
+<br><font color="#000000">　</font>
+<br><font color="#000000">squid 的 Owner 與 Group 是在 squid.conf 裡面設定的，而至於
+cache dir 則是需要我們手動來設定好他的權限呢！</font>
+<br><font color="#000000">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="server_basic"></a><font color="#000099"><font size=+1>最簡易的
+squid 設定方法</font></font>
+<br>　
+<br><font color="#000000">設定 squid 僅要修改一個檔案而已，那就是 </font><font face="細明體"><font color="#000066">/usr/local/squid/etc/squid.conf</font></font><font color="#000000">
+囉( RPM 版本就不相同囉！請自行找出來吧！ )！請注意，在這個例子當中，我們並沒有介紹高檔配備的設定，僅只是列出重要的設定項目還有一些觀念，您所想要的設定必需要視您的主機規劃而定，例如
+cache dir 每個人所放置的目錄都不相同啊，所以直接拿我的設定來啟動時，可能會完蛋啊！請注意需要修改成您所想要的樣式才行！好了，在這個小節當中，我們僅列出來幾個一定要設定的參數，至於更進階的參數將留待後面分別介紹。</font>
+<br><font color="#000000">　</font>
+
+<br><font color="#000000">另外要額外提醒的是，在 squid.conf 這個檔案當中，預設的情況下是『</font><b><font color="#000066">除了本機可以使用
+squid 的少部分功能外，其他所有的項目都沒有被啟動</font></b><font color="#000000">』，所以您必需以
+vi 的搜尋功能找到下列的設定項目後，將註解符號 (#) 拿掉，或者是自行輸入底下的設定才行喔！不囉唆，馬上進行吧！</font>
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> cd /usr/local/squid/etc</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> vi squid.conf</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 關於網路的參數設定部分</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 　 在這個部分當中，最重要的就是啟用
+squid 這個 daemon 的 port 了！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　在預設的情況下，公認的標準
+proxy port 為 3128 ，至於被查詢封包</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　觀察的則是
+3130 這個 port，這裡我們分別啟用這兩個 port ！如果您的</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　Proxy
+還有幫人家代理 https 這個由 SSL 協定啟用的 port ，那麼還需要</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　啟動 https_port
+，但是我們這裡不談論 SSL 啦！太危險了～</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_port 3128</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>icp_port&nbsp;
+3130</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 設定快取目錄
+( Cache dir ) 的大小與記錄檔案所在的目錄</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　這個設定是重要到爆的地方，一定得設定正確才行啊！上面我們不是</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　提過關於硬碟與目錄嗎？好了，現在這樣假設：我有兩塊
+partition ，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　這兩塊
+partition 分別掛載在 /usr/local/squid/var/cache1</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　以及 /usr/local/squid/var/cache2
+這兩個區域，此外，兩塊&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　partition
+一塊為 1GB (cache1) 另一塊為 2 GB (cache2) ，則設定為：</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>#　　&lt;cache_dir>
+&lt;aufs|ufs> &lt;目錄所在> &lt;MBytes大小> &lt;dir1> &lt;dir2></font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　那個 aufs
+只有在編譯的時候加入 --enable-async-io 那個項目才有支援，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　至於目錄所在地與所佔用的磁碟大小則請視您的主機情況而定，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　而後面
+dir1, dir2 則是兩個次目錄的大小，通常 16 256 或 64 64 皆可，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　一般來說，數字最好是
+16 的倍數，據說效能會比較好啦！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　注意1：
+下面兩行需要『視您的主機環境而定！』不要照抄！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　注意2：
+在底下的例子中，我的兩塊 partition 已經 mount 上該目錄了！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　　　　　這也就是說，底下的兩個目錄是『已經存在的！』</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_dir aufs
+/usr/local/squid/var/cache1 1000 16 256</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_dir aufs
+/usr/local/squid/var/cache2 2000 16 256</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　底下則是關於記錄檔的放置目錄與檔名！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_access_log
+/usr/local/squid/var/logs/access.log</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_log /usr/local/squid/var/logs/cache.log</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_store_log
+/usr/local/squid/var/logs/store.log</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>pid_filename
+/usr/local/squid/var/logs/squid.pid</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 3. 關閉認證機制</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　不曉得為什麼，這一版的
+squid 會自動的加入認證機制，請找到底下</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　幾行，將他
+mark 起來！</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#auth_param
+basic children 5</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#auth_param
+basic realm Squid proxy-caching web server</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#auth_param
+basic credentialsttl 2 hours</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 4. 提供 squid
+服務</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　預設的情況下，僅有本機可以使用
+squid ，我們先將所有的權限開放</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　然後在一個一個的關閉囉！先找到底下這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>http_access
+deny all</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　將他改成</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_access
+allow all</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 5. 設定 squid
+的擁有者與系統管理員信箱：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　就是剛剛我們上一小節提到的
+squid 的擁有者，請注意，這個</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　user 與
+group 必需要在 /etc/passwd 及 /etc/group 裡面存在方可成功！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　我這裡以權限最小的
+nobody, nogroup 來做為範例，您也可以自行設定！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　另外，cache_mgr
+則是 squid 管理員的信箱，當 squid 發生問題時，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　螢幕上就會出現這個信箱給使用者聯繫管理員之用！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_effective_user&nbsp;&nbsp;
+
+nobody</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFF00">cache_effective_group&nbsp;
+nogroup&nbsp; </font><font color="#FF6666"># 您也可以改成 nobody ！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_mgr youraccount@your.e.mail</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 6. 變更目錄權限：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　在預設的情況下，我們主要的紀錄資訊都寫入
+/usr/local/squid/var 裡面，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　所以這個時候需要將這個目錄的權限改變成為
+nobody 與 nogroup 所有！</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　當然囉，如果您的
+cache_dir 不在這個目錄當中，那麼還需要額外自行建立，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　例如我的
+cache_dir 萬一是在 /proxy1 與 /proxy2 時，那麼我就必需要：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　chown
+-R nobody:nogroup /proxy1</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　chown
+-R nobody:nogroup /proxy2</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　關於權限的問題是很重要的！請不要忘記了！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> chown -R nobody:nogroup /usr/local/squid/var</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 7. 開始啟動
+squid：</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　啟動 squid
+來試看看吧！不過，首先我們必需要建立快取目錄的格式</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　才行，此外，由於我們想要以
+nobody 來啟動 squid ，所以你需要這樣：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">/usr/local/squid/sbin/squid -z </font><font color="#FF6666">#
+建立 cache_dir</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> su nobody -c "/usr/local/squid/bin/RunCache
+&amp;"</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 8. 查看是否真的啟動了
+squid 了？</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> netstat -tln | grep 3128</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 0.0.0.0:3128&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 9. 重新讀取設定檔
+squid.conf 的方法：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> /usr/local/squid/sbin/squid -k reconfigure</font></font></font></td>
+</tr>
+</table>
+　
+<br>在上面的設定中，重要的地方在於：
+<br>　
+<ul>
+<li>
+<font color="#000099">你的硬碟規劃與 cache_dir 的設定是否吻合</font>：請注意，除非您是『架設著玩的，純粹鍛鍊功力』的角度來設定
+Proxy ，那麼可以直接以預設的設定來搞定您的 cache_dir ，不然的話，前面我們提過，這個
+Cache dir 可是影響 Proxy 效能的相當重要的因素之一，因此，千萬不可大意啊！</li>
+</ul>
+　
+<ul>
+
+<li>
+<font color="#000099">關於權限的大問題</font>：由於我們常常提倡『不要以
+root 來啟動 daemon 』，所以這個 squid 我們是以 nobody 與 nogroup 來啟動的！而
+Process 與權限的關係是相當相當的重要的，因此，您必需要將上面剛剛建立的
+cache_dir 更動整個目錄的擁有者才行！如果是鍛鍊功力而已，那麼隨意建立一個目錄更動一下他的擁有者與群組，就行了，不然的話，請依照您的硬碟規劃好好的設計一番！</li>
+</ul>
+　
+<ul>
+<li>
+<font color="#000099">關於 cache_dir 重新建置的步驟</font>：在上面的第
+7 個步驟當中，我們必需以 squid -z 來重建一下 cache_dir 的格式，這個步驟在第一次啟動
+squid 時才做，其他時候就不需要進行了！而進行這個步驟之前，請務必將上面提到的兩點注意事項先搞定，否則您的
+squid 很難啟動喔！</li>
+
+<br>　
+<li>
+<font color="#000099">實際瀏覽器的查驗</font>：雖然上面第 8 個步驟已經確認了
+squid 啟動了，但是還不能肯定工作正常，這個時候如果您有 client 端的電腦，假設是
+Windows 的 IE 好了，那麼就趕緊來測試看看能不能使用 squid 囉！啟動 IE 後，按下：</li>
+
+<ul><font color="#000066">『工具』-></font>
+<br><font color="#000066">『Internet 選項』-></font>
+<br><font color="#000066">『連線』-></font>
+<br><font color="#000066">『區域網路設定』中，點選</font>
+<br><font color="#000066">『使用 Proxy 伺服器』</font></ul>
+並在網址列輸入你的主機名稱 ( 或者是 IP 均可 )，然後按確定離開！然後在 IE
+中按按看網頁的設定有沒有成功，如果可以讀到網頁的話，表示 squid 可以正常的被使用了！
+<br>　
+<li>
+<font color="#000099">cache_dir 這個參數的意義與存取格式的類型</font>：</li>
+
+<br>這個設定項目就是限制暫存區大小的地方啦，格式為：
+<br>　
+<ul><font face="細明體"><font color="#000066">cache_dir ufs /usr/local/squid/var/cache
+100 16 256</font></font></ul>
+　
+<br>上面的說明是：暫存區目錄為 /usr/local/squid/var/cache ，而暫存空間大小為
+100M ， 在這個暫存目錄下有 16 個目錄，而每個目錄中又有 256 個目錄 ( 你可以實際進入
+/usr/local/squid/cache 當中去看看 ) 。如果你要改變暫存檔目錄及這個目錄的大小時，可以在這裡修改！不建議修改
+16, 256 這兩個數值。另外，通常，如果是我們一般小型的區網 ( 不超過10個人
+) ，那設定個&nbsp; 500 MB作為 cache 應該夠了，如果你的硬碟夠大，設定成
+1000 MB 以上更好，當然，與第一個注意事項相符的，需要與您的實際硬碟大小以及
+Partition 放置的目錄互相配合才行。修改過這個指令後，要再重新啟動 squid
+之前，請先使用下面的指令來使你的目錄可以進行存取的動作，否則你的 squid
+是不會工作的！例如你將上面的參數修改成：
+<br>　
+<ul><font face="細明體"><font color="#000066">cache_dir ufs /usr/local/squid/var/cache
+1000 16 256</font></font></ul>
+　
+<br>然後再進行下面的指令：
+<br>　
+<ul><font face="細明體"><font color="#000066">rm -rf /usr/local/squid/var/cache</font></font>
+
+<br><font face="細明體"><font color="#000066">mkdir /usr/local/squid/var/cache</font></font>
+<br><font face="細明體"><font color="#000066">chown nobody:nogroup /usr/local/squid/var/cache</font></font>
+<br><font face="細明體"><font color="#000066">/usr/local/squid/sbin/squid
+-z</font></font></ul>
+<font color="#000000">　</font>
+<br><font color="#000000">這樣你的squid暫存目錄就可以使用囉！另外，如果你在編譯
+(configure 過程中) 的時候有將 --enable-async-io 這一個參數加進來的話，將可以增加
+</font><b><font color="#000066">aufs</font></b><font color="#000000">
+這一個資料存取的格式！這個存取的格式可以將你的硬碟發揮到最極限的速度喔！雖然在
+squid.conf 檔案中有提及，這個 type 可能會有 bug 存在，不過，據鳥哥的使用結果，發現，沒啥大問題！好用的很！所以，你可以將上面的咚咚改成下面的樣子：</font>
+<ul><font face="細明體"><font color="#000066">cache_dir aufs /usr/local/squid/var/cache
+1000 16 256</font></font></ul>
+</ul>
+　
+
+<br>這樣就算已經完成了一個『很陽春』的小型 proxy 了！為什麼說很陽春呢？這是因為這個
+Proxy 並沒有上層 Proxy 餵資料，所以 Client 端的任何要求這個 Proxy 都需要『自己去捉』啊！哇！那麼這個
+Proxy 還真累啊！沒錯啊，所以底下我們要再來談一談其他幾個增加 proxy 效能的方法，好讓大家的
+Proxy Server 可以真的加快您瀏覽的速度啊！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="server_mem_cache"></a><font color="#000099"><font size=+1>記憶體與磁碟快取留存百分比設定</font></font>
+<br>　
+<br>記憶體與磁碟快取在 squid.conf 當中的相關簡易設定如下所示，至於更詳細的說明則在下表之後進行解說：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 與記憶體有關的設定：因為我的系統很小，所以只給
+8 MB！如果您的實體記憶體</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 很大的情況下，例如
+512 MB，可以考慮加大到 64 或 128 MB。</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_mem&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8 MB</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 與磁碟容量有關的設定(註：下列的
+90 與 95 是百分比 )</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 如果您的
+cache_dir 所在磁碟很大時，可以考慮將 4096 改成 32768 KB</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_swap_low&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+90</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_swap_high&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+95</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>maximum_object_size&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4096 KB</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 與記憶體保存資料有關的設定</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>maximum_object_size_in_memory&nbsp;&nbsp;
+8 KB</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 我們經由
+dns 正反解以及 IP 的結果，記錄在暫存區啊！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ipcache_size&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1024</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ipcache_low&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+90</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ipcache_high&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+95</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>fqdncache_size&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1024</font></font></font></td>
+</tr>
+</table>
+　
+<br><b><font color="#000099">記憶體的需求數量：</font></b>
+<br>事實上，除了硬碟之外，記憶體可能是另一個相當重要的影響 Proxy 效能的因子！怎麼說呢？因為
+Proxy 會將資料存一份在 Cache 硬碟中，但是同時也會將資料暫存在記憶體當中啊，以加快未來使用者存取同一份資料的速度！所以囉，記憶體本來就會被
+squid 的程式所消耗掉一些！一般來說，被 squid 消耗掉的記憶體約略每 1GBytes
+的 cache_dir 空間就消耗 10MB 的記憶體容量，所以，如果以上面我們的設定為例
+(cache1, cache2 共有 3GB)， 那麼就有 30MB 以上的記憶體被消耗掉了！除此之外，
+squid 程式執行當中亦會額外的消耗掉一些實體記憶體，這部份佔用掉的記憶體約為
+10-20 MB 。
+<br>　
+<br>除了這些記憶體是必須要的之外，您還可以額外的指定一些記憶體來進行比較『熱門』的資料存取！也就是說，可以額外的再加一些記憶體來幫助
+squid 工作，而不僅只是上面提到的記憶體使用量！那個就是 cache_mem 這個設定參數的用途啦！所以，請特別留意啊，『
+<font color="#000066">cache_mem
+並不是指我要使用多少記憶體給 squid 使用，而是指 "我還要額外提供多少記憶體給
+squid 使用" 的意思</font>』！因此，假設我有 X GB 的磁碟快取空間，而且 squid
+程式使用掉 15 MB 的記憶體，那麼我 squid 使用掉的記憶體就有：
+<br>　
+<ul><font color="#000066">X * 10 + 15 + "cache_mem 設定值"</font></ul>
+
+　
+<br>您可以自行計算一下您的 squid 消耗掉多少記憶體喔！此外， squid 官方網站建議您的實體記憶體
+(不含 swap 的記憶體容量) 最好是上面數值的兩倍，也就是說，假如我的快取容量為
+3 GB ， cache_mem 設定為 16MB ，那麼我的 squid 至少會消耗掉 3*10+15+16
+= 61MB，則我的實體記憶體最好至少要有 122 MB 以上，才會有比較好的效能！當然，這個單指
+Proxy 部分而已，如果您的該部主機還有負責其他的工作，呵呵！那麼記憶體就得在累加上去啦！一般來說，如果您的
+Proxy 很多人使用時，這個值越大越好，但是最好也要符合上面的需求喔！
+<br>　
+<br><b><font color="#000099">關於磁碟容量的設定</font></b>：
+<br>請注意，如果您的磁碟快取空間額滿了，那麼您的 squid 也就『掛點』了！因此，請隨時注意你的磁碟快取空間！但是，要我天天去注意
+squid 的 cache_dir 裡面的容量，也太勞神了吧？！這個時候就必須要『cache_swap_low,
+cache_swap_high 』這些設定的幫忙了！如果以上面表格的設定為例時，他的說明是『<font color="#000066">當我的快取目錄所佔容量為總快取量的
+95% 時，那麼我的 squid 將會自動的將快取目錄內的容量減低至剩下 90% 的容量！</font>』注意，那個
+90 與 95 為百分比例喔！以我們的設定為例，我的 cache_dir 總共有 3GB ，那麼當快取空間被使用了
+3*0.95=2.85GB 時，我的 squid 會自動的將 2.85GB 裡面較舊的資料刪除，使快取目錄內剩下
+3*0.9=2.7GB 的空間！這樣能瞭解了吧？請特別注意，如果您的 proxy 容易很多人同時上線時，請將這兩個數值更動一下，例如變更為
+70 85 ，為什麼呢？萬一您的使用者突然間都上線了，然後下載大量的檔案，那麼『瞬間』可能會使您的
+cache 目錄超過額度，導致 cache 死掉！所以降低 cache_swap_high 對於大型
+proxy 是有需要的！
+<br>　
+<br><b><font color="#000099">是否需要記錄捉到的資料</font></b>：
+<br>還有一個小問題要說明的，是否使用者要求過的資料我都要記錄呢？呵呵！那當然不是啦！如果都記錄的話，萬一像最近好多
+Linux distribution 都釋出了他們新版的 Linux ISO 檔案，那些檔案一個都有
+600 MB 以上的容量，萬一使用者下載個幾個這樣的檔案，我們的 Proxy 想不爆掉都很難～所以這個時候就要限制一下需要記錄的『最大檔案』啦！在預設的情況下，我們的
+squid 對於超過 4MB 的檔案是不記錄的(就是不放入 cache 的意思)，但是如果您的硬碟夠大的話，我都喜歡將這個數值調大一點，為什麼呢？萬一我的使用者常常下載一些
+10~20 MB 的套件檔案，難道我每次都要到官方網站去下載一次嗎？當然我不想這樣啊！所以我通常將這個數值調大到
+32MB ，或者是 32768 KB 囉！除了磁碟快取之外，記憶體的快取可以記錄的最大檔案容量也可以修正一下喔！但是我們的記憶體可就珍貴的多了！不要開太大，大約預設值就很不錯了！
+<br>　
+<br><b><font color="#000099">關於 IP 與完整主機名稱的紀錄</font></b>：
+<br>如果能將 IP 與主機名稱記錄下來的話，搜尋的腳步也會加快一些的！所以以上面的表格為例，我們分別開啟了
+ipcache_size 與 fqdncache_size( 後面接的數值是 bytes )的記憶容量，由於這些資料都是
+ASCII 的資料，用不了什麼空間，因此 1024 bytes 已經足夠了！至於後面的 low
+與 high 則與前面說明的相同！
+<br>　
+
+<br>
+<hr WIDTH="100%"><a NAME="server_acl"></a><font color="#000099"><font size=+1>acl
+的用法與用途</font></font>
+<br>　
+<br>在 squid.conf 這個檔案裡面最常看到的大概就是 acl 這個設定項目了！他可是整個
+squid.conf 的重頭戲啊！很多的來源與目的管制都是靠他來設定完成的呢！我們底下就稍微談一談這個重要的咚咚吧！首先，他的語法為：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1>&lt;acl> &lt;acl名稱>
+&lt;acl類型> &lt;設定的內容></font></font></font></td>
+</tr>
+</table>
+　
+
+<br>上面那個 &lt;acl名稱> 可以想成是一個暱稱就是了！別想太多～就只是一個代名詞，至於
+acl 類型可就有趣的多了，他主要有下面這幾大類：
+<br>　
+<br><b><font color="#000099">以來源端來控制：</font></b>
+<ul>
+<li>
+<b><font color="#000066">src　 ip-address/netmask</font></b>：主要控制『<font color="#000066">來源的
+IP 位址</font>』，例如『<font face="細明體"><font color="#000066">acl nckuip
+src 140.116.0.0/16</font></font>』，這表示未來在 squid.conf 裡面，任何使用到
+nckuip 這個代名詞時，就表示他是『來源為 140.116.0.0/16 的位址』！</li>
+
+<li>
+<b><font color="#000066">src　addr1-addr2/netmask</font></b>：主要控制『<font color="#000066">一段範圍來源的
+IP 位址</font>』，例如『<font face="細明體"><font color="#000066">acl nckuevoffice
+src 140.116.44.120-140.116.44.130/24</font></font>』就表示 nckuevoffice
+這個代名詞為來自 140.116.44.120 到 140.116.44.130 之間這 11 個 IP 的要求！』請注意，是『來源』喔！</li>
+
+<li>
+<b><font color="#000066">srcdomain　.foo.com</font></b>：主要控制『<font color="#000066">來源為一某個網域的電腦</font>』的意思，例如：『<font face="細明體"><font color="#000066">acl
+vbirdhome srcdomain .vbird.org</font></font>』，與 src 很類似，都是控制來源的用戶端，只不過
+src 控制的是 IP 而 srcdomain 則是控制 domain name 就是了！</li>
+</ul>
+　
+<br><b><font color="#000099">以目的端來控制：</font></b>
+<ul>
+<li>
+<b><font color="#000066">dst　ip-address/netmask</font></b>：主要控制『目的端的
+IP 位址』，與 src 類似，只不過是用來控制『目的端』的位址！</li>
+
+<li>
+<b><font color="#000066">dstdomain　.foo.com</font></b>：這個就沒問題了吧？就是用來控制『目的端的網域』囉！與
+srcdomain 類似喔！</li>
+</ul>
+　
+<br><b><font color="#000099">以正規表示法的方式來控制</font></b>：
+<ul>
+<li>
+<b><font face="細明體"><font color="#000066">url_regex [-i] ^http:// </font></font></b>：除了上面兩種基本的方法之外，我們也可以使用<b><font color="#000066">正規表示法</font></b>的方式來控制『網域』的設定值呢！例如『<font face="細明體"><font color="#000066">
+acl urlname url_regex ^http://linux\.vbird\.org.*</font></font> 』這表示
+urlname 代表的就是來自 http://linux.vbird.org 這個網站的『任何資料』，因為『
+.* 』代表任意字元的意思啊！如果僅只是一些檔名，例如 gif 這一類的檔名時，要怎麼作呢？就如底下的說明啦！</li>
+
+<li>
+<b><font face="細明體"><font color="#000066">urlpath_regex [-i] \.gif$</font></font></b>：上面提到的是關於整個網址的名稱，這裡則是只要『URL
+部分相同』就可以啦！例如『<font face="細明體"><font color="#000066">acl
+gifname urlpath_regex \.gif$ </font></font>』則是代表 gifname 代表的是
+url 後面是 .gif 的網址，呵呵！那就是 gif 的圖檔附檔名嘛！！這樣應該不難理解了吧！</li>
+</ul>
+　
+<br>由於在 squid 當中很多時候都會用到一些 IP 網域啦，以及 domain name 等等的資料，這個時候這個
+acl 就可以看做與 bash 裡面的『變數』很類似囉！您可以參考看看的啦！只是他的用途相當的廣泛，這個在底下我們會進一步的使用
+acl 搭配各種設定值來進行說明的！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="server_upper_proxy"></a><font color="#000099"><font size=+1>上層
+Proxy 的選擇與負載分流的設定方法</font></font>
+<br><font color="#000000">　</font>
+<br><b><font color="#000099">上層 Proxy 的設定方式： cache_peer</font></b>
+
+<br>我們在上面的原理部分說明過，一部有效能的 Proxy server 必須要能利用上層
+Proxy 所提供的效能，才能達到我們所想要的『加速』功能！那麼當然大前提之下就是需要先找到『最佳效能的上層
+Proxy 主機』囉！沒錯！就是這樣的啦！在這裡，我們以成功大學的學術網路為架構進行說明，如果您的網路架構並非為學術單位的話，請依照您能找到的上層
+Proxy 來進行設定喔！需要特別留意的是，由於成大有許多的上層代理伺服器，這些伺服器都可以做為我個人
+proxy 的 parent proxy 主機，不過，由於各個主要的 parent proxy 所提供的網域服務都不盡相同，所以我們得先將主要的幾個伺服器對應的網域給他找出來，底下是一個例子：
+<br>　
+<br><font face="細明體"><font color="#000066">gate.ncku.edu.tw&nbsp; 主要服務
+.com 的網域</font></font>
+<br><font face="細明體"><font color="#000066">gate3.ncku.edu.tw 主要服務
+.net .edu 的網域</font></font>
+<br><font face="細明體"><font color="#000066">gate2.ncku.edu.tw 主要服務非
+.com .net 與 .edu 的網域</font></font>
+<br><font face="細明體"><font color="#000066">proxy.ncku.edu.tw 主要服務任何網址</font></font>
+<br>　
+<br>至於在 squid.conf 當中設定的參數則是『cache_peer 』這個項目，設定的樣式為：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+
+<td><font face="細明體"><font color="#FFFF00"><font size=-1>&lt;cache_peer>
+&lt;主機名稱> &lt;類別> &lt;http_port> &lt;icp_port> &lt;其他參數></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>類別：主要有上層(parent)
+與同一層 (sibling) 兩種，我們這裡主要介紹的是</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　上層
+Proxy 也就是 parent 這一大類，如果您想要架設一個小型的 Proxy</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　Cluster
+的話，可以考慮組成 sibling 的功能，由於我們僅想要架設單部</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　Proxy
+Server ，所以這裡我們就不探討 sibling 了！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFCC">http_port icp_port</font><font color="#FF6666">：就是我們最前面設定的啦！
+Internet 上面預設是</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　3128
+3130 這兩個！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>其他參數：其他參數的部分就很重要了，主要有底下幾個重要參數：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFFFCC">proxy-only</font><font color="#FF6666">
+：只取出上層 Proxy 的 cache 給 client ，並不會將上層 Proxy</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　的資料存在自己的
+cache 硬碟中；</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　</font><font color="#FFFFCC">　weight=n</font><font color="#FF6666">　
+：權重的意思，因為我們可以指定多部上層 Proxy 主機，哪一部</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　最重要？就可以利用這個
+weight 來設定， n 越大表示這部 Proxy</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　越重要！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFCC">　　no-query</font><font color="#FF6666">　
+：一般來說，如果要向 sibling 要求資料時，會向 sibling 送出</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　icp
+的要求封包，使用 no-query 就可以取消。一般來說，如果向上層</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　Proxy
+要求資料時，可以不需要發送 icp 封包，以降低主機的負擔</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFFFCC">default</font><font color="#FF6666">　　：表示該部主機為預設的
+Proxy 主機的意思；</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFFFCC">no-netdb-exchange</font><font color="#FF6666">：表示不向附近的
+Proxy 主機送出 imcp 的封包要求</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FF6666">　</font><font color="#FFFFCC">　no-digest</font><font color="#FF6666">　：表示不向附近主機要求建立
+digest 紀錄表格。</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>範例：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer
+gate.ncku.edu.tw parent 3128 3130 no-digest no-netdb-exchange</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer
+gate2.ncku.edu.tw parent 3128 3130 no-digest no-netdb-exchange</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer
+gate3.ncku.edu.tw parent 3128 3130 no-digest no-netdb-exchange</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer
+proxy.ncku.edu.tw parent 3128 3130 no-digest no-netdb-exchange</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>基本上，由於我們向上層 Proxy 要求資料的時候，也是需要時間的，因此，這裡我們建議您不要設定太多的上層
+proxy 主機，一般來說， 2~4 部也就足夠了，太多部 上層Proxy 的情況反而可能會拖垮您的
+Proxy 速度呢！OK！既然有了上層 Proxy ，而且每一部所負責的網域並不相同，所以我們當然就需要將網域分門別類囉！如何將這些網域分門別類呢？那就需要
+acl 的幫忙啦！先提醒一下，由於我們的 Proxy 旨在幫助 client 端取得資料，所以使用
+acl 的時候，是針對『目標』來進行設定的，因此，使用的是 dst 與 dstdomain
+喔！在這裡，我們將主要的網域分成底下這幾大類：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1>0. 自己想要直接使用自己的
+Proxy 捉取的資料</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl directip
+dst 140.116.44.0/24</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl directdn
+dstdomain .vbird.org tw.yaoo.com tw.news.yahoo.com</font></font></font>
+<p><font face="細明體"><font color="#FFFFCC"><font size=-1>1. 成大附近的網域</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl nckudn
+dstdomain .ncku.edu.tw</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl nckuip
+dst 140.116.0.0/16 163.28.112.0/24 163.28.113.0/24 163.28.114.0/24 163.28.115.0/24
+163.28.116.0/24 163.28.117.0/24</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>2. 台灣的網域
+(請注意：底下為同一行)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl twdn dstdomain
+.tw .twnic.net .hinet.net .acer.net .wownet.net .seeder.net .silkera.net
+.neto.net timenet.net tw.aunet.net .adsldns.org&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>3. 台灣的 IP
+(注意：底下為同一行)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl twip dst
+163.28.0.0/16 140.96.0.0/11 140.128.0.0/12 140.92.0.0/16 139.175.0.0/16
+139.223.0.0/16 163.12.0.0/14 163.16.0.0/14 168.95.0.0/16 192.72.0.0/16
+192.83.160.0/19 192.83.192.0/22 192.192.0.0/16 202.39.0.0/16 202.132.128.0/17
+202.145.224.0/19 203.64.0.0/12 210.64.0.0/13 210.60.0.0/14</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>4. 一些商業、網域、教育、以及其他的網域</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl comdn dstdomain
+.com</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl netdn dstdomain
+.net</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl edudn dstdomain
+.edu</font></font></font></td>
+</tr>
+</table>
+　
+<br>這樣子就作好了基礎的工作了！接著下來，我們要開始來設定『各個主要的網域要透過哪一個上層
+Proxy 來進行資料的取得？』這裡就有點難度啦！得小心在意一下！我們的基本假設為這樣：
+<br><font face="細明體"><font color="#000066">gate.ncku.edu.tw&nbsp; 僅負責
+.com 的網域；</font></font>
+<br><font face="細明體"><font color="#000066">gate3.ncku.edu.tw 僅負責
+.net 與 .edu 的網域</font></font>
+<br><font face="細明體"><font color="#000066">gate2.ncku.edu.tw 不負責上面的三個網域</font></font>
+<br><font face="細明體"><font color="#000066">proxy.ncku.edu.tw 不負責上面三個網域</font></font>
+<br>這麼一來，使用 cache_peer_access 這個設定項目時，我們的設定會變成這樣喔！
+
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 主要的格式範例：</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># &lt;cache_peer_access>
+&lt;上層 Proxy > &lt;allow|deny> &lt;acl名稱></font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate.ncku.edu.tw&nbsp; allow comdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate.ncku.edu.tw&nbsp; deny&nbsp; !comdn</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate3.ncku.edu.tw allow netdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate3.ncku.edu.tw allow edudn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate3.ncku.edu.tw deny&nbsp; !netdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate3.ncku.edu.tw deny&nbsp; !edudn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; comdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; netdn</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; edudn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; directdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; directip</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; twdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; twip</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; nckudn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+gate2.ncku.edu.tw deny&nbsp; nckuip</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; comdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; netdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; edudn</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; directdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; directip</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; twdn</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; twip</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; nckudn</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cache_peer_access
+proxy.ncku.edu.tw deny&nbsp; nckuip</font></font></font></td>
+</tr>
+</table>
+　
+<br>經過上面這個動作，我們就可以將 .com 的要求經過 gate.ncku.edu.tw 這一部，並且將
+.net 與 .edu 給 gate3.ncku.edu.tw 來服務！此外，將沒有被自己定義出來的
+IP 或者是網域就丟給 gate2 以及 proxy 這兩部來服務，至於我們既然是在台灣，所以自己定義出來的四個
+acl 名字 (directdn, directip, twdn, twip) 當然是直接交給我們自己的 Proxy
+來捉取了，相信速度上面應該不會有任何的影響的！因此，那四個主要的 acl 名稱將在後面繼續介紹如何不要透過上層
+Proxy 來捉取資料喔！ ( 請參考 always_direct 與 never_direct 的設定值 )
+<br>　
+<br><b><font color="#000099">不要進行 cache 的設定值：</font></b>
+<br>就如同我們在原理的部分提到的，有些網站的資料事實上並沒有做為 cache
+的需要，例如 CGI 檔案就是一個很鮮明的案例！所以，一般而言， squid 在一開始就會自動幫我們設定好底下這三行：
+
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFF00"><font size=-1>hierarchy_stoplist&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+cgi-bin ?</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl QUERY urlpath_regex
+cgi-bin \?</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>no_cache deny
+QUERY</font></font></font></td>
+</tr>
+</table>
+　
+<br>上面這三行的意思是：『<font color="#000066">只要在網址列出現了 cgi-bin
+的字樣時，該網頁資料就不進行 cache 的動作</font>！』這樣一來，可以避免我們的主機存放太多的垃圾啊！
+^_^！當然啦，在某些時候，例如您所在的網域真的是很慢，同時又沒有適合的上層
+Proxy 的環境下，那麼將 cgi 之類的網頁 cache 下來，也未嘗不是一個可以節省瀏覽時間的一個方法！如果確定要將
+cgi-bin 底下的網頁也存下來的話，那麼就將上面三行註解掉囉！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="server_time_par"></a><font color="#000099"><font size=+1>與時間相關的設定值
+( connect_timeout, request_timeout )</font></font>
+<br>　
+
+<br>由於 Proxy 的設定除了防火牆的額外功能外，最主要的目的還是在於將網頁資料
+cache 下來！既然如此的話，那麼與 Server 的連線時間的確認就顯的很重要啦！怎麼說呢？萬一今天您有設定三部上層
+Proxy ，每一部的要求時間都控制在 5 分鐘，如此一來，呵呵！萬一今天剛好三部上層
+Proxy 都掛點，難道我們就宿命似的要等待 15 分鐘嗎？當然不是啦！所以這個時候，我們可以將連線的等待時間縮短，好讓
+Proxy 可以發揮更為強大的功能啊！
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 關於 cache
+的更新時間趨勢</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 我們在快取當中的資料總是需要更新的對吧！那麼如何設定更新的時間呢？</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1># &lt;refresh_pattern>
+&lt;regex> &lt;最小時間> &lt;百分比> &lt;最大時間></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 注意，那個
+regex 指的是『目標』，這個『目標』大部分為網址，而這個網址</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 使用正規表示法來表示就是了！上面的意義是說：最小的時間內
+(分鐘)，如果</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 檔案有更動，就直接更新，或者是目標檔案上次更新的時間到現在已經經過最大</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 時間的『百分比』時，就予以更新！範例如下：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>refresh_pattern
+^ftp:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1440&nbsp;&nbsp;&nbsp;
+20%&nbsp;&nbsp;&nbsp;&nbsp; 10080</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>refresh_pattern
+^gopher:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1440&nbsp;&nbsp;&nbsp;
+
+0%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1440</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>refresh_pattern
+.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20%&nbsp;&nbsp;&nbsp;&nbsp; 4320</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 第一行的意思是，如果網址裂開頭是
+ftp 的話，那麼在一天(1440分鐘)後，如果</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># proxy 再次取用這個檔案時，則
+cache 內的資料會被更新！</font></font></font>
+<p><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 關於連線時間限制</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FF6666"># </font><font color="#FFFF99">connect_timeout</font><font color="#FF6666">
+指的是連接到其他主機的時間多久之後算失敗，預設是兩分鐘</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　　　　　　　
+不過我覺得我的機器連線速度還算快速，所以減低了時間</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># </font><font color="#FFFF99">peer_connect_timeout</font><font color="#FF6666">
+指的是連接到上層 Proxy 多久不成功就算失敗，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　　　　　　　
+由於上層 Proxy 與我的環境息息相關，不可能連不上，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>#　　　　　　　　
+所以我這裡將時間調整的很短！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># </font><font color="#FFFF99">request_timeout</font><font color="#FF6666">
+
+指的是，連線上了，但是要求的時間會多長？</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># </font><font color="#FFFF99">persistent_request_timeout</font><font color="#FF6666">
+指的是連續要求時間會有多長？</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>connect_timeout
+30 seconds</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>peer_connect_timeout
+10 seconds</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>request_timeout
+1 minutes</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>persistent_request_timeout
+20 seconds</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 請特別注意喔！上面的設定當中，是因為我的環境『還算不錯』，所以我將</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 時間調整的很短，因為我曉得我的環境當中不會有花很長時間的狀況，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這裡請依照您的網路環境來調整喔！或者乾脆不要設定也沒有關係！</font></font></font></td>
+</tr>
+</table>
+　
+<br>
+<hr WIDTH="100%"><a NAME="server_always_direct"></a><font color="#000099"><font size=+1>總是系統自己來捉資料(always_direct)</font></font>
+<br>　
+<br>剛剛我們在主機分流的地方有提過，有些資料我們要讓我們自己的 Proxy 去捉取資料即可，而不透過上層
+Proxy ，那麼怎麼達到這樣的目的呢？也不是很難啦！就告訴 Proxy 不要去捉就好啦！怎麼告訴他呢？使用
+always_direct 或 never_direct 即可！
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 使用 acl
+先定義出要直接或者不要直接去的網址或 IP ，</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 　 這個部分我們剛剛在上面已經設定好了，就是
+directip 與 directdn，</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>#　　還有 twdn
+與 twip 這幾個咚咚！</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 如果是直接要
+Proxy 出去捉資料，可以使用 always_direct</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>always_direct
+allow directip directdn</font></font></font>
+<p><font face="細明體"><font color="#FFFFCC"><font size=-1># 3. 如果一定『拒絕經由上層
+Proxy 出去』的話，可以使用 never_direct&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>never_direct
+deny twdn twip</font></font></font>
+<p><font face="細明體"><font color="#FFFFCC"><font size=-1># never_direct
+allow 表示一定會經由上層 Proxy 來捉資料，</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># never_direct
+deny&nbsp; 當然就表示一定是自己向外頭捉資料囉！</font></font></font></td>
+
+</tr>
+</table>
+　
+<br>事實上，這個東西可以讓我們的 Proxy 變的很靈活！假設這樣的一個案例，我們自己有一個內部的
+WWW 網站，這個網站的網址為 192.168.0.100 ，如果我要經由上層 Proxy 去捉資料的話，那不就完蛋了～因為這個是『私有
+IP 』的網域啊！所以，我將他寫入 directip 那個 acl 的設定當中，如此一來，呵呵！我們的
+Proxy 會自動的經由自己的 route table 去到內部網域讀取資料給你，您根本不需要變更您的其他設定就可以自由自在的讀取內部與外部的主機資料！此外，如果您發現同一網域還有其他的
+WWW 主機，把這些主機的 IP 或主機名稱寫入 directdn 或 directip 的 acl 設定當中吧！因為在同一網域時，您自己去捉一定會比上層
+proxy 捉完之後再傳給你來的快吧！
+<br>　
+<br>當然還不只如此啦，有的 WWW主機由於設定的關係，他們並不允許我們的上層
+Proxy 來捉取資料，最常見的例子就是類似總圖對校內的 client 端開放的圖書查尋的軟體了！因為如果開放了這些上層
+proxy 的話，那麼全台灣所有的人只要將他們的瀏覽器 proxy 設定為成大的上層
+proxy 主機，就可以使用成大的資源了！那豈不麻煩？因為這些資源是需要花費經費的啊！這個時候，您也就必須要讓這些網址經由我們的
+Proxy 自己去捉取囉！這樣可以瞭解乎！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="server_access_control"></a><font color="#000099"><font size=+1>限制使用
+proxy 使用者與 proxy 目標的方式 (acl and http_access )</font></font>
+<br>　
+<br>既然 proxy 有一定的風險存在，自然就不能讓任何人都能使用你的 proxy 主機囉！沒錯！所以我們必須要管制連線的使用者！管制的方法真是簡單的很！就是使用
+acl 配合 http_access 即可！在預設的情況中， squid 已經幫我們設定好一些安全的可以連線的
+port 了，此外，也只有本機可以使用 proxy 功能呢！
+<br>　
+<br>那麼萬一如果我樣讓內部 192.168.0.0/24 這個網域的使用者可以使用我的
+proxy 呢？該如何設定？呵呵！您可以這樣做：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 先設定這個內部網域的
+acl 名稱</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl inside
+src 192.168.0.0/24</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 設定 http_access
+讓他可以使用</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_access
+allow inside</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_access
+deny&nbsp; all</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>那個 http_access deny all 是系統預設的項目！剛剛我們在 <a href="#server_basic">最簡單的
+squid.conf 設定</a> 時已經將他改成 http_access allow all 了！所以請記得將他給改回來啊！不然的話，您的
+Proxy 很有可能會被人家利用喔！
+<br>　
+<br>這裡再提供一個值得思考的咚咚，如果您跟我一樣，都是使用撥接的 ADSL ，這樣一來，由於我們的
+IP 都不是固定的，如果要讓我們的 ADSL 撥接的 client 可以使用我們剛剛設定的
+Proxy 時，該怎麼辦？啊！這樣就不能使用『 acl 配合 src 』的設定方式了嗎？呵呵！當然不是，您可以這樣想像：
+<br>　
+<ol>
+<li>
+<font color="#000066">我先申請一個動態 DNS 的網域名稱，例如我的 tsai.adsldns.org
+；</font></li>
+
+<li>
+<font color="#000066">雖然我可以直接在 squid.conf 當中設定 acl 並使用 srcdomain
+來設定我的 tsai.adsldns.org ，但是很抱歉的是，如果我的 tsai.adsldns.org
+來連接到 Proxy 主機時，事實上，我的撥接制 IP 反查得到的主機名稱一定不是
+tsai.adsldns.org ，如此一來則 srcdomain 一點用處也沒有了；</font></li>
+
+<li>
+
+<font color="#000066">再換個方式，如果我寫一支 script 來偵測 tsai.adsldns.org
+所對應的 IP 呢？並且將他寫入一個自訂的設定檔當中，這樣一來，這個檔案會隨時記錄最新的
+tsai.adsldns.org 的 IP ，如此一來，我就可以使用 acl 配合 src 的設定方式了！</font></li>
+</ol>
+　
+<br>很麻煩嗎？一點也不會，整個 script 可以像底下這樣：
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> cd /usr/local/squid/etc</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+etc]#</font><font color="#FFFF00"> vi squid.allow.sh</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#!/bin/bash</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 這支程式可以用來查尋您的
+IP 喔！</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1># 1. 請輸入您的主機名稱，請注意，如果有兩個以上的主機名稱，</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#&nbsp;&nbsp;&nbsp;
+請分別以空格分開各個主機名稱</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">hostnames='</font><b><font color="#FFFF00">tsai.adsldns.org
+test.adsldns.org</font></b><font color="#FFFFFF">'</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">basedir=</font><b><font color="#FFFF00">/usr/local/squid/etc/</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">email=</font><b><font color="#FFFF00">root@localhost</font></b></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">squid=</font><b><font color="#FFFF00">/usr/local/squid/sbin/squid</font></b></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1># 2. 以下為程式段，看看就好了！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>[ -f $basedir/squid.allow.hosts.raw
+] || \</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+touch $basedir/squid.allow.hosts.raw</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>cat /dev/null
+> $basedir/squid.allow.hosts.now</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>runornot=no</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>for host in
+$hostnames</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>do</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+hostip=`host $host | awk '{print $4}'`</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if [ "$hostip" == "out;" ]; then</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+echo 'Proxy 回應：沒有 DNS 的訊息！' |\</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mail -s 'Proxy 主機回應' $email</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+exit</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+fi</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+fileraw="$basedir"/squid.allow.`echo $host|cut -d '.' -f1`</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ -f $fileraw ] || touch $fileraw</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+hostraw=`cat $fileraw`</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if [ "$hostraw" != "$hostip" ]; then</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+runornot="yes"</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+echo $hostip > $fileraw</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+fi</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+echo $hostip >> $basedir/squid.allow.hosts.now</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>done</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>if [ "$runornot"
+== "yes" ]; then</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cat $basedir/squid.allow.hosts.raw >&nbsp; $basedir/squid.allow.hosts</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cat $basedir/squid.allow.hosts.now >> $basedir/squid.allow.hosts</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+$squid -k reconfigure</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mail -s 'Proxy 主機回應！Client IP 已經改變' $email &lt; $basedir/squid.allow.hosts</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>fi</font></font></font></td>
+</tr>
+</table>
+　
+<br>如此一來，我將可以把我的隨時最新的 IP 紀錄在 /usr/local/squid/etc/squid.allow.hosts
+這個檔案當中！那麼要如何更新這個檔案的內容在 squid 的設定檔中呢！就這樣設定即可：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 先設定這個檔案的名稱吧！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>acl allowhost
+src "/usr/local/squid/etc/squid.allow.hosts"</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 設定 http_access
+讓他可以使用</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_access
+allow allowhost</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>http_access
+deny&nbsp; all</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>然後將上面這個 squid.allow.sh 給他丟進去 crontab 當中，我預設都是在
+30 分鐘跑一次！
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root @test
+root]#</font><font color="#FFFF00"> vi /etc/crontab</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>10,30 * * *
+* root /usr/local/squid/etc/squid.allow.sh</font></font></font></td>
+</tr>
+</table>
+　
+<br>這樣就完整的啦！ ^_^
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="server_other_functions"></a><font color="#000099"><font size=+1>額外的功能參數</font></font>
+
+<br>　
+<br>除了上面提到的這些關於網頁快取的功能之外， Proxy 還可以幫我們進行 FTP
+的服務取得資料喔！我們可以透過瀏覽器，經由 proxy 提供的 FTP 功能來登入對方主機，當然，對方主機必須要能夠提供匿名登入啊！好了，我們來看看要怎樣設定呢？
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 與 FTP 有關的設定項目，主要是針對被動式連線方式來設定喔！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ftp_user Squid@</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ftp_passive
+on</font></font></font>
+<p><font face="細明體"><font color="#FFFFCC"><font size=-1># 主要與 DNS
+的設定值有關，如果在高負載的 Proxy 環境下，可以考慮將</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># dns_children
+提高到 20 左右，這個值最大為 32</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>dns_timeout
+1 minutes</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>hosts_file
+/etc/hosts</font></font></font></td>
+</tr>
+</table>
+　
+<br>還有一些額外的範例可以參考看看喔：</ul>
+
+<blockquote>
+<blockquote>鳥哥的範例：<a href="0420squid/0420squid_vbird_ex" target="_blank">http://linux.vbird.org/linux_server/0420squid/0420squid_vbird_ex</a>
+<br>成大 gate.ncku.edu.tw 的 squid.conf 設定：<a href="http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.ncku" target="_blank">http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.ncku</a>
+<br>電機系 turtle.ee.ncku.edu.tw 的 squid.conf 設定：<a href="http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.turtle" target="_blank">http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.turtle</a>
+
+<br>台南學校範例 proxy.school.tn.edu.tw 的 squid.conf 設定：<a href="http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.school.tn" target="_blank">http://turtle.ee.ncku.edu.tw/~tung/proxy/squid.conf.school.tn</a></blockquote>
+</blockquote>
+
+<hr WIDTH="100%"><a NAME="client"></a><font color="#000099"><font size=+1>Client
+端設定</font></font>
+<ul>既然 proxy 是給瀏覽器用的，那麼自然在瀏覽器上面就需要設定一些參數囉！呵呵，沒錯！那麼如何設定呢？由於不同的瀏覽器在設定
+Proxy 的地方也都不同，所以底下我們介紹目前比較常見的兩款瀏覽器，分別是
+Netscape 以及 IE 的設定，至於其他的瀏覽器，請參考各瀏覽器的相關說明啊！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="client_netscape"></a><font color="#000099"><font size=+1>Netscape</font></font>
+<br>　
+<br>Netscape 的設定並不難，只要修改一個小地方即可！
+<br>　
+<ol>
+<li>
+
+開啟 Netscape 之後，啟用『<font color="#000066">編輯</font>』並選擇『<font color="#000066">偏好設定</font>』項目，如下所示：</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_netscape_1.jpg" NOSAVE height=198 width=181>
+<br>　
+<li>
+在出現的畫面當中，先按下『<font color="#000066">進階</font>』左邊的展開模式，然後選擇底下的『<font color="#000066">代理伺服器</font>』，則畫面會出現如下的模樣。之後，在右邊的視窗當中選擇『<font color="#000066">自行設定代理伺服器的組態</font>』項目，並且再按下『<font color="#000066">檢視</font>』，則到下一步去設定：</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_netscape_2.jpg" NOSAVE height=459 width=545>
+<br>　
+<li>
+在出現的方框中，由於我們通常僅針對 WWW 進行快取，所以可以僅針對 HTTP 的項目進行設定！在下面的畫面當中，請輸入『<font color="#000066">Proxy
+主機的 IP 或者是 domain name </font>』，以及『<font color="#000066">連接的
+port number</font>』，這樣就可以了。不過，如果有某些網域您想要直接讓你的
+PC 去捉取資料時，可以將該網域名稱填寫在最下方的方框中！以下面的畫面為例，我的
+PC 要連接到 linux.vbird.org 以及 www.study-area.org 時，就可以不透過 Proxy
+啦！這個功能也挺適合可以自行調配流量、流速的朋友！</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_netscape_3.jpg" NOSAVE height=400 width=386>
+<br>　
+<li>
+再按下『確定』之後，立刻就生效了！</li>
+
+</ol>
+　
+<br>
+<hr WIDTH="100%"><a NAME="client_ie"></a><font color="#000099"><font size=+1>Internet
+Explorer</font></font>
+<br>　
+<br>在 IE 的設定上面也一點都不難啊！
+<br>　
+<ol>
+<li>
+開啟 IE ，然後在『<font color="#000066">工具</font>』內選擇『<font color="#000066">Internet
+選項</font>』：</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_ie_1.jpg" NOSAVE height=155 width=151>
+<br>　
+<li>
+在開啟的視窗內選擇『<font color="#000066">連線</font>』並點選下方的『<font color="#000066">區域網路設定</font>』：</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_ie_2.jpg" NOSAVE height=419 width=406>
+<br>　
+<li>
+在出現的方框中，先在下方打勾起『<font color="#000066">使用 Proxy 伺服器</font>』，然後依序在網址列填入『
+
+<font color="#000066">Proxy
+的網址或者是 IP</font> 』以及連接埠填入『 <font color="#000066">Proxy 所開放的
+port number</font>』，如下方的設定即可。</li>
+
+<br>　
+<br><img SRC="0420squid/0420squid_client_ie_3.jpg" NOSAVE height=306 width=384>
+<br>　
+<li>
+另外，如果有某些網域不想透過這個上層 Proxy 的話，點選上圖的 『<font color="#000066">進階</font>』
+那一項，在出現的框框的最底下，可以填入你不想透過 Proxy 捉取的網站網址，如下所示：</li>
+
+<br>　
+
+<br><img SRC="0420squid/0420squid_client_ie_4.jpg" NOSAVE height=360 width=368>
+<br>　</ol>
+如此一來則設定好了 Proxy Server 囉！</ul>
+
+<hr WIDTH="100%"><a NAME="serverahead"></a><font color="#000099"><font size=+1>Server
+端進階設定</font></font>
+<ul>既然一些主機的設定已經搞定了，接著下來又是到了 Server 的安全與進階設定時間啦！那麼在安全的設定方面，最重要的自然又是我們一再強調的登錄檔的分析囉！如何分析登錄檔呢？難道又要自己動手寫分析的
+scripts ？？呵呵！不用麻煩了，我們可以使用前輩智慧的結晶，直接有軟體可以來進行分析喔！還有，既然強調
+Proxy 可能會被濫用，所以當然要適當的管理了！這個時候的防火牆設定又要出現啦！呵呵！趕緊來看一下怎麼處理吧！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="serverahead_pwebstats"></a><font color="#000099"><font size=+1>末端資料分析
+pwebstat</font></font>
+<br>　
+<br>事實上， squid 已經有眾多的登錄檔分析軟體了，而且大多是免費的 (<a href="http://www.squid-cache.org/Scripts/" target="_blank">http://www.squid-cache.org/Scripts/</a>)
+，您可以依照自己的喜好來加以安裝與分析你的 squid 喔！我這裡僅介紹目前很常被使用的一套軟體，也就是
+
+<a href="http://martin.gleeson.com/pwebstats/installation.html" target="_blank">pwebstats</a>
+這一套！你可以在 pwebstats 的官方網站上面查得更新的資料 ( <a href="http://martin.gleeson.com/pwebstats/installation.html" target="_blank">http://martin.gleeson.com/pwebstats/installation.html</a>
+)。不過，由於 pwebstats 在安裝的時候需要使用到其他的函式庫，因此，你必須要先安裝
+fly 這套軟體才行啊！而在安裝 fly 之前，又需要先安裝一些必備的圖示用的函式庫才行，那就是類似
+gd, libpng, zlib 等等的套件喔！聽起來似乎很多東西要做，但是事實上卻非常簡單的啦！好吧！那麼我們就一步一步的來安裝這個
+pwebstats 吧！
+<br>　
+<br><b><font color="#000099">安裝所需要的套件資料：</font></b>
+<br>除了系統自己可能已經安裝好的 gd, libpng, zlib 之外，您可以由<a href="#reference">文末</a>提供的官方網站的連結來取得最新的
+fly 與 pwebstats 套件，而如果您不需要使用最新的資料，那麼也可以經由 <a href="http://linux.vbird.org">鳥哥的私房菜</a>
+提供的比較舊的套件版本來安裝 ( <a href="http://linux.vbird.org/download/">http://linux.vbird.org/download/</a>
+
+)。我這裡假設您已經將所需要的 fly-2.0.0.tar.gz 與 pwebstats-1.3.8.tar.gz
+套件都下載到 /root 底下了，那麼您可以這樣做：
+<ol>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1>1. 確認一下到底有沒有我們需要的一些相關套件？</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> rpm -qa | egrep '(^gd-|^zlib-|^libpng-)'</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>libpng-devel-1.0.14-0.7x.4</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>gd-1.8.4-4</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>zlib-1.1.3-25.7</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>zlib-devel-1.1.3-25.7</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>libpng-1.0.14-0.7x.4</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>gd-devel-1.8.4-4</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 請注意，我是以
+Red Hat 7.2 為例，如果您的系統並非 RH 7.2 ，那麼可能</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 套件後面接的版本會不太一樣，不過，至少都需要有上面的幾樣套件就是了！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 就是 gd,
+zlib, libpng 這三個套件啦！有的 distribution 還會有 xxx-devel</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 之類的名稱，那個也需要安裝喔！如果發現沒有安裝的話，請拿出您的原版光碟片，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 將他 mount
+上之後，好好的將他搜尋一下，並且安裝上去吧！很重要，一定要</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 安裝這些套件之後，底下的動作才會成功呢！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>2. 開始安裝
+fly 這支程式</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">cd /usr/local/src</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">tar -zxvf /root/fly-2.0.0.tar.gz</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># ....會產生一個
+fly-2.0.0 的目錄</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">cd fly-2.0.0</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+fly-2.0.0]# </font><font color="#FFFF00">make</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>註：</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># ....如果沒有出現底下的字樣那麼就是成功了！</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>/usr/bin/ld:
+cannot find -lttf (或者是 ljpeng ...)</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>collect2: ld
+returned 1 exit status</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>make: *** [fly]
+Error 1</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 如果是出現
+warning 的話，還不打緊，因為僅只是警告而已，所以問題不大，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 但是如果出現上面的字樣時，就會連帶出現第三行的
+Error ，那就是編譯失敗了</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 果真如此的話，請先尋找一下，以上面為例，找不到
+lttf ，而 lttf 其實</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 就是 libttf
+檔名啦！(所以 ljpeg 就是 libjpeg )所以給他下達：</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>loate libttf</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>/usr/lib/libttf.so.2</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 嗯！找到了！其實是
+libttf.so.2 啦！如果你的系統跟我的不同，有可能檔名</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 會不一樣，所以請依照你的螢幕顯示的訊息來下達指令喔！但是這個編譯程式</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 有點笨，不認識這個檔案，所以我們要欺騙他一下，就是下達：</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>ln -s /usr/lib/libttf.so.2
+/usr/lib/libttf.so</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這樣就可以啦！如果還有找不到的檔案，同樣的方式給他連結一下即可！然後</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 再次的給他執行一次
+make 即可！最後會產生一個檔名為 fly 的執行檔，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 如果沒有產生執行檔，那就是有問題啦！請趕緊再回頭去查一查是否有某些</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 套件沒有安裝，或者沒有依照上面的方式建立連結檔案！</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+fly-2.0.0]#</font><font color="#FFFF00"> cp fly /usr/local/bin</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>我們先將 fly
+這支程式給他複製到 /usr/local/bin 這個目錄去，可以直接使用</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>這樣就 OK 了！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>3. 開始安裝
+pwebstats 套件</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">cd /usr/local/src</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]#</font><font color="#FFFF00"> tar -zxvf /root/pwebstats-1.3.8.tar.gz</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 此時會產生
+/usr/local/src/pwebstats-1.3.8 這個目錄，這目錄裡面</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 已經是可以執行的資料了，不需要進行任何的編譯，所以我們將他直接移動到</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># /usr/local/
+裡面去！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">mv pwebstats-1.3.8 /usr/local/pwebstats</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">cd /usr/local/pwebstats</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+pwebstats]# </font><font color="#FFFF00">vi pwebstats</font><font color="#FF6666">
+
+&lt;==這個是主要的執行檔！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 由於我們的
+perl 這個程式語言的執行檔是放置在 /usr/bin/perl ，但是</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這支程式預設是書寫為：</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>#!/usr/local/bin/perl</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 將上面改寫為</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>#!/usr/bin/perl</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這樣就可以了！繼續下一步！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>4. 開始設定
+squid 的輸出輸入參數：</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>前提要件：</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>a. 我的 WWW
+主頁目錄在 /var/www/html</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>b. 我的 pwebstats
+整個資料庫放置在 /usr/local/pwebstats</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>c. 我的 squid
+登錄檔放置在 /usr/local/squid/var/logs/access.log.0</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>d. 我的 squid
+的執行檔為 /usr/local/squid/sbin/squid</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>e. 我的 pwebstats
+輸出的資料放置在 /var/www/html/pwebstats&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>f. 我的 fly
+是放在 /usr/local/bin/fly</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+pwebstats]#</font><font color="#FFFF00"> mkdir /var/www/html/pwebstats</font><font color="#FF6666">&lt;=請依您的主機而定</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+pwebstats]# </font><font color="#FFFF00">cd /usr/local/pwebstats/conf</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]#</font><font color="#FFFF00"> vi squid-proxy.conf&nbsp;</font><font color="#FF6666">
+&lt;==這個就是主要的設定檔！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 底下請填寫你的主機的『暱稱』！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>server:My_Proxy_Server</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這個是顯示在網頁上面的標題內容！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>Server_header:我的代理伺服器</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># squid 登錄檔放置的完整檔名</font></font></font>
+<br><b><font face="細明體"><font color="#FFFF00"><font size=-1>logfile:/usr/local/squid/var/logs/access.log.0</font></font></font></b>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 我們使用的就是
+squid 的登錄檔啊！所以這裡不需改變</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>logtype:squid</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 剛剛提到的，網頁資料要輸出到底下的目錄</font></font></font>
+<br><b><font face="細明體"><font color="#FFFF00"><font size=-1>outdir:/var/www/html/pwebstats</font></font></font></b>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 一些圖像檔案的預設目錄，這裡我們使用
+pwebstats 提供的目錄！</font></font></font>
+<br><b><font face="細明體"><font color="#FFFF00"><font size=-1>templates:/usr/local/pwebstats/templates</font></font></font></b>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 嗯！我們就天天來進行一次吧！可以用
+weekly 或 daily</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>interval:daily</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 是否在執行的過程中給他輸出訊息呢？好吧！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>verbose:true</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># fly 放置的目錄，剛剛我們移動的目錄啊！</font></font></font>
+<br><b><font face="細明體"><font color="#FFFF00"><font size=-1>fly_prog:/usr/local/bin/fly</font></font></font></b>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 本機端的要求，這裡可以不用設定喔！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>local_patt:</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 列出幾部
+client 電腦？我給他來個 50 部好了！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>host_threshold:50</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 列出幾部
+Server (被要求資料者)，還是給個 100 部吧！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>remote_host_threshold:100</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 統計的次數，給他
+100 次好了！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>item_threshold:100</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 做多少個
+domain 的分析？給他 15 個就夠多了！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>domain_threshold:15</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 底下保留預設值即可！
+(最後面的 dns 反查可以啟動！)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>exclude_reqs:true</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#complete_exclude_host:</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#complete_exclude_url_patt:</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#complete_exclude_user:</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>dns_lookup:true</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 事實上，只要上面粗體字的地方寫對就好了！其他的保留預設值即可！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>5. 測試執行一次看看：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]#</font><font color="#FFFF00"> /usr/local/squid/sbin/squid -k rotate</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>上面這個動作會將
+squid 的登錄檔進行 logrotate 的動作喔！就會更新了</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>/usr/local/squid/var/logs/access.log.0
+這個檔案啦！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]# </font><font color="#FFFF00">/usr/local/pwebstats/pwebstats -c&nbsp;
+\</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+/usr/local/pwebstats/conf/squid-proxy.conf</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>.....(略)......</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>-- Reading
+in log file /usr/local/squid/var/logs/access.log.0:</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+The logfile has 27 entries.</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+Processing...</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+0%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+50%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+100%</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+|-----------------------|------------------------|</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+##################################################</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+
+Finished.</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>.....(略)......</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>呵呵！這樣就是成功啦！！！！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>6. 將每天執行的指令寫成
+scripts 吧！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 我將他寫在/usr/local/pwebstats/pwebstats.sh
+這個檔案當中喔！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]#</font><font color="#FFFF00"> vi /usr/local/pwebstats/pwebstats.sh</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#!/bin/bash</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/usr/local/squid/sbin/squid
+-k rotate</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>sync; sleep
+5s</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/usr/local/pwebstats/pwebstats
+-c /usr/local/pwebstats/conf/squid-proxy.conf</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]# </font><font color="#FFFF00">chmod 755 /usr/local/pwebstats/pwebstats.sh</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+conf]#</font><font color="#FFFF00"> vi /etc/crontab&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入底下這一行吧！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>59 2 * * *
+root /usr/local/pwebstats/pwebstats.sh >/dev/null 2>&amp;1</font></font></font></td>
+
+</tr>
+</table>
+　</ol>
+很簡單吧！這樣就安裝完畢了！不過，由於我們安裝的 fly 可能有點問題啦！就我的系統來說，這個
+fly 總是編的怪怪的～如果您的 fly 無法編譯成功的話，那麼直接由鳥哥的私房菜提供的檔案來直些下載使用算了！
+<a href="http://linux.vbird.org/download/">http://linux.vbird.org/download</a>
+找一下 fly 的 binary ，下載完畢之後，請記得：
+<br>　
+<ul><font face="細明體"><font color="#000066">gzip -d fly.gz</font></font>
+<br><font face="細明體"><font color="#000066">chmod 755 fly</font></font>
+<br><font face="細明體"><font color="#000066">mv fly /usr/local/bin</font></font></ul>
+　
+<br>這樣就可以了！而剛剛我們不是有執行過一次嗎？你的登錄資料會被放置在
+/var/www/html/pwebstats 這個目錄當中！假如我的首頁就是 /var/www/html/ 的話，那麼我的網址列輸入
+http://myIP/pwebstats 就可以看到類似下圖：
+
+<br>　
+<br><img SRC="0420squid/0420squid_pwebstats_1.jpg" NOSAVE BORDER=2 height=461 width=489>
+<br>　
+<br>在按下了『Day 1』之後，會出現如下的畫面：
+<br>　
+<br><img SRC="0420squid/0420squid_pwebstats_2.jpg" NOSAVE BORDER=2 height=491 width=509>
+<br>　
+<br>呵呵！更詳細的內容您就可以自行看看囉！加油的啦！！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="serverahead_sarg"></a><font color="#000099"><font size=+1>末端資料分析
+sarg</font></font>
+<br>　
+<br>除了上面介紹的 pwebstats 之外，其實還有一套相當棒而且功能相當強悍的分析軟體，那就是
+<a href="http://web.onda.com.br/orso/sarg.html" target="_blank">Squid
+Analysis Report Generator</a> ( Squid 分析報告製作者)，他的官方網站在：<a href="http://web.onda.com.br/orso/sarg.html" target="_blank">http://web.onda.com.br/orso/sarg.html</a>，他的原理相當的簡單，就是將
+logfile 拿出來，然後進行一下解析，依據不同的時間、網站、與熱門網站等等來進行資料的輸出，由於輸出的結果實在是太詳細了！所以.....呵呵！如果你是老闆的話，用這個軟體會讓你『愛不釋手』啊！因為每個人的每個小動作都會被記錄下來，我的天吶！當我第一次看到這個分析的畫面時，真的給他嚇了老大一跳得說～因為連每個
+IP 在『每個小時所連上的每個網站資料』都有紀錄～～害怕了吧～
+
+<br>　
+<br>不過，有優點就有缺點啦！怎麼說呢？因為 SARG 功能太強大了，所以記錄的『資料量』就實在是多了點，如果您的
+Proxy 網站屬於那種很大流量的網站時，那麼就不要使用『日報表』，也就是每天產生一份報表的那種方式！那麼由於資料一天可能會有幾
+MB 的資料，一兩個月還沒有關係，如果記錄了幾年，那麼光是這些記錄就會花掉好幾
+GB 的硬碟空間了～此外，也可以使用『覆蓋舊有資料』的方式不要留存舊資料，這樣也可以節省硬碟的空間啦！
+<br>　
+<br>這個 SARG 軟體已經出到 1.4 版，更好的是，他支援『多國語系』呢！目前鳥哥已經翻譯了一部分的資料，希望能對大家有點幫助啊！對於這個套件，你可以到官方網站上下載最新的版本
+( <a href="http://web.onda.com.br/orso/sarg.html" target="_blank">http://web.onda.com.br/orso/sarg.html</a>
+) ，而鳥哥這裡也有提供啦！我提供的版本是 1.4 的( 在 2003/03/16 釋出的版本
+)，已經經過了 patch (套件修補) 的動作，並且加入中文化的語言檔案，所以直接下載就有中文顯示囉！請到檔案下載中心下載：
+<br>　
+<ul>
+<li>
+<a href="http://linux.vbird.org/download#squid_ap">http://linux.vbird.org/download#squid_ap</a></li>
+</ul>
+　
+<br>整個安裝與執行的過程很簡單的！我們來試看看吧！(註：假設您已經將 sarg-1.4.taiwan_big5.tar.gz
+放置在 /root 底下了！)：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1># 1. 解壓縮：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> cd /usr/local/src</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">tar -zxvf /root/sarg-1.4.taiwan_big5.tar.gz</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>....(略).....</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>這個時候會產生一個名為
+sarg-1.4 的目錄出來！</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 設定、編譯與安裝</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+src]# </font><font color="#FFFF00">cd sarg-1.4</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+sarg-1.4]# </font><font color="#FFFF00">mkdir /usr/local/sarg</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+sarg-1.4]# </font><font color="#FFFF00">./configure --prefix=/usr/local/sarg&nbsp;
+\</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--enable-mandir=/usr/local/sarg/man1&nbsp; \</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--enable-bindir=/usr/local/sarg/bin&nbsp; \</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+&amp;&amp; make &amp;&amp; make install</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>這樣可以快速的設定、編譯與安裝，一次完成！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>安裝的資料當中：</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>a. 設定檔 /usr/local/sarg/sarg.conf</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>b. 執行檔 /usr/local/sarg/bin/sarg</font></font></font>
+<br><font face="細明體"><font color="#FFFF99"><font size=-1>c. 說明檔 /usr/local/sarg/man1/sarg.1</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 3. 額外設定
+( 說明文件的路徑 )</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> vi /etc/man.config </font><font color="#FF6666">(有時為
+man.conf 檔名不同！)</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>新增加這一行</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>MANPATH /usr/local/sarg</font></font></font></td>
+</tr>
+</table>
+　
+<br>相信嗎？這樣就安裝完畢了！很快速吧！接下來你要做的就是設定囉！設定之前請先注意您的相關資料，以我為例，我的相關資料為：
+<br>　
+<ul>
+<li>
+<font color="#000066">登錄檔使用 /usr/local/squid/var/logs/access.log.0
+這一個經過 rotation 的檔案；</font></li>
+
+<li>
+<font color="#000066">計算的暫存檔放置在 /tmp 底下；</font></li>
+
+<li>
+
+<font color="#000066">我的 SARG 輸出的首頁放置在 /var/www/html/sarg 這個『目錄』之中；</font></li>
+
+<li>
+<font color="#000066">我想要讓我的網頁以 big5 的字元編碼格式輸出！</font></li>
+</ul>
+　
+<br>這個時候我只要修改一個檔案，也就是 /usr/local/sarg/sarg.conf 即可，內容有點像這樣：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">mkdir /var/www/html/sarg</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> vi /usr/local/sarg/sarg.conf</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 這個檔案是
+sarg 的設定檔，裡面已經將整個設定參數講的很清楚了，</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 你可以依照你的情況來調整這個檔案的參數，無論如何，這個檔案裡面</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 應該至少要有底下這幾個資料，其他的請自行使用喔！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>language Taiwan_big5</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>access_log
+/usr/local/squid/var/logs/access.log.0</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>title "Squid
+使用狀態報告"</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>temporary_dir
+/tmp</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>output_dir
+/var/www/html/sarg</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>overwrite_report
+no</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>mail_utility
+/bin/mail</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>topsites_num
+100</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>exclude_codes
+/usr/local/sarg/exclude_codes</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>max_elapsed
+28800000</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>charset big5</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> /usr/local/sarg/bin/sarg</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>SARG: 製作報告完成於
+/var/www/html/sarg/2003Apr10-2003Apr11</font></font></font></td>
+
+</tr>
+</table>
+　
+<br>試跑一下，嘿嘿！已經成功的輸出資料囉！這個時候，請在您的瀏覽器上面輸入
+http://your.domain.or.IP/sarg 即可看到剛剛跑出來的資料了！很棒吧！好了，我總不能常常這樣手動的跑分析資料吧？OK！那麼怎麼將這個動作放到
+crontab 當中呢？！呵呵！我們底下寫了一支 script 來同時跑 pwebstats 及 SARG
+這兩個玩意兒～這支 script 是長這樣的：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFCC"><font size=-1>1. 建立這支程式：
+我將他取名為 /usr/local/squid/etc/squid.logrotate</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">vi /usr/local/squid/etc/squid.logrotate</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>#!/bin/bash</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 這支程式是要寫來做為
+squid 的 log files analysis 之用的！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 執行的方法為
+crontab 囉！</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># vi /etc/crontab
+加入底下這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 59 23 * *
+* root /usr/local/squid/etc/squid.logrotate</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 1. parameters
+settings</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>PATH=/sbin:/bin:/usr/sbin:/usr/bin</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 2. stoping
+and rotating squid</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>sleep 50s</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/usr/local/squid/sbin/squid
+-k rotate</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/usr/local/squid/sbin/squid
+-k shutdown</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 3. pwebstats
+processing</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/var/www/html/pwebstats/pwebstats
+-c&nbsp; \</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/var/www/html/pwebstats/conf/squid-proxy.conf \</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+> /dev/null 2>&amp;1</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 4. sarg processing</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/usr/local/sarg/bin/sarg
+> /dev/null 2>&amp;1</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1># 5. starting
+squid</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>sleep 11s</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>su nobody -c
+"/usr/local/squid/bin/RunCache &amp;" > /dev/null 2>&amp;1</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 2. 改變檔案權限與加入
+crontab 排程當中！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> chmod 744 /usr/local/squid/etc/squid.logrotate</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">vi /etc/crontab</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>加入這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>59 23 * * *
+root /usr/local/squid/etc/squid.logrotate</font></font></font></td>
+</tr>
+</table>
+
+　
+<br>這一支程式有什麼特點呢？由於我是在 23:59 開始執行，而且執行時期先等待
+(sleep) 50 秒鐘，且工作完畢後再等 10 秒鐘，也就是說，我的 squid 的 log
+檔案一定會是以天為單位來分隔，所以我們所看到的資料就會『一」天一天』的顯示，而不會跨了不同的兩天了！我是比較喜歡這樣啦！但是每個人的觀點不同，您可以自由調配喔！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="serverahead_firewall"></a><font color="#000099"><font size=+1>防火牆的規劃</font></font>
+<br>　
+<br>事實上， Proxy 本身就已經可以做為一個防火牆啦！為何還需要針對 Proxy
+來進行防火牆的規劃？話是這樣沒錯啦！但是我們的 Proxy 是開放 3128 與 3130
+這兩個 port 啊！您總不能這兩個 port 沒有開放吧！所以囉，要讓您的 Proxy
+可以對外面開始服務，就需要啟用 3128 這個標準的 Proxy port 囉！所以需要在您的防火牆
+scripts 當中加入這一行：
+<br>　
+<ul><font face="細明體"><font color="#000066"><font size=-1>/sbin/iptables
+-A INPUT -p TCP -i eth0&nbsp; --dport 3128:3130 -j ACCEPT</font></font></font></ul>
+　
+<br>一般來說，這樣就可以正常的啟動 Proxy 的服務了！那麼至於 Proxy 本身提供的防火牆內容呢？呵呵！就利用
+acl 配合 http_access 就能夠管制使用者的使用空間了！真是相當的具有彈性啊！
+^_^
+<br>　
+<br>
+
+<hr WIDTH="100%"><a NAME="serverahead_transparent"></a><font color="#000099"><font size=+1>NAT
+與 Proxy 透過 transparent proxy 設定加快網路傳輸</font></font>
+<br>　
+<br>讓我們現在來想像一個連線狀態，就是你有一整組內部網路，而這個內部網路都是透過
+NAT 主機連線出去的。那麼我們談過，就是在一個內部網域很大的情況下，使用
+Proxy 是一個很不錯的選擇，因為至少他可以減輕頻寬的負荷啊！OK！那麼我們就架設
+Proxy 好了，不過，遺憾的是，架設 Proxy 的時候，也要使用者在瀏覽器上面設定了你架設好的瀏覽器才有用啊！否則那部
+Proxy 沒有人使用的話，架了也是白搭！好了，那麼有沒有辦法在『<font color="#000066">使用者不需要在瀏覽器上面進行任何設定，就可以實現以
+Proxy 幫助使用者捉取 WWW 資料 』</font>呢？當然有啦！那就是 Transparent
+Proxy 啦！也有人翻譯成『通透式代理伺服器』，為什麼這麼翻譯我也不曉得？？不過，他的原理是這樣的：
+<br>　
+<ul>
+<li>
+<font color="#000066">當使用者經過 NAT 伺服器來連線進入 Internet 時，假如使用的
+Internet 協定為 80 (也就是 WWW) ，那麼就將這個要求交給 Proxy 來工作，以達到代理伺服器的功能。</font></li>
+</ul>
+　
+<br>呵呵！也就是說，當使用者是經過 NAT 主機連線出去時，只要讓 NAT 主機發現『咦！你是要去捉
+WWW 的資料對吧！好！那麼這個動作由 Proxy 主機幫你搞定！』如此一來，使用者根本就不需要在瀏覽器上面設定
+Proxy 的相關資料，因為這個動作是『由 NAT 主機自己決定的』，所以只要在 NAT
+主機上面設定妥當即可，使用者不必設定任何資料呢！呵呵！真是不錯！那麼要怎麼進行呢？只要兩個步驟即可：
+<br>　
+<ol>
+<li>
+
+<b><font color="#000099">設定 Proxy 主機：</font></b></li>
+
+<br>設定 proxy 主機當然就是要又修改 squid.conf 囉！而這個設定相當的簡單喔！只要幾行就可以搞定：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> vi /usr/local/squid/etc/squid.conf</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這裡請填入你的
+Proxy 主機名稱 與 port ！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>httpd_accel_host
+vbird.adsldns.org</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 因為我們是要進行
+WWW 的資料快取，所以 port 當然就是 80 囉！</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>httpd_accel_port
+80</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這個很重要！因為設定
+httpd_accel_host 之後， cache 的設定會自動被終止，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 必須要加上這個設定為
+on 之後，才能提供 cache 的功能！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>httpd_accel_with_proxy
+on</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>httpd_accel_uses_host_header
+on</font></font></font>
+<p><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test root]#</font><font color="#FFFF00">
+/usr/local/squid/sbin/squid -k reconfigure</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>總共就是這四行啦！這樣就設定好一個 squid 的 transparent proxy 的功能囉！
+<br>　
+<li>
+<b><font color="#000099">設定 NAT 主機的 port map ：</font></b></li>
+
+<br>再來讓我們到 NAT 主機上面看看先，因為需要將 80 這個 port 交給 Proxy
+的 3128 來幫忙協助，所以你的防火牆 script 必須要加入這一段才行：
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFF00"><font size=-1>iptables -t
+nat -A PREROUTING -i eth0 -p tcp -s 192.168.0.0/24 \</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>--dport 80
+-j REDIRECT --to-ports 3128</font></font></font></td>
+</tr>
+</table>
+　
+
+<br>注意一下，那個 eth0 是『你的 NAT 對內的網路卡裝置代號』，至於 192.168.0.0/24
+則是你的內部網域，請依照你的主機實際狀態來設定喔！
+<br>　</ol>
+完全不需要懷疑！這樣一來，您的 client 端完全不需要進行任何的設定，立刻就可以使用
+Proxy 的好處囉！很不錯吧！呵呵！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="serverahead_beca"></a><font color="#000099"><font size=+1><font face="Times New Roman Baltic">squid
+</font>的注意事項</font></font>
+<br>　
+<br>使用代理伺服器後，瀏覽國外的網頁應該是可以變快的！但是，你要小心幾件事：
+<br>　
+<ol>
+<li>
+<font color="#000066">若 squid 內設定的使用空間滿了，則 squid 將不會運作！</font></li>
+
+<li>
+<font color="#000066">若 squid 的紀錄檔太大了，則工作效率會變慢！</font></li>
+</ol>
+　
+<br>由於我們已經安裝的 pwebstats 了，並且已經設定好了 squid -k rotate 的工作，所以第二個問題並不嚴重，嚴重的可能會是第一個問題！所以有可能我們會自行手動的刪除
+Proxy 的快取目錄，如何刪除呢？雖然上面已經提過了一些注意事項，這裡我們再次的說明吧！
+<br>　
+<table BORDER COLS=1 WIDTH="549" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFFF"><font size=-1>1. 停止 squid&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">kill -9 `cat /usr/local/squid/var/logs/squid.pid`</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>(可能會重複做
+5 次左右才會完全砍掉！)</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 刪除暫存目錄
+(這個目錄請依您的系統而定！)</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">rm -rf /usr/local/squid/var/cache1</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">mkdir /usr/local/squid/var/cache1</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 重建快取目錄並重新啟動</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">/usr/local/squid/sbin/squid -z</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">su nobody -c "/usr/local/squid/bin/RunCache
+&amp;"</font></font></font></td>
+</tr>
+</table>
+
+　
+<br>其他的建議：
+<ol>　
+<li>
+<font color="#000066">關於上層代理伺服器</font>：用 cache_peer 設定上層代理伺服器的數目不要太多，只要
+2-5 個之間就好了，而且上層代理伺服器一定要找距離你最近，並且具有較大頻寬的主機，如果是在台南，那
+proxy.ncku.edu.tw 就是不錯的主機，或者向您的 ISP 詢問喔；</li>
+
+<br>　
+<li>
+<font color="#000066">關於暫存目錄的設定</font>：以 cache_dir ufs 設定的目錄，最好是單獨割出來的約
+1-2 GB 的硬碟槽，以我為例，我將另外一台主機的 30GB 的硬碟割兩槽給 proxy
+用，而每一槽只有 2GB ，分別命名為 proxy1 與 proxy2 ，則可以寫成</li>
+
+<ol><font face="細明體"><font color="#000066">　</font></font>
+<br><font face="細明體"><font color="#000066">cache_dir ufs /proxy1 2000
+16 256</font></font>
+
+<br><font face="細明體"><font color="#000066">cache_dir ufs /proxy2 2000
+16 256</font></font>
+<br><font face="細明體"><font color="#000066">　</font></font></ol>
+由於分成兩槽來存取，所以整體效率上會比較好，但這是針對一般比較大型的代理伺服器的設定了，我們這個小主機就不用如此設定(但是效率真的有差哩！)。
+<br>　
+<li>
+<font color="#000066">善用 acl, always_direct, never_direct</font>：就如同上面提到的，因為你的目的不同，所以會使用到不同的
+proxy 作為你的上層代理伺服器，如果你發現你的上層代理伺服器無法針對你常上的網站來求取資料時，就將那個網站加入你的
+always_direct 吧！另外，也可以使用 cache_peer_access 來處理喔！</li>
+
+<br>　
+<li>
+<font color="#000066">在 ./configure 的時候增加 --enable-async-io=80 這一個指令</font>：基本上，增加這個指令之後，將可以使您的磁碟多一個
+type ，亦即是 aufs ，這個 type 的速度較快！</li>
+</ol>
+
+</ul>
+
+<hr WIDTH="100%"><a NAME="important"></a><font color="#000099"><font size=+1>重點回顧</font></font>
+<ul>
+<li>
+<font color="#000066">代理伺服器 ( Proxy ) 最大的功能是在代理使用者向 Internet
+要求 Web page 的資料，同時達成 Web pages 的快取記錄 (Cache) ，以達到假性的頻寬節省目的；此外，還可以額外的達成防火牆的功能；</font></li>
+
+<li>
+<font color="#000066">目前 Unix Like 的機器中，做為 proxy 功能的伺服器軟體幾乎都是使用
+squid ，而 squid 僅需要設定 squid.conf 這個設定檔即可使用；</font></li>
+
+<li>
+<font color="#000066">設定 Proxy 時，如果能以頻寬更大的上層 Proxy 來幫助，將有助於
+Client 端瀏覽速度的提昇；</font></li>
+
+<li>
+<font color="#000066">以防火牆的功能來說， Proxy 使用應用層的方式來達成防火牆功能，至於
+iptables 則是更為底層的 TCP/IP 分析的方式；</font></li>
+
+<li>
+<font color="#000066">Proxy 對於硬體的要求較高，尤其是硬碟的 partition
+與記憶體，一般來說，一個 cache 目錄最好就是一個 partition ，而一個 cache
+partition 最好容量在 2-4 GB 之間即可；</font></li>
+
+<li>
+<font color="#000066">transparent proxy 的功能就是可以讓 client 端不需要設定瀏覽器的
+proxy 功能，即可進行 proxy 的工作；</font></li>
+</ul>
+
+<hr WIDTH="100%"><a NAME="reference"></a><font color="#000099"><font size=+1>參考資源</font></font>
+<ul>
+<li>
+
+優客筆記本：<a href="http://turtle.ee.ncku.edu.tw/~tung/proxy/" target="_blank">http://turtle.ee.ncku.edu.tw/~tung/proxy/</a></li>
+
+<li>
+台北市教育網路中心：<a href="http://www.tp.edu.tw/document/squid/index.files/frame.htm" target="_blank">http://www.tp.edu.tw/document/squid/index.files/frame.htm</a></li>
+
+<li>
+squid 官方網站：<a href="http://www.squid-cache.org/" target="_blank">http://www.squid-cache.org/</a></li>
+
+<li>
+squid 說明文件計畫：<a href="http://squid-docs.sourceforge.net/" target="_blank">http://squid-docs.sourceforge.net/</a></li>
+
+<li>
+中山大學資訊工程所：<a href="http://www.cc.nsysu.edu.tw/~lmj/Squid.files/frame.htm" target="_blank">http://www.cc.nsysu.edu.tw/~lmj/Squid.files/frame.htm</a></li>
+
+<li>
+鷺江國小：<a href="http://proxy.lcps.tpc.edu.tw/" target="_blank">http://proxy.lcps.tpc.edu.tw/</a></li>
+
+<li>
+fly 官方網站：<a href="http://martin.gleeson.com/fly/index.html" target="_blank">http://martin.gleeson.com/fly/index.html</a></li>
+
+<li>
+
+pwebstats 官方網站：<a href="http://martin.gleeson.com/pwebstats/index.html" target="_blank">http://martin.gleeson.com/pwebstats/index.html</a></li>
+</ul>
+
+<hr WIDTH="100%"><a NAME="FAQ"></a><font color="#000099"><font size=+1>本章習題練習
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看
+)</font></font>
+<ul>
+<li>
+請說明為何 Proxy 可以提升網路的 WWW 瀏覽速度？</li>
+
+<li>
+萬一 squid 發生了問題，請問我該如何找出問題點？</li>
+
+<li>
+
+請說明 Proxy 伺服器的功能為何？</li>
+
+<li>
+試說明為何 Proxy 伺服器可以提昇網域之內的網路安全性？</li>
+
+<br><a href="1000results.php#0420squid">前往參考用解答</a></ul>
+
+<center><font color="#3333FF"><font size=+1><a href="0420squid.php"><font face="標楷體">簡易</font>
+Proxy Server <font face="標楷體">架設</font></a></font></font></center>
+
+<hr WIDTH="100%"><font face="新細明體"><font color="#000066"><font size=-1>2001/??/??：第一次完成日期，其實已經忘記了～</font></font></font>
+
+<br><font face="新細明體"><font color="#000066"><font size=-1>2001/11/09：加入增加
+Proxy 效能的方法，就是使用多顆硬碟做成的資料儲存方式！</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2003/04/04：完成大幅度的改寫動作！加入了完整的
+Proxy 說明，與 pwebstats 的架設！</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2003/04/11：完成了另一個末端分析的強大軟體
+<a href="#serverahead_sarg">SARG
+分析套件</a>！</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2003/09/16：微幅調校一下版面！</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2004/11/12：修訂 transparent proxy 的設定問題， httpd_accel_with_proxy on</font></font></font>
+<br>
+
+
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

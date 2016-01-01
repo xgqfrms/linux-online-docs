@@ -1,0 +1,1795 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 常用網路指令介紹</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0140networkcommand.htm">
+    <span class="text_head0"><span class="text_head_en">Linux </span>常用網路指令介紹</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0140networkcommand.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/08/02</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	Linux 的網路功能相當的強悍，一時之間我們也無法完全的介紹所有的網路指令，
+	這個章節主要的目的在介紹一些常見的網路指令而已。至於每個指令的詳細用途將在後續伺服器架設時，
+	依照指令的相關性來進行說明。當然，在這個章節的主要目的是在於將所有的指令彙整在一起，比較容易瞭解啦！
+	還有，這一章鳥哥新增了一些封包擷取的指令，若不熟悉沒關係，先放著，全部讀完後再回來這一章仔細練習啊！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#network_setup">網路參數設定指令：</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#ifconfig">ifconfig</a>, <a href="#ifup">ifup, ifdown</a><br />
+	　　1.2 <a href="#route">route</a><br />
+	　　1.3 <a href="#ip_cmd">ip</a><br />
+	　　1.4 <a href="#iw_cmd">iwlist, iwconfig</a><br />
+	　　1.5 <a href="#dhclient">dhclient</a><br />
+	</span>
+2. <a href="#network_test">網路偵錯與觀察指令</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#ping">ping</a>：<a href="#ping_mtu">用 ping 追蹤最大 MTU 數值</a><br />
+	　　2.2 <a href="#traceroute">traceroute</a><br />
+	　　2.3 <a href="#netstat">netstat</a><br />
+	　　2.4 <a href="#host">host</a><br />
+	　　2.5 <a href="#nslookup">nslookup</a><br />
+	</span>
+3. <a href="#remote_con">遠端連線指令</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#telnet">telnet</a><br />
+	　　3.2 <a href="#ftp">ftp</a><br />
+	　　3.3 <a href="#lftp">lftp</a><br />
+	　　3.4 <a href="#gaim">gaim：圖形介面的即時通訊軟體</a><br />
+	</span>
+4. <a href="#browser">文字介面網頁瀏覽</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#lynx">lynx</a><br />
+	　　4.2 <a href="#wget">wget</a><br />
+	</span>
+5. <a href="#pick">封包擷取功能</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#tcpdump">tcpdump</a><br />
+	　　5.2 <a href="#ethereal">ethereal</a><br />
+	　　5.3 <a href="#nc">nc, netcat</a><br />
+	</span>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a>：<br />
+8. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+9. <a href="http://phorum.vbird.org/viewtopic.htm?t=26123"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=26123</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="network_setup"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">網路參數設定指令：</span><br />
+<div class=block1>
+	任何時刻如果你想要做好你的網路參數設定，包括 IP 參數、路由參數與無線網路等等，
+	就得要瞭解底下這些相關的指令才行！其中以 route 及 ip  這兩支指令算是較重要的喔！ ^_^
+	當然，比較早期的用法，我們都是使用 ifconfig 的啦！<br />
+	<ul>
+	<li><span class=text_import1>ifconfig</span>：查詢、設定網路卡與 IP 網域等相關參數；
+	<li><span class=text_import1>ifup, ifdown</span>：這兩個檔案是 script ，透過更簡單的方式來啟動網路介面；
+	<li><span class=text_import1>route</span>：查詢、設定路由表 (route table)
+	<li><span class=text_import1>ip</span>：複合式的指令，可以直接修改上述提到的功能；</ul>
+
+	<hr /><a NAME="network_setup_ip"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ifconfig, ifup, 
+	ifdown</span><br />
+	<div class=block2>
+		這三個指令的用途都是在啟動網路介面，不過， ifup 與 ifdown 僅能就 /etc/sysconfig/network-scripts
+		內的 ifcfg-ethx (x 為數字) 進行啟動或關閉的動作，並不能直接修改網路參數，除非手動調整 
+		ifcfg-ethx 檔案才行。至於 ifconfig 則可以直接手動給予某個介面 IP 或調整其網路參數！
+		底下我們就分別來談一談先！<br /><br />
+
+		<hr><li><a name="ifconfig"></a><span class=text_import1>ifconfig</span><br />
+		<div class=block2>
+			ifconfig 主要是可以手動的啟動、觀察與修改網路介面的相關參數，可以修改的參數很多啊，
+			包括 IP 參數以及 MTU 等等都可以修改，他的語法如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig {interface} {up|down}</span>  <span class=term_say>&lt;== 觀察與啟動介面</span>
+[root@linux ~]# <span class=term_command>ifconfig interface {options}  </span>  <span class=term_say>&lt;== 設定與修改介面</span>
+<span class=term_say>參數：
+interface：網路卡介面代號，包括 eth0, eth1, ppp0 等等
+options  ：可以接的參數，包括如下：
+    up, down ：啟動 (up) 或關閉 (down) 該網路介面(不涉及任何參數)
+    mtu      ：可以設定不同的 MTU 數值，例如 mtu 1500 (單位為 byte)
+    netmask  ：就是子遮罩網路；
+    broadcast：就是廣播位址啊！
+範例：</span>
+
+<span class=term_hd>範例一：觀察所有的網路介面(直接輸入 ifconfig)</span>
+[root@linux ~]# <span class=term_command>ifconfig</span>
+eth0      Link encap:Ethernet  HWaddr 00:0F:EA:A3:06:A2
+          inet addr:192.168.10.100  Bcast:192.168.10.255  Mask:255.255.255.0
+          inet6 addr: fe80::20f:eaff:fe73:682/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:3439 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2735 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:646935 (631.7 KiB)  TX bytes:562313 (549.1 KiB)
+          Interrupt:209 Memory:fb000000-0
+</pre></td></tr></table>
+
+			一般來說，<span class=text_import2>直接輸入 ifconfig 就會列出目前已經被啟動的卡</span>，
+			不論這個卡是否有給予 IP ，都會被顯示出來。而<span class=text_import2>如果是輸入 ifconfig eth0 ，
+			則會秀出這張介面的相關資料，而不管該介面是否有啟動</span>。所以如果您想要知道某張網路卡的
+			Hardware Address，直接輸入『 ifconfig "網路介面代號" 』即可喔！ ^_^！
+			至於上表出現的各項資料是這樣的(資料排列由上而下、由左而右)：<br />
+			<ul>
+			<li><span class=text_import1>eth0</span>：就是網路卡的代號，也有 lo 這個 loopback ；</li>
+			<li><span class=text_import1>HWaddr</span>：就是網路卡的硬體位址，俗稱的 MAC 是也；</li>
+			<li><span class=text_import1>inet addr</span>：IPv4 的 IP 位址，後續的 Bcase, Mask 分別代表的是
+				Broadcast 與 netmask 喔！</li>
+			<li><span class=text_import1>inet6 addr</span>：是 IPv6 的版本的 IP ，我們沒有使用，所以略過；</li>
+			<li><span class=text_import1>MTU</span>：就是 
+				<a href="0110network_basic.htm#protocol_mtu">MTU</a> 啊！</li>
+			<li><span class=text_import1>RX</span>：那一行代表的是網路由啟動到目前為止的封包接收情況，
+				packets 代表封包數、errors 代表封包發生錯誤的數量、 dropped 
+				代表封包由於有問題而遭丟棄的數量等等</li>
+			<li><span class=text_import1>TX</span>：與 RX 相反，為網路由啟動到目前為止的傳送情況；</li>
+			<li><span class=text_import1>collisions</span>：代表封包碰撞的情況，如果發生太多次，
+				表示您的網路狀況不太好；</li>
+			<li><span class=text_import1>txqueuelen</span>：代表用來傳輸資料的緩衝區的儲存長度；</li>
+			<li><span class=text_import1>RX bytes, TX bytes</span>：總傳送、接收的位元組總量</li>
+			<li><span class=text_import1>Interrupt, Memory</span>：網路卡硬體的資料， IRQ 岔斷與記憶體位址；</li>
+			</ul>
+			透過觀察上述的資料，大致上可以瞭解到您的網路情況，尤其是那個 RX, TX 內的 error 數量，
+			以及是否發生嚴重的 collision 情況，都是需要注意的喔！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：暫時修改網路介面</span>
+[root@linux ~]# <span class=term_command>ifconfig eth0 192.168.100.100</span>
+<span class=term_say># 如果不加任何其他參數，則系統會依照該 IP 所在的 class 範圍，
+# 自動的計算出 netmask 以及 network, broadcast 等 IP 參數；</span>
+
+[root@linux ~]# <span class=term_command>ifconfig eth0 192.168.100.100 netmask 255.255.255.128 \</span>
+> <span class=term_command>mtu 8000 </span>
+<span class=term_say># 設定網路介面，同時設定 MTU 的數值！</span>
+
+[root@linux ~]# <span class=term_command>ifconfig eth0 mtu 9000</span>
+<span class=term_say># 僅修改該介面的 MTU 數值，其他的保持不動！</span>
+
+[root@linux ~]# <span class=term_command>ifconfig eth0:0 192.168.50.50</span>
+<span class=term_say># 仔細看那個介面， eth0:0 喔！那就是在該網路介面上，再模擬一個網路介面，
+# 亦即是在一張網路卡上面設定多個 IP 的意思啦！</span>
+
+[root@linux ~]# <span class=term_command>ifconfig</span>
+eth0      Link encap:Ethernet  HWaddr 00:0F:EA:A3:06:A2
+          inet addr:192.168.10.100  Bcast:192.168.10.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:3669 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2892 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:667547 (651.9 KiB)  TX bytes:584799 (571.0 KiB)
+          Interrupt:209 Memory:fb000000-0
+
+eth0:0    Link encap:Ethernet  HWaddr 00:0F:EA:A3:06:A2
+          inet addr:192.168.200.2  Bcast:192.168.200.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          Interrupt:209 Memory:fb000000-0
+<span class=term_say># 仔細看，是否與硬體有關的資訊都相同啊！沒錯！因為是同一張網卡嘛！</span>
+
+[root@linux ~]# <span class=term_command>ifconfig eth0:0 down</span>
+<span class=term_say># 關掉 eth0:0 這個介面。如果想要啟動 eth1 ，並且不給予任何網路參數，
+# ifconfig eth1 up 就可以達到了！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/network restart</span>
+<span class=term_say># 剛剛設定的資料全部失效，會以 ifcfg-ethx 的設定為主！</span>
+</pre></td></tr></table>
+
+			呵呵！使用 ifconfig 可以暫時手動來設定或修改某個介面卡的相關功能，
+			並且也可以透過 eth0:0 這種虛擬的網路介面來設定好一張網路卡上面的多個 IP 喔！
+			手動的方式真是簡單啊！並且設定錯誤也不打緊，因為我們可以利用 
+			<span class=text_import2>/etc/init.d/network restart</span>
+			來重新啟動整個網路介面，那麼之前手動的設定資料會全部都失效喔！另外，
+			要啟動某個網路介面，但又不讓他具有 IP 參數時，直接給他 
+			<span class=text_import2>ifconfig eth0 up</span> 即可！
+			這個動作<span class=text_import2>經常在無線網卡當中會進行</span>，
+			因為我們必須要啟動無線網卡讓他去偵測 AP 存在與否啊！<br /><br />
+		</div>
+
+		<hr><li><a name="ifup"></a><span class=text_import1>ifup, ifdown</span><br />
+		<div class=block2>
+			即時的手動修改一些網路介面參數，可以利用 ifconfig 來達成，如果是要直接以設定檔，
+			亦即是在 /etc/sysconfig/network-scripts 裡面的 ifcfg-ethx 等檔案的設定參數來啟動的話，
+			那就得要透過 ifdown 或 ifup 來達成了。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifup   {interface}</span>
+[root@linux ~]# <span class=term_command>ifdown {interface}</span>
+
+[root@linux ~]# <span class=term_command>ifup eth0</span>
+</pre></td></tr></table>
+
+			ifup 與 ifdown 真是太簡單了！這兩支程式其實是 script 而已，他會直接到 
+			/etc/sysconfig/network-scripts 目錄下搜尋對應的設定檔，例如 
+			ifup <span class=text_import1>eth0</span> 時，他會找出 
+			ifcfg-<span class=text_import1>eth0</span> 這個檔案的內容，然後來加以設定。
+			關於 ifcfg-eth0 的設定則請參考前一章<a href="0130internet_connect.htm">連上 Internet</a>
+			的說明。<br /><br />
+
+			不過，由於這兩支程式主要是搜尋設定檔 (ifcfg-ethx) 來進行啟動與關閉的，
+			所以在使用前請確定 ifcfg-ethx 是否真的存在於正確的目錄內，否則會啟動失敗喔！
+			另外，<span class=text_import2>如果以 ifconfig eth0 .... 來設定或者是修改了網路介面後，
+			那就無法再以 ifdown eth0 的方式來關閉了</span>！因為 ifdown 會分析比對目前的網路參數與 ifcfg-eth0
+			是否相符，不符的話，就會放棄該次動作。因此，使用 ifconfig 修改完畢後，應該要以 
+			ifconfig eth0 down 才能夠關閉該介面喔！<br /><br />
+		</div>
+	</div>
+
+	<hr /><a NAME="route"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">路由修改 route</span><br />
+	<div class=block2>
+		我們在<a href="0110network_basic.htm">網路基礎</a>的時候談過關於路由的問題，
+		兩部主機之間一定要有路由才能夠互通 TCP/IP 的協定，否則就無法進行連線啊！
+		一般來說，只要有網路介面，該介面就會產生一個路由，例如在鳥哥實驗室內部的主機有一個 eth0 及 lo ，
+		所以：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route [-nee]</span>
+[root@linux ~]# <span class=term_command>route add [-net|-host] [網域或主機] netmask [mask] [gw|dev]</span>
+[root@linux ~]# <span class=term_command>route del [-net|-host] [網域或主機] netmask [mask] [gw|dev]</span>
+<span class=term_say>觀察的參數：
+   -n  ：不要使用通訊協定或主機名稱，直接使用 IP 或 port number；
+   -ee ：使用更詳細的資訊來顯示
+增加 (add) 與刪除 (del) 路由的相關參數：
+   -net    ：表示後面接的路由為一個網域；
+   -host   ：表示後面接的為連接到單部主機的路由；
+   netmask ：與網域有關，可以設定 netmask 決定網域的大小；
+   gw      ：gateway 的簡寫，後續接的是 IP 的數值喔，與 dev 不同；
+   dev     ：如果只是要指定由那一塊網路卡連線出去，則使用這個設定，後面接 eth0 等
+</span>
+<span class=term_hd>範例一：單純的觀察路由狀態</span>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 eth0
+169.254.0.0     0.0.0.0         255.255.0.0     U     0      0        0 eth0
+<span class=term_write>0.0.0.0         192.168.10.30   0.0.0.0</span>         UG    0      0        0 eth0
+
+[root@linux ~]# <span class=term_command>route</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    *               255.255.255.0   U     0      0        0 eth0
+169.254.0.0     *               255.255.0.0     U     0      0        0 eth0
+<span class=term_write>default         server.cluster  0.0.0.0</span>         UG    0      0        0 eth0
+</pre></td></tr></table>
+
+		由上面的例子當中仔細觀察 route 與 route -n 的輸出結果，你可以發現有加 -n 
+		參數的主要是顯示出 IP ，至於使用 route 而已的話，顯示的則是『主機名稱』喔！
+		也就是說，在預設的情況下， route 會去找出該 IP 的主機名稱，如果找不到呢？
+		就會顯示的鈍鈍的(有點小慢)，所以說，鳥哥通常都直接使用 route -n 啦！
+		由上面看起來，我們也知道 <span class=text_import2>default = 0.0.0.0/0.0.0.0</span> ，
+		而上面的資訊有哪些你必須要知道的呢？<br />
+		<ul>
+		<li><span class=text_import1>Destination, Genmask</span>：這兩個玩意兒就是分別是 network 與 
+			netmask 啦！所以這兩個咚咚就組合成為一個完整的網域囉！</li>
+		<li><span class=text_import1>Gateway</span>：該網域是通過那個 gateway 連接出去的？
+			如果顯示 0.0.0.0 表示該路由是直接由本機傳送，亦即可以透過區域網路的 MAC 直接傳訊；
+			如果有顯示 IP 的話，表示該路由需要經過路由器 (通訊閘) 的幫忙才能夠傳送出去。</li>
+		<li><span class=text_import1>Flags</span>：總共有多個旗標，代表的意義如下：
+			<ul>
+			<li><span class=text_import2>U (route is up)：該路由是啟動的；</span>
+			<li>H (target is a host)：目標是一部主機 (IP) 而非網域；
+			<li><span class=text_import2>G (use gateway)：需要透過外部的主機 (gateway) 來轉遞封包；</span>
+			<li>R (reinstate route for dynamic routing)：使用動態路由時，恢復路由資訊的旗標；
+			<li>D (dynamically installed by daemon or redirect)：已經由服務或轉 port 功能設定為動態路由
+			<li>M (modified from routing daemon or redirect)：路由已經被修改了；
+			<li>!  (reject route)：這個路由將不會被接受(用來抵擋不安全的網域！)</ul></li>
+		<li><span class=text_import1>Iface</span>：這個路由傳遞封包的介面。</li>
+		</ul>
+		此外，觀察一下上面的路由排列順序喔，<span class=text_import2>依序是由小網域 
+		(192.168.10.0/24 是 Class C)，逐漸到大網域
+		(169.254.0.0/16 Class B) 最後則是預設路由 (0.0.0.0/0.0.0.0)</span>。
+		然後當我們要判斷某個網路封包應該如何傳送的時候，該封包會經由這個路由的過程來判斷喔！
+		舉例來說，我上頭僅有三個路由，若我有一個傳往 192.168.10.20 的封包要傳遞，那首先會找 192.168.10.0/24
+		這個網域的路由，找到了！所以直接由 eth0 傳送出去；<br /><br />
+
+		如果是傳送到 Yahoo 的主機呢？ Yahoo 的主機 IP 是 202.43.195.52，我通過判斷 1)不是 192.168.10.0/24，
+		2)不是 169.254.0.0/16 結果到達 3)0/0 時，OK！傳出去了，透過 eth0 將封包傳給 192.168.10.30 
+		那部 gateway 主機啊！所以說，路由是有順序的。<br /><br />
+
+		因此當你重複設定多個同樣的路由時，
+		例如在你的主機上的兩張網路卡設定為相同網域的 IP 時，會出現什麼情況？會出現如下的情況：<br />
+
+<table class="term"><tr><td class="term"><pre>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 <span class=term_write>eth0</span>
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 <span class=term_write>eth1</span>
+</pre></td></tr></table>
+
+		也就是說，<span class=text_import2>由於路由是依照順序來排列與傳送的，
+		所以不論封包是由那個介面 (eth0, eth1) 所接收，都會由上述的 eth0 傳送出去</span>，
+		所以，在一部主機上面設定兩個相同網域的 IP 本身沒有什麼意義！有點多此一舉就是了。
+		除非是類似虛擬主機 (Xen, VMware 等軟體) 所架設的多主機時，才會有這個必要～<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：路由的增加與刪除</span>
+[root@linux ~]# <span class=term_command>route del -net 169.254.0.0 netmask 255.255.0.0 dev eth0</span>
+<span class=term_say># 上面這個動作可以刪除掉 169.254.0.0/16 這個網域！
+# 請注意，在刪除的時候，需要將路由表上面出現的資訊都寫入
+# 包括  netmask , dev 等等參數喔！注意注意</span>
+
+[root@linux ~]# <span class=term_command>route add -net 192.168.100.0 \</span>
+> <span class=term_command>netmask 255.255.255.0 dev eth0</span>
+<span class=term_say># 透過 route add 來增加一個路由！請注意，這個路由必須要能夠與你互通。
+# 舉例來說，如果我下達底下的指令就會顯示錯誤：
+# route add -net 192.168.200.0 netmask 255.255.255.0 gw 192.168.200.254
+# 因為我的環境內僅有 192.168.10.100 這個 IP ，所以不能與 192.168.200.254
+# 這個網段直接使用 MAC 互通！這樣說，可以理解喔！？</span>
+
+[root@linux ~]# <span class=term_command>route add default gw 192.168.10.30</span>
+<span class=term_say># 增加預設路由的方法！請注意，只要有一個預設路由就夠了喔！
+# 在這個地方如果您隨便設定後，記得使用底下的指令重新設定你的網路
+# /etc/init.d/network restart</span>
+</pre></td></tr></table>
+
+		如果是要進行路由的刪除與增加，那就得要參考上面的例子了，
+		其實，使用 man route 裡面的資料就很豐富了！仔細查閱一下囉！
+		你只要記得，當出現『<span class=text_import2>SIOCADDRT: Network is unreachable</span>』
+		這個錯誤時，肯定是由於 gw 後面接的 IP 無法直接與您的網域溝通 (Gateway 並不在你的網域內)，
+		所以，趕緊檢查一下是否輸入錯誤啊！加油吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="ip_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ip</span><br />
+	<div class=block2>
+		ip 是個指令喔！並不是那個 TCP/IP 的 IP 啦！這個 ip 指令的功能可多了！
+		基本上，他就是整合了 ifconfig 與 route 這兩個指令囉～不過， ip 可以達成的功能卻又多更多！
+		真是個相當厲害的指令。如果您有興趣的話，請自行 vi /sbin/ifup ，就知道整個 ifup 
+		就是利用 ip 這個指令來達成的。好了，如何使用呢？讓我們來瞧一瞧先！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ip [option] [動作] [指令]</span>
+<span class=term_say>參數：
+option ：設定的參數，主要有：
+    -s ：顯示出該裝置的統計數據(statistics)，例如總接受封包數等；
+動作：亦即是可以針對哪些網路參數進行動作，包括有：
+    link  ：關於裝置 (device) 的相關設定，包括 MTU, MAC 位址等等
+    addr/address ：關於額外的 IP 協定，例如多 IP 的達成等等；
+    route ：與路由有關的相關設定</span>
+</pre></td></tr></table>
+
+		由上面的語法我們可以知道， ip 除了可以設定一些基本的網路參數之外，還能夠進行額外的 IP 協定，
+		包括多 IP 的達成，真是太完美了！底下我們就分三個部分 (link, addr, route) 來介紹這個 ip 
+		指令吧！<br /><br />
+
+		<hr><li><span class=text_import1>關於裝置介面 (device) 的相關設定： ip link</span></li>
+		<div class=block2>
+		ip link 可以設定與裝置 (device) 有關的相關設定，包括 MTU 以及該網路介面的 MAC 等等，
+		當然也可以啟動 (up) 或關閉 (down) 某個網路介面啦！整個語法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ip [-s] link show</span>  <span class=term_say>&lt;== 單純的查閱該裝置相關的資訊</span>
+[root@linux ~]# <span class=term_command>ip link set [device] [動作與參數]</span>
+<span class=term_say>參數：
+show：僅顯示出這個裝置的相關內容，如果加上 -s 會顯示更多統計數據；
+set ：可以開始設定項目， device 指的是 eth0, eth1 等等介面代號；
+動作與參數：包括有底下的這些動作：
+   up|down  ：啟動 (up) 或關閉 (down) 某個介面，其他參數使用預設的乙太網路；
+   address  ：如果這個裝置可以更改 MAC 的話，用這個參數修改！
+   name     ：給予這個裝置一個特殊的名字；
+   mtu      ：就是最大傳輸單元啊！</span>
+
+<span class=term_hd>範例一：顯示出所有的介面資訊</span>
+[root@linux ~]# <span class=term_command>ip link show</span>
+1: lo: &lt;LOOPBACK,UP,10000> mtu 16436 qdisc noqueue
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: &lt;BROADCAST,MULTICAST,UP,10000> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:50:fc:22:9a:cb brd ff:ff:ff:ff:ff:ff
+3: sit0: &lt;NOARP> mtu 1480 qdisc noop
+    link/sit 0.0.0.0 brd 0.0.0.0
+
+[root@linux ~]# <span class=term_command>ip -s link show eth0</span>
+2: eth0: &lt;BROADCAST,MULTICAST,UP,10000> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:50:fc:22:9a:cb brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast
+    484011792  2247372  0       0       0       0
+    TX: bytes  packets  errors  dropped carrier collsns
+    2914104290 2867753  0       0       0       0
+</pre></td></tr></table>
+
+		使用 ip link show 可以顯示出整個裝置介面的硬體相關資訊，如上所示，包括網卡位址(MAC)、MTU等等，
+		比較有趣的應該是那個 sit0 的介面了，那個 sit0 的介面是用在 IPv4 及 IPv6 的封包轉換上的，
+		對於我們僅使用 IPv4 的網路是沒有作用的。 lo 及 sit0 都是主機內部所自行設定的。
+		而如果加上 -s 的參數後，則這個網路卡的相關統計資訊就會被列出來，
+		包括接收 (RX) 及傳送 (TX) 的封包數量等等，詳細的內容與 ifconfig 所輸出的結果相同的。<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：啟動、關閉與設定裝置的相關資訊</span>
+[root@linux ~]# <span class=term_command>ip link set eth0 up</span>
+<span class=term_say># 啟動 eth0 這個裝置介面；</span>
+
+[root@linux ~]# <span class=term_command>ip link set eth0 down</span>
+<span class=term_say># 阿就關閉啊！簡單的要命～</span>
+
+[root@linux ~]# <span class=term_command>ip link set eth0 mtu 1000</span>
+<span class=term_say># 更改 MTU 的值，達到 1000 bytes，單位就是 bytes 啊！</span>
+</pre></td></tr></table>
+
+		更新網路卡的 MTU 使用 ifconfig 也可以達成啊！沒啥了不起，不過，如果是要更改『網路卡代號、
+		MAC 位址的資訊』的話，那可就得使用 ip 囉～不過，設定前得要先關閉該網路卡，否則會不成功。
+		如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例三：修改網路卡代號、MAC 等參數</span>
+[root@linux ~]# <span class=term_command>ip link set eth0 name vbird</span>
+SIOCSIFNAME: Device or resource busy
+<span class=term_say># 因為該裝置目前是啟動的，所以不能這樣做設定。你應該要這樣做：</span>
+
+[root@linux ~]# <span class=term_command>ip link set eth0 down      </span> <span class=term_say>&lt;==關閉介面</span>
+[root@linux ~]# <span class=term_command>ip link set eth0 name vbird</span> <span class=term_say>&lt;==重新設定</span>
+[root@linux ~]# <span class=term_command>ip link show               </span> <span class=term_say>&lt;==觀察一下</span>
+2. <span class=term_write>vbird</span>: &lt;BROADCAST,MILTICASE> mtu 900 qdisc pfifo_fast qlen 1000
+    link/ehter 00:40:d0:13:c3:46 brd ff:ff:ff:ff:ff:ff
+<span class=term_say># 怕了吧！連網路卡代號都可以改變！不過，玩玩後記得改回來啊！
+# 因為我們的 ifcfg-eth0 還是使用原本的裝置代號！避免有問題，要改回來</span>
+[root@linux ~]# <span class=term_command>ip link set vbird name eth0</span> <span class=term_say>&lt;==介面改回來</span>
+
+[root@linux ~]# <span class=term_command>ip link set eth0 address aa:aa:aa:aa:aa:aa</span>
+[root@linux ~]# <span class=term_command>ip link show eth0</span>
+<span class=term_say># 如果你的網路卡支援硬體位址 (MAC) 可以更改的話，
+# 那麼上面這個動作就可以更改你的網路卡位址了！厲害吧！
+# 不過，還是那句老話，測試完之後請立刻改回來啊！</span>
+</pre></td></tr></table>
+
+		在這個裝置的硬體相關資訊設定上面，包括 MTU, MAC 以及傳輸的模式等等，都可以在這裡設定。
+		有趣的是那個 address 的項目，那個項目後面接的可是硬體位址 (MAC) 而不是 IP 喔！
+		很容易搞錯啊！切記切記！更多的硬體參數可以使用 man ip 查閱一下與 ip link 有關的設定。<br /><br />
+		</div>
+
+		<hr><li><span class=text_import1>關於額外的 IP 相關設定： ip address</span></li>
+		<div class=block2>
+		如果說 ip link 是與 <a href="0110network_basic.htm#whatisnetwork_osi">OSI 七層協定</a> 
+		的第二層資料連階層有關的話，那麼 ip address (ip addr) 就是與第三層網路層有關的參數啦！
+		主要是在設定與 IP 有關的各項參數，包括 netmask, broadcast 等等。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ip address show</span>   <span class=term_say>&lt;==就是查閱 IP 參數啊！</span>
+[root@linux ~]# <span class=term_command>ip address [add|del] [IP參數] [dev 裝置名] [相關參數]</span>
+<span class=term_say>參數：
+show    ：單純的顯示出介面的 IP 資訊啊；
+add|del ：進行相關參數的增加 (add) 或刪除 (del) 設定，主要有：
+    IP 參數：主要就是網域的設定，例如 192.168.100.100/24 之類的設定喔；
+    dev    ：這個 IP 參數所要設定的介面，例如 eth0, eth1 等等；
+    相關參數：主要有底下這些：
+        broadcast：設定廣播位址，如果設定值是 + 表示『讓系統自動計算』
+        label    ：亦即是這個裝置的別名，例如 eth0:0 就是了！
+        scope    ：這個介面的領域，通常是這幾個大類：
+                   global ：允許來自所有來源的連線；
+                   site   ：僅支援 IPv6 ，僅允許本主機的連線；
+                   link   ：僅允許本裝置自我連線；
+                   host   ：僅允許本主機內部的連線；
+                   所以當然是使用 global 囉！預設也是 global 啦！</span>
+
+<span class=term_hd>範例一：顯示出所有的介面之 IP 參數：</span>
+[root@linux ~]# <span class=term_command>ip address show</span>
+1: lo: &lt;LOOPBACK,UP,10000> mtu 16436 qdisc noqueue
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,10000> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:50:fc:22:9a:cb brd ff:ff:ff:ff:ff:ff
+    <span class=term_write>inet 192.168.1.2/24 brd 192.168.1.255 scope global eth0</span>
+    inet6 fe80::250:fcff:fe22:9acb/64 scope link
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP> mtu 1480 qdisc noop
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre></td></tr></table>
+
+		看到上面那個特殊的字體嗎？沒錯！那就是 IP 參數啦！也是 ip address 最主要的功能。
+		底下我們進一步來新增虛擬的網路介面試看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：新增一個介面，名稱假設為 eth0:vbird </span>
+[root@linux ~]# <span class=term_command>ip address add 192.168.50.50/24 broadcast + \</span>
+> <span class=term_command>dev eth0 label eth0:vbird</span>
+[root@linux ~]# <span class=term_command>ip address show eth0</span>
+2: eth0: <BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:40:d0:13:c3:46 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+    <span class=term_write>inet 192.168.50.50/24 brd 192.168.50.255 scope global eth0:vbird</span>
+    inet6 fe80::240:d0ff:fe13:c346/64 scope link
+       valid_lft forever preferred_lft forever
+<span class=term_say># 看到上面的特殊字體了吧？多出了一行新的介面，且名稱是 eth0:vbird
+# 至於那個 broadcast + 也可以寫成 broadcast 192.168.50.255 啦！</span>
+[root@linux ~]# <span class=term_command>ifconfig</span>
+<span class=term_write>eth0:vbir</span> Link encap:Ethernet  HWaddr 00:40:D0:13:C3:46
+          inet addr:192.168.50.50  Bcast:192.168.50.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          Interrupt:5 Base address:0x3e00
+<span class=term_say># 如果使用 ifconfig 就能夠看到這個怪東西了！可愛吧！ ^_^</span>
+
+<span class=term_hd>範例三：將剛剛的介面刪除 </span>
+[root@linux ~]# <span class=term_command>ip address del 192.168.50.50/24 dev eth0</span>
+<span class=term_say># 刪除就比較簡單啊！ ^_^</span>
+</pre></td></tr></table><br />
+
+		</div>
+		<hr><li><span class=text_import1>關於路由的相關設定： ip route</span></li>
+		<div class=block2>
+		呵呵，這個項目當然就是路由的觀察與設定囉！事實上， ip route 的功能幾乎與 route 
+		這個指令差不多，但是，他還可以進行額外的參數設計，例如 MTU 的規劃等等，相當的強悍啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ip route show</span>  <span class=term_say>&lt;==單純的顯示出路由的設定而已</span>
+[root@linux ~]# <span class=term_command>ip route [add|del] [IP或網域] [via gateway] [dev 裝置]</span>
+<span class=term_say>參數：
+show ：單純的顯示出路由表，也可以使用 list ；
+add|del ：增加 (add) 或刪除 (del) 路由的意思。
+    IP或網域：可使用 192.168.50.0/24 之類的網域或者是單純的 IP ；
+    via     ：從那個 gateway 出去，不一定需要；
+    dev     ：由那個裝置連出去，這就需要了！
+    mtu     ：可以額外的設定 MTU 的數值喔！</span>
+
+<span class=term_hd>範例一：顯示出目前的路由資料</span>
+[root@linux ~]# <span class=term_command>ip route show</span>
+192.168.1.0/24 dev eth0  proto kernel  scope link  src 192.168.1.2
+169.254.0.0/16 dev eth1  scope link
+default via 192.168.1.254 dev eth1
+</pre></td></tr></table>
+
+		如上表所示，最簡單的功能就是顯示出目前的路由資訊，其實跟 route 這個指令相同啦！
+		指示必須要注意幾個小東西：<ul>
+		<li>proto：此路由的路由協定，主要有 redirect, kernel, boot, static, ra 等，
+			其中 kernel 指的是直接由核心判斷自動設定。
+		<li>scope：路由的範圍，主要是 link ，亦即是與本裝置有關的直接連線。</ul>
+		再來看一下如何進行路由的增加與刪除吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：增加路由，主要是本機直接可溝通的網域</span>
+[root@linux ~]# <span class=term_command>ip route add 192.168.5.0/24 dev eth0</span>
+<span class=term_say># 針對本機直接溝通的網域設定好路由，不需要透過外部的路由器</span>
+[root@linux ~]# <span class=term_command>ip route show</span>
+192.168.5.0/24 dev eth0  scope link
+<span class=term_say>....以下省略....</span>
+
+<span class=term_hd>範例三：增加可以通往外部的路由，需透過 router 喔！</span>
+[root@linux ~]# <span class=term_command>ip route add 192.168.10.0/24 via 192.168.5.100 dev eth0</span>
+[root@linux ~]# <span class=term_command>ip route show</span>
+192.168.5.0/24 dev eth0  scope link
+<span class=term_say>....其他省略....</span>
+192.168.10.0/24 via 192.168.5.100 dev eth0
+<span class=term_say># 仔細看喔，因為我有 192.168.5.0/24 的路由存在 (我的網卡直接聯繫)，
+# 所以才可以將 192.168.10.0/24 的路由丟給 192.168.5.100 
+# 那部主機來幫忙傳遞喔！與之前提到的 route 指令是一樣的限制！</span>
+
+<span class=term_hd>範例四：增加預設路由</span>
+[root@linux ~]# <span class=term_command>ip route add default via 192.168.1.2 dev eth0</span>
+<span class=term_say># 那個 192.168.1.2 就是我的預設路由器 (gateway) 的意思啊！ ^_^
+# 真的記得，只要一個預設路由就 OK ！</span>
+
+<span class=term_hd>範例五：刪除路由</span>
+[root@linux ~]# <span class=term_command>ip route del 192.168.10.0/24</span>
+[root@linux ~]# <span class=term_command>ip route del 192.168.5.0/24</span>
+</pre></td></tr></table><br />
+		</div>
+
+		事實上，這個 ip 的指令實在是太博大精深了！剛接觸 Linux 網路的朋友，可能會看到有點暈～
+		不要緊啦！您先會使用 ifconfig, ifup , ifdown 與 route 即可，
+		等以後有經驗了之後，再繼續回來玩 ip 這個好玩的指令吧！ ^_^
+		有興趣的話，也可以自行參考 ethtool 這個指令喔！ (man ethtool)。<br /><br />
+	</div>
+
+	<hr /><a NAME="iw_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">iwlist, iwconfig</span><br />
+	<div class=block2>
+		這兩個指令您必須要有無線網卡才能夠進行喔！這兩個指令的用途是這樣的：<ul>
+		<li>iwlist：利用無線網卡進行無線 AP 的偵測與取得相關的資料；
+		<li>iwconfig：設定無線網卡的相關參數。
+		</ul>
+		這兩個指令的應用我們在前一章裡面的 <a href="0130internet_connect.htm#wireless_connect">無線網卡設定</a>
+		談了很多了，所以這裡我們不再詳談，有興趣的朋友應該先使用 man iwlist 與 man iwconfig 瞭解一下語法，
+		然後再到前一章的無線網路小節查一查相關的用法，就瞭解了啦！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="dhclient"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">dhclient</span><br />
+	<div class=block2>
+		如果你是使用 DHCP 協定在區域網路內取得 IP 的話，那麼是否一定要去編輯 ifcfg-eth0 內的 BOOTPROTO 呢？
+		嘿嘿！有個更快速的作法，那就是利用 dhclient 這個指令～因為這個指令才是真正發送 dhcp
+		要求工作的程式啊！那要如何使用呢？很簡單！如果不考慮其他的參數，使用底下的方法即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>dhclient eth0</span>
+</pre></td></tr></table>
+
+		夠簡單吧！這樣就可以立刻叫我們的網路卡以 dhcp 協定去嘗試取得 IP 喔！
+		不過在 SuSE distribution 裡面，他僅有 dhcpcd 這支程式，他與 dhclient 是相同的咚咚啦！ ^_^<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="network_test"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">網路偵錯與觀察指令：</span><br />
+<div class=block1>
+	在網路的互助論壇中，最常聽到的一句話就是：『<span class=text_import2>高手求救！我的
+	Linux 不能連上網路了！</span>』我的天吶！不能上網路的原因多的很！而要完全搞懂也不是一件簡單的事情呢！
+	不過，事實上我們可以自己使用測試軟體來追蹤可能的錯誤原因，而很多的網路偵測指令其實在
+	Linux 裡頭已經都預設存在了，只要您好好的學一學基本的偵測指令，那麼一些朋友在告訴您如何偵錯的時候，
+	您應該就立刻可以知道如何來搞定他囉！好了，底下我們就簡單的來談一談幾個很基本的網路常用的偵錯指令啦！<br /><br />
+
+	<hr /><a NAME="ping"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ping</span><br />
+	<div class=block2>
+		這個 ping 是很重要的指令，ping 主要透過 <a href="0110network_basic.htm#protocol_icmp">ICMP 封包</a>
+		來進行整個網路的狀況報告，當然啦，最重要的就是那個 ICMP type 0, 8 這兩個類型，
+		分別是要求回報與主動回報網路狀態是否存在的特性。要特別注意的是， ping 還是需要透過 
+		<a href="0110network_basic.htm#ipandmac_head">IP 封包</a>來傳送 ICMP 封包的，
+		而 IP 封包裡面有個相當重要的 TTL (Time To Live) 屬性，這是很重要的一個路由特性，
+		詳細的 IP 與 ICMP 表頭資料請參考<a href="0110network_basic.htm">網路基礎</a>的詳細介紹。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ping [-bcstnM] IP</span>
+<span class=term_say>參數：
+-b ：後面接的是 broadcast 的 IP，用在你『需要對整個網域的主機進行 ping 』時；
+-c ：後面接的是執行 ping 的次數，例如 -c 5 ；
+-n ：不進行 IP 與主機名稱的反查，直接使用 IP ；
+-s ：發送出去的 ICMP 封包大小，預設為 56(bytes)，再加 8 bytes 的 ICMP 表頭資料
+-t ：TTL 的數值，預設是 255，每經過一個節點就會少一；
+-M [do|dont] ：主要在偵測網路的 MTU 數值大小，兩個常見的項目是：
+   do  ：代表傳送一個 DF (Don't Fragment) 旗標，讓封包不能重新拆包與打包；
+   dont：代表不要傳送 DF 旗標，表示封包可以在其他主機上拆包與打包</span>
+
+<span class=term_hd>範例一：偵測一下 168.95.1.1 這部 DNS 主機是否存在？</span>
+[root@linux ~]# <span class=term_command>ping -c 3 168.95.1.1</span>
+PING 168.95.1.1 (168.95.1.1) 56(84) bytes of data.
+64 bytes from 168.95.1.1: icmp_seq=0 ttl=243 time=9.16 ms
+64 bytes from 168.95.1.1: icmp_seq=1 ttl=243 time=8.98 ms
+64 bytes from 168.95.1.1: icmp_seq=2 ttl=243 time=8.80 ms
+
+--- 168.95.1.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2002ms
+rtt min/avg/max/mdev = 8.807/8.986/9.163/0.164 ms, pipe 2
+</pre></td></tr></table>
+
+		ping 最簡單的功能就是傳送 ICMP 封包去要求對方主機回應是否存在於網路環境中，
+		上面的回應訊息當中，幾個重要的項目是這樣的：<br />
+		<ul>
+		<li><span class=text_import1>64 bytes</span>：表示這次傳送的 ICMP 封包大小為 64 bytes 這麼大，這是預設值，
+			在某些特殊場合中，例如要搜索整個網路內最大的 MTU 時，可以使用 -s 2000 之類的數值來取代；</li>
+		<li><span class=text_import1>icmp_seq=0</span>：ICMP 所偵測進行的次數，第一次編號為 0 ；</li>
+		<li><span class=text_import1>ttl=243</span>：TTL 與 IP 封包內的 TTL 是相同的，每經過一個帶有 MAC
+			的節點 (node) 時，例如 router, bridge 時， TTL 就會減少一，預設的 TTL 為 255 ，
+			你可以透過 -t 150 之類的方法來重新設定預設 TTL 數值；</li>
+		<li><span class=text_import1>time=9.16 ms</span>：回應時間，單位有 ms(0.001秒)及 us(0.000001秒)，
+			一般來說，越小的回應時間，表示兩部主機之間的網路連線越良好！</li>
+		</ul>
+		如果你忘記加上 -c 3 這樣的規定偵測次數，那就得要使用 [ctrl]-c 將他結束掉了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：針對整個網域進行 ping 的追查</span>
+[root@linux ~]# <span class=term_command>ping -c 3 -b 192.168.10.255</span>
+WARNING: pinging broadcast address          <span class=term_say>&lt;==會告知危險喔！</span>
+PING 192.168.10.255 (192.168.10.255) 56(84) bytes of data.
+64 bytes from 192.168.10.100: icmp_seq=1 ttl=64 time=0.177 ms
+64 bytes from 192.168.10.20: icmp_seq=1 ttl=64 time=0.179 ms (DUP!)
+64 bytes from 192.168.10.10: icmp_seq=1 ttl=64 time=0.302 ms (DUP!)
+64 bytes from 192.168.10.40: icmp_seq=1 ttl=64 time=0.304 ms (DUP!)
+<span class=term_say># 當要針對整部主機作 ping 的偵測時，可以利用 -b 這個參數。
+# 請特別注意，當使用 ping -b 時，會對整個網域進行偵測喔！沒事別亂用。
+# 例如上面的範例中，區網內的 192.168.10.20... 等主機會被偵測到。</span>
+</pre></td></tr></table>
+
+		如果想要瞭解區網內有多少部主機存活著，那麼使用 ping -b broadcast 就能夠知道了！
+		而不必一部一部主機來偵測啊！方便～另外也特別注意一下，
+		<span class=text_import2>如果您的主機與待偵測主機並不在同一個網域內，
+		那麼 TTL 預設使用 255 ，如果是同一個網域內，那麼 TTL 預設則使用 64 喔</span>！
+		看看上面的輸出即可瞭解。<br /><br />
+
+		<a name="ping_mtu"></a><span class=text_import1>用 ping 追蹤最大 MTU 數值</span><br /><br />
+
+		我們由前幾章的<a href="0110network_basic.htm">網路基礎</a>裡面談到加大訊框 (frame) 時，
+		對於網路效能是有幫助的，因為封包打包的次數會減少，加上如果整個傳輸的媒體都能夠接受這個 frame 
+		而不需要重新進行封包的拆解與重組的話，那麼效能當然會更好，那個修改 frame 大小的參數就是 
+		<a href="0110network_basic.htm#protocol_mtu">MTU</a> 啦！好了，現在我們知道網路卡的 MTU 
+		可以透過 <a href="#ifconfig">ifconfig</a> 或者是 <a href="#ip_cmd">ip</a> 等來達成，
+		那麼追蹤整個網路傳輸的最大 MTU 時，又該如何查詢？呵呵！最簡單的方法當然是透過 ping 傳送一個大封包，
+		並且不許中繼的路由器或 switch 將該封包重組，那就能夠處理啦！沒錯！可以這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例三：找出最大的 MTU 數值</span>
+[root@linux ~]# <span class=term_command>ping -c 2 -s 1000 -M do 192.168.10.10</span>
+PING 192.168.10.10 (192.168.10.10) 1000(1028) bytes of data.
+1008 bytes from 192.168.10.10: icmp_seq=1 ttl=64 time=0.424 ms
+<span class=term_say># 如果有回應，那就是可以接受這個封包，如果無回應，那就表示這個 MTU 太大了。</span>
+
+[root@linux ~]# <span class=term_command>ping -c 2 -s 8000 -M do 192.168.10.10</span>
+PING 192.168.10.10 (192.168.10.10) 8000(8028) bytes of data.
+<span class=term_write>ping: local error: Message too long, mtu=1500</span>
+<span class=term_say># 這個錯誤訊息是說，本地端的 MTU 才到 1500 而已，你要偵測 8000 的 MTU
+# 根本就是無法達成的！那要如何是好？用前一小節介紹的 ip link 來進行 MTU 設定吧！</span>
+</pre></td></tr></table>
+
+		不過，你需要知道的是，由於
+		<a href="0110network_basic.htm#ipandmac_head">IP 封包表頭 (不含 options) 就已經佔用了 20 bytes</a> ，再加上 
+		ICMP 的表頭有 8 bytes ，所以<span class=text_import2>當然你在使用 -s size  
+		的時候，那個封包的大小就得要先扣除 (20+8=28) 的大小了。
+		因此如果要使用 MTU 為 1500 時，就得要下達『 ping -s 1472 -M do xx.yy.zz.ip 』才行啊</span>！
+		另外，由於本地端的網路卡 MTU 也會影響到偵測，所以如果想要偵測整個傳輸媒體的 MTU 數值，
+		那麼每個可以調整的主機就得要先使用 ifcofig 或 ip 先將 MTU 調大，然後再去進行偵測，
+		否則就會出現像上面提供的案例一樣，可能會出現『Message too long, mtu=1500』之類的字樣喔！
+		至於如果偵測完畢後，想要調整最佳化的 MTU ，那麼請參考前一章節的內容來調整囉！ ^_^<br /><br />
+
+		不過這個 MTU 不要隨便調整啊！除非真的有問題。通常調整 MTU 的時間是在這個時候：
+		<ul><span class=text_import2>
+		<li>因為全部的主機群都是在內部的區網，例如叢集架構 (cluster) 的環境下，
+			由於內部的網路節點都是我們可以控制的，因此可以透過修改 MTU 來增進網路效能；
+		<li>因為作業系統預設的 MTU 與您的網域不符，導致某些網站可以順利連線，某些網站則無法連線。
+			以 Windows 作業系統作為連線分享的主機時，在 Client 端挺容易發生這個問題；
+		</span></ul>
+		如果是要連上 Internet 的主機，注意不要隨便調整 MTU ，因為我們無法知道 Internet 
+		上面的每部機器能夠支援的 MTU 到多大，因為......不是我們能夠管的到的嘛！ ^_^<br /><br />
+
+		另外，其實每種連線方式都有不同的 MTU 值，常見的各種介面的 MTU 值分別為︰<br /><br />
+
+<center>
+<table width=55% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td>網路介面</td><td>MTU</td></tr>
+<tr align=center><td>Ethernet</td><td>1500</td></tr>
+<tr align=center><td>PPPoE</td><td>1492</td></tr>
+<tr align=center><td>Dial-up(Modem)</td><td>576</td></tr>
+</table></center><br />
+
+		網路上也有免費幫忙查詢 MTU 與傳輸相關資料的網站，例如底下這個網站：
+		<ul><li><a href="http://forums.speedguide.net:8117/"
+			target="_blank">http://forums.speedguide.net:8117/</a></ul>
+		連接上這個網站之前，請先取消您瀏覽器上的代理伺服器 (Proxy) 的設定，才能顯示出正確的訊息。
+		如果在 Windows 的系統上面想要修改 MTU 值的話，那就得要修改 Windows 的登錄檔，
+		在 Windows 上面對於 MTU 的偵測與修改的詳細作法可以參考微軟的官方網站：
+		<ul><li><a href="http://www.microsoft.com/taiwan/msclub/member/TIPS/Spring_2001/tip1to3/tip1to3_2.htm"
+		target="_blank">http://www.microsoft.com/taiwan/msclub/member/TIPS/Spring_2001/tip1to3/tip1to3_2.htm</a></ul>
+	</div>
+
+	<hr /><a NAME="traceroute"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">traceroute</span><br />
+	<div class=block2>
+		我們前面談到的指令大多數都是針對主機的網路參數設定所需要的，而 ping 是兩部主機之間的回聲與否判斷，
+		那麼有沒有指令可以追蹤兩部主機之間通過的各個節點 (node) 通訊狀況的好壞呢？
+		舉例來說，如果我們連線到 yahoo 的速度比平常慢，你覺得是 (1)自己的網路環境有問題？
+		(2)還是外部的 Internet 有問題？如果是 (1) 的話，我們當然需要檢查自己的網路環境啊，
+		看看是否又有誰中毒了？但如果是 Internet 的問題呢？那只有『等等等』啊！
+		判斷是 (1) 還是 (2) 就得要使用 traceroute 這個指令啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>traceroute [-nwig] IP</span>
+<span class=term_say>參數：
+-n ：可以不必進行主機的名稱解析，單純用 IP ，速度較快！
+-w ：若對方主機在幾秒鐘內沒有回聲就宣告不治...預設是 5 秒
+-i ：用在比較複雜的環境，如果你的網路介面很多很複雜時，才會用到這個參數；
+     舉例來說，你有兩條 ADSL 可以連接到外部，那你的主機會有兩個 ppp，
+     你可以使用 -i 來選擇是 ppp0 還是 ppp1 啦！
+-g ：與 -i 的參數相仿，只是 -g 後面接的是 gateway 的 IP 就是了。</span>
+
+<span class=term_hd>範例一：</span>
+[root@linux ~]# <span class=term_command>traceroute -n tw.yahoo.com</span>
+traceroute to tw.yahoo-ap1.akadns.net (203.84.202.164), 30 hops max, 38 byte packets
+ 1  61.59.121.1  42.174 ms  41.690 ms  41.058 ms
+ 2  139.175.172.2  40.962 ms  41.978 ms  40.973 ms
+ 3  192.72.122.130  40.983 ms  41.930 ms  41.003 ms
+ 4  139.175.58.210  42.956 ms  41.997 ms  42.337 ms
+ 5  139.175.58.153  47.591 ms  47.972 ms  48.748 ms
+ 6  139.175.56.30  48.193 ms  47.970 ms  47.986 ms
+ 7  139.175.57.94  47.959 ms  47.951 ms  47.985 ms
+ 8  139.175.56.138  48.363 ms  47.586 ms  47.995 ms
+ 9  139.175.58.42  49.256 ms  50.668 ms  47.490 ms
+10  61.58.33.133  201.882 ms  201.565 ms  200.973 ms
+11  61.58.33.50  199.910 ms  199.019 ms  198.961 ms
+12  203.84.200.226  202.391 ms  202.567 ms  209.283 ms
+</pre></td></tr></table>
+
+		這個 traceroute 挺有意思的，這個指令會針對欲連接的目的地之所有 router 進行 ICMP 的逾時等待，
+		例如上面的例子當中，由鳥哥的主機連接到 Yahoo 時，他會經過 12 個節點，traceroute 會主動的對這
+		12 個節點做 ICMP 的回聲等待，並偵測回覆的時間，每個節點會偵測三次。
+		所以像上頭顯示的結果，發現每個節點其實回覆的時間大約在 200 ms 以內，算是還可以的 Internet 環境了。
+		而且由上面的資訊來看，可以看出在 61.58.33.133 這個節點後的傳輸延遲較久，至於之前的 
+		9 個節點則有不錯的表現。透過這種解析，可以讓您瞭解到這條連線是那個環節出了問題喔。<br /><br />
+
+		另外，如果在預設的 5 秒鐘之內 traceroute 聽不到節點的回聲，那麼螢幕上就會跑出一個『 * 』的符號，
+		告知該節點無法有順利的回應。由於我們的 traceroute 用的是 ICMP 封包，有些防火牆或者主機可能會將 ICMP
+		可通過的權力拿掉，因此就會造成等不到回聲的狀態！另外，有些 gateway 
+		本來就不支援 traceroute 的功能，因此也會產生那個『 * 』的狀況。所以分析時得要注意一下吶！<br /><br />
+	</div>
+
+	<hr /><a NAME="netstat"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">netstat</span><br />
+	<div class=block2>
+		如果你覺得你的某個網路服務明明就啟動了，但是就是無法造成連線的話，那麼應該怎麼辦？
+		首先你應該要查詢一下自己的網路介面所監聽的埠口 (port) 來看看是否真的有啟動，
+		因為有時候螢幕上面顯示的 [OK] 並不一定是 OK 啊！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>netstat -[rn]     </span>  <span class=term_say>&lt;==與路由有關的參數</span>
+[root@linux ~]# <span class=term_command>netstat -[antulpc]</span>  <span class=term_say>&lt;==與網路介面有關的參數</span>
+<span class=term_say>參數：
+與路由 (route) 有關的參數說明：
+-r  ：列出路由表(route table)，功能如同 route 這個指令；
+-n  ：不使用主機名稱與服務名稱，使用 IP 與 port number ，如同 route -n
+與網路介面有關的參數：
+-a  ：列出所有的連線狀態，包括 tcp/udp/unix socket 等；
+-t  ：僅列出 TCP 封包的連線；
+-u  ：僅列出 UDP 封包的連線；
+-l  ：僅列出有在 Listen (監聽) 的服務之網路狀態；
+-p  ：列出 PID 與 Program 的檔名；
+-c  ：可以設定幾秒鐘後自動更新一次，例如 -c 5 每五秒更新一次網路狀態的顯示；</span>
+
+<span class=term_hd>範例一：列出目前的路由表狀態，且以 IP 及 port number 顯示：</span>
+[root@linux ~]# <span class=term_command>netstat -rn</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+192.168.10.0    0.0.0.0         255.255.255.0   U         0 0          0 eth0
+169.254.0.0     0.0.0.0         255.255.0.0     U         0 0          0 eth0
+0.0.0.0         192.168.10.30   0.0.0.0         UG        0 0          0 eth0
+<span class=term_say># 其實這個參數就跟 route -n 一模一樣，對吧！這不是 netstat 的主要功能啦！</span>
+
+<span class=term_hd>範例二：列出目前的所有網路連線狀態，使用 IP 與 port number</span>
+[root@linux ~]# <span class=term_command>netstat -an</span>
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address               Foreign Address             State
+tcp        0      0 0.0.0.0:25                  0.0.0.0:*                   LISTEN
+tcp        0      0 :::22                       :::*                        LISTEN
+tcp        0      0 ::ffff:192.168.10.100:25    ::ffff:192.168.10.200:57509 TIME_WAIT
+tcp        0     52 ::ffff:192.168.10.100:22    ::ffff:192.168.10.210:1504  ESTABLISHED
+udp        0      0 127.0.0.1:53                0.0.0.0:*
+Active UNIX domain sockets (servers and established)
+Proto RefCnt Flags       Type       State         I-Node Path
+unix  2      [ ACC ]     STREAM     LISTENING     4792   public/cleanup
+unix  2      [ ACC ]     STREAM     LISTENING     4799   private/rewrite
+<span class=term_say>......(底下省略)......</span>
+</pre></td></tr></table>
+
+		netstat 的輸出主要分為兩大部分，分別是 TCP/IP 的網路介面部分，以及傳統的 Unix socket 部分。
+		還記得我們在基礎篇裡面曾經談到檔案的類型嗎？那個 socket 與 FIFO 檔案還記得吧？
+		那就是在 Unix 介面用來做為程式資料交流的介面了，也就是上頭表格內看到的 Active Unix domain sockets
+		的內容囉～<br /><br />
+
+		通常鳥哥都是建議加上『 -n 』這個參數的，因為可以避過主機名稱與服務名稱的反查，直接以 IP 
+		及埠口號碼 (port number) 來顯示，顯示的速度上會快很多！至於在輸出的訊息當中，
+		我們先來談一談關於網路連線狀態的輸出部分，他主要是分為底下幾個大項：<br />
+		<ul>
+		<li><span class=text_import1>Proto</span>：該連線的封包協定，主要為 TCP/UDP 等封包；<br />
+		<li><span class=text_import1>Recv-Q</span>：非由使用者程式連接所複製而來的總 bytes 數；<br />
+		<li><span class=text_import1>Send-Q</span>：由遠端主機所傳送而來，但不具有 ACK 標誌的總 bytes 數，
+			意指主動連線 SYN 或其他標誌的封包所佔的 bytes 數；<br />
+		<li><span class=text_import1>Local Address</span>：本地端的位址，可以是 IP (-n 參數存在時)，
+			也可以是完整的主機名稱。如上表我們看到的 IP 格式有兩種，一種是 IPv4 的標準，
+			亦即是四組十進位的數字後面加上冒號『:』後，接著 port number 。一種是 IPv6 ，
+			前面的 IP 加上很多冒號『:』的格式。我們可以由這個顯示的資料看出這個服務是開放在哪一個介面，
+			例如上表當中， port 22 是開放在 0.0.0.0 ，亦即是所有介面都可以連到 port 22 ，
+			至於 port 53 則僅開放在本機的 127.0.0.1 這個介面而已，所以是不對外部介面開放的意思。<br />
+		<li><span class=text_import1>Foreign Address</span>：遠端的主機 IP 與 port number <br />
+		<li><span class=text_import1>stat</span>：狀態列，主要的狀態含有：<br />
+			<ul><li><span class=text_import2>ESTABLISED</span>：已建立連線的狀態；
+			<li><span class=text_import2>SYN_SENT</span>：發出主動連線 (SYN 標誌) 的連線封包；
+			<Li><span class=text_import2>SYN_RECV</span>：接收到一個要求連線的主動連線封包；
+			<li><span class=text_import2>FIN_WAIT1</span>：該插槽服務(socket)已中斷，該連線正在斷線當中；
+			<li><span class=text_import2>FIN_WAIT2</span>：該連線已掛斷，但正在等待對方主機回應斷線確認的封包；
+			<li><span class=text_import2>TIME_WAIT</span>：該連線已掛斷，但 socket 還在網路上等待結束；
+			<li><span class=text_import2>LISTEN</span>：通常用在服務的監聽 port ！可使用『 -l 』參數查閱。
+			</ul>
+		</ul>
+
+		基本上，我們常常談到的 netstat 的功能，就是在觀察網路的連線狀態了，而網路連線狀態中，
+		又以觀察『<span class=text_import2>我目前開了多少的 port 在等待用戶端的連線</span>』以及
+		『<span class=text_import2>目前我的網路連線狀態中，有多少連線已建立或產生問題</span>』最常見。
+		那你如何瞭解與觀察呢？通常鳥哥是這樣處理的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例三：秀出目前已經啟動的網路服務</span>
+[root@linux ~]# <span class=term_command>netstat -tulnp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address   Foreign Address  State    PID/Program name
+tcp        0      0 <span class=term_write>0.0.0.0:25</span>      0.0.0.0:*        LISTEN   2141/master
+tcp        0      0 <span class=term_write>:::22</span>           :::*             LISTEN   1924/sshd
+tcp        0      0 <span class=term_write>:::25</span>           :::*             LISTEN   2141/master
+udp        0      0 <span class=term_write>127.0.0.1:53</span>    0.0.0.0:*                 1911/named
+<span class=term_say># 上面最重要的其實是那個 -l 的參數，因為可以僅列出有在 Listen 的 port</span>
+</pre></td></tr></table>
+
+		你可以在上面的範例當中發現，我的網路連線僅有對外開放 port 25 以及 port 22 而已 (因為針對 0.0.0.0 開放)，
+		至於 port 53 則僅針對內部的 127.0.0.1 來開放，所以是不對 Internet 開放這個服務的喔！
+		而其中 port 22,25 都是使用 TCP 封包，至於 port 53 則是開放在 UDP 封包的狀態！
+		再仔細的看，每一行輸出的最右邊，你可以發現鳥哥的主機 port 22 是由 sshd 這支程式所啟動的，
+		並且他的 PID 是 1924 ，看到這邊，聰明的您應該知道，『<span class=text_import2>那我如何關閉這個 
+		port</span> 』吧？使用 kill 或 killall 即可啊！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例四：觀察本機上頭所有的網路連線狀態</span>
+[root@linux ~]# <span class=term_command>netstat -atunp</span>
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address     Foreign Address     State       PID/Program name
+tcp        0      0 0.0.0.0:25        0.0.0.0:*           LISTEN      2141/master
+tcp        0      0 :::22             :::*                LISTEN      1924/sshd
+tcp        0      0 :::25             :::*                LISTEN      2141/master
+<span class=term_write>tcp        0     68 192.168.1.100:22  192.168.1.210:1504  ESTABLISHED 30417/sshd:</span>
+udp        0      0 127.0.0.1:53      0.0.0.0:*                       1911/named
+</pre></td></tr></table>
+
+		看到上頭的特殊字體吧？那代表目前已經建立連線的一條網路連線，他是由遠端主機 192.168.1.210
+		啟動一個大於 1024 的埠口向本地端主機 192.168.1.100 的 port 22  進行連線的一條連線，
+		你必須要想起來的是：『<span class=text_import2>Client 端是隨機取一個大於 1024 以上的 
+		port 進行連線</span>』，此外『<span class=text_import2>只有 
+		root 可以啟動小於 1023 以下的 port</span> 』，那就看的懂上頭那條連線囉！如果這條連線你想要砍掉他的話，
+		看到最右邊的 30417/sshd 了沒？ kill 會用吧！ ^_^<br /><br />
+
+		至於傳統的 Unix socket 的資料，記得使用 man netstat 查閱一下吧！
+		這個 Unix socket 通常是用在一些僅在本機上運作的程式所開啟的插槽介面檔，
+		例如 X Window 不都是在本機上運作而已嗎？那何必啟動網路的 port 呢？當然可以使用 Unix socket
+		囉，另外，例如 Postfix 這一類的網路伺服器，由於很多動作都是在本機上頭來完成的，
+		所以以會佔用很多的 Unix socket 喔！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題一：請說明服務名稱與 port number 的對應在 Linux 當中，是用那個檔案來設定對應的？<br /><br />
+答：<ul>
+/etc/services
+</ul>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a NAME="host"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">host</span><br />
+	<div class=block2>
+		這個指令可以用來查出某個主機名稱的 IP 喔！舉例來說，我們想要知道 tw.yahoo.com 的 IP 時，
+		可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>host [-a] hostname [server]</span>
+<span class=term_say>參數：
+-a ：列出該主機詳細的各項主機名稱設定資料
+[server] ：可以使用非為 /etc/resolv.conf 的 DNS 主機來查詢。</span>
+
+<span class=term_hd>範例一：列出 tw.yahoo.com 的 IP </span>
+[root@linux ~]# <span class=term_command>host tw.yahoo.com</span>
+tw.yahoo.com is an alias for tw.yahoo-ap1.akadns.net.
+tw.yahoo-ap1.akadns.net has address 202.43.195.52
+</pre></td></tr></table>
+
+		瞧！IP 是 202.43.195.52 啊！很簡單就可以查詢到 IP 了！
+		那麼這個 IP 是向誰查詢的呢？其實就是寫在 <a href="0130internet_connect.htm#resolv">/etc/resolv.conf</a>
+		那個檔案內的 DNS 主機啦！如果不想要使用該檔案內的主機來查詢，也可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>host tw.yahoo.com 168.95.1.1</span>
+Using domain server:
+<span class=term_write>Name: 168.95.1.1
+Address: 168.95.1.1#53</span>
+Aliases:
+
+tw.yahoo.com is an alias for tw.yahoo-ap1.akadns.net.
+tw.yahoo-ap1.akadns.net has address 202.43.195.52
+</pre></td></tr></table>
+
+		會告訴我們所使用來查詢的主機是哪一部吶！這樣就夠清楚了吧？至於更詳細的 host 用法，我們會在
+		<a href="0350dns.htm">DNS 主機</a> 那個章節再來好好聊一聊吧！<br /><br />
+	</div>
+	<hr /><a NAME="nslookup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">nslookup</span><br />
+	<div class=block2>
+		這玩意兒的用途與 host 基本上是一樣的，就是用來作為 IP 與主機名稱對應的檢查，
+		同樣是使用 <a href="0130internet_connect.htm#resolv">/etc/resolv.conf</a>
+		這個檔案來作為 DNS 伺服器的來源選擇。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nslookup [-query=[type]] [hostname|IP]</span>
+<span class=term_say>參數：
+-query=type：查詢的類型，除了傳統的 IP 與主機名稱對應外，DNS 還有很多資訊，
+             所以我們可以查詢很多不同的資訊，包括 mx, cname 等等，
+             例如： -query=mx 的查詢方法！</span>
+
+<span class=term_hd>範例一：找出 www.google.com.tw 的 IP</span>
+[root@linux ~]# <span class=term_command>nslookup www.google.com.tw</span>
+Server:         168.95.1.1
+Address:        168.95.1.1#53
+
+Non-authoritative answer:
+www.google.com.tw       canonical name = www.google.com.
+www.google.com  canonical name = www.l.google.com.
+<span class=term_write>Name:   www.l.google.com
+Address: 64.233.189.104</span>
+
+<span class=term_hd>範例二：找出 168.95.1.1 的主機名稱</span>
+[root@linux ~]# <span class=term_command>nslookup 168.95.1.1</span>
+Server:         168.95.1.1
+Address:        168.95.1.1#53
+
+1.1.95.168.in-addr.arpa name = dns.hinet.net.
+</pre></td></tr></table>
+
+		如何，看起來與 host 差不多吧！不過，這個 nslookup 還可以由 IP 找出主機名稱喔！
+		例如那個範例二，他的主機名稱是： dns.hinet.net 哩！目前大家都建議使用 dig 
+		這個指令來取代 nslookup ，我們會在 <a href="0350dns.htm">DNS 伺服器</a> 那時再來好好談一談吧！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="remote_con"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">遠端連線指令：</span><br />
+<div class=block1>
+	啥是遠端連線呢？其實就是在不同的電腦之間進行登入的情況啦！
+	我們可以透過 telnet, ssh 或者是 ftp 等協定來進行遠端主機的登入，
+	底下我們就分別來介紹一下這些基本的指令吧！另外，相關的伺服器我們則會在後續進行說明的。<br /><br />
+
+	<hr /><a NAME="telnet"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">telnet</span><br />
+	<div class=block2>
+		telnet 是早期我們在個人電腦上面要連結到伺服器主機上工作時，最重要的一個軟體了！
+		他不但可以直接連接到伺服器上頭，還可以用來連結 BBS 呢！非常棒！
+		不過， telnet 本身的資料在傳送的時候是使用明碼 (原始的資料，沒有加密) ，
+		所以資料在 Internet 上面跑的時候，會比較危險一點 (就怕被別人監聽啊)。
+		更詳細的資料我們會在『<a href="0310telnetssh.htm">遠端連線伺服器</a>』章節內做介紹的。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>telnet [host|IP] [port]</span>
+
+<span class=term_hd>範例一：連結到成大夢之大地這個 BBS 站</span>
+[root@linux ~]# <span class=term_command>telnet bbs.dorm.ncku.edu.tw</span>
+bbs.ccns.ncku.edu.tw ⊙ 夢之大地 逼逼ㄟ四 ⊙ 140.116.250.3 [DreamBBS Ver.040223]
+歡迎光臨【 夢之大地 逼逼ㄟ四 】。系統負載：0.16 0.16 0.16 [負載正常]
+  ╭─┼────┼─╮        ╭╮          ┌┤夢之大地├─────────┐
+  ╭──┬──┬──╮╭───┴┴──┬╮  │                              │
+  ╰──┴──┴──╯                │    │ 夢之大地由                   │
+  ╭────────╮            ╭─╯    │    【電腦網路愛好社‧CCNS】  │
+   ╭───┬───╮       ╭──╯        │                     維護管理 │
+           │      │   ╭─╯              │                              │
+   ╰───┴───╯ ╰┴───────╯  └─────────┤By BenHe├┘
+
+  ┌┤本站站長群├────────┐          ╭              ╭    ╭    ╮
+  │站長: billcho                 │  ╭───┼────╮╭─┼─╭┼──┼╮
+  │系統: cat                     │          │              │    │    ││
+  │站務: muwell  ianwolf         │        ╭╯╮            │    │    ││
+  │      renn999 GG              │      ╭╯  ╰╮          │    │    │╯
+  │                              │    ╭╯      ╰╮        │╭  │
+  └───────────────┘  ╰╯          ╰─╯╰─┴╯  ╰───╯
+參觀用帳號：guest，申請新帳號：new。目前線上人數 [2183/5000] 人。
+請輸入代號：<span style="background-color:white">           </span>
+</pre></td></tr></table>
+
+		如上所示，我們可以透過 telnet 輕易的連結到 BBS 上面，
+		<span class=text_import2>而如果您的主機有開啟 telnet 服務的話</span>，
+		同樣的利用『 telnet IP 』並且輸入帳號與密碼之後，就能夠登入主機了。
+		另外，在 Linux 上的 telnet 軟體還提供了 Kerberos 的認證方式，有興趣的話請自行參閱 man telnet 
+		的說明。<br /><br />
+
+		除了連結到伺服器以及連結到 BBS 站之外， telnet 還可以用來連結到某個 port (服務) 上頭吶！
+		舉例來說，我們可以用 telnet 連接到 port 110 ，看看這個 port 是否有正確的啟動呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：偵測本機端的 110 這個 port 是否正確啟動？</span>
+[root@linux ~]# <span class=term_command>telnet localhost 110</span>
+Trying 127.0.0.1...
+telnet: connect to address 127.0.0.1: Connection refused
+<span class=term_say># 如果出現這樣的訊息，代表這個 port 沒有啟動或者是這個連線有問題，
+# 因為您看到那個 refused 嘛！</span>
+
+[root@linux ~]# <span class=term_command>telnet localhost 25</span>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 vbird.vbird.idv.tw ESMTP Postfix
+<span class=term_command>ehlo localhost</span>
+250-linux.dm.tsai
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-ETRN
+250 8BITMIME
+<span class=term_command>quit</span>
+221 Bye
+Connection closed by foreign host.
+</pre></td></tr></table>
+
+		瞧！根據輸出的結果，我們就能夠知道這個通訊協定 (port number 提供的通訊協定功能) 是否有成功的啟動吶！
+		而在每個 port 所監聽的服務都有其特殊的指令，例如上述的 port 25 就是在本機介面所提供的電子郵件服務，
+		那個服務所支援的指令就如同上面使用的資料一樣，但是其他的 port 就不見得支援這個『 ehlo 』的命令，
+		因為不同的 port 有不同的程式嘛！所以當然支援的命令就不同囉！
+		與 mail server 有關的 telnet 用法，我們將在郵件伺服器內提到喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="ftp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ftp</span><br />
+	<div class=block2>
+		常常會聽到『FTP』這個咚咚吧！舉例來說，如果你想要下載 Linux 的光碟燒錄映象檔時，要去哪裡下載啊？
+		不是說要去義守大學嗎？也可以到成大或崑山科大等等的 FTP 網站，嘿嘿！沒錯～那就是 FTP 提供者啦！
+		那我們要如何去下載呢？當然就是透過 ftp 的用戶端軟體了。在 Linux 底下，我們可以透過 ftp 這個軟體，
+		也可以透過下一小節會提到的 lftp 說～<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ftp [-p] [host|IP] [port]</span>
+<span class=term_say>參數：
+-p ：啟動被動式模式 (passive, PASV)；</span>
+
+<span class=term_hd>範例一：連線到義守大學去看看</span>
+[root@linux ~]# <span class=term_command>ftp ftp.isu.edu.tw</span>
+Connected to ftp.isu.edu.tw (140.127.177.17).
+220-歡迎光臨義守大學檔案伺服器
+220-
+220-本站提供以下軟體可供下載：
+220-*******************************************************************************
+220-/pub/BeOS/       BeOS 作業系統
+220-/pub/Linux/      Linux 作業系統
+<span class=term_say>....(其他省略)....</span>
+220-*******************************************************************************
+Name (ftp.isu.edu.tw:dmtsai): <span class=term_command>anonymous</span>
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> <span style="background-color:white"> </span>
+ftp> <span class=term_write>help         </span><span class=term_say>&lt;==提供更多的可用指令，可以常參考！</span>
+ftp> <span class=term_write>cd</span> /pub      <span class=term_say>&lt;==變換目錄到 /pub 當中</span>
+ftp> <span class=term_write>dir</span>          <span class=term_say>&lt;==顯示遠端主機的目錄內容</span>
+ftp> <span class=term_write>get</span> file     <span class=term_say>&lt;==下載 file 這個檔案</span>
+ftp> <span class=term_write>mget</span> file    <span class=term_say>&lt;==下載 file 這個目錄或檔案</span>
+ftp> <span class=term_write>put</span> file     <span class=term_say>&lt;==上傳 file 這個檔案到伺服器上</span>
+ftp> <span class=term_write>delete</span> file  <span class=term_say>&lt;==刪除主機上的 file 這個檔案</span>
+ftp> <span class=term_write>mkdir</span> dir    <span class=term_say>&lt;==建立 dir 這個目錄</span>
+ftp> <span class=term_write>lcd</span> /home    <span class=term_say>&lt;==切換『本地端主機』的工作目錄</span>
+ftp> <span class=term_write>passive</span>      <span class=term_say>&lt;==啟動或關閉 passive 模式</span>
+ftp> <span class=term_write>binary</span>       <span class=term_say>&lt;==資料傳輸模式設定為 binary 格式</span>
+</pre></td></tr></table>
+
+		FTP 其實算是一個很麻煩的協定，因為他使用兩個 port 分別進行命令與資料的交流，
+		詳細的資料我們會在後續的 FTP 伺服器內詳談，這裡我們先單純的介紹一下如何使用 ftp 這個軟體。
+		首先我們當然是需要登入囉，所以在上頭的表格當中我們當然需要填入帳號與密碼了。
+		不過由於義守大學提供匿名登入，而匿名登入者的帳號就是『 anonymous 』所以直接填寫那個帳號即可。
+		如果是私人的 FTP 時，才需要提供一組完整的帳號與密碼啦！<br /><br />
+
+		登入 FTP 主機後，就能夠使用 ftp 軟體的功能進行上傳與下載的動作，
+		幾個常用的 ftp 內指令如上表，不過，鳥哥建議您可以連到大學的 FTP 網站後，
+		使用 help (或問號 ?) 來參考可用的指令，然後嘗試下載以測試使用一下這個指令吧！
+		這樣以後沒有瀏覽器的時候，你也可以到 ftp 下載了呢！不錯吧！ ^_^<br /><br />
+
+		另外，如果由於某些理由，讓你的 FTP 主機的 port 開在非正規的埠口時，
+		那你就可以利用底下的方式來連接到該部主機喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ftp hostname 318</span>
+<span class=term_say># 假設對方主機的 ftp 服務開啟在 318 這個 port 啊！</span>
+</pre></td></tr></table>
+
+	</div>
+
+	<hr /><a NAME="lftp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">lftp</span><br />
+	<div class=block2>
+		早期當我們要登入提供匿名登入的主機時，很多時候都是使用 ncftp 這個軟體，
+		不過，現在有更棒的選擇，那就是 lftp 啦！這個軟體甚至可以在 ftp 裡面使用類似 bash 的指令功能，
+		實在是非常的完美！而整個使用的方法與上面提到的 ftp 又非常類似吶！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>lftp [-p port] [-u user[,pass]] [host|IP]</span>
+<span class=term_say>參數：
+-p  ：後面可以直接接上遠端 FTP 主機提供的 port
+-u  ：後面則是接上 帳號與密碼 ，就能夠連接上遠端主機了
+      如果沒有加帳號密碼， lftp 預設會使用 anonymous 嘗試匿名登入</span>
+
+<span class=term_hd>範例一：利用 lftp 登入義守大學</span>
+[root@linux ~]# <span class=term_command>lftp ftp.isu.edu.tw</span>
+lftp ftp.isu.edu.tw:~> <span style="background-color:white"> </span>
+<span class=term_say># 瞧！一下子就登入了！很快樂吧！ ^_^</span>
+</pre></td></tr></table>
+
+		至於登入 FTP 主機後，一樣可以使用『help』來顯示出可以執行的指令，
+		與 ftp 很類似啦！不過多了書籤的功能，而且也非常的類似 bash 那！很不錯呦！
+		除了這個好用的文字介面的 FTP 軟體之外，事實上還有很多圖形介面的好用軟體呢！
+		最常見的就是 gftp 了～不但是圖形介面，而且與 cute ftp 簡直就是像到不行！非常的容易上手喔！
+		CentOS 本身就有提供 gftp 了，你可以拿出原版的光碟來安裝，然後進入 X Window 後，
+		啟動一個 shell ，輸入『 gftp 』就能夠發現他的好用啦！底下我們在來介紹一下即時通訊吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="gaim"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">gaim</span><br />
+	<div class=block2>
+		我想，現在應該大家都知道什麼是 MSN, 雅虎即時通以及其他的通訊軟體吧？
+		那麼要連上這些伺服器時，該怎麼處理哪？很簡單，在 X Window 底下使用 gaim 就好了！
+		簡直簡單到不行～ ^_^
+		請先進入 X Window 系統，然後開啟一個終端機視窗，接著直接輸入 gaim (請注意您必須已經安裝了 gaim 了)
+		然後就會出現如下的視窗啦：<br /><br />
+
+		<center>
+		<img src="0140networkcommand/gaim_1.png"
+		title="gaim 使用範例圖" alt="gaim 使用範例圖"><br />
+		圖一、gaim 使用範例圖
+		</center><br />
+
+		在輸入你的帳號與密碼，並選擇相對應的即時通訊伺服器 (如 MSN 或 Yahoo 即時通) ，就可以進入到如下畫面：<br /><br />
+
+		<center>
+		<img src="0140networkcommand/gaim_2.png"
+		title="gaim 使用範例圖" alt="gaim 使用範例圖"><br />
+		圖二、gaim 使用範例圖
+		</center><br />
+
+		若一切都沒有問題後，按下『登入』嘿嘿～您就可以在 Linux 上頭使用即時通訊軟體啦！方便的很哩！ ^_^<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="browser"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">文字介面網頁瀏覽</span><br />
+<div class=block1>
+	什麼？文字界面竟然有瀏覽器！別逗了好不好？呵呵！誰有那個時間在逗您呦！真的啦！有這個東西，
+	是在文字界面下上網瀏覽的好工具！分別是 lynx 及 wget 這兩個寶貝蛋，但是，您必需要確定您已經安裝了這兩個套件才行。
+	底下就讓我們來聊一聊這兩個好用的傢伙吧！<br /><br />
+
+	<hr /><a NAME="lynx"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">lynx</span><br />
+	<div class=block2>
+		這個指令可以讓我們來瀏覽網頁，但鳥哥認為，這個檔案最大的功能是在『
+		<span class=text_import2>查閱 Linux 本機上面以 HTML 語法寫成的文件資料 (document)</span>』
+		怎麼說呢？如果你曾經到 Linux 本機底下的 /usr/share/doc 這個目錄看過文件資料的話，
+		就會常常發現一些網頁檔案，使用 vi  去查閱時，老是看到一堆 HTML  的語法！有礙閱讀啊～
+		這時候使用 lynx 就是個好方法啦！可以看的清清楚楚啊！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>lynx [options] [website]</span>
+<span class=term_say>參數：
+options 指的是一些慣用的參數，可以使用 man lynx 查閱，常見的有：
+-anonymous ：預設使用匿名登入；
+-assume_charset=big5 ：設定預設的語系資料為 big5 ，用在中文網頁很方便</span>
+
+<span class=term_hd>範例一：瀏覽 Linux kernel 網站</span>
+[root@linux ~]# <span class=term_command>LANG=zh_TW.big5</span>
+[root@linux ~]# <span class=term_command>lynx http://www.kernel.org</span>
+</pre></td></tr></table>
+
+		輸入 LANG=zh_TW.big5 是當您想要瀏覽中文網站時，那麼終端機就得要有相對應的顯示編碼才行，
+		否則會有一堆亂碼產生啊！當我直接輸入 lynx 網站網址後，就會出現如下的圖示：<br /><br />
+
+		<img src="0140networkcommand/lynx_1.png"
+		title="lynx 使用範例圖" alt="lynx 使用範例圖"><br />
+		圖三、lynx 使用範例圖
+		<br /><br />
+
+		在特殊字體的部分是我們可以使用 &lt;tab> 按鍵來進行『超連結』的按鈕啦～而上圖最底下一行則顯示出一些熱鍵，
+		你可以按上述的熱鍵來參考一些常見的指令功能。不過有些地方您還是得要知道才行：<br />
+
+		<ul>
+		<li>進入畫面之後，由於是文字型態，所以編排可能會有點位移！不過不打緊！不會影響我們看咚咚！
+		<LI>這個時候可以使用『上下鍵』來讓游標在上面的選項當中(如信箱、書籤等等的)，按下 Enter 就進入該頁面 
+		<li>可以使用『左右鍵』來移動『上一頁或下一頁』
+		<li>可以藉由修改 /etc/lynx.cfg 來設定顯示的字元編碼 (台灣地區可以選擇 Big5 編碼)
+		<li>其他的設定可以使用上面的範例當中，最底下那一行的說明喔！
+		<li>一些常見功能：<UL>
+			<li>h：Help, 求助功能. 線上說明書.
+			<li>g：Goto URL, 按 g 後輸入網頁位址(URL) 如:http://www.abc.edu/等
+			<li>d：download, 下載檔案.
+			<li>q：Quit, 跳離 lynx !
+			<li>Ctrl+C  ：強迫切斷 lynx 的執行.
+			<li>方向鍵:<ul>
+				<li>上  ：移動游標至本頁中 "上一個可連結點" .
+				<li>下  ：移動游標至本頁中 "下一個可連結點" .
+				<li>左  ：back. 跳回上一頁.
+				<li>右  ：進入反白游標所連結之網頁.
+				<li>ENTER 同 "右" 鍵.</ul>
+			</ul>
+		</ul>
+		至於如果是瀏覽 Linux 本機上面的網頁檔案，那就可以使用如下的方式：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /usr/share/doc/samba-3.0.10/htmldocs</span>
+[root@linux htmldocs]# <span class=term_command>lynx index.html</span>
+</pre></td></tr></table>
+
+		在鳥哥的 CentOS 4.3 當中，有這麼一個檔案，我就可以利用 lynx 來取出察看吶！
+		顯示的結果有點像底下這樣：<br /><br />
+
+		<img src="0140networkcommand/lynx_2.png"
+		title="lynx 使用範例圖" alt="lynx 使用範例圖"><br />
+		圖四、lynx 使用範例圖
+		<br /><br />
+
+		當然啦！因為您的環境可能是在 Linux 本機的 tty1~tty6 ，所以無法顯示出中文，
+		這個時候你就得要設定為：『LANG=en_US』之類的語系設定才行喔！
+		而如果你常常需要瀏覽中文語系的網頁，那就可以直接修改設定檔，例如 /etc/lynx.cfg 這個檔案內：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/lynx.cfg</span>
+CHARACTER_SET:utf-8            <span class=term_say>&lt;==約在 399 行</span>
+#ASSUME_CHARSET:iso-8859-1     <span class=term_say>&lt;==約在 414 行</span>
+#PREFERRED_LANGUAGE:en         <span class=term_say>&lt;==約在 542 行</span>
+
+<span class=term_say># 你可以將他改成如下所示：</span>
+<span class=term_write>CHARACTER_SET:big5
+ASSUME_CHARSET:big5
+PREFERRED_LANGUAGE:zh_TW</span>
+</pre></td></tr></table>
+
+		另外，如果某些時刻你必須上網點選某個網站以自動取得更新時，舉例來說，早期的自動線上更新主機名稱系統，
+		僅支援網頁更新，那你如何進行更新呢？嘿嘿！可以使用 lynx 喔！利用 -dump 這個參數處理先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>lynx -dump \</span>
+> <span class=term_command>http://some.site.name/web.htm?name=user&password=pw > testfile</span>
+</pre></td></tr></table>
+
+		上面的網站後面有加個問號 (?) 對吧？後面接的則是利用網頁的『 GET 』功能取得的各項變數資料，
+		利用這個功能，我們就可以直接點選到該網站上囉！非常的方便吧！而且會將執行的結果輸出到 testfile
+		檔案中，不過如果網站提供的資料是以『 POST 』為主的話，那鳥哥就不知道如何搞定了。
+		關於 GET 與 POST 的相關資訊我們會在 WWW 伺服器當中再次的提及的！別緊張啊！<br /><br />
+	</div>
+
+	<hr /><a NAME="wget"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">wget</span><br />
+	<div class=block2>
+		如果說 lynx 是在進行網頁的『瀏覽』，那麼 wget 就是在進行『網頁資料的取得』。
+		舉例來說，我們的 Linux 核心是放置在 www.kernel.ort 內，主要同時提供 ftp 與 http 來下載。
+		我們知道可以使用 lftp 來下載資料，但如果想要用瀏覽器來下載呢？
+		那就利用 wget 吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>wget [option] [網址]</span>
+<span class=term_say>參數：
+若想要連線的網站有提供帳號與密碼的保護時，可以利用這兩個參數來輸入喔！
+--http-user=usrname
+--http-password=password
+--quiet ：不要顯示 wget 在抓取資料時候的顯示訊息
+更多的參數請自行參考 man wget 吧！ ^_^</span>
+
+<span class=term_hd>範例一：請下載 2.6.17 版的核心</span>
+[root@linux ~]# <span class=term_command>wget  \</span>
+> <span class=term_command>http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.17.tar.gz</span>
+--16:06:10--  http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.17.tar.gz
+           => `linux-2.6.17.tar.gz'
+Resolving www.kernel.org... 204.152.191.37, 204.152.191.5
+Connecting to www.kernel.org|204.152.191.37|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 51,700,445 (49M) [application/x-gzip]
+
+ 3% [==>                        ] 1,890,568    220.69K/s    ETA 04:12
+</pre></td></tr></table>
+
+		您瞧瞧～很可愛吧！不必透過瀏覽器，只要知道網址後，立即可以進行檔案的下載，
+		又快速又方便，還可以透過 proxy 的幫助來下載呢！透過修改 /etc/wgetrc 來設定你的代理伺服器：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/wgetrc</span>
+#http_proxy = http://proxy.yoyodyne.com:18023/  <span class=term_say>&lt;==找到底下這幾行，大約在 78 行後；</span>
+#ftp_proxy = http://proxy.yoyodyne.com:18023/
+#use_proxy = on
+
+<span class=term_say># 將他改成類似底下的模樣，記得，你必須要有可接受的 proxy 主機才行！</span>
+<span class=term_write>http_proxy = http://proxy.ncku.edu.tw:3128/
+use_proxy = no</span>
+</pre></td></tr></table>
+	</div>
+</div>
+
+
+<hr /><a NAME="pick"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">封包擷取功能</span><br />
+<div class=block1>
+	很多時候由於我們的網路連線出現問題，使用類似 ping 的軟體功能卻又無法找出問題點，
+	最常見的是因為路由與 IP 轉遞後所產生的一些困擾 (請參考防火牆與 NAT 主機部分)，
+	這個時候要怎麼辦？最簡單的方法就是『<span class=text_import2>分析封包的流向</span>』囉！
+	透過分析封包的流向，我們可以瞭解一條連線應該是如何進行雙向的連線的動作，
+	也就會清楚的瞭解到可能發生的問題所在了！底下我們就來談一談這個 tcpdump 與圖形介面的封包分析軟體吧！<br /><br />
+
+	<hr /><a NAME="tcpdump"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">tcpdump</span><br />
+	<div class=block2>
+		說實在的，對於 tcpdump 這個軟體來說，你甚至可以說這個軟體其實就是個駭客軟體，
+		因為他不但可以分析封包的流向，連封包的內容也可以進行『監聽』，
+		如果你使用的傳輸資料是明碼的話，不得了，在 router 上面就可能被人家監聽走了！
+		很可怕吶！所以，我們也要來瞭解一下這個軟體啊！(註：這個 tcpdump 必須使用 root 的身份執行)<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tcpdump [-nn] [-i 介面] [-w 儲存檔名] [-c 次數] [-Ae]</span>
+                <span class=term_command>        [-qX] [-r 檔案] [所欲擷取的資料內容]</span>
+<span class=term_say>參數：
+-nn：直接以 IP 及 port number 顯示，而非主機名與服務名稱
+-i ：後面接要『監聽』的網路介面，例如 eth0, lo, ppp0 等等的介面；
+-w ：如果你要將監聽所得的封包資料儲存下來，用這個參數就對了！後面接檔名
+-c ：監聽的封包數，如果沒有這個參數， tcpdump 會持續不斷的監聽，
+     直到使用者輸入 [ctrl]-c 為止。
+-A ：封包的內容以 ASCII 顯示，通常用來捉取 WWW 的網頁封包資料。
+-e ：使用資料連接層 (OSI 第二層) 的 MAC 封包資料來顯示；
+-q ：僅列出較為簡短的封包資訊，每一行的內容比較精簡
+-X ：可以列出十六進位 (hex) 以及 ASCII 的封包內容，對於監聽封包內容很有用
+-r ：從後面接的檔案將封包資料讀出來。那個『檔案』是已經存在的檔案，
+     並且這個『檔案』是由 -w 所製作出來的。
+所欲擷取的資料內容：我們可以專門針對某些通訊協定或者是 IP 來源進行封包擷取，
+     那就可以簡化輸出的結果，並取得最有用的資訊。常見的表示方法有：
+     'host foo', 'host 127.0.0.1' ：針對單部主機來進行封包擷取
+     'net 192.168' ：針對某個網域來進行封包的擷取；
+     'src host 127.0.0.1' 'dst net 192.168'：同時加上來源(src)或目標(dst)限制
+     'tcp port 21'：還可以針對通訊協定偵測，如 tcp, udp, arp, ether 等
+     還可以利用 and 與 or 來進行封包資料的整合顯示呢！</span>
+
+<span class=term_hd>範例一：以 IP 與 port number 捉下 eth0 這個網路卡上的封包，持續 3 秒</span>
+[root@linux ~]# <span class=term_command>tcpdump -i eth0 -nn</span>
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 96 bytes
+<span class=term_write>01:33:40.41 IP 192.168.1.100.22 > 192.168.1.11.1190: P 116:232(116) ack 1 win 9648</span>
+01:33:40.41 IP 192.168.1.100.22 > 192.168.1.11.1190: P 232:364(132) ack 1 win 9648
+<span class=term_say>&lt;==按下 [ctrl]-c 之後結束</span>
+6680 packets captured              <span class=term_say>&lt;==捉下來的封包數量</span>
+14250 packets received by filter   <span class=term_say>&lt;==由過濾所得的總封包數量</span>
+7512 packets dropped by kernel     <span class=term_say>&lt;==被核心所丟棄的封包</span>
+</pre></td></tr></table>
+
+		如果你是第一次看 tcpdump 的 man page 時，肯定一個頭兩個大，因為 tcpdump 
+		幾乎都是分析封包的表頭資料，使用者如果沒有簡易的網路封包基礎，要看懂粉難吶！
+		所以，至少您得要回到<a href="0110network_basic.htm">網路基礎</a>裡面去將 TCP
+		封包的表頭資料理解理解才好啊！ ^_^！至於那個範例一所產生的輸出範例中，我們可以約略區分為數個欄位，
+		我們以範例一當中那個特殊字體行來說明一下：<br />
+		<ul><li><span class=text_import2>01:33:40.41</span>：這個是此封包被擷取的時間，『時:分:秒』的單位；
+		<li><span class=text_import2>IP</span>：透過的通訊協定是 IP ；
+		<li><span class=text_import2>192.168.1.100.22 ></span> ：傳送端是 192.168.1.100 這個 
+			IP，而傳送的 port number 為 22，您必須要瞭解的是，那個大於 (>) 的符號指的是封包的傳輸方向喔！
+		<li><span class=text_import2>192.168.1.11.1190</span>：接收端的 IP 是 192.168.1.11，
+			且該主機開啟 port 1190 來接收；
+		<li><span class=text_import2>P 116:232(116)</span>：這個封包帶有 PUSH 的資料傳輸標誌，
+			且傳輸的資料為整體資料的 116~232 byte，所以這個封包帶有 116 bytes 的資料量；
+		<li><span class=text_import2>ack 1 win 9648</span>：ACK與 Window size 的相關資料。</ul>
+		最簡單的說法，就是該封包是由 192.168.1.100 傳到 192.168.1.11，透過的 port 是由 22 到 1190 ，
+		且帶有 116 bytes 的資料量，使用的是 PUSH 的旗標，而不是 SYN 之類的主動連線標誌。
+		呵呵！不容易看的懂吧！所以說，上頭才講請務必到
+		<a href="0110network_basic.htm#protocol_tcp">TCP 表頭資料</a>的部分去瞧一瞧的啊！<br /><br />
+
+
+		再來，一個網路狀態很忙的主機上面，你想要取得某部主機對你連線的封包資料而已時，
+		使用 tcpdump 配合管線命令與正規表示法也可以，不過，畢竟不好捉取！
+		我們可以透過 tcpdump 的表示法功能，就能夠輕易的將所需要的資料獨立的取出來。
+		在上面的範例一當中，我們僅針對 eth0 做監聽，所以整個 eth0 介面上面的資料都會被顯示到螢幕上，
+		不好分析啊！那麼我們可以簡化嗎？例如只取出 port 21 的連線封包，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tcpdump -i eth0 -nn port 21</span>
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 96 bytes
+01:54:37.96 IP 192.168.1.11.1240 > 192.168.1.100.21: . ack 1 win 65535
+01:54:37.96 IP 192.168.1.100.21 > 192.168.1.11.1240: P 1:21(20) ack 1 win 5840
+01:54:38.12 IP 192.168.1.11.1240 > 192.168.1.100.21: . ack 21 win 65515
+01:54:42.79 IP 192.168.1.11.1240 > 192.168.1.100.21: P 1:17(16) ack 21 win 65515
+01:54:42.79 IP 192.168.1.100.21 > 192.168.1.11.1240: . ack 17 win 5840
+01:54:42.79 IP 192.168.1.100.21 > 192.168.1.11.1240: P 21:55(34) ack 17 win 5840
+</pre></td></tr></table>
+
+		瞧！這樣就僅提出 port 21 的資訊而已，且仔細看的話，你會發現封包的傳遞都是雙向的，
+		client 端發出『要求』而 server 端則予以『回應』，所以，當然是有去有回啊！
+		而我們也就可以經過這個封包的流向來瞭解到封包運作的過程。
+		舉例來說：<ol><li>我們先在一個終端機視窗輸入『 tcpdump -i lo -nn 』 的監聽，
+		<li>再另開一個終端機視窗來對本機 (127.0.0.1) 登入『ssh localhost』</ol>那麼輸出的結果會是如何？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tcpdump -i lo -nn</span>
+<span class=term_say> 1 </span>tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+<span class=term_say> 2 </span>listening on lo, link-type EN10MB (Ethernet), capture size 96 bytes
+<span class=term_say> 3 </span>11:02:54.253777 IP 127.0.0.1.<span class=term_write>32936</span> > 127.0.0.1.22: <span class=term_write>S</span> 933696132:933696132(0) 
+   win 32767 &lt;mss 16396,sackOK,timestamp 236681316 0,nop,wscale 2>
+<span class=term_say> 4 </span>11:02:54.253831 IP 127.0.0.1.22 > 127.0.0.1.32936: <span class=term_write>S</span> 920046702:920046702(0) 
+   <span class=term_write>ack</span> 933696133 win 32767 &lt;mss 16396,sackOK,timestamp 236681316 236681316,nop,
+   wscale 2>
+<span class=term_say> 5 </span>11:02:54.253871 IP 127.0.0.1.32936 > 127.0.0.1.22: . <span class=term_write>ack</span> 1 win 8192 &lt;nop,
+   nop,timestamp 236681316 236681316>
+<span class=term_say> 6 </span>11:02:54.272124 IP 127.0.0.1.22 > 127.0.0.1.32936: P 1:23(22) ack 1 win 8192 
+   &lt;nop,nop,timestamp 236681334 236681316>
+<span class=term_say> 7 </span>11:02:54.272375 IP 127.0.0.1.32936 > 127.0.0.1.22: . ack 23 win 8192 &lt;nop,
+   nop,timestamp 236681334 236681334>
+</pre></td></tr></table>
+
+		上表顯示的頭兩行是 tcpdump 的基本說明，然後：<ul>
+		<li>第 3 行顯示的是『來自 client 端，帶有 SYN 主動連線的封包』，
+		<li>第 4 行顯示的是『來自 server 端，除了回應 client 端之外(ACK)，還帶有 SYN 主動連線的標誌；
+		<li>第 5 行則顯示 client 端回應 server 確定連線建立 (ACK)
+		<li>第 6 行以後則開始進入資料傳輸的步驟。</ul>
+		從第 3-5 行的流程來看，熟不熟悉啊？沒錯！那就是
+		<a href="0110network_basic.htm#protocol_tcp_3_handshake">三向交握</a> 的基礎流程啦！夠有趣吧！
+		不過 tcpdump 之所以被稱為駭客軟體之一可不止上頭介紹的功能吶！
+		上面介紹的功能可以用來作為我們主機的封包連線與傳輸的流程分析，
+		這將有助於我們瞭解到封包的運作，同時瞭解到主機的防火牆設定規則是否有需要修訂的地方。<br /><br />
+
+		更神奇的使用要來啦！如果我們使用 tcpdump 在 router 上面監聽『明碼』的傳輸資料時，
+		例如 FTP 傳輸協定，你覺得會發生什麼問題呢？
+		我們先在主機端下達『 tcpdump -i lo port 21 -nn -X 』然後再以 ftp 登入本機，並輸入帳號與密碼，
+		結果你就可以發現如下的狀況：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tcpdump -i lo -nn -X 'port 21'</span>
+    0x0000:  4500 0048 2a28 4000 4006 1286 7f00 0001  E..H*(@.@.......
+    0x0010:  7f00 0001 0015 80ab 8355 2149 835c d825  .........U!I.\.%
+    0x0020:  8018 2000 fe3c 0000 0101 080a 0e2e 0b67  .....&lt;.........g
+    0x0030:  0e2e 0b61 3232 3020 2876 7346 5450 6420  ...a220.(<span class=term_write>vsFTPd.</span>
+    0x0040:  322e 302e 3129 0d0a                      2.0.1)..
+
+    0x0000:  4510 0041 d34b 4000 4006 6959 7f00 0001  E..A.K@.@.iY....
+    0x0010:  7f00 0001 80ab 0015 835c d825 8355 215d  .........\.%.U!]
+    0x0020:  8018 2000 fe35 0000 0101 080a 0e2e 1b37  .....5.........7
+    0x0030:  0e2e 0b67 5553 4552 2064 6d74 7361 690d  ...gUSER.<span class=term_write>dmtsai</span>.
+    0x0040:  0a                                       .
+
+    0x0000:  4510 004a d34f 4000 4006 694c 7f00 0001  E..J.O@.@.iL....
+    0x0010:  7f00 0001 80ab 0015 835c d832 8355 217f  .........\.2.U!.
+    0x0020:  8018 2000 fe3e 0000 0101 080a 0e2e 3227  .....>........2'
+    0x0030:  0e2e 1b38 5041 5353 206d 7970 6173 7377  ...8PASS.<span class=term_write>mypassw</span>
+    0x0040:  6f72 6469 7379 6f75 0d0a                 <span class=term_write>ordisyou</span>..
+</pre></td></tr></table>
+
+		上面的輸出結果已經被簡化過了，你必須要自行在你的輸出結果當中搜尋相關的字串才行。
+		從上面輸出結果的特殊字體中，我們可以發現『<span class=text_import2>該 FTP 軟體使用的是 
+		vsftpd ，並且使用者輸入 dmtsai 這個帳號名稱，且密碼是 mypasswordisyou</span>』
+		嘿嘿！你說可不可怕啊！如果使用的是明碼的方式來傳輸你的網路資料？
+		所以我們才常常在講啊，網路是很不安全低！<br /><br />
+
+		另外你得瞭解，為了讓網路介面可以讓 tcpdump 監聽，所以執行 tcpdump 時網路介面會啟動在
+		『錯亂模式 (promiscuous)』，所以你會在 /var/log/messages 裡面看到很多的警告訊息，
+		通知你說你的網路卡被設定成為錯亂模式！別擔心，那是正常的。
+		至於更多的應用，請參考 man tcpdump 囉！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：如何使用 tcpdump 監聽 (1)來自 eth0 介面卡且 (2)通訊協定為 port 22 ，(3)目標來源為 192.168.1.100
+的封包資料？<br /><br />
+答：<ul>
+tcpdump -i eth0 -nn 'port 22 and src host 192.168.1.100'
+</ul>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a NAME="ethereal"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ethereal</span><br />
+	<div class=block2>
+		除了 tcpdump 這個軟體之外，其實你還可以使用 ethereal 這個好用的網路流量分析軟體吶！
+		ethereal 分為文字介面與圖形介面，文字介面的用法與 tcpdump 相當的類似，不過他的指令名稱為 tethereal
+		就是了。因為用法差不多，所以建議您直接使用 man tethereal 查閱吧！
+		在 CentOS 上原本就有 ethereal 了，所以請拿出光碟來安裝即可喔！
+		需要安裝 ethereal 與 ethereal-gnome 才行吶！<br /><br />
+
+		啟動的方法很簡單，你必須要在 X Window 底下，先開啟一個終端機，然後直接輸入 ethereal 後，
+		就會出現如下的畫面了：<br /><br />
+
+		<center><img src="0140networkcommand/ethereal_1.jpg"
+		title="ethereal 使用範例圖" alt="ethereal 使用範例圖"><br />
+		圖五、ethereal 使用範例圖
+		</center><br />
+
+		簡單的作法，你可以點選如上圖顯示的那個按鈕，會出現挑選監聽的介面視窗，如下所示：<br /><br />
+
+		<center><img src="0140networkcommand/ethereal_2.jpg"
+		title="ethereal 使用範例圖" alt="ethereal 使用範例圖"><br />
+		圖六、ethereal 使用範例圖
+		</center><br />
+
+		你應該選擇要監聽的介面，在這裡因為是測試用的，所以鳥哥使用的是 lo 這個內部介面，
+		你當然應該要選擇你自己的網路介面才是。然後按下 start 後，就會出現開始偵測的畫面了：<br /><br />
+
+		<center><img src="0140networkcommand/ethereal_3.jpg"
+		title="ethereal 使用範例圖" alt="ethereal 使用範例圖"><br />
+		圖七、ethereal 使用範例圖
+		</center><br />
+
+		在這個畫面當中你可以看到很多類型的封包協定，在等你處理完畢後，就可以按下『stop』結束監聽，
+		而開始進入如下的封包分析畫面。<br /><br />
+
+		<center><img src="0140networkcommand/ethereal_4.jpg"
+		title="ethereal 使用範例圖" alt="ethereal 使用範例圖"><br />
+		圖八、ethereal 使用範例圖
+		</center><br />
+
+		封包分析畫面共分為三大區塊，如上圖所示，第一區塊主要顯示的是封包的標頭資料，
+		內容就有點類似 tcpdump 的顯示結果，第二區塊則是詳細的表頭資料，
+		包括訊框的內容、通訊協定的內容以及 socket pair 等等資訊。
+		第三區塊則是 16 進位與 ASCII 碼的顯示結果。透過這個 ethereal 您就可以一口氣得到所需要的所有封包內容啦！
+		而且還是圖形介面的，很方便吧！透過在第一區塊選擇不同的封包，就能夠查閱每個封包的資料內容囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="nc"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">nc, netcat</span><br />
+	<div class=block2>
+		這個 nc 可以用來作為某些服務的檢測，因為他可以連接到某個 port 來進行溝通，
+		此外，還可以自行啟動一個 port 來傾聽其他用戶的連線吶！非常的不錯用！
+		如果在編譯的時候給予『GAPING_SECURITY_HOLE』參數的話，嘿嘿！
+		這個軟體還可以用來取得用戶端的 bash 哩！可怕吧！我們的 CentOS 
+		比較人性化，並沒有給予上面的參數，所以我們不能夠用來作為駭客軟體～
+		但是用來取代 telnet 也是個很棒的功能了！(有的系統將執行檔改名為 netcat 啦！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nc [IP|host] [port]</span>
+[root@linux ~]# <span class=term_command>nc -l -p [port]</span>
+<span class=term_say>參數：
+-l ：作為監聽之用，亦即開啟一個 port 來監聽用戶的連線；
+-p ：開啟的這個 port number</span>
+
+<span class=term_hd>範例一：連接本地端的 port 25 查閱相關訊息</span>
+[root@linux ~]# <span class=term_command>nc localhost 25</span>
+localhost.localdomain [127.0.0.1] 25 (smtp) open
+220 pc.dm.tsai ESMTP Postfix
+<span class=term_command>ehlo localhost</span>
+250-pc.dm.tsai
+250-PIPELINING
+250-SIZE 40000000
+250-ETRN
+<span class=term_command>quit</span>
+221 Bye
+</pre></td></tr></table>
+
+		這個最簡單的功能與 telnet 幾乎一樣吧！可以去檢查某個服務啦！不過，更神奇的在後面，
+		我們可以建立兩個連線來傳訊喔！舉個例子來說，我們先在 client 端的地方啟動一個 port 來進行傾聽：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例二：啟動一個 port 來監聽使用者的連線要求</span>
+[root@linux ~]# <span class=term_command>nc -l -p 20000</span>
+<span class=term_say># 啟動一個 port 20000  在主機上，如果此時使用 netstat -tlnp 
+# 就可以看到系統上多出來一個 port 20000 在傾聽使用者的連線喔！</span>
+</pre></td></tr></table>
+
+		然後在主機端的地方，也利用 nc 來連線到用戶端，並且輸入一些指令看看喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nc localhost 20000</span>
+<span style="background-color:white"> </span>  <span class=term_say>&lt;==這裡可以開始輸入字串了！</span>
+</pre></td></tr></table>
+
+		此時，在主機端我們可以打入一些字，你會發現在 client 端會同時出現你輸入的字眼吶！
+		如果你同時給予一些額外的參數，例如利用標準輸入與輸出 (stdout, stdin) 的話，
+		那麼就可以透過這個連線來作很多事情了！
+		當然 nc 的功能不只如此，你還可以發現很多的用途喔！
+		請自行到您主機內的 /usr/share/doc/nc-1.10/scripts 目錄下看看這些 script ，有幫助的吶！
+		不過，如果你需要額外的編譯出含有 GAPING_SECURITY_HOLE 功能，
+		以使兩端連線可以進行額外指令的執行時，就得要自行下載原始碼來編譯了！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>修改網路介面的硬體相關參數，可以使用 ifconfig  這個指令，包括 MTU 等等；
+	<li>ifup 與 ifdown 其實只是 script ，在使用時，會主動去 /etc/sysconfig/network-scripts
+		下找到相對應的裝置設定檔，才能夠正確的啟動與關閉；
+	<li>路由的修改與查閱可以使用 route 來查詢，此外， route 亦可進行新增、刪除路由的工作；
+	<li>ip 指令可以用來作為整個網路環境的設定，利用 ip link 可以修改『網路裝置的硬體相關功能』，
+		包括 MTU 與 MAC 等等，可以使用 ip address 修改 TCP/IP 方面的參數，包括 IP 以及網域參數等等，
+		ip route 則可以修改路由！
+	<li>ping 主要是透過 ICMP 封包來進行網路環境的檢測工作，並且可以使用 ping 來查詢整體網域可接受最大的 MTU 值；
+	<li>偵察每個節點的連線狀況，可以使用 traceroute 這個指令來追蹤！
+	<li>netstat 除了可以觀察本機的啟動介面外，還可以觀察 Unix socket 的傳統插槽介面資料；
+	<li>host 與 nslookup 預設都是透過 /etc/resolv.conf 內設定的 DNS 主機來進行主機名稱與 IP 的查詢；
+	<li>lftp 可以用來匿名登入遠端的 FTP 主機；
+	<li>telnet 不只用來進行 BBS 的登入，也可以用來作為某些埠口的連線測試；
+	<li>lynx 主要的功能是『瀏覽』，包括本機上 HTML 語法的檔案， wget 則主要在用來下載 WWW 的資料；
+	<li>擷取封包以分析封包的流向，可使用 tcpdump ，至於圖形介面的 ethereal  則可以進行更為詳細的解析。
+	<li>透過 tcpdump 分析三向交握，以及分析明碼傳輸的資料，可發現網路加密的重要性。
+	<li>nc 可用來取代 telnet 進行某些服務埠口的檢測工作，同時若自行編譯 nc 時，可額外的執行 -e 參數。
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>暫時將你的 eth0 這張網路卡的 IP 設定為 192.168.1.100 ，如何進行？</li>
+	<div class=block2><font color=white size=-1>
+	ifconfig eth0 192.168.1.100
+	</font></div>
+
+	<li>我要增加一個路由規則，以 eth0 連接 192.168.100.100/24 這個網域，應該如何下達指令？</li>
+	<div class=block2><font color=white size=-1>
+	route add -net 192.l68.100.0 netmask 255.255.255.0 dev eth0
+	</font></div>
+
+	<li>我的網路停頓的很厲害，尤其是連接到 tw.yahoo.com 的時候，那麼我應該如何檢查那個環節出了問題？</li>
+	<div class=block2><font color=white size=-1>
+	traceroute tw.yahoo.com
+	</font></div>
+
+	<li>我發現我的 Linux 主機上面有個連線很怪異，想要將他斷線，應該如何進行？</li>
+	<div class=block2><font color=white size=-1>
+	以 root 的身份進行『netstat -anp |more』查出該連線的 PID，然後以『 kill -9 PID 』踢掉該連線。
+	</font></div>
+
+	<li>您如何知道 green.ev.ncku.edu.tw 這部主機的 IP ？</li>
+	<div class=block2><font color=white size=-1>
+	方法很多，可以利用 host green.ev.ncku.edu.tw 或 dig green.ev.ncku.edu.tw 或 nslookup green.ev.ncku.edu.tw 等方法找出
+	</font></div>
+
+	<li>請找出您的機器上面最適當的 MTU 應該是多少？</li>
+	<div class=block2><font color=white size=-1>
+	請利用『ping -c 3 -M do -s MTU yourIP 』找出您的 IP 的 MTU 數值。
+	事實上，你還可以先以 ip 設定網路卡較大的 MTU 後，在進行上述的動作，才能夠找出網域內適合的 MTU。
+	</font></div>
+
+	<li>如何在終端機介面上面進行 WWW 瀏覽？又該如何下載 WWW 上面提供的檔案？</li>
+	<div class=block2><font color=white size=-1>
+	要瀏覽可以使用 lynx ，至於要下載則使用 wget 這個軟體。
+	</font></div>
+
+	<li>在終端機介面中，如何連接 bbs.sayya.org 這個 BBS ？</li>
+	<div class=block2><font color=white size=-1>
+	利用 telnet bbs.sayya.org 即可連接上
+	</font></div>
+
+	<li>請自行以 tcpdump 觀察本機端的 ssh 連線時，三向交握的內容</li>
+	<li>請自行回答：為何使用明碼傳輸的網路連線資料較為危險？並自行以軟體將封包取出，並與同學討論封包的資訊</li>
+	<li>請自行至 Internet 下載 nc(netcat) 的原始碼，並且編譯成為具有 GAPING_SECURITY_HOLE 的參數，
+	    然後建立一條連線使用 -e /bin/bash 嘗試將本地端的 bash 丟給目的端執行 (特殊功能，可讓 client 
+	    取得來自主機的 bash)。</li>
+
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>查詢 MTU 的網站： <a href="http://forums.speedguide.net:8117/"
+		target="_blank">http://forums.speedguide.net:8117/</a></li>
+	<li>在 Windows 底下修改 MTU 的方法：
+		<a href="http://www.microsoft.com/taiwan/msclub/member/TIPS/Spring_2001/tip1to3/tip1to3_2.htm"
+		target="_blank">http://www.microsoft.com/taiwan/msclub/member/TIPS/Spring_2001/tip1to3/tip1to3_2.htm</a></li>
+	<li>本章各指令的 man page 說明文件</li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/07/31：第一次完成日期！<br />
+2003/08/19：重新編排版面，加入 <a href="#jmcce">jmcce</a> 的安裝以及 <a href="#MTU">MTU</a> 的相關說明<br />
+2003/08/20：加入課後練習去<br />
+2003/09/19：加入參考用解答咯！<br />
+2005/03/24：<a href="#route">route</a> 的指令參數寫錯了！已經訂正！<br />
+2006/07/24：將舊的文章移動到 <a href="0140networkcommand/0140networkcommand.htm">此處</a><br />
+2006/07/24：拿掉相關性不高的 <a href="0140networkcommand/0140networkcommand.htm#jmcce">JMCCE 中文終端機</a>；
+	將 <a href="0140networkcommand/0140networkcommand.htm#MTU">Windows 系統的 MTU 檢測修改方法移除</a>。
+	也拿掉 <a href="0140networkcommand/0140networkcommand.htm#ncftp">ncftp</a> 的說明<br />
+2006/08/02：修改了很多部分，加入一些封包偵測的功能程式，tcpdump, nc 等指令！<br />
+</span>
+<hr><span class="text_date">2002/07/31以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0140networkcommand.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

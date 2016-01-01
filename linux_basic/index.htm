@@ -1,0 +1,623 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+
+    <td>
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">鳥哥的<span class="text_head_en"> Linux </span>私房菜 -- 基礎學習篇目錄</span><br />
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	底下的幾篇文章是學習Linux的基礎文件，這些文件是基礎中的基礎，如果您能將其中的文件都看完並且消化過，那麼未來在管理
+	Linux主機以及架設網站方面，就能夠達到『事半功倍』的成效，請不要忽略這部份了！否則，再怎麼討論都是枉然的啦！^_^。
+	因為Linux的資料非常的多，每份資料彼此的相關性都很強，要單獨的一項一項講解並不容易，
+	所以底下的文件該怎麼看呢？建議先按照順序將內容大致瀏覽過一次，看不懂的地方也可以先略過不要緊。
+	全部看完之後，再從頭開始『仔細』的實際操作過一遍，那應該就能夠進入Linux的世界囉～<br /><br />
+
+	另外，每篇文章底下的日期，指的是重大改版日期而非最新日期，每篇文章的最新日期請以該篇文章最下方的工作日誌為主；
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+
+<a href="#part1">第一部份：Linux的規劃與安裝</a><br />
+<a href="#part2">第二部份：Linux檔案、目錄與磁碟格式</a><br />
+<a href="#part3">第三部份：學習Shell與Shell Scripts</a><br />
+<a href="#part4">第四部份：Linux使用者管理</a><br />
+<a href="#part5">第五部份：Linux系統管理員</a><br />
+<a href="#part6">第六部份：其他備份文章</a><br />
+	<span class="text_h2">
+	　　這部份包括了早期的Red Hat 6.x以及<br />
+
+	　　鳥哥寫的一、二版的基礎篇各章節文章彙整！
+	</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+
+<a name="part1"></a>
+<hr /><span class="text_h1">第一部份 Linux 的規劃與安裝</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	常常聽到Linux具有非常優良的血統，所以具有相當良好的多人多工環境，可以方便程式設計師來開發軟體。
+	此外，Linux本身是不用錢的『自由軟體』，使用上面並沒有所謂的『盜版』問題。但是，為什麼Linux不用錢？
+	隨便修改或發佈Linux為什麼不會被罰？為什麼Linux有這麼多的版本？包括Fedora, SuSE, CentOS, Debian等等？
+	這個都是我們必須要來瞭解的部分！瞭解這些部分，妳才會對Linux有一個正確的理解，才能夠跟你的同事、同學、
+	上司說明，為什麼使用Linux具有很多優點與好處！ ^_^<br /><br />
+
+	Linux並不好學習，鳥哥也是『重傷』過好幾次才能對Linux有一些基礎的認知。那麼到底應該如何學習Linux呢？關鍵在實作。
+	既然要實作就得要實際的安裝一部Linux，那麼Linux要安裝前需要熟悉哪些基礎觀念？計算機概論是非常重要的一環！
+	因為Linux與硬體的關係還不小～此外，打造一台Windows/Linux共存的主機也是很有用的，
+	至少對於需要多平台但又缺乏空間與金錢的朋友來說，這樣的處理是非常有用的！<br /><br />
+
+	在第一篇裡面，我們會由計算機概論談起，再講到Linux的歷史淵源與自由軟體的關係，然後重點在於如何規劃硬體與Linux安裝，
+	最後談到如何登入與使用Linux圖形/文字介面的環境。本篇資料較多，第一次接觸Linux的新朋友，
+	很多資料若看不懂可以先略過，等到後續文章都讀完了再回來看，才會有幫助喔！ ^_^
+	</span>
+	<br /><br />
+	<table border="1" width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr valign="middle">
+		<td width="170" align="center">
+			<a href="0105computers.htm">計算機概論</a>
+
+			<br /><font face="細明體" size="-1">2008/07/22</font></td>
+		<td><font size="-1">
+		這幾年鳥哥開始在大學任教了，在教學的經驗中發現到，由於對Linux有興趣的朋友很多可能並非資訊相關科系出身，
+		因此對於電腦硬體及計算機方面的概念不熟。然而作業系統這種咚咚跟硬體有相當程度的關連性，
+		所以<a href="0105computers.htm">.....</a></font></td>
+	    </tr>
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0110whatislinux.htm">Linux是什麼</a>
+
+			<br /><font face="細明體" size="-1">2008/07/26</font></td>
+		<td><font size="-1">
+		眾所皆知的，Linux的核心原型是1991年由托瓦茲(Linus Torvalds)寫出來的，但是托瓦茲為何可以寫出Linux這個作業系統？
+		為什麼他要選擇386的電腦來開發？為什麼Linux的發展可以這麼迅速？又為什麼Linux是免費的？<a 
+		href="../linux_basic/0110whatislinux.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0120howtolinux.htm">Linux如何學習</a>
+
+			<br /><font face="細明體" size="-1">2008/07/28</font></td>
+		<td><font size="-1">
+		目前Linux上頭有兩種主要的操作模式，分別是圖形介面與文字介面，那麼學習Linux要用X-Window(圖形介面)好還是Command 
+		Line(文字介面)好？這兩種學習心態有什麼優缺點呢？此外，有沒有良好的入門文件可供參考？<a
+		href="../linux_basic/0120howtolinux.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0130designlinux.htm">主機規劃與磁碟分割</a>
+
+			<br /><font face="細明體" size="-1">2008/08/21</font></td>
+		<td><font size="-1">
+		事實上，要安裝好一部Linux主機並不是那麼簡單的事情，你必須要針對distributions的特性、伺服器的軟體能力、
+		未來的升級需求、硬體擴充性需求等等來考量，還得要知道磁碟分割、檔案系統<a
+		href="../linux_basic/0130designlinux.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0157installcentos5.htm">安裝CentOS 5.x<br />與多重開機技巧</a>
+
+			<br /><font face="細明體" size="-1">2008/09/02</font>
+		</td>
+		<td><font size="-1">
+		Linux distributions越作越成熟，所以在安裝方面也越來越簡單！雖然安裝非常的簡單，
+		但是剛剛前一章所談到的基礎認知還是需要瞭解的，包括MBR, partition, boot loader, mount, software的<a
+		href="../linux_basic/0157installcentos5.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+
+			<a href="../linux_basic/0160startlinux.htm">首次登入與<br />線上求助 man page</a><br />
+			<font face="細明體" size="-1">2008/09/09</font>
+		</td>
+		<td><font size="-1">
+		終於可以開始使用Linux這個有趣的系統了！由於Linux系統使用了非同步的磁碟/記憶體資料傳輸模式，
+		同時又是個多人多工的環境，所以你不能隨便的不正常關機，關機有一定的程序喔！錯誤的關機方法<a
+		href="../linux_basic/0160startlinux.htm">.....</a></font></td>
+	    </tr>
+
+	</table>
+</div>
+
+<a name="part2"></a>
+<hr /><span class="text_h1">第二部分 Linux 檔案、目錄與磁碟格式</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	安裝完了 Linux 之後，接著下來自然就是要使用他了！我們在
+	<a href="../linux_basic/0160startlinux.htm#cmd">開機與關機及簡易指令操作</a>
+	稍微說明了指令下達的方法，以及<a href="../linux_basic/0160startlinux.htm#manual">指令線上查詢</a>的方式，
+	因此您可以輕易的使用指令列模式來進行諸多的動作與工作。那麼接著下來呢？當然就是想要知道
+	Linux 裡面有什麼東西囉，所以，在這一個部分當中，我們將介紹 Linux 最基本的檔案權限概念，
+	與每個檔案目錄所帶有的意涵。<br /><br />
+
+	當然囉，要瞭解權限的概念，那麼對於不同的『身份』就需要瞭解一下才行，
+	不同的身份的人，所建立的或擁有的檔案是否會相同呢？例如系統管理員與一般身份使用者的檔案？
+	當然不太一樣！除此之外，如果您的硬碟空間不足，需要增加硬碟時，應該要如何新增呢？
+	還有，記憶體不足的情況下，有沒有增進虛擬記憶體容量的方法？在接下來的幾個章節之中，我們將介紹
+	Linux 主要的檔案架構、以及磁碟在 Linux 當中該如何使用及掛載等問題。
+	</span><br /><br />
+
+	<table border="1"  width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr>
+		<td width="170" align="center">
+			<a href="../linux_basic/0210filepermission.htm">Linux檔案權限與<br />目錄配置</a>
+			<br /><font face="細明體" size="-1">2008/09/23</font>
+
+		</td>
+		<td><font size="-1">
+		Linux最優秀的地方之一，就在於他的多人多工的環境。而為了讓各個使用者具有較保密的檔案資料，
+		因此檔案的權限管理就變的很重要了。 Linux一般將檔案可存取的身份分為三個類別，分別是 owner/group/other，
+		且三種身份各有read/write/execute<a
+		href="../linux_basic/0210filepermission.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0220filemanager.htm">Linux檔案與目錄管理</a>
+
+			<br /><font face="細明體" size="-1">2008/09/29</font>
+		</td>
+		<td><font size="-1">
+		在第六章我們認識了Linux系統下的檔案權限概念以及目錄的配置說明。 在這個章節當中，
+		我們就直接來進一步的操作與管理檔案與目錄吧！包括在不同的目錄間變換、 建立與刪除目錄、建立與刪除檔案，
+		還有尋找檔案、查閱檔案內容<a
+		href="../linux_basic/0220filemanager.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+
+			<a href="../linux_basic/0230filesystem.htm">Linux 磁碟與<br />檔案系統管理</a>
+			<br /><font face="細明體" size="-1">2008/10/31</font>
+		</td>
+		<td><font size="-1">
+		系統管理員很重要的任務之一就是管理好自己的磁碟檔案系統，每個分割槽不可太大也不能太小， 
+		太大會造成磁碟容量的浪費，太小則會產生檔案無法儲存的困擾。此外，我們在前面幾章談到的檔案權限與屬性中，
+		這些權限與屬性<a
+		href="../linux_basic/0230filesystem.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0240tarcompress.htm">檔案的壓縮與打包</a>
+			<br /><font face="細明體" size="-1">2008/12/18</font></td>
+		<td><font size="-1">
+		在 Linux 底下有相當多的壓縮指令可以運作喔！這些壓縮指令可以讓我們更方便從網路上面下載大型的檔案呢！
+		此外，我們知道在 Linux 底下的副檔名是沒有什麼很特殊的意義的，不過，針對這些壓縮指令所做出來的壓縮檔，
+		為了方便記憶<a
+		href="../linux_basic/0240tarcompress.htm">.....</a></font></td>
+
+	    </tr>
+	</table>
+</div>
+
+
+<a name="part3"></a>
+<hr /><span class="text_h1">第三部分：學習 Shell 與 Shell scripts</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	瞭解了基本的 Linux 檔案屬性與目錄的配置之後，在進入更深入的
+	Linux 世界之前，有幾個課題還是一定要知道的，那就是我們所使用的這個文字模式介面，也就是所謂的『Shell』這個咚咚。在
+	Linux 的世界中，使用的是 GNU 發展出來的強化的第二代 shell ，稱為 BASH Shell
+	，他有什麼特異功能呢？簡單的說，我們之前下達的幾個指令都是 bash 管理的，除此之外，
+	他還可以記錄指令、檔案或命令的補全功能、環境變數的使用等等，還有很多功能等著你去發掘呢！<br /><br />
+
+	在知道了部分的 bash 功能後，在接著下來，我們還得瞭解一下什麼是資料流重導向？還有常規表示法等等的問題，
+	這都是未來我們系統管理員在管理主機上面，一個不可缺乏的利器！當然囉，要將這些功能整合起來運用的話，
+	就不能不學習一下所謂的腳本『
+	shell scripts 』，他具有基礎的程式能力( Program )，當真是個管理系統的好幫手呢！<br /><br />
+
+	再來，在未來的架站設定當中，常會使用到文字編輯器來編輯參數設定檔，這個時候，
+	系統管理員至少務必要熟悉一套文字介面下的文書編輯軟體，當然不限制哪一套軟體啦，但是
+	vi 是最標準的 Unix-Like 的文字介面之文書處理軟體，所以，我們幾乎一定可以在每部
+	Unix-Like 上面發現他的蹤跡，所以，就來瞭解他一下吧，這也是挺重要的工作呢！</span>
+	<br /><br />
+
+	<table border="1" width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr>
+		<td width="170" align="center">
+			<a href="../linux_basic/0310vi.htm">vim程式編輯器</a>
+
+			<br /><font face="細明體" size="-1">2009/01/13</font>
+		</td>
+		<td><font size="-1">
+		系統管理員的重要工作就是得要修改與設定某些重要軟體的設定檔，
+		因此至少得要學會一種以上的文字介面的文書編輯器。 在所有版本的 Linux 
+		上頭都會有的一套文書編輯器就是 vi ，而且很多軟體<a
+		href="../linux_basic/0310vi.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+
+			<a href="../linux_basic/0320bash.htm">認識與學習 BASH</a>
+			<br /><font face="細明體" size="-1">2009/02/07</font>
+		</td>
+		<td><font size="-1">
+		在 Linux 的環境下，如果你不懂 bash 是什麼，那麼其他的東西就不用學了！
+		因為前面幾章我們使用終端機下達指令的方式， 就是透過 bash 的環境來處理的喔！
+		所以說，他很重要吧！bash 的東西非常的多，包括變數<a
+		href="../linux_basic/0320bash.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0330regularex.htm">正規表示法與<br />文件格式化處理</a>
+			<br /><font face="細明體" size="-1">2009/02/10</font>
+		</td>
+		<td><font size="-1">
+		正規表示法 (Regular Expression, RE, 或稱為常規表示法)是透過一些特殊字元的排列，
+		用以『搜尋/取代/刪除』一列或多列文字字串， 簡單的說，
+		正規表示法就是用在字串的處理上面的一項『表示式』。正規表示法並<a
+		href="../linux_basic/0330regularex.htm">.....</a></font></td>
+
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0340bashshell-scripts.htm">學習 shell scripts</a>
+			<br /><font face="細明體" size="-1">2009/02/18</font>
+		</td>
+		<td><font size="-1">
+
+		如果你真的很想要走資訊這條路，並且想要好好的管理好屬於你的主機，那麼，別說鳥哥不告訴你，
+		可以自動管理你的系統的好工具： Shell scripts 真的是得要好好學習學習的！
+		基本上， shell script 有點像是早期的批次檔，亦即是<a
+		href="../linux_basic/0340bashshell-scripts.htm">.....</a></font></td>
+	    </tr>
+	</table>
+</div>
+
+
+<a name="part4"></a>
+<hr /><span class="text_h1">第四部分：Linux 使用者管理</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+
+	好了！終於要到了管理 Linux 帳號的時刻了！對於 Linux
+	有一定的熟悉度之後，再來就是要管理連上 Linux 的帳號問題了！這個帳號的問題可大可小啦！大到可以限制他使用
+	Linux 主機的各項資源，小到甚至一般帳號的密碼訂定規則都可以進行規定！端看您對於安全的需求啦！
+	此外，如果站在資源平均分配的角度上，那麼
+	Linux 主機上面有限的資源當然是平均分配給大家比較好！這個時候就得來規定一下『誰可以使用多少的硬碟空間？』那就是
+	Quota 喔！呵呵！厲害吧！<br /><br />
+	在訂定完了一些帳號的規則之後，那麼我們就繼續來管理一下主機的系統與程序的管理吧！
+	這個包括了觀察每個程序
+	( Process ) 與工作排程及工作管理 ( jobs control )，這些也都是很重要的工作呢！</span><br /><br />
+
+	<table border="1"  width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr>
+		<td width="170" align="center">
+			<a href="../linux_basic/0410accountmanager.htm">Linux 帳號管理與<br />ACL 權限控制</a>
+
+			<br /><font face="細明體" size="-1">2009/03/04</font>
+		</td>
+		<td><font size="-1">
+		要登入 Linux 系統一定要有帳號與密碼才行，否則怎麼登入，您說是吧？不過，
+		不同的使用者應該要擁有不同的權限才行吧？我們還可以透過 user/group 
+		的特殊權限設定，來規範出不同的群組開發專案呢<a
+		href="../linux_basic/0410accountmanager.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+
+			<a href="../linux_basic/0420quota.htm">磁碟配額(Quota)與<br />進階檔案系統管理</a>
+			<br /><font face="細明體" size="-1">2009/03/12</font>
+		</td>
+		<td><font size="-1">
+		如果您的 Linux 伺服器有多個用戶經常存取資料時，為了維護所有使用者在硬碟容量的公平使用，磁碟配額 
+		(Quota) 就是一項非常有用的工具！另外，如果你的用戶常常抱怨磁碟容量不夠用，那麼更進階的檔案系統就得要學習學習<a
+		href="../linux_basic/0420quota.htm">.....</a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0430cron.htm">例行性工作排程 (crontab)</a>
+			<br /><font face="細明體" size="-1">2009/03/15</font>
+		</td>
+		<td><font size="-1">
+		學習了基礎篇也一陣子了，你會發現到為什麼系統常常會主動的進行一些任務？
+		這些任務到底是誰在設定工作的？ 如果你想要讓自己設計的備份程式可以自動的在系統底下執行，<a
+		href="../linux_basic/0430cron.htm">.....</a></font></td>
+
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0440processcontrol.htm">程序管理與<br />SELinux 初探</a>
+			<br /><font face="細明體" size="-1">2009/03/25</font>
+		</td>
+		<td><font size="-1">
+
+		一個程式被載入到記憶體當中運作，那麼在記憶體內的那個資料就被稱為程序(process)。程式是作業系統上非常重要的概念，
+		所有系統上面跑的資料都會以程序的型態存在。那麼系統的程序有哪些狀態<a
+		href="../linux_basic/0440processcontrol.htm">.....</a></font></td>
+	    </tr>
+	</table>
+</div>
+
+
+<a name="part5"></a>
+<hr /><span class="text_h1">第五部分：Linux 系統管理員</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+
+	嗯！終於來到系統管理員 ( root ) 要注意的工作事項之篇幅了！各位準系統管理員心理準備好了嗎？
+	我們要管理機器囉，呵呵！那麼管理員的工作是什麼？看報喝茶？！沒錯！管理員最大的享受就是看報喝茶了。
+	一個好的系統管理員，平時不會希望掛載網站上面一再不斷的查詢、檢查漏洞等等的，
+	因為果真如此的話，那麼就表示『機器一定有問題了！』。為了讓我們的
+	Linux 機器跑得更穩更順暢，好讓我這個管理員有更多的時間去看報喝茶，哈哈！
+	更深入的瞭解系統是需要的！所以，這一篇我們由開機關機的整體流程談起，好瞭解一下
+	Linux 在開機的過程中到底做了哪些事情，這樣才能知道我們在什麼時候應該做什麼事情吶！<br /><br />
+	此外，由於『沒有一個套件是永遠安全的！』，所以套件管理是相當重要的一部份，這裡我們以
+	RPM 與 Tarball 來介紹一下如何管理你系統上面的套件。再來，你知道你的系統上面跑了多少資料嗎？
+	雖然知道什麼是 ps 來查詢程序，但是總是得知道我的系統有哪些服務吧！嘿嘿！
+	來看看先?不但如此，還得針對登錄檔進行解析，以及對於系統進行備份。呵呵！
+	管理員的工作還真多那。不止不止，還要進行核心的管理呢！哇！果然是忙斃了！無論如何，
+	還是得要瞭解吶！</span><br /><br />
+	<table border="1" width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr>
+		<td align="center" width="170">
+			<a href="../linux_basic/0560daemons.htm">認識系統服務<br />(daemon)</a>
+			<br /><font face="細明體" size="-1">2009/04/02</font>
+
+		</td>
+		<td><font size="-1">
+		在 Unix-Like 的系統中，你常常聽到 daemon 這個字眼！那麼什麼是傳說中的 daemon 呢？這些 daemon 
+		放在什麼地方？他的功能是什麼？該如何啟動這些 daemon ？又如何有效的將這些 daemon 管理妥當<a
+		href="../linux_basic/0560daemons.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center"><a href="../linux_basic/0570syslog.htm">認識與分析登錄檔</a>
+			<br /><font face="細明體" size="-1">2009/04/09</font>
+
+		</td>
+		<td><font size="-1">
+		當你的 Linux 系統出現不明原因的問題時，很多人都告訴你，你要查閱一下登錄檔才能夠知道系統出了什麼問題了，
+		所以說，了解登錄檔是很重要的事情呢。登錄檔可以記錄系統在什麼時間、哪個主機、哪個服務<a
+		href="../linux_basic/0570syslog.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center"><a href="../linux_basic/0510osloader.htm">開機流程、模組管理<br />與 loader</a>
+
+			<br /><font face="細明體" size="-1">2009/04/30</font>
+		</td>
+		<td><font size="-1">
+		系統開機其實是一項非常複雜的程序，因為核心得要偵測硬體並載入適當的驅動程式後，
+		接下來則必須要呼叫程序來準備好系統運作的環境，以讓使用者能夠順利的操作整部主機系統。
+		如果你能夠理解開機的原理<a
+		href="../linux_basic/0510osloader.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center"><a href="../linux_basic/0610hardware.htm">系統設定工具(網路與<br />印表機)與硬體偵測</a>
+
+			<br /><font face="細明體" size="-1">2009/06/03</font>
+		</td>
+		<td><font size="-1">
+		除了手動設定之外，其實系統提供了一個名為 setup 的指令給系統管理員使用喔！
+		這個指令還能夠設定網路呢。此外，我們也應該要知道如何在 Linux 底下連接印表機吧！
+		否則一些資料怎麼印出來？另外<a
+		href="../linux_basic/0610hardware.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center"><a href="../linux_basic/0520source_code_and_tarball.htm">軟體安裝：<br />原始碼與 Tarball </a>
+
+			<br /><font face="細明體" size="-1">2009/06/20</font>
+		</td>
+		<td><font size="-1">
+		我們在第一章、Linux是什麼當中提到了 GNU 計畫與 GPL 授權所產生的自由軟體與開放源碼等咚咚。
+		不過，前面的章節都還沒有提到真正的開放源碼是什麼的訊息！在這一章當中，我們將藉由 Linux 
+		作業系統裡面的執行檔<a
+		href="../linux_basic/0520source_code_and_tarball.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+
+			<a href="../linux_basic/0520rpm_and_srpm.htm">軟體安裝：<br />RPM, SRPM 與 YUM 功能</a>
+			<br /><font face="細明體" size="-1">2009/07/03</font>
+		</td>
+		<td><font size="-1">
+		雖然使用原始碼進行編譯可以進行客製化的設定，但對於 Linux distribution 的原本發佈商來說，
+		則有軟體管理不易的問題， 畢竟不是每個人都會進行原始碼編譯的。
+		如果能夠將軟體預先在相同的硬體與作業系統上面編譯好才發佈的話<a
+		href="../linux_basic/0520rpm_and_srpm.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0590xwindow.htm">X Window 設定介紹</a>
+			<br /><font face="細明體" size="-1">2009/07/15</font>
+		</td>
+		<td><font size="-1">
+		在 Linux 上頭的圖形介面我們稱之為 X Window System，簡稱為 X 或 X11 囉！為何稱之為系統呢？這是因為 X 
+		視窗系統又分為 X server 與 X client ，既然是 Server/Client (主從架構) 這就表示其實 X 
+		視窗系統是可以跨網路且跨平台的<a
+		href="../linux_basic/0590xwindow.htm">.....</a></a></font></td>
+
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0580backup.htm">Linux 備份策略</a>
+			<br /><font face="細明體" size="-1">2009/07/21</font>
+		</td>
+		<td><font size="-1">
+
+		萬一不幸你的 Linux 被駭客入侵了、或是你的 Linux 系統由於硬體關係 (不論是天災還是人禍) 
+		而掛掉了！這個時候，請問如何快速的回復你的系統呢？呵呵！當然囉，如果有備份資料的話，
+		那麼回復系統所花費的時間與成本將降低相當的多<a
+		href="../linux_basic/0580backup.htm">.....</a></a></font></td>
+	    </tr>
+
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0540kernel.htm">核心編譯</a>
+			<br /><font face="細明體" size="-1">2009/07/31</font>
+
+		</td>
+		<td><font size="-1">
+		我們說的 Linux 其實指的就是核心 (kernel) 而已。這個核心控制你主機的所有硬體並提供系統所有的功能，
+		所以說，他重不重要啊！我們開機的時候其實就是利用開機管理程式載入這個核心檔案來偵測硬體，
+		在核心載入適當的驅動程式後<a
+		href="../linux_basic/0540kernel.htm">.....</a></a></font></td>
+	    </tr>
+	</table><br />
+
+</div>
+
+
+<a name="part6"></a>
+
+<hr /><span class="text_h1">第六部分：其他備份文章</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	這個部分的內容是鳥哥基於自己的需求而將某一時期的文章結合在一起，以方便鳥哥自己的查詢之用。
+	如果您使用的Linux distribution是舊的，那麼這個文件可能對你有幫助，不過，還是建議讀新的資料，
+	因為舊的資料可能會有些疏失啦！</span><br /><br />
+
+	<table border="1" width="100%" cellspacing="0" cellpadding="5" style="text-align:justify">
+	    <tr valign="middle">
+		<td width="170" align="center"> 內容大綱 </td>
+
+		<td align="center">主要內容說明</td>
+	    </tr>
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/9999questions.htm">Linux 系統與指令練習題&nbsp;</a>
+			<br /><font size="-1" face="細明體">2002/06/28</font>
+		</td>
+
+		<td><font size="-1">趕快來試試看對於 Linux 瞭解有多深？！這裡的題目都只與基礎系統有關，其他的關於
+			Server 的部分將在以後才會擺上來。</font></td>
+	    </tr>
+	    <tr>
+		<td align="center">
+			<a href="../linux_basic/0140spfdisk.htm">SPFDISK 的一個範例&nbsp;</a>
+			<br /><font face="細明體" size="-1">2005/06/12</font>
+		</td>
+
+		<td><font size="-1">安裝 Linux 最重要的就是硬碟空間了！然而很抱歉的是， Windows 的 fdisk
+			並不認識 Linux 的磁碟格式！所以如果您已經安裝了 Linux 之後，卻想將該 partition
+			( 硬碟磁區 ) 刪除的話，那麼使用 Windows 的 FDISK 程式是無法做的！另外，使用
+			<span class="text_import1">全中文</span>
+			的 <span class="text_import1">spfdisk</span> 也可以讓您更容易瞭解 fdisk
+			在做什麼工作呦！</font></td>
+	    </tr>
+	    <tr>
+		<td align="center">
+			較小安裝 Red Hat 7.2 <br /><font face="細明體" size="-1">2003/02/03</font>
+			<font face="細明體" size="-1">(Older)</font>
+		</td>
+		<td><font size="-1">終於要安裝 Red Hat Linux 了！呼～真是麻煩～那麼 Linux 的安裝模式有哪些呢？
+			嗯！基本上可以分為圖形安裝模式 ( 好消息是 Red Hat 7.3 已經支援中文安裝了 )與文字安裝模式，
+			....</font></td>
+	    </tr>
+	    <tr>
+		<td align="center">
+
+			Red Hat 6.x 舊文件 <br /><font face="細明體" size="-1">1999~2001</font>
+		</td>
+		<td><font size="-1">這些是早期的 Red Hat 6.x 的相關基礎文件，當時寫的比較簡單，
+			而且也比較沒有系統，不過，如果您還是使用舊版的
+			Red Hat 的話，那麼，或許還是有可以參考的地方吧！？ ^_^..</font></td>
+	    </tr>
+	    <tr>
+		<td align="center">
+
+			基礎篇第一版<br />Mandrake 9為例 <br /><font face="細明體" size="-1">2001~2004</font></td>
+		<td><font size="-1">
+		這個部分是鳥哥寫的第一本書的內容！不過，因為時間隔的太久了，很多文章都經過了部分的編修，
+		所以與書籍上的章節不太相同。列出來只是為了要對鳥哥自己負責就是了！^_^<a
+		href="../linux_basic/mandrake9.0.htm">.....</a></font></td>
+	    </tr>
+	    <tr>
+
+		<td align="center">
+			基礎篇第二版<br />Fedora Core 4為例 <br /><font face="細明體" size="-1">2005~2008</font></td>
+		<td><font size="-1">
+		這個部分則是基礎篇的第二版，基本上已經是非常完整的書籍內容了！
+		不過，仍然是具有部分的疏失啦！尤其是內容字太多了！新版的希望能夠圖多點～<a
+		href="../linux_basic/fc4.htm">.....</a></font></td>
+	    </tr>
+
+	</table>
+</div>
+
+
+<hr />
+    </td>
+    <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

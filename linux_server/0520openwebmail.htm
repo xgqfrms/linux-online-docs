@@ -1,0 +1,711 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- OpenWebMail 好用的 WWW 郵件收發軟體</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0520openwebmail.htm">
+    <span class="text_head0">簡易<span class="text_head_en"> OpenWebMail </span>設定</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0520openwebmail.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2004/11/23</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在 Client 端使用 pop3 之類的 <a href="0380sendmail.htm#theory_mailtrans">MUA</a>
+	軟體來收信是目前一般使用者最常見的信件收受模式。不過，
+	這種模式由於是直接將信件下載到用戶端的個人電腦上，事實上，
+	很容易遭受不明病毒的影響，並且，如果信件內容大部分是廣告信件的話，由主機傳送到個人電腦這過程中的傳送行為，
+	將會平白的讓使用者損失一定程度的網路頻寬。由於電子郵件對於現代人來說，
+	應該已經是不可或缺的使用工具，所以雖然使用
+	pop3 有一定程度的風險，大家還是得繼續使用啊~難道沒有解決的方法嗎？呵呵！是有的，那就是使用網頁介面
+	(Web) 的郵件功能啦，也就是 WebMail 。其實 <b>WebMail 並不是一個郵件伺服器</b>，而只是透過主機提供的
+	Web 介面讓使用者登入，並且直接在主機上面進行郵件的收發而已。因此，事實上，您也可以將
+	webmail 視為一個 MUA 啦！底下我們就來說一說這一個由台灣人發明的 OpenWebMail 吧！
+</td></tr></table><br>
+
+<!-- 本文的連結區部分 -->
+<span class="text_h1">
+<a href="#theory">前言</a>：<br>
+	<span class="text_h2">
+	　　：<a href="#theory_need">架設前須知</a><br>
+	</span>
+<a href="#install">OpenWebMail的安裝</a>：<br>
+	<span class="text_h2">
+	　　：<a href="#install_fc1">FC1 的 RPM 安裝</a><br>
+	　　：<a href="#install_mdk10">MDK 10.0 的 tarball安裝</a><br>
+	</span>
+<a href="#others">一些其他的設定</a>：<br>
+<a href="#faq">問題與解決</a>：<br>
+	<span class="text_h2">
+	　　：還是無法執行 openwebmail<br>
+	</span>
+<a href="#reference">參考資源</a>：<br>
+</span>
+
+<!-- 本文的正式部分 -->
+<hr><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">前言</span><br>
+<div class=block1>
+	電子郵件對於一般人來說，是越來越重要了，像鳥哥通常就是使用電子郵件來跟大部分的朋友聯絡，
+	而且，重要的文件與公事也幾乎是使用電子郵件來傳遞的呢！而在一般的個人電腦上面，我們通常是使用類似
+	Outlook express/Netscape/Mozilla 之類的 Client 端軟體，並透過 POP3/SMTP
+	協定來收發信件。<br><br>
+
+	不過，遺憾的是，電子郵件其實並不安全！這點在一些
+	<a href="http://www.cert.org.tw/" target="_blank">安全通報</a> 上面就可以查閱的到了，不論是
+	<a href="0380sendmail.htm#theory_mailtrans">MTA/MUA</a>
+	都可能有漏洞的！而且，除了漏洞問題之外，更麻煩的是，廣告信件的大量發行，
+	造成我們用戶端的頻寬浪費，真的是很討厭！但是，電子郵件又是這樣的重要，
+	不能不收發電子郵件啊！那怎麼辦？這個時候我們就可以使用
+	Web 介面的 MUA 來進行電子郵件的收發啊！<br><br>
+
+	那麼這種 webmail 的地位是甚麼呢？是否只要有 webmail 就不需要 mail server
+	了呢？當然不是這樣！<span class="text_import1">webmail 其實可以被當成是一種
+	MUA 來看待</span>，也就是說，您可以將他想成與 outlook express 同等級的應用軟體；而透過這個
+	webmail 我們可以對 mail serve r進行電子郵件的存取。也就是說， webmail 要能夠使用，必須要架構在具有
+	WWW 及 Mail Server 的服務上面才行！這幾者之間的關係可以簡單的這樣看：<br><font color="#000099"><pre>
+           Server 端                    Client
+    -------------------------
+   |       Apache/Webmail<---|<----  Mozilla/IE(瀏覽器)
+   |             |           |
+   |<---SMTP-----|           |
+   |             |           |
+   |  /var/spool/mail/accout |
+   `-------------------------' </pre></font>
+
+	也就是說，當 Client 端以瀏覽器登入主機後，主機透過 webmail 
+	提供的服務，讓登入的使用者可以讀取該主機內自己的郵件，並且，也可以透過主機的
+	smtp 協定來進行郵件的寄發！ <br><br>
+
+
+	<hr><a NAME="theory_need"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">架設前須知</span><br>
+	<div class=block2>
+		如同前面的說明，webmail 要能夠正確的運作，其實還需要 www/mail 這兩種服務的存在才行！此外，由於
+		webmail 需要能夠正確的存取主機內的郵件檔案 (/var/spool/mail/account)，所以，我們必須要提供
+		webmail 足夠的權力來存取才行。因此，您必需要確定：<br><span class="text_import2">
+		<ul>
+		<li>WWW Server (Apache) 已經順利運作；
+		<li>Mail Server (Postfix/sendmail) 已經順利運作；
+		<li>webmail 要求的前置軟體必須已經安裝：例如 openwebmail 需要 
+		    perl / suidperl / perl(CGI) / perl-Text-Iconv / perl-Compress-Zlib
+		    等等的套件呢！其中 suid 方面的軟體，則是提供 webmail 存取權力的套件。
+		</ul></span>
+		所以囉，在您架設 webmail 之前，請先確認您的主機提供的 WWW/Mail 
+		服務是正確無誤的！此外，前驅套件也必須要沒有問題的安裝才行！<br><br>
+
+		底下我們以目前相當熱門，並且是由台灣成大博士董仲愷主導發起的 Openwebmail
+		這個套件來進行安裝！這東西很不錯喔！您可以在底下的連結當中下載與 Red Hat/Fedora
+		有關的 RPM 檔案：
+		<ul>
+		<li><a href="http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/" 
+			target="_blank">http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/</a></li>
+		</ul>
+		或者是下載原始檔案 (tarball)：
+		<ul>
+		<li><a href="http://turtle.ee.ncku.edu.tw/openwebmail/download/release/" 
+			target="_blank">http://turtle.ee.ncku.edu.tw/openwebmail/download/release/</a></li>
+		</ul>
+		底下鳥哥將以 FC1 及 Mandrake 10.0 作為測試的基準來安裝 openwebmai 喔！
+	</div>
+</div>
+
+
+<hr><a NAME="install"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">OpenWebMail 的安裝：</span><br>
+<div class=block1>
+	因為 openwebmail 本身就有針對 Red Hat/Fedora 釋出 RPM 檔案，所以我們當然就直接以編譯好的
+	RPM 檔案來安裝即可！那如果是非 Red Hat/Fedora 怎麼辦？沒關係，可以使用原始碼來安裝啊！<br><br>
+
+	<hr><a name="install_fc1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">FC1 的 RPM 安裝</span><br>
+	<div class=block2>
+		請先確定 Postfix 或者 sendmail 已經安裝完畢，此外， Apache 也已經安裝好了！如果想要快速的架設好您的
+		Postfix + SASL 認證的話，可以這樣做：(更詳細的資訊請查閱：
+		<a href="http://linux.vbird.org0390postfix.htm">
+		http://linux.vbird.org0390postfix.htm</a>)<br>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 0. 先確定所有的套件都已經安裝了，主要有:</span>
+<span class="term_write">     postfix-2.0.16-1
+     cyrus-sasl-2.1.15-6
+     cyrus-sasl-md5-2.1.15-6
+     cyrus-sasl-devel-2.1.15-6
+     cyrus-sasl-plain-2.1.15-6
+     <span class="term_say">如果還有忘記寫上去的，還請繼續的安裝啊！並且，請移除底下的套件</span>
+     sendmail
+     fetchmail
+     mutt</span>
+
+<span class="term_hd"># 1. 先確定一下 /usr/lib/sasl2/smtpd.conf 存在，且內容為：</span>
+<span class="term_write">     pwcheck_method: saslauthd</span>
+
+<span class="term_hd"># 2. 確定一下 /etc/sysconfig/saslauthd 內容為：</span>
+<span class="term_write">     MECH=shadow</span>
+
+<span class="term_hd"># 3. 確定一下 main.cf 裡面有：</span>
+<span class="term_write">smtpd_sasl_auth_enable = yes
+smtpd_sasl_local_domain=
+smtpd_recipient_restrictions =
+  reject_unknown_sender_domain
+  reject_unknown_recipient_domain
+  permit_mynetworks
+  permit_sasl_authenticated
+  reject_unauth_destination
+smtpd_client_restrictions =
+  permit_mynetworks
+  hash:/etc/postfix/access
+  permit_sasl_authenticated
+  reject_rbl_client relays.ordb.org
+  reject_rhsbl_client dsn.rfc-ignorant.org
+smtpd_sasl_security_options = noanonymous</span>
+
+<span class="term_hd"># 4. 然後啟動 saslauth 及 postfix 應該就可以啦！</span>
+</pre></td></tr></table>
+
+		然後，請先下載 FC1 所需要的前驅套件，請連結至：
+		<a href="http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/fc1/" 
+		target="_blank">http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/fc1/</a>
+		下載所有的 RPM 套件，然後再安裝 openwebmail 2.40 版，整個安裝流程：
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">1. 安裝 openwebmail ：</span>
+[root@test root]# <span class="term_command">rpm -ivh perl*</span><span class="term_note"> # 假設所有的RPM都放在 /root 底下。</span>
+[root@test root]# <span class="term_command">yum update</span>
+<span class="term_say"># 這個動作僅只是要升級剛剛的套件而已；</span>
+
+[root@test root]# <span class="term_command">rpm -ivh openwebmail-2.40-1.i386.rpm</span>
+<span class="term_say"># 注意：在預設的情況下， openwebmail 會將檔案資料安裝至與 apache 有關的路徑
+# 也就是 /var/www/data 與 /var/www/cgi-bin 底下，所以，如果您已經將 apache
+# 以 tarball 方式安裝，導致擁有不同的 WWW Root 路徑時，最好使用 tarball
+# 來安裝您的 openwebmail 啊！</span>
+
+<span class="term_hd">2. 初始化設定：</span>
+[root@test root]# <span class="term_command">cd /var/www/cgi-bin/openwebmail</span>
+[root@test openwebmail]# <span class="term_command">./openwebmail-tool.pl --init</span>
+<span class="term_say"># 因為 openwebmail 支援相當多種認證機制，因此，我們必須在使用 openwebmail 
+# 之前，先將 openwebmail 的相關設定做好！上面 openwebmail-tool.pl --init
+# 就是在達成這樣的目標。此外，這個步驟會進行蠻長的一段時間喔！請耐心等候！</span>
+
+[root@test openwebmail]# <span class="term_command">cd etc</span>
+[root@test etc]# <span class="term_command">vi dbm.conf</span>
+<span class="term_say"># 找到並修改成底下幾行：</span>
+<span class="term_write">dbm_ext                 .db
+dbmopen_ext             .db
+dbmopen_haslock         yes</span>
+[root@test etc]# <span class="term_command">cd ..</span>
+[root@test openwebmail]# <span class="term_command">./openwebmail-tool.pl --init</span>
+Welcome to the Open WebMail!
+
+This program is going to send a short message back to the developer,
+so we could have the idea that who is installing and how many sites are
+using this software, the content to be sent is:
+
+OS: Linux 2.4.22-1.2199.nptl i686
+Perl: 5.008003
+WebMail: Open WebMail 2.40 20040816
+
+Send the site report?(Y/n)
+sending report...
+
+Thank you.
+
+
+<span class="term_hd">3. 進一步設定：</span>
+[root@test openwebmail]# <span class="term_command">cd etc</span>
+[root#test etc]# <span class="term_command">vi openwebmail.conf</span>
+<span class="term_say"># 找到這一行：</span>
+<span class="term_write">default_language                en</span>
+<span class="term_say"># 改成這樣子：</span>
+<span class="term_write">default_language                zh_TW.Big5</span>
+</pre></td></tr></table>
+
+		一般來說，設定成這樣就足夠您運作 openwebmail 了，不過，您的 WWW 主機必須要能提供
+		perl 的執行環境，因為 openwebmail 就是以 perl 寫成的啊！以 apache 為例，您必須要知道如何啟動
+		perl 的 CGI 執行環境：
+
+<table class="term"><tr><td class="term"><pre>
+[root@test root]# <span class="term_command">vi /etc/httpd/conf/httpd.conf</span>
+ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+&lt;Directory "/var/www/cgi-bin">
+    AllowOverride None
+    Options None
+    Order allow,deny
+    Allow from all
+&lt;/Directory>
+AddHandler cgi-script .cgi .pl
+</pre></td></tr></table>
+
+		至少上面的設定要設定妥當才行啊！好了，那麼如何使用 openwebmail 呢？直接在您的瀏覽器上面輸入：
+		<ul><span class="text_import2">http://your.linux.server/cgi-bin/openwebmail/openwebmail.pl</span></ul>
+		就可以使用 openwebmail 囉！很簡單吧！不過，如果萬一您的認證一直無法成功的話，可以指定一下認證機制看看：
+
+<table class="term"><tr><td class="term"><pre>
+[root@test root]# <span class="term_command">cd /var/www/cgi-bin/openwebmail/auth</span>
+[root@test auth]# <span class="term_command">vi auth_unix.pl</span>
+<span class="term_say"># 找到底下：</span>
+my $passwdfile_plaintext = $conf{'passwdfile_plaintext'} || '/etc/passwd';
+my $passwdfile_encrypted = $conf{'passwdfile_encrypted'} || '/etc/master.passwd';
+<span class="term_say"># 改成這樣：</span>
+<span class="term_write">my $unix_passwdfile_plaintext="/etc/passwd";
+my $unix_passwdfile_encrypted="/etc/shadow";</span>
+
+<span class="term_say"># 或者是修改底下這個檔案成為：</span>
+[root@test root]# <span class="term_command">vi \
+/var/www/cgi-bin/openwebmail/etc/defaults/auth_unix.conf</span>
+<span class="term_say"># 其內容只需將</span>
+passwdfile_encrypted /etc/master.passwd
+<span class="term_say"># 改為</span>
+<span class="term_write">passwdfile_encrypted /etc/shadow</span>
+<span class="term_say"># 這樣就算完成了。 </span>
+</pre></td></tr></table>
+
+	</div>
+
+
+	<hr><a name="install_mdk10"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">MDK10.0 的 Tarball 安裝</span><br>
+	<div class=block2>
+		如果您是使用 MDK 作為您的 Linux 系統時，由於 OpenWebMail 並沒有針對這個作業系統來設計
+		RPM 檔案，所以，這裡我們以 Tarball 來進行安裝。首先，請先確認一下您的 Postfix
+		與 Apache 已經安裝妥當。底下我們就完整的來談一談囉！(同樣的，更詳細的 Postfix
+		+ SASL 的 SMTP 身分認證資訊請查閱：
+		<a href="http://linux.vbird.org0390postfix.htm">http://linux.vbird.org0390postfix.htm
+		</a>)
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 0. 先確定一下底下這些套件都已經安裝了(使用 rpm 的方式來安裝的)</span>
+[root@test root]# <span class="term_command">rpm -qa | egrep '(sasl|postfix|imap)'|sort</span>
+cyrus-sasl-2.1.15-10mdk
+imap-2002d-8mdk
+libpostfix1-2.1.1-0.1.100mdk
+libsasl2-2.1.15-10mdk
+libsasl2-devel-2.1.15-10mdk
+libsasl2-plug-anonymous-2.1.15-10mdk
+libsasl2-plug-login-2.1.15-10mdk
+libsasl2-plug-plain-2.1.15-10mdk
+postfix-2.1.1-0.1.100mdk
+<span class="term_say"># 若沒有安裝任何一個套件，請使用 urpmi 來安裝喔！</span>
+　
+<span class="term_hd"># 1. 建立 saslauthd 認證機制與 smtp 認證檔案：</span>
+[root@test root]# <span class="term_command">vi /etc/sysconfig/saslauthd</span>
+<span class="term_write">#SASL_AUTHMECH=pam
+SASL_AUTHMECH=shadow</span>
+<span class="term_say"># 事實上，就是將認證機制修訂成為 shadow 就是了。</span>
+　
+[root@test root]# <span class="term_command">mkdir /etc/postfix/sasl</span>
+[root@test root]# <span class="term_command">vi /etc/postfix/sasl/smtpd.conf</span>
+<span class="term_write">pwcheck_method: saslauthd
+mech_list: plain login</span>
+<span class="term_say"># 這一版的 postfix 比較奇怪，他的認證檔案預設就是放置在這裡喔！</span>
+
+<span class="term_hd"># 2. 修訂 postfix 的設定檔 master.cf：</span>
+[root@test root]# <span class="term_command">vi /etc/postfix/master.cf</span>
+<span class="term_say"># 找到這個：</span>
+smtp    inet    n       -       y       -       -       smtpd
+<span class="term_say"># 改為這個：</span>
+<span class="term_write">smtp    inet    n       -       n       -       -       smtpd</span>
+
+<span class="term_hd"># 3. 修訂 postfix 的設定檔 main.cf：</span>
+<span class="term_say"># 基本上，內容就有點類似底下這樣：
+# Postfix 在 MDK 10.0 底下的預設設定資料：</span>
+<span class="term_write">readme_directory = /usr/share/doc/postfix-2.1.1/README_FILES
+sample_directory = /usr/share/doc/postfix-2.1.1/samples
+html_directory = /usr/share/doc/postfix-2.1.1/html
+sendmail_path = /usr/sbin/sendmail.postfix
+setgid_group = postdrop
+command_directory = /usr/sbin
+manpage_directory = /usr/share/man
+daemon_directory = /usr/lib/postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+queue_directory = /var/spool/postfix
+mail_owner = postfix</span>
+　
+<span class="term_say"># 使用者的設定資料！</span>
+<span class="term_write">mynetworks_style = host
+delay_warning_time = 4h
+smtpd_banner = $myhostname ESMTP $mail_name ($mail_version) (Mandrake Linux)
+unknown_local_recipient_reject_code = 450
+smtp-filter_destination_concurrency_limit = 2
+lmtp-filter_destination_concurrency_limit = 2
+smtpd_sasl_path = /etc/postfix/sasl:/usr/lib/sasl2  <span class="term_note_b"># <== 就是這一行</span>
+smtpd_sasl_application_name = smtpd
+<b>relayhost = [seed.net.tw]</b></span>
+<span class="term_say">#上面這行很重要，如果想要以動態 IP 架站，就需要 ISP 的 relay host 才行！
+#詳細資料請參考：(因為我的主機在seednet底下，所以....)
+# <a href="http://phorum.study-area.org/viewtopic.htm?t=18621">http://phorum.study-area.org/viewtopic.htm?t=18621</a>
+# <a href="http://phorum.study-area.org/viewtopic.htm?t=22806">http://phorum.study-area.org/viewtopic.htm?t=22806</a></span>
+<span class="term_write">myhostname = <b>hostname.domain.name</b>  <span class="term_note"># <==這裡請輸入您的主機名稱</span>
+mydomain = <b>domain.name</b>              <span class="term_note"># <==這裡則是領域名稱</span>
+myorigin = $myhostname
+inet_interfaces = all
+mydestination = $myhostname
+mynetworks = 127.0.0.0/8
+alias_maps = hash:/etc/postfix/aliases
+alias_database = hash:/etc/postfix/aliases
+mail_spool_directory = /var/spool/mail
+debug_peer_level = 2
+debugger_command =
+         PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+         xxgdb $daemon_directory/$process_name $process_id & sleep 5
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_local_domain =
+smtpd_recipient_restrictions =
+     reject_unknown_sender_domain
+     reject_unknown_recipient_domain
+     permit_mynetworks
+     permit_sasl_authenticated
+     reject_unauth_destination
+smtpd_client_restrictions = hash:/etc/postfix/access, permit_sasl_authenticated,
+     reject_rbl_client   relays.ordb.org,
+     reject_rhsbl_client dsn.rfc-ignorant.org
+smtpd_sasl_security_options = noanonymous
+notify_classes = resource, software
+message_size_limit =   31457280
+mailbox_size_limit = 1000000000
+header_checks = regexp:/etc/postfix/header_checks
+body_checks = regexp:/etc/postfix/body_checks</span>
+
+<span class="term_hd"># 4. 其他相關的檔案：</span>
+/etc/postfix/access
+/etc/postfix/header_checks
+/etc/postfix/body_checks
+/etc/postfix/aliases
+<span class="term_say"># 相關設定請參考上面提供的連結啊！</span>
+
+<span class="term_hd"># 5. 開始啟動：</span>
+[root@test root]# <span class="term_command">/etc/rc.d/init.d/saslauthd start</span>
+[root@test root]# <span class="term_command">/etc/rc.d/init.d/postfix   start</span>
+</pre></td></tr></table>
+
+		這樣就完成了 Postfix 的安裝與設定，再接下來則是 Apache 的安裝與設定了。
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 0. 利用 urpmi 來安裝所需要的所有的套件！</span>
+[root@test root]# <span class="term_command">urpmi apache2 php MySQL</span>
+Preparing...                ###########################################
+   1:libmysql12             ###########################################
+   2:libapr0                ###########################################
+   3:apache-conf            ###########################################
+   4:apache2-common         ###########################################
+   5:perl-Data-ShowTable    ###########################################
+   6:perl-Mysql             ###########################################
+   7:apache2-modules        ###########################################
+   8:apache2                ###########################################
+   9:libphp_common432       ###########################################
+  10:perl-CGI               ###########################################
+  11:MySQL-client           ###########################################
+  12:MySQL-common           ###########################################
+  13:php-ini                ###########################################
+  14:apache2-mod_php        ###########################################
+  15:MySQL                  ###########################################
+<span class="term_say"># 因為我再最早安裝時，並沒有選擇 WWW ，所以要安裝的資料就很多！
+# 另外，請您做好 urpmi 的設定才行！</span>
+
+<span class="term_hd"># 1. 開始啟動 httpd 囉！</span>
+[root@test root]# <span class="term_command">/etc/rc.d/init.d/httpd start</span>
+
+<span class="term_hd"># 2. 讓 MySQL 在開機時不會自動啟動， httpd 則會自動啟動！</span>
+[root@test root]# <span class="term_command">chkconfig httpd on</span>
+[root@test root]# <span class="term_command">chkconfig mysql off</span>
+[root@test root]# <span class="term_command">chkconfig --list | grep 3:on</span>
+httpd           0:off   1:off   2:on    3:on    4:on    5:on    6:off
+</pre></td></tr></table>
+
+		千萬注意，我們目前並沒有要使用 MySQL 的計劃，所以，當然就要將 MySQL
+		給他關閉啦！而 httpd 則是需要在開機的時候就與以啟動才行，
+		所以上面的第二個步驟才需要如此的設定喔！現在，您就可以在您的網址列輸入您的主機名稱，看看能不能連結
+		http 提供的 WWW 服務呢？！<br><br>
+
+		現在，請注意，預設的狀態下， MDK 10.0 的 WWW 主網頁是放置在 /var/www/html
+		底下的，但是 MDK 卻沒有預設的 data 目錄，所以我們就必須要給予設定啦！您可以這樣做：
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 0. 將 openwebmail 解壓縮，並且移動到適當的目錄下：</span>
+[root@test root]# <span class="term_command">cd /usr/local/src</span>
+[root@test src]# <span class="term_command">tar -zxvf /disk1/software/openwebmail-2.40.tar.gz</span>
+[root@test src]# <span class="term_command">cd cgi-bin/</span>
+[root@test cgi-bin]# <span class="term_command">mv openwebmail/ /var/www/cgi-bin/</span>
+[root@test cgi-bin]# <span class="term_command">cd ..</span>
+[root@test src]# <span class="term_command">rmdir cgi-bin</span>
+[root@test src]# <span class="term_command">mv data/openwebmail /var/www/html/openwebmail_data</span>
+[root@test src]# <span class="term_command">rmdir data</span>
+<span class="term_say"># 同時請注意，您的主機上面必須要有 perl 模組的存在了才行！
+# 我的 perl 模組有底下這麼多：
+perl-MailTools-1.59-2mdk
+perl-Crypt-SSLeay-0.51-3mdk
+perl-Term-Readline-Gnu-1.14-5mdk
+perl-Digest-SHA1-2.04-1mdk
+perl-Mysql-1.22_19-9mdk
+perl-MDK-Common-1.1.11-2mdk
+perl-HTML-Parser-3.35-2mdk
+perl-File-Slurp-2002.1031-3mdk
+perl-Tk-800.024-4mdk
+perl-SGMLSpm-1.03ii-6mdk
+perl-SDL-1.20.0-8mdk
+perl-ldap-0.31-2mdk
+perl-Glib-1.021-3mdk
+perl-Gtk2-1.023-3mdk
+perl-IO-Tty-1.02-9mdk
+perl-Gtk2-TrayIcon-0.03-3mdk
+perl-Authen-SASL-2.04-2mdk
+perl-Locale-gettext-1.01-11mdk
+perl-TimeDate-1.16-3mdk
+perl-HTML-Tagset-3.03-7mdk
+perl-URI-1.25-1mdk
+perl-Gnome2-Vte-0.02-1mdk
+perl-devel-5.8.3-5mdk
+perl-XML-SAX-0.12-3mdk
+perl-Convert-ASN1-0.16-4mdk
+perl-Data-ShowTable-3.3-9mdk
+perl-5.8.3-5mdk
+perl-DBI-1.40-2mdk
+perl-Libconf-0.33-2.1.100mdk
+perl-XML-Parser-2.34-1mdk
+perl-CGI-3.00-2mdk
+perl-URPM-0.94-11mdk
+perl-Expect-1.15-6mdk
+perl-Digest-HMAC-1.01-11mdk
+perl-base-5.8.3-5mdk
+perl-libwww-perl-5.76-3mdk
+perl-XML-NamespaceSupport-1.08-3mdk
+# 另外，也需要加入兩個必要的模組，您可以使用 FC1 的相關檔案，下載點：
+# <a href="http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/fc1/">http://turtle.ee.ncku.edu.tw/openwebmail/download/redhat/rpm/packages/fc1/</a>
+# <span class="term_write">rpm -ivh perl-Text-Iconv-1.2-fc1.i386.rpm perl-Compress-Zlib-1.16-12.i386.rpm</span>
+# 兩個就可以啦！</span>
+
+<span class="term_hd"># 1. 初始化設定：</span>
+[root@test root]# <span class="term_command">cd /var/www/cgi-bin/openwebmail</span>
+[root@test openwebmail]# <span class="term_command">./openwebmail-tool.pl --init</span>
+<span class="term_say"># 因為 openwebmail 支援相當多種認證機制，因此，我們必須在使用 openwebmail 
+# 之前，先將 openwebmail 的相關設定做好！上面 openwebmail-tool.pl --init
+# 就是在達成這樣的目標。此外，這個步驟會進行蠻長的一段時間喔！請耐心等候！</span>
+[root@test openwebmail]# <span class="term_command">cd etc</span>
+[root@test etc]# <span class="term_command">vi dbm.conf</span>
+<span class="term_say"># 找到並修改成底下幾行：</span>
+<span class="term_write">dbm_ext                 .pag
+dbmopen_ext             none
+dbmopen_haslock         yes</span>
+[root@vbird etc]# <span class="term_command">vi openwebmail.conf</span>
+<span class="term_say"># 找到並修改成底下幾行：</span>
+<span class="term_write">domainnames             auto
+auth_module             auth_unix.pl
+mailspooldir            /var/spool/mail
+ow_cgidir               /var/www/cgi-bin/openwebmail
+ow_cgiurl               /cgi-bin/openwebmail
+ow_htmldir              /var/www/html/openwebmail_data
+ow_htmlurl              /openwebmail_data
+logfile                 /var/log/openwebmail.log</span>
+[root@test etc]# <span class="term_command">cd ..</span>
+[root@test openwebmail]# <span class="term_command">./openwebmail-tool.pl --init</span>
+
+creating db /var/www/cgi-bin/openwebmail/etc/maps/b2g ...done.
+creating db /var/www/cgi-bin/openwebmail/etc/maps/g2b ...done.
+creating db /var/www/cgi-bin/openwebmail/etc/maps/lunar ...done.
+Welcome to the Open WebMail!
+
+This program is going to send a short message back to the developer,
+so we could have the idea that who is installing and how many sites are
+using this software, the content to be sent is:
+
+OS: Linux 2.6.3-14mdk i686
+Perl: 5.008003
+WebMail: Open WebMail 2.40 20040816
+
+Send the site report?(Y/n) <span class="term_command">y</span>
+sending report...
+
+Thank you.
+
+<span class="term_hd"># 2. 修訂認證機制：</span>
+[root@test root]# <span class="term_command">vi /var/www/cgi-bin/openwebmail/auth/auth_unix.pl</span>
+<span class="term_say"># 找到：</span>
+my $passwdfile_encrypted = $conf{'passwdfile_encrypted'} || '/etc/master.passwd';
+<span class="term_say"># 修改成：</span>
+<span class="term_write">my $passwdfile_encrypted = '/etc/shadow';</span>
+
+<span class="term_say"># 或者是修改底下這個檔案成為：</span>
+[root@test root]# <span class="term_command">vi \
+/var/www/cgi-bin/openwebmail/etc/defaults/auth_unix.conf</span>
+<span class="term_say"># 其內容只需將</span>
+passwdfile_encrypted /etc/master.passwd
+<span class="term_say"># 改為</span>
+<span class="term_write">passwdfile_encrypted /etc/shadow</span>
+<span class="term_say"># 這樣就算完成了。 </span>
+</pre></td></tr></table>
+
+		然後連到您的主機：http://hostname/cgi-bin/openwebmail/openwebmail.pl
+		，就能夠看到您的 OpenWebmail 囉！同時，如果還是無法看到相關的咚咚，請查閱您的登錄檔！
+	</div>
+</div>
+
+
+<hr><a NAME="others"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">一些其他的設定：</span><br>
+<div class=block1>
+	除了既有的設定之外，如果您想要其他的設定時，這裡提供幾個簡單的設定：
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 網路硬碟：</span>
+<span class="term_say">如果不想提供網路硬碟的話，可以在底下的檔案：
+/var/www/cgi-bin/openwebmail/etc/openwebmail.conf
+加入這行：</span>
+<span class="term_write">enable_webdisk no</span>
+
+<span class="term_hd"># 2. 提供 ssh 連線：</span>
+<span class="term_say">如果不想提供網路連線的話，可以在底下的檔案：
+/var/www/cgi-bin/openwebmail/etc/openwebmail.conf
+加入這行：</span>
+<span class="term_write">enable_sshterm no</span>
+
+<span class="term_hd"># 3. 讓登入更簡單：</span>
+<span class="term_say">如果不想在網址列輸入長長的一段文字，可以修改成為：</span>
+<span class="term_command">vi httpd.conf</span><span class="term_note"> (請依照您的系統來修訂！)</span>
+<span class="term_write">ScriptAlias  /webmail     /var/www/cgi-bin/openwebmail/openwebmail.pl</span>
+or
+<span class="term_write">ScriptAlias  /webmail.pl  /var/www/cgi-bin/openwebmail/openwebmail.pl</span>
+<span class="term_say">然後重新啟動 apache ，如此一來，您可以在網址列輸入：
+http://hostname/webmail or http://hostname/webmail.pl
+就可以進入 openwebmail 囉！</span>
+</pre></td></tr></table>
+</div>
+
+
+<hr><a NAME="faq"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">問題與解決</span><br>
+<div class=block1>
+	<ul>
+	<li><span class="text_import2">還是無法執行 openwebmail：</span><br><br>
+	一般來說，安裝好 openwebmail 之後，應該是立即可以使用了，不過，如果您一直無法進入
+	openwebmail 的歡迎畫面，那麼請特別留意：<br><br>
+	<ol>
+	<li>在 openwebmail.conf 這個設定檔當中，是否填寫了適當的認證機制(auth_unit.pl)；
+	<li>在 auth_unix.pl 這個設定檔當中，是否填寫了正確的密碼認證檔案？
+	<li>您的 WWW 是否提供 perl 的 CGI 執行環境？
+	<li>仔細查閱 /var/log/httpd/error_log 及 /var/log/openwebmail.log 來解決問題！
+	</ol></li><br>
+
+	<li><span class="text_import2">來自討論區的網友留言</span><br>
+
+<table class="term"><tr><td class="term"><pre>
+鳥哥好：
+最近剛好在裝 openwebmail，拜讀主站上的文件安裝下去，
+發現有一些部份在安裝時可能需要額外注意的，在此提供給您。
+我的 distribution 是用 MDK 9.2，因此我是照 MDK 10.0 的 
+Tarball 安裝作下去的，不過我的 postfix + LAMP 是用 rpm 
+裝的，因此我直接跳到 openwebmail 安裝。
+
+文中提到：
+<span class="term_say">現在，請注意，預設的狀態下， MDK 10.0 的 WWW 
+主網頁是放置在 /var/www/html 底下的，但是 MDK 
+卻沒有預設的 data 目錄，所以我們就必須要給予設定啦！
+您可以這樣做：</span>
+
+但我在 ./openwebmail-tool.pl --init 時仍會碰到要找 
+/usr/local/www 底下的 cgi-bin 的情形，所以應該還是要
+<span class="term_command"> ln -s /usr/local/www /var/www </span>
+
+另外，文件中下達 ./openwebmail-tool.pl --init 兩次，
+但事實上第一次執行時系統會告訴我 dbm.conf 的資訊不對，
+所以我認為應該先改 dbm.conf 再執行即可？
+
+以上是我粗淺的看法，其實不管怎麼樣，可以正確的初始化才是重點。
+
+最後是安裝後不能改密碼的問題，研究後發現在 
+cgi-bin/openwebmail/etc/defaults/auth_unix.conf 
+除了更改 passwdfile_encrypted 外，也要將 passwdmkdb 設定成none 才行。
+
+這幾點是我安裝時幾個相異之處，提出來供鳥哥參考。也謝謝鳥哥文件的分享。
+</pre></td></tr></table></li>
+
+	</ul>
+</div>
+
+
+<hr><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資源</span><br>
+<div class=block1>
+	<ul>
+	<li>OpenWebMail 的下載：
+		<a href="http://turtle.ee.ncku.edu.tw/openwebmail/download/" 
+		target="_blank">http://turtle.ee.ncku.edu.tw/openwebmail/download/</a></li>
+	<li>OpenWebMail 台灣主站：
+		<a href="http://turtle.ee.ncku.edu.tw/openwebmail/" 
+		target="_blank">http://turtle.ee.ncku.edu.tw/openwebmail/</a></li>
+	<li>Ultraman 的 OpenWebMail 實作：
+		<a href="http://linux.vbird.org/somepaper/20030317-openwebmail.htm" 
+		target="_blank">http://linux.vbird.org/somepaper/20030317-openwebmail.htm</a></li>
+	</ul>
+</div>
+
+
+<hr><span class="text_history">2004/08/26：首次完成；<br>
+2004/10/22：收到網友 tzerming 兄的來信，告知認證機制的修改方面，可使用 auth_unix.conf 的修改方法！<br>
+2004/11/23：收到來自討論區網友 wonton 兄的來信，將該留言放置於問題與解決了！<br>
+<hr><span class="text_date">2004/08/26以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0520openwebmail.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,1688 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="在 Linux 系統上面偵測、維護、變更硬體的方法" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 第二十一章、系統設定工具(網路與印表機)與硬體偵測</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第二十一章、系統設定工具(網路與印表機)與硬體偵測</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/15</span>
+</div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	除了手動設定之外，其實系統提供了一個名為 setup 的指令給系統管理員使用喔！這個指令還能夠設定網路呢。
+	此外，我們也應該要知道如何在 Linux 底下連接印表機吧！否則一些資料怎麼印出來？
+	另外，如果你的主機板支援 CPU 溫度偵測的話，我們還能夠利用 lm_sensors 這個軟體功能來偵測硬體的電壓、風扇轉速、
+	CPU 溫度等資訊呢！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#setup">CentOS 系統設定工具： setup</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#setup_auth">使用者身份驗證設定</a><br />
+	　　1.2 <a href="#setup_network">網路設定項目(手動設定IP與自動取得)</a><br />
+	　　1.3 <a href="#setup_firewall">防火牆設定</a><br />
+	　　1.4 <a href="#setup_keyboard">鍵盤形式設定</a><br />
+	　　1.5 <a href="#setup_service">系統服務的啟動與否設定</a><br />
+	　　1.6 <a href="#setup_time">系統時鐘的時區設定</a><br />
+	　　1.7 <a href="#setup_x">X 視窗介面解析度設定</a><br />
+	</span>
+2. <a href="#cups">利用 CUPS 設定 Linux 印表機</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#cups_comps">Linux 的列印元件 (列印工作、佇列、服務與印表機)</a><br />
+	　　2.2 <a href="#cups_connect">CUPS 支援的連線模式</a><br />
+	　　2.3 <a href="#cups_web">以 Web 介面控管網路印表機</a><br />
+	　　2.4 <a href="#cups_web_usb">以 Web 介面控管 USB 本機印表機</a><br />
+	　　2.5 <a href="#cups_server">將 Linux 本機印表機開放成為網路印表機</a><br />
+	　　2.6 <a href="#cups_manu">手動設定印表機</a>： <a href="#lpadmin">lpadmin</a>, <a href="#lpstat">lpstat</a>,
+		<a href="#lpr">lpr</a>, <a href="#lp">lp</a>, <a href="#lpq">lpq</a>, <a href="#lprm">lprm</a><br />
+	</span>
+3. <a href="#hw">硬體資料收集與驅動，及 lm_sensors</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#hw_pre_find">硬體資訊的收集與分析</a>： <a href="#lspci">lspci</a>, <a href="#lsusb">lsusb</a>,
+		<a href="#iostat">iostat...</a><br />
+	　　3.2 <a href="#hw_pre_usb">驅動 USB 裝置</a><br />
+	　　3.3 <a href="#hw_pre_lm">使用 lm_sensors 取得溫度、電壓等資訊</a>： <a href="#sensors-detect">sensors-detect</a>,
+		<a href="#sensors">sensors</a><br />
+	　　3.4 <a href="#udev">udev與 hal 簡介</a><br />
+	</span>
+4. <a href="#hint">重點回顧</a><br />
+5. <a href="#ex">本章習題</a><br />
+6. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+7. <a href="http://phorum.vbird.org/viewtopic.php?t=23898"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23898</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="setup"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">CentOS 系統設定工具： setup</span><br />
+<div class="block1">
+	<p>系統設定除了使用手動的方式編輯設定檔之外 (例如 /etc/inittab, /etc/fstab 等)，其實在 Red Hat 系統的 RHEL, CentOS 及 Fedora 
+	還有提供一支綜合程式來管理的，那就是 setup 這個指令的功能囉！老實說， setup 其實只有在 Red Hat 的系列才有，
+	在其他的 Linux distributions 並不存在，因此，鳥哥並沒有很要求一定要學會這傢伙的。
+	只不過，setup 還是挺好用的，所以我們還是來玩玩吧！</p>
+
+	<p>這個 setup 的處理方法非常的簡單，就是利用 root 的身份下達這個指令，如果你已經使用遠端操作系統的話，
+	記得最好切換一下語系成為英文語系 (比較不會出現邊框是亂碼的情況) ，結果就會出現如下的畫面了。</p>
+
+	<center><img src="0610hardware/setup_01.gif" alt="setup 的指令執行畫面示意圖" 
+	title="setup 的指令執行畫面示意圖" border="1" /><br />
+	圖1.0、 setup 的指令執行畫面示意圖<br /></center>
+
+	<p>如上圖所示，那就是 setup 提供的各項系統設定功能。這個畫面的使用方式其實在圖中的最底下一行有說明了，
+	可以利用 [tab] 按鍵在三個畫面中切換，使用 Run Tool 可以開始設定該項目，使用 Quit 可以離開 setup 指令。
+	那麼上面的主選單部分有哪些功能呢？這些設定的基本功能是這樣的：</p>
+
+	<ul>
+	<li><span class="text_import2">Authentication configuration</span>：<br />
+		這是與使用者身份認證有關的設定，包括本機的帳號與利用遠端伺服器提供的帳號來登入本機等功能的設定；<br /><br /></li>
+
+	<li><span class="text_import2">Firewall configuration</span>：<br />
+		簡單的設定 (1)防火牆與 (2)SELinux 的啟動模式 (Disable, Enforcing, Permissive)。
+		SELinux 請參考<a href="/linux_basic/0440processcontrol.php#selinux">第十七章</a>的說明，
+		防火牆則請參考<a href="/linux_server">伺服器篇</a>的解釋了。這個地方的設定比較簡單，
+		有時候可能會讓你自己搞不清楚設定值的意義。所以，還是手動處理比較妥當；<br /><br /></li>
+
+	<li><span class="text_import2">Keyboard configuration</span>：<br />
+		就是鍵盤按鍵的對應表。注意，這個設定僅與 tty 介面有關，至於 X Window 則不是以這個為設定值；<br /><br /></li>
+
+	<li><span class="text_import2">Network configuration</span>：<br />
+		設定網路參數的地方，包括 IP, network, netmask, dns 等等，不過，
+		還需要看完<a href="/linux_server/0110network_basic.php">伺服器篇關於網路基礎</a>的介紹後，
+		才能夠比較瞭解設定值的意義啦！<br /><br /></li>
+
+	<li><span class="text_import2">System services</span>：<br />
+		其實就是<a href="/linux_basic/0560daemons.php#ntsysv">第十八章提到的 ntsysv</a> 
+		的內容喔～亦即設定一些系統服務是否在開機時啟動的地方；<br /><br /></li>
+
+	<li><span class="text_import2">Timezone configuration</span>：<br />
+		安裝的時候不是可以透過<a href="/linux_basic/0157installcentos5.php#centos5_5">全世界地圖挑選時區</a>嗎？
+		這個就是在安裝完畢後重新選擇時區的地方；<br /><br /></li>
+
+	<li><span class="text_import2">X configuration</span>：<br />
+		設定 X Window 相關的設定，例如解析度啦等等的。我們會在<a
+		href="/linux_basic/0590xwindow.php">第二十四章再提到 X Window</a> 方面的基礎知識。</li>
+	</ul>
+
+	<p>底下我們就來約略的介紹一下這些玩意兒吧！除了網路 IP 的設定外，其餘的部分鳥哥會很快的帶過去而已。
+	畢竟 setup 僅是一個統整的工具，每個設定項目其實都牽涉到各自的基礎功能，那些基礎功能還得要持續摸索的...<br /><br /></p>
+
+	<hr /><a name="setup_auth"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者身份驗證設定</span><br />
+	<div class="block2">
+		<p>在按下了『 Authentication configuration 』項目後，會出現如下畫面：</p>
+
+		<center><img src="0610hardware/setup_auth.gif" alt="Setup 指令的使用者身份認證機制" 
+		title="Setup 指令的使用者身份認證機制" border="1" /><br />
+		圖 1.1.1、Setup 指令的使用者身份認證機制<br /></center>
+
+		<p>我們的 Linux 除了使用自己提供的使用者密碼驗證機制之外，還能夠使用其他外部身份驗證伺服器所提供的各項驗證功能喔。
+		在上面圖示的左側 User Information 的地方指的是：我們系統上的使用者可以使用什麼方式對外取得帳號資訊，
+		也就是說，這部主機除了 /etc/passwd 的帳號之外，還能夠使用其他的帳號來登入系統的。我們支援的帳號管理伺服器主要有
+		LDAP, <a href="/linux_server/0430nis.php">NIS</a>, Winbind 等。</p>
+
+		<p>至於右側的 Authentication 則是登入時需要提供的身份驗證碼 (密碼) 所使用的機制為何。
+		在預設的情況下，我們身份驗證僅參考本機的 /etc/passwd, /etc/shadow 而已，而且使用 MD5 的密碼驗算機制，
+		因此上圖右側的部分僅會有最上方兩個而已。事實上，這個部分的設定主要是修改了
+		<span class="text_import2">/etc/sysconfig/authconfig</span> ，同時還加入了各個伺服器的用戶端程式設定功能哩。</p>
+
+		<p>你一定會問，那麼什麼時候可以用到這個機制呢？思考一下，如果你的網路環境是電腦教室，
+		你希望每個同學都能夠有自己的帳號來登入每部主機。此時，你會希望每部主機都幫同學建立同一個帳號嗎？
+		那如果每一個同學都想要修改密碼，那就糟了！因為每部主機都得要重新修改密碼才行啊！這個時候帳號管理伺服器就很重要了。
+		他的功能有點像底下這樣：</p>
+
+		<center><img src="0610hardware/auth.gif" alt="身份管理伺服器的功能示意圖" 
+		title="身份管理伺服器的功能示意圖" border="0" /><br />
+		圖 1.1.2、身份管理伺服器的功能示意圖<br /></center>
+
+		<p>如上圖所示，我 vbird 想要登入某一部主機時，這部主機會向外要求帳號資訊，就是最上方那部伺服器。
+		此時，你只要在最上方的伺服器上將該帳號設定好，並且在每部主機都利用 NIS 或 LDAP 功能來指定身份查詢的方向，
+		那麼 vbird 就能夠使用同一組帳號密碼來登入每部主機了，這樣管理是否很方便呢？因為只要管理一部伺服器即可嘛！
+		我們在伺服器篇談到 <a href="/linux_server/0430nis.php">NIS</a> 時再來實作這個環境喔！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實 NIS 與 LDAP 等等的，都是一種網路通訊協定，我們可以透過網路通訊協定來進行資料的傳輸。
+		使用者帳號資訊當然也能夠透過這個機制來管理囉！有興趣的朋友請繼續閱讀鳥哥寫的<a href="/linux_server">伺服器篇</a>囉～ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="setup_network"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">網路設定項目(手動設定IP與自動取得)</span><br />
+	<div class="block2">
+		<p>網路其實是又可愛又麻煩的玩意兒，如果你是網路管理員，那麼你必須要瞭解區域網路內的 IP, gateway, netmask 
+		等參數，如果還想要連上 Internet ，那麼就得要理解 DNS 代表的意義為何。如果你的單位想要擁有自己的網域名稱，
+		那麼架設 DNS 伺服器則是不可或缺的。總之，要設定網路伺服器之前，你得要先理解<a 
+		href="/linux_server/0110network_basic.php">網路基礎</a>就是了！
+		沒有人願意自己的伺服器老是被攻擊或者是網路問題層出不窮吧！^_^</p>
+
+		<p>但鳥哥這裡的網路介紹僅止於當你是一部單機的 Linux 用戶端，而非伺服器！所以你的各項網路參數只要找到網路管理員，
+		或者是找到你的 ISP (Internet Service Provider) ，向他詢問<span 
+		class="text_import2">網路參數的取得方式</span>以及<span class="text_import2">實際的網路參數</span>即可。
+		通常網路參數的取得方式在台灣常見的有底下這幾種：</p>
+
+		<ol>
+		<li><span class="text_import2">手動設定固定 IP </span>：<br /><br />
+		常見於學術網路的伺服器設定、公司行號內的特定座位等。這種方式你必須要取得底下的幾個參數才能夠讓你的 Linux 
+		上網的：<br /><br />
+			<ul>
+			<li>IP</li>
+			<li>子網路遮罩(netmask)</li>
+			<li>通訊閘(gateway)</li>
+			<li>DNS 主機的 IP (通常會有兩個，若記不住的話，硬背 168.95.1.1 即可)</li>
+			</ul><br /></li>
+
+		<li><span class="text_import2">網路參數可自動取得</span>：<br /><br />
+		常見於 IP 分享器後端的主機，或者是利用電視線路的纜線上網 (cable modem)，或者是學校宿舍的網路環境等。
+		這種網路參數取得方式就被稱為 dhcp ，你啥事都不需要知道，只要知道設定上網方式為 dhcp 即可。<br /><br /></li>
+
+		<li><span class="text_import2">透過 ADSL 寬頻撥接</span>：<br /><br />
+		不論你的 IP 是固定的還是每次撥接都不相同 (被稱為浮動式 IP)，只要是透過寬頻數據機『撥接上網』的，就是使用這種方式。
+		撥接上網雖然還是使用網路卡連接到數據機上，不過，系統最終會產生一個替代數據機的網路介面 (ppp0) ，
+		那個 ppp0 也是一個實體網路介面啦！</li>
+		</ol>
+
+		<p>瞭解了網路參數的取得方法後，你還得要知道一下我們透過啥硬體連上 Internet 的呢？其實就是網路卡嘛。
+		目前的主流網卡為使用乙太網路協定所開發出來的乙太網卡 (Ethernet)，因此我們 Linux 就稱呼這種網路介面為 ethN (N 為數字)。
+		舉例來說，鳥哥的這部測試機上面有一張乙太網卡，因此鳥哥這部主機的網路介面就是 eth0 囉 (第一張為 0 號開始)。</p>
+
+		<p>好了，那就讓我們透過 setup 來設定網路吧！按下『 Network Configuration 』會出現如下畫面：</p>
+
+		<center><img src="0610hardware/setup_network_01.gif" alt="setup 的網路介面選擇示意圖" 
+		title="setup 的網路介面選擇示意圖" border="1" /><br />
+		圖 1.2.1 、 setup 的網路介面選擇示意圖<br /></center>
+
+		<p>上圖中那個 eth1.bak 是系統捉錯的檔案，因為這個程式會跑到 /etc/sysconfig/network-scripts/ 目錄下找出檔名為
+		ifcfg-ethN 的檔案內容來顯示的。因為鳥哥僅有一張網卡，因此那個 eth1 不要理會他！直接點選 eth0 
+		之後就會產生如下的畫面：</p>
+
+		<center><img src="0610hardware/setup_network_02.gif" alt="網路介面的各項網路參數設定示意圖" 
+		title="網路介面的各項網路參數設定示意圖" border="1" /><br />
+		圖 1.2.2 、 網路介面的各項網路參數設定示意圖<br /></center>
+
+		<p>上圖中那個 Name 與 Device 名稱最好要相同，盡量不要修改他！這裡的設定是這樣的：</p>
+		<ol class="text_import2">
+		<li>如果你是使用手動設定的話，『 Use DHCP 』一定不能勾選，然後將底下的 Static IP, Netmask, Default
+		gateway IP 設定值填上去即可。這三個設定值請洽你的網路管理員喔。<br /><br /></li>
+		<li>如果你是使用 DHCP 的自動取得 IP 方式，勾選『 Use DHCP 』後，將後面的三個設定清空，這樣就設定好網路參數了；</li>
+		</ol>
+
+		<p>如果你是使用 ADSL 撥接的話，那麼上面的設定項目就不適用了。
+		你得要使用 (1)adsl-setup 來進行設定，然後再以 (2)adsl-start 來啟動 ADSL 撥接，
+		詳細的方法我們會在伺服器篇再來介紹的。上面談的都是 IP 的取得方式，並沒有談到主機名稱解析的部分 (DNS)。
+		只有手動設定者才需要進行 DNS IP 的設定，使用 dhcp 及 adsl-start 者都不需要進行底下的動作啦！
+		假設你的 DNS IP 為中華電信的 168.95.1.1 時，那就得這樣設定：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim /etc/resolv.conf</span>
+nameserver 168.95.1.1
+</pre></td></tr></table>
+
+		<p>重點是 nameserver 後面加上你的 DNS IP 即可！一切設定都妥當之後，你還得要進行一個任務，那就是重新啟動網路看看囉！
+		重新啟動網路的方法很簡單，這樣做即可：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">/etc/init.d/network restart</span>
+Shutting down interface eth0:               [  OK  ]
+Shutting down loopback interface:           [  OK  ]
+Bringing up loopback interface:             [  OK  ]
+Bringing up interface eth0:                 [  OK  ]
+</pre></td></tr></table>
+
+		<p>由於網路涉及的範圍相當的廣泛，還包括如何進行網路除錯的工作等，鳥哥將這部份寫在伺服器篇了，所以這裡不再多費唇舌。
+		假設你現在已經連上 Internet 了，那麼防火牆的設定則不可不知啊！底下就來談談。</p>
+	</div>
+
+	<hr /><a name="setup_firewall"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆設定</span><br />
+	<div class="block2">
+		<p>防火牆的認識是非常困難的，因為你必須要有很強的網路基礎概念才行。CentOS 
+		提供的這個簡單的設定其實有時候反而會讓我們困擾不已。基本上，這裡僅是介紹『你可以這樣做』，但並不代表『你必須這樣做』！
+		所以，有興趣的還是得要再繼續鑽研網路技術喔！ ^_^。好了，在按下 Firewall configuration 後，會出現如下畫面：</p>
+
+		<center><img src="0610hardware/setup_firewall_01.gif" alt="setup 進入防火牆設定示意圖" 
+		title="setup 進入防火牆設定示意圖" border="1" /><br />
+		圖 1.3.1 、 setup 進入防火牆設定示意圖<br /></center>
+
+		<p>上圖中主要出現兩個部分，一個是關於 SELinux 的部分，一個則是防火牆的部分。SELinux 我們在<a
+		href="/linux_basic/0440processcontrol.php">第十七章</a>介紹過了，這裡不再浪費篇幅。
+		請依據你的需求設定 Enforcing, Permissive 或 Disabled 吧！(當然最好還是務必要啟動 SELinux 啦！)</p>
+
+		<p>防火牆的部分，由於我們<a href="/linux_basic/0157installcentos5.php#post_install">安裝時建議不要啟動防火牆</a>，
+		因此上圖你會看到『 Disabled 』的部分被選擇了。但是由於現在你的系統已經上網了 (假設已經上網了)，
+		那麼你務必要啟動防火牆來管理網路才好。由於預設你的防火牆會開放遠端主機對你的登入連線，
+		因此最好使用 Customize (客戶設定) 來改變設定比較好喔！按下『 Customize 』會出現如下圖示：</p>
+
+		<center><img src="0610hardware/setup_firewall_02.gif" alt="客製化防火牆抵擋機制的示意圖" 
+		title="客製化防火牆抵擋機制的示意圖" border="1" /><br />
+		圖 1.3.2 、 客製化防火牆抵擋機制的示意圖<br /></center>
+
+		<p>這個地方不是三言兩語講的完的！包括信任網域，以及允許進入的伺服器封包～很是麻煩。基本上，你只要這樣想就好了：</p>
+
+		<ul>
+		<li><span class="text_import2">Trusted Devices</span>：這是信任網域，
+			如果你有兩張網路卡，一張是 eth0 對內，一張是對外，假設是 eth1 ，那麼如果你想要讓
+			eth0 的進出封包都是為信任，那麼這裡就可以將 eth0 勾選。不過，要非常非常注意，
+			接到外部網域 (Internet) 的那張網路卡，千萬不能勾選，否則大家就都能夠透過那張網卡連到你的主機上！
+			在預設的情況中，這裡都不要選擇任何介面啦！<br /><br /></li>
+
+		<li><span class="text_import2">MASQUERADE Devices</span>：這個是『封包偽裝』的功能，
+			亦即是進行 IP 分享器的功能啦！如果你的 Linux 主機是作為類似 IP 分享器的功能，
+			那麼對外那張網路卡就得要啟動 MASQUERADE 才行！因為我們尚未談到網路伺服器，因此這裡可千萬不要隨意選擇。
+			<br /><br /></li>
+
+		<li><span class="text_import2">Allow incoming</span>：這裡提到的就是各個服務的內部項目，
+			舉例來說，你的 Linux 有提供 WWW 服務，又希望大家都能夠來查閱，
+			那麼這個時候就可以在 WWW 那個項目前面勾選啦！你要注意到的是，預設 Linux 都會開放 ssh 這個服務 (如上圖)，
+			記得先將他取消勾選喔！因為這個 ssh 現在很容易被攻擊！所以不要開放人家使用這個服務連線到你的主機上。</li>
+		</ul>
+
+		<p>基本上，這個動作僅是在建立 <span class="text_import2">/etc/sysconfig/iptables</span> 這個檔案而已。
+		而這個檔案預設是不存在的 (因為我們沒有啟動防火牆啊！) 。這裡你先有個概念即可，因為，我們未來會介紹以 
+		shell script 的方式建立屬於您自己的防火牆系統，細節我們會在伺服器篇慢慢作介紹的啊！</p>
+
+		<p>如果你已經有網路了，記得在這個項目的設定中，於圖 1.3.1 選擇防火牆為『 Enable 』的狀態，按下『 Customize
+		 』進入圖 1.3.2 當中取消 ssh 的勾選，最後再回到 1.3.1 當中按下『 OK 』來啟動 Linux 用戶端的防火牆設定吧！
+		這樣你的系統就具有最起碼的防火牆功能囉！ ^_^</p>
+	</div>
+
+	<hr /><a name="setup_keyboard"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">鍵盤形式設定</span><br />
+	<div class="block2">
+		<p>某些情況底下你的鍵盤可能會發生一些對應錯誤的情況，舉例來說，使用的鍵盤並非台灣常見的 104 按鍵導致很多英文對應不起來。
+		此時你可以使用 setup 來修改喔！按下『 Keyboard configuration 』會出現如下的畫面：</p>
+
+		<center><img src="0610hardware/setup_keyboard.gif" alt="鍵盤形式選擇" 
+		title="鍵盤形式選擇" border="1" /><br />
+		圖 1.4.1 、鍵盤形式選擇<br /></center>
+
+		<p>其實這個檔案就僅會修改 /etc/sysconfig/keyboard 啦！很簡單的設定項目。</p>
+	</div>
+
+	<hr /><a name="setup_service"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">系統服務的啟動與否設定</span><br />
+	<div class="block2">
+		<p>我們在<a href="/linux_basic/0560daemons.php">第十八章</a>談過系統服務的啟動與關閉，
+		當時介紹過 <a href="/linux_basic/0560daemons.php#ntsysv">ntsysv</a> 吧？沒錯～這個 System services 
+		的項目就是會呼叫出 ntsysv 這支程式來處理服務的設定啦！詳細的設定請回第十八章參考吧！這裡不再浪費篇幅囉！
+		因為....鳥哥實在太會碎碎唸了，再加上圖示，唔！好佔篇幅～ @_@</p>
+	</div>
+
+	<hr /><a name="setup_time"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">系統時鐘的時區設定</span><br />
+	<div class="block2">
+		<p>我們知道地球是圓的，所以想要看王建民在紐約投球都得要三更半夜才有辦法看的到！這也就是說，
+		其實在同一個時間點全世界的時鐘指的時間都不相同啊！我們的 Linux 是支援多國語系的國際化作業系統，
+		所以你可以將這部主機拿到任何地方且不需要修改系統時鐘，因為系統會主動的依據你提供的時區來變化時間的。
+		當你將筆記型電腦帶到美國紐約並且想要變更成為美國時間時，可以按下『 Timezone configuration 』的項目：</p>
+
+		<center><img src="0610hardware/setup_time.gif" 
+		alt="setup 的時區選擇" title="setup 的時區選擇" border="1" /><br />
+		圖 1.6.1 、 setup 的時區選擇<br /></center>
+
+		<p>如上圖所示，你在上半部畫面中，可以使用鍵盤方向鍵來選擇正確的位置，然後再用 [tab] 移動到 [OK] 即可！
+		時區的設定，其實就是找出與 /etc/sysconfig/clock 有關的設定項目而已。實際上，上面圖示出現的咚咚，就與
+		/usr/share/zoneinfo/ 目錄內的資料有關而已。</p>
+	</div>
+
+	<hr /><a name="setup_x"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X 視窗介面解析度設定</span><br />
+	<div class="block2">
+		<p>X Window System 我們會在<a href="/linux_basic/0590xwindow.php">第二十四章</a>再來詳細說明，這裡僅是告知一下，
+		如果你想要變更你的 X 視窗介面的解析度時，就可以使用這個項目了。不過要注意的是，這個項目的執行不可以使用類似 ssh 
+		通訊協定連線後，在遠端主機上執行這個設定項目。因為這個項目的執行會產生一個新的 X 終端機在 tty7 或 tty8 上頭，
+		因此，你如果使用遠端連線機制的話，會看不到畫面的啦！理解乎？</p>
+
+		<p>在你點選了『 X configuration 』之後，就會出現如下的圖樣。其中以硬體及設定兩個頁面較常被變更。
+		先來瞧瞧圖示吧：</p>
+
+		<center><img src="0610hardware/setup_x_01.gif" 
+		alt="setup 的 X 解析度設定" title="setup 的 X 解析度設定" border="1" /><br />
+		圖 1.7.1 、 setup 的 X 解析度設定<br /></center>
+
+		<p>如上所示，由於視窗解析度的範圍與螢幕的支援有關，因此你必須要先處理螢幕的更新頻率後才能夠修改視窗解析度。
+		所以我們會先處理『硬體』部分，鳥哥的螢幕是舊式的 4:3 傳統螢幕，所以選擇 1024x768 ，如果你的螢幕是新型的寬螢幕，
+		那麼請自行挑選適當的解析度吧。處理完畢後就能夠開始設定視窗解析度了，如下所示：</p>
+
+		<center><img src="0610hardware/setup_x_02.gif" 
+		alt="setup 的 X 解析度設定" title="setup 的 X 解析度設定" border="1" /><br />
+		圖 1.7.2 、 setup 的 X 解析度設定<br /></center>
+
+		<p>如上圖所示，此時會出現可調整的解析度啦！整理整理就能夠顯示出你想要的視窗解析度。
+		其實這些設定都是修改 /etc/X11/xorg.conf 這個設定檔啦！等到了第二十四章時，我們再來詳細的談談這玩意吧！
+		至於關於 X 方面的登錄檔則在 /var/log/Xorg.0.log 囉！</p>
+	</div>
+
+	<hr />
+	<p>鳥哥個人認為，這個 setup 的工具是很好用的～只是，如果能夠完全清楚整個系統架構的話，
+	再來玩這個小程式會比較好啦！ ^_^。另外，原本的舊版 CentOS 還有提供印表機的設定功能，不過由於新版的資料已經轉由 CUPS 負責列印，
+	而列印可以使用瀏覽器介面來顯示，因此就取消了這個 setup 的元件啦！底下我們就來玩玩如何簡單的設定你的印表機吧！</p>
+</div>
+
+
+<hr /><a name="cups"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">利用 CUPS 設定 Linux 印表機</span><br />
+<div class="block1">
+	<p>印表機對於日常生活來說，很重要吧！呵呵～沒錯啊！尤其我們的 Linux 主機如果未來還要作為
+	Printing server 的話，那麼自然就得要先建立好印表機的連線啦！在本章裡面我們僅談論一下如何讓你的 Linux 可以連接到印表機，
+	讓你的 Linux 可以順利的將文件資料列印出來啦！現在就來談談先！<br /><br /></p>
+
+	<hr /><a name="cups_comps"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 的列印元件
+	(列印工作、佇列、服務與印表機)</span><br />
+	<div class="block2">
+
+		<ul class="list1"><li class="text_import1">硬體支援度</li></ul>
+
+		<p>要談論 Linux 的列印，首先就得要知道 Linux 底下整個列印的行為是怎樣的一個流程呢？而且，
+		也得要瞭解一下你的硬體是否支援列印工作嘛！在硬體部分，你必須要在 BIOS 將印表機的支援啟動才行！
+		不過，這大概都屬於舊式印表機才需要的動作啦！為啥呢？因為現在印表機大部分都是 USB 或者是網路印表機了，
+		根本不需要使用 25 針序列埠的支援！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		為什麼會談到 25 針序列埠以及 BIOS 的支援呢？這是因為鳥哥曾經發生過一件糗事。
+		由於鳥哥常用舊型主機的關係，所以總喜歡先在 BIOS 裡面將沒用到的裝置項目全部取消 (disable)，
+		所以沒有接印表機的情況下，當然連印表機的序列埠 (Parallel) 也關閉了。沒想到後來為了測試印表機的連線取得一台舊式印表機，
+		要命啊！連續測試兩天的時間卻無法順利的列印出正確的文件資訊！最後才想到可能是 BIOS 內部的問題。
+		進入 BIOS 將印表機支援啟動成為 EPP/SPP 之後，俺的 Linux 就能夠順利的捉到印表機並進行列印～真想哭啊！
+		不是感動的想哭，是氣的想哭！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>除了主機本身的支援之外，<span class="text_import2">你的印表機也必須要能夠支援 Linux 才行</span>！其實並不是 
+		Linux 的問題啦！而是印表機製造商必須要能夠提供給 Linux 用的驅動程式，這樣你的 Linux 才能夠使用該型號的印表機。
+		老實說，鳥哥是 HP 印表機的愛好者，因為 HP 印表機對 Linux 的支援非常好！但是另一牌的 L 開頭的印表機總是很慢或者不推出給
+		Linux 用的驅動程式，所以該牌的印表機很難安裝在 Linux 主機上！真困擾。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		因為鳥哥過去所待的研究室大多購買 HP 的印表機，所以測試印表機時完全沒有出現任何問題。
+		但是某天在家裡使用鳥嫂購買的 L 牌的事務機時，連忙了三天卻都無法連接到該印表機來順利輸出。
+		最終查詢 Linux 印表機支援網站，才發現該型號的事務機根本沒有推出給 Linux 用的驅動程式，
+		所以就無法順利使用該印表機～最終...鳥哥就放棄該測試了～唉！真浪費時間！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>那到底你該如何確認你的印表機有支援 Linux 呢？或者是，如果你想要購買新的印表機時，
+		如何查詢該印表機能否在 Linux 上面安裝呢？很簡單，直接到底下的網站去查詢一下即可喔！</p>
+
+		<ul><li><a href="http://www.linuxfoundation.org/en/OpenPrinting" 
+		target="_blank">http://www.linuxfoundation.org/en/OpenPrinting</a></li></ul>
+
+		<p>舉例來說，鳥哥現在的研究室有一部 HP 的 LaserJet P2015dn 印表機，我想要知道這部印表機對 Linux 的支援度好不好，
+		那就先進入上述的網站連結，出現如下的畫面：</p>
+
+		<center><img src="0610hardware/printer_01.gif" alt="印表機支援網站的主畫面" 
+		title="印表機支援網站的主畫面" border="1" /><br />
+		圖 2.1.1 、 印表機支援網站的主畫面<br /></center>
+
+		<p>在如上畫面中請按下『 Printers 』來觀察印表機的特色吧！會出現如下畫面：</p>
+
+		<center><img src="0610hardware/printer_02.gif" alt="選擇印表機示意圖" 
+		title="選擇印表機示意圖" border="1" /><br />
+		圖 2.1.2 、 選擇印表機示意圖<br /></center>
+
+		<p>在上圖中填入正確的廠牌 (HP) 以及正確的印表機型號 (LaserJet P2015dn) 後，請按下『 Show 』那個按鈕，
+		該網站就會從資料庫內捉出支援度的情況給你看，如下圖所示：</p>
+
+		<center><img src="0610hardware/printer_03.gif" alt="鳥哥的印表機對 Linux 的支援度" 
+		title="鳥哥的印表機對 Linux 的支援度" border="1" /><br />
+		圖 2.1.3 、 鳥哥的印表機對 Linux 的支援度<br /></center>
+
+		<p>在顯示的畫面中，你最要注意的是那個企鵝數量啦！如果達到 3 隻，那就代表支援度是非常完美的。
+		兩支企鵝是可接受的範圍內。如果是小於一隻企鵝時，那麼該印表機對 Linux 的支援可能就是比較差的喔！
+		還好，鳥哥這部含有網路功能的印表機還有兩隻企鵝的支援，等一下應該能夠順利安裝到俺的 Linux 測試機上吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">列印元件</li></ul>
+
+		<p>你有沒有發現，在印表機還沒有啟動電源的情況底下，其實我們還是可以透過軟體來將某個工作列印出來的，
+		只是該項工作就會被放入到等待的環境中 (佇列) 。為什麼會這樣呢？這是因為整個列印的行為被區分為許多部分，
+		每個部分都可以單獨存在的啦！我們將整個部分繪製成下圖來瞧瞧：</p>
+
+		<center><img src="0610hardware/print_comps.gif" alt="列印行為之各元件示意圖" 
+		title="列印行為之各元件示意圖" border="0" /><br />
+		圖 2.1.4、 列印行為之各元件示意圖<br /></center>
+
+		<p>我們大概可以將上圖區分為幾個部分來說明：</p>
+
+		<ul>
+		<li><span class="text_import2">列印工作：</span><br /><br />
+		例如 Open Office 這類較大型的辦公室軟體中，可以利用內建的程式產生列印的動作。
+		我們也可以使用類似 lpr 這類指令列程式來直接列印某個檔案。列印軟體產生的列印動作，就是產生一個列印的工作 (job)，
+		這個列印工作就會進入排隊等待 (佇列, queue) 的環境中，等待列印服務來進行輸出。<br /><br /></li>
+
+		<li><span class="text_import2">列印佇列：</span><br /><br />
+		這是放置列印工作的重要項目！這個列印佇列與列印服務有關。一般來說，列印佇列會以印表機的名字來命名，
+		讓大家知道你的列印工作將要使用哪部印表機輸出之故。當列印工作放置到佇列後，就開始等待列印服務的取用與輸出了。
+		<br /><br /></li>
+
+		<li><span class="text_import2">列印服務：</span><br /><br />
+		就是實際負責溝通佇列內的列印工作與印表機的服務啦！列印服務其實就是將佇列內的列印工作，將她的資料轉成印表機認識的格式後，
+		直接交給印表機來輸出而已。但是列印服務必須要認識與溝通印表機，因此他就得要連上印表機與驅動印表機才行。
+		目前常見的列印服務有 CUPS 與 LPRng ，不過以 CUPS 為主流啦！<br /><br />
+
+		一般我們說的印表機驅動程式，其實就是將列印工作的資料轉成印表機格式啦！
+		而目前常見的印表機格式為使用 Postscript 的列印格式，Linux 預設的 CUPS 本身就支援這種列印格式，因此，
+		只要你購買的印表機有支援 postscript ，那麼安裝起來應該是很輕鬆的才是。我們在上面提到的印表機支援網站中，
+		裡面的驅動程式很多就是 postscript 印表機描述檔案 (Postscript Printer Description (<a href="#ps1">註1</a>))<br /><br />
+
+		那萬一沒有 PPD 檔案呢？沒關係，我們可以透過印表機製作商提供的其他定義檔 (例如 Ghostscript) 來解釋列印工作的資料，
+		讓印表機認識該格式後，就能夠順利列印了！這也就是說，其實印表機驅動程式就是將資料轉成印表機認識的格式後，
+		就能夠加以輸出了。而常見的格式為 Postscript 及 Ghostscript 囉！<br /><br />
+
+		那麼這些列印的 PPD 驅動程式檔放在哪裡呢？其實就放在 <span class="text_import2">/usr/share/cups/model/</span>
+		底下啦！ CentOS 已經提供一些預設的驅動程式了，如果想要取得更新的 PPD 驅動程式檔，請參考上面的印表機網站，
+		從那上頭來下載即可呦！若想要直接下載全部的 PPD 檔案，可以參考連結：
+		<a href="http://www.linuxprinting.org/download/PPD/" 
+		target="_blank">http://www.linuxprinting.org/download/PPD/</a></li>
+		</ul>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		為什麼需要列印佇列 (queue) 呢？因為印表機只能夠給單一任務進行列印，沒辦法像 CPU 可以交錯運作的！
+		所以列印工作就得要排隊等待印表機的列印，而印表機得要將前一份工作列印完畢後才能夠列印下一份工作！
+		否則如果是交錯列印，那印出的東西不就混雜在一起了？這樣說瞭解嗎？ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="cups_connect"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">CUPS 支援的連線模式</span><br />
+	<div class="block2">
+		<p>如果你的印表機具有網路卡，那麼你當然可以使用網路連線到你的印表機上面囉！不過，這種印表機提供什麼服務呢？
+		也就是說，你可以使用什麼連線協定來連上印表機呢？常見的印表機連線分享方式有底下這些：</p>
+
+		<ul>
+		<li><span class="text_import2">socket</span><br />
+		資料透過 internet socket(埠口)來傳送，一般為 port 9100 或 35。如果想要進行資料的傳輸與列印，可以透過在瀏覽器上面輸入：
+		socket://host-printer:9100/ 來進行。不過，這種模式不常用就是了。<br /><br /></li>
+
+		<li><span class="text_import2">LPD (Line Pritner Daemon)</span><br />
+		LPD 是較早之前的列印服務，剛剛上頭提到的 LPRng 就是使用這種方式的連線啦！
+		LPD 主要是利用序列埠來達成列印的需求，印表機名稱就是 LPT1/LPT2... 等等。
+		目前還是可以在比較早期的 Linux distributions 看到這種列印方式。<br /><br /></li>
+
+		<li><span class="text_import2">IPP (Internet Printing Protocol)</span><br />
+		這是目前比較流行的印表機列印協定，我們的 CUPS 預設也是支援這種協定啊！當啟動 IPP 時，印表機會啟動 
+		port 631 ，列印的資料就是透過這個 port 來進行傳送的。另外，如果你的印表機或者 Linux 主機啟動了 ipp 之後，
+		嘿嘿！你可以直接使用瀏覽器，輸入： ipp://printer_IP/printername，或者是： http:/printer_IP:631 
+		就能夠直接線上處理印表機的設定了！方便的很啊！<br /><br /></li>
+
+		<li><span class="text_import2">SMB (Server Message Block)</span><br />
+		這傢伙就是網路上的芳鄰啦！協定使用的是： smb://user:password@host/printer 。</li>
+		</ul>
+
+		<p>CentOS 5.x 預設提供的就是 CUPS 的 IPP 協定喔！而且 CUPS 預設開機就啟動了，
+		因此，你可以隨時隨地的以 Web 介面設定自己的印表機呢！真是非常方便！
+		那如果你的印表機是透過線材 (USB/序列埠) 連上主機的呢？那就得要考慮底下的連接介面囉！ </p>
+
+		<ul>
+		<li>parallel ：平行序列埠啊，就是 25 針那種玩意兒！他是連接到 /dev/lp[0-2] 等裝置。
+		在 CUPS 裡面的裝置使用格式為： <span class="text_import2">parallel:/dev/lp0</span>；<br /><br /></li>
+
+		<li>USB ：一般越來越常見的 USB 印表機啊！ CUPS 使用的格式為： 
+			<span class="text_import2">usb:/dev/usb/lp0</span> 。</li></ul>
+	</div>
+
+	<hr /><a name="cups_web"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">以 Web 介面控管網路印表機</span><br />
+	<div class="block2">
+		<p>事實上，管理 Linux 的印表機是非常簡單的一件事情，因為你只要啟動 CUPS 之後，再以瀏覽器介面來管理即可。
+		不過，在預設的情況底下，要進行瀏覽器介面的管理動作時，你必須要：</p>
+
+		<ul class="text_import2">
+		<li>必須要啟動 CUPS 這個服務 (/etc/init.d/cups start)</li>
+		<li>具有 root 的權限 (需要 root 的密碼來設定)；</li>
+		<li>預設僅能在本機 (localhost) 管理，無法使用遠端連線連到此 Linux 管理；</li>
+		</ul>
+
+		<p>如果你想要在區域網路內將印表機的控制權挪出來給其他用戶管理時，就得要修改 CUPS 的設定了。
+		在這裡，我們先以本機的方式來處理印表機的連線喔！首先，鳥哥以具有網路卡的印表機 HP LaserJet P2015dn 這部為例 
+		(因為鳥哥也只有這部印表機具有網卡啊！)，這部印表機的 IP 為 192.168.201.253，而鳥哥 Linux 測試機 IP 為
+		192.168.201.250。然後，你可以這樣做：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">確認印表機存在且支援 CUPS 認識的相關協定</li></ul>
+
+		<p>如果想要加入 CUPS 的網路印表機，那麼你的印表機當然就得要支援 CUPS 認識的通訊協定囉！如何確定呢？
+		首先，你必須要依照你印表機所提供的手冊去設定好 IP ，以鳥哥上面的環境來說，我的印表機 IP 為 192.168.201.253 ，
+		因此我可以這樣確定該印表機是否存在喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先確定 IP 是否正確：</span>
+[root@www ~]# <span class="term_command">ping -c 3 192.168.201.253</span>
+PING 192.168.201.253 (192.168.201.253) 56(84) bytes of data.
+64 bytes from 192.168.201.253: icmp_seq=1 ttl=255 <span class="term_write">time=0.464 ms</span>
+64 bytes from 192.168.201.253: icmp_seq=2 ttl=255 <span class="term_write">time=0.313 ms</span>
+64 bytes from 192.168.201.253: icmp_seq=3 ttl=255 <span class="term_write">time=0.356 ms</span>
+
+--- 192.168.201.253 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2000ms
+rtt min/avg/max/mdev = 0.313/0.377/0.464/0.067 ms
+<span class="term_say"># 重點是有沒有出現回應的時間參數，亦即是 time 那個欄位喔！</span>
+<a name="nmap"></a>
+<span class="term_hd"># 2. 使用 nmap 測試印表機有沒有出現列印相關的服務埠口：</span>
+[root@www ~]# <span class="term_command">nmap 192.168.201.253</span>
+Starting Nmap 4.11 ( http://www.insecure.org/nmap/ ) at 2009-05-27 22:07 CST
+Interesting ports on 192.168.201.253:
+Not shown: 1676 closed ports
+PORT     STATE SERVICE
+80/tcp   open  http
+139/tcp  open  netbios-ssn
+<span class="term_write">515/tcp  open  printer
+9100/tcp open  jetdirect</span>
+MAC Address: 00:18:FE:9E:4C:58 (Unknown)
+
+Nmap finished: 1 IP address (1 host up) scanned in 3.875 seconds
+<span class="term_say"># 鳥哥這部印表機僅支援 LPD 服務 (515) 以及 HP 獨家的服務 (9100)</span>
+</pre></td></tr></table>
+
+		<p>這樣就確定我的印表機實際存在，且這部印表機僅支援 HP 獨家的網路服務 (port 9100) 以及舊版的 LPD 服務而已，
+		這個資訊很重要，因為等一下我們使用 CUPS 連線時，就得要使用這個 LPD 的服務喔！另外，請特別給他留意一下，
+		那個 nmap 是個可以掃瞄主機埠口的軟體 (port scan) ，這個軟體其實是駭客軟體，他預設並沒有安裝到 CentOS 上，
+		但是你可以使用『 yum install nmap 』來安裝他。請注意，因為這個軟體可以是惡意攻擊的，因此<span
+		class="text_import2">千萬不要用來查閱別人的主機，否則恐怕會有違法之虞喔！！</span></p>
+
+		<p>接下來，讓我們來瞭解一下，系統有沒有 CUPS 的支援吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">查詢你 Linux 主機是否啟動 CUPS 服務</li></ul>
+
+		<p>再來查看看你的主機是否已經啟動了 CUPS 呢？使用 netstat 這個指令看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">netstat -tlunp | grep 631</span>
+tcp  0  0 127.0.0.1:<span class="term_write">631</span>     0.0.0.0:*         LISTEN      4231/<span class="term_write">cupsd</span>
+udp  0  0 0.0.0.0:<span class="term_write">631</span>       0.0.0.0:*                     4231/<span class="term_write">cupsd</span>
+</pre></td></tr></table>
+
+		<p>確實有啟動 631 埠口以及 cupsd 的服務。接下來，我們可以直接連上 CUPS 了！請打開瀏覽器，
+		然後在網址列輸入『 http://localhost:631 』即可！因為瀏覽器要連接的並非正規的 WWW 服務埠口，
+		因此就得要加上冒號 (:) 來指定埠口連接！順利的話，應該可以出現如下畫面：</p>
+
+		<center><img src="0610hardware/cups_print_01.gif" alt="CUPS 進站畫面" 
+		title="CUPS 進站畫面" border="1" /><br />
+		圖 2.3.1、 CUPS 進站畫面<br /></center>
+
+		<p>主畫面主要可以分為上下兩個按鈕列來說明，其中又以下方的按鈕列為常見的操作項目。我們會用到的按鈕大概就是：</p>
+		<ul>
+		<li>Add Printer：新增印表機，就是從這個按鈕開始的！</li>
+		<li>Manage Jobs：列印工作管理，如果有列印工作要取消的，這個就對了！</li>
+		<li>Manage Printers：管理印表機，包括是否啟動或者是刪除印表機等。</li>
+		</ul>
+
+		<p>不囉唆，趕緊來新增印表機看看！按下『 Add Printer 』項目吧：</p>
+
+		<center><img src="0610hardware/cups_print_02.gif" alt="CUPS 新增印表機的畫面示意圖" 
+		title="CUPS 新增印表機的畫面示意圖" border="1" /><br />
+		圖 2.3.2、 CUPS 新增印表機的畫面示意圖<br /></center>
+
+		<p>上面圖示中，最重要的其實是那個『 Name 』的項目，那就是你印表機的佇列名稱！未來所有列印的工作都是放在該名稱底下排隊的！
+		鳥哥的這個印表機名稱比較複雜啦！你可以取個比較簡單的名字，以後比較容易使用指令列軟體來列印啦！
+		至於位置 (Location) 與描述 (Description) 都是這個印表機的說明，可寫可不寫！寫完後按下『 continue 』吧！</p>
+
+		<center><img src="0610hardware/cups_print_03.gif" alt="選擇印表機所提供的服務項目" 
+		title="選擇印表機所提供的服務項目" border="1" /><br />
+		圖 2.3.3、選擇印表機所提供的服務項目<br /></center>
+
+		<p>接下來則是選擇這個印表機佇列所連線的印表機提供什麼服務的列印功能？你可以看到前一小節我們使用 <a 
+		href="#nmap">nmap</a> 的時候就發現 port 9100 就是 HP JetDirect ，因此我們可以選擇上圖的第一個項目。
+		由於這部印表機也提供 port 515 的 LPD 服務，因此你也可以選擇上圖的『 LPD/LPR Host or Printer 』項目。
+		不過，在這裡鳥哥選擇的是第一項啦！選擇完畢後再按下『 Continue 』進入印表機的實體位置項目，如下圖：</p>
+
+		<center><img src="0610hardware/cups_print_04.gif" alt="填寫印表機的實際連線方式，要填正確！" 
+		title="填寫印表機的實際連線方式，要填正確！" border="1" /><br />
+		圖 2.3.4、填寫印表機的實際連線方式，要填正確！<br /></center>
+
+		<p>上圖有提供很多範例，我們由於使用到 port 9100 ，因此使用的就是 socket:// 那個範例使用的狀態。
+		填寫正確的位置後，接下來按下『 Continue 』來繼續選擇印表機的型號吧！</p>
+
+		<center><img src="0610hardware/cups_print_05.gif" alt="選擇印表機的實際型號(驅動程式確認)" 
+		title="選擇印表機的實際型號(驅動程式確認)" border="1" /><br />
+		圖 2.3.5、選擇印表機的實際型號(驅動程式確認)<br /></center>
+
+		<p>如上圖所示，我們選擇的是 HP 的廠牌！廠牌選擇完畢後會出現如下圖的型號選擇：</p>
+
+		<center><img src="0610hardware/cups_print_06.gif" alt="選擇印表機的實際型號(驅動程式確認)" 
+		title="選擇印表機的實際型號(驅動程式確認)" border="1" /><br />
+		圖 2.3.6、選擇印表機的實際型號(驅動程式確認)<br /></center>
+
+		<p>但上圖中我們並沒有看到 P2015dn 這部印表機的型號！那怎辦？沒關係，可以連線到 <a
+		href="http://www.linuxfoundation.org/en/OpenPrinting"
+		target="_blank">http://www.linuxfoundation.org/en/OpenPrinting</a> 網站下載適當的驅動程式後，
+		按下上圖中的『瀏覽』按鈕來選擇該檔案即可。不過，從該網站的介紹中，可以發現鳥哥的這部印表機似乎使用預設的 Postscript
+		驅動程式即可，該網站也沒有提供這部印表機的驅動程式啊！那怎辦？沒關係，在 /usr/share/cups/model/
+		目錄下就有預設的驅動程式啦！所以請按下『瀏覽』來處理一下！</p>
+
+		<center><img src="0610hardware/cups_print_07.gif" alt="選擇驅動程式檔案" 
+		title="選擇驅動程式檔案" border="1" /><br />
+		圖 2.3.7、選擇驅動程式檔案<br /></center>
+
+		<p>如上圖所示，選擇正確的驅動程式，然後再按下『開啟』按鈕，最後按下『 Add Printer 』按鈕就可以進入管理員密碼輸入畫面：</p>
+
+		<center><img src="0610hardware/cups_print_08.gif" alt="輸入管理員帳號密碼(預設用 root)" 
+		title="輸入管理員帳號密碼(預設用 root)" border="1" /><br />
+		圖 2.3.8、輸入管理員帳號密碼(預設用 root)<br /></center>
+
+		<p>到此為止我們的印表機設定就 OK 了！如果你回到 CUPS 的進站畫面，並且點選 Printers 之後，就會出現如下的印表機畫面：</p>
+
+		<center><img src="0610hardware/cups_print_09.gif" alt="印表機的控制畫面" 
+		title="印表機的控制畫面" border="1" /><br />
+		圖 2.3.9、印表機的控制畫面<br /></center>
+
+		<p>上面畫面中的按鈕都看的懂吧？其中比較重要的是那個『  Set As Default 』項目，
+		那就是設定為『預設印表機』，當你產生列印工作後，該工作預設就會丟給這個 hp_lj_p2015dn 的佇列來處理的意思喔。
+		接下來，當然就是按下『 Print Test Page 』看看能否列印出正確的畫面囉！如果可以順利的列印，恭喜您！
+		印表機設定成功！</p>
+	</div>
+
+	<hr /><a name="cups_web_usb"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">以 Web 介面控管 USB 本機印表機</span><br />
+	<div class="block2">
+		<p>上一小節提到的是網路印表機，那如果你的印表機是一般普通的具有 USB 介面的印表機呢？
+		由於印表機的裝置檔名為 /dev/usb/lp0 開始的名稱，既然已經知道印表機名稱了，那麼我們先來注意看看 USB 是否有捉到該印表機，
+		由於我們的 Linux 已經能夠處理隨插即用 (PnP) 的裝置，因此直接執行 ls 去查閱檔名是否存在即可：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll /dev/usb/lp0</span>
+crw-rw---- 1 root lp 180, 0 Jun  1 22:32 /dev/usb/lp0
+<span class="term_say"># 這個檔案會被自動的建立起來，你不需要手動建立這個檔案喔！</span>
+</pre></td></tr></table>
+
+		<p>老實說，除非你的 USB 印表機是非常冷門的機種，否則，我們的 CUPS 應該已經自動的捉到並且設定好該印表機囉！
+		以鳥哥為例，鳥哥辦公室的事務機為 HP Diskjet F380 ，如果使用列出 USB 裝置的 lsusb 時，可以看到：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lsusb</span>
+Bus 001 Device 001: ID <u>03f0:5511 Hewlett-Packard Deskjet F300 series</u>
+Bus 002 Device 001: ID 0000:0000
+Bus 002 Device 002: ID 0d62:a100 Darfon Electronics Corp. Benq Mouse
+</pre></td></tr></table>
+
+		<p>接下來，同樣的我們使用 CUPS 的 Web 介面來設定一下這部印表機吧！在網址列輸入 http://localhost:631 
+		之後再按下『Manage Printers』會出現如下畫面：</p>
+
+		<center><img src="0610hardware/cups_usb_01.gif" alt="由 HAL 機制順利取得的 USB 印表機" 
+		title="由 HAL 機制順利取得的 USB 印表機" border="1" /><br />
+		圖 2.4.1 、由 HAL 機制順利取得的 USB 印表機<br /></center>
+
+		<p>由上圖我們可以發現 CUPS 已經捉到了印表機了！連驅動程式都安裝妥當！這是怎麼回事啊？
+		這是因為 CentOS 提供了 HAL 的機制來處理 PnP 裝置的緣故。關於 HAL 的機制我們會在下一小節再來討論。
+		不過由於這個裝置使用的是 HAL 提供的裝置檔名，我們如果想要使用 /dev/usb/lp0 來作為印表機的輸出檔名的話，
+		那麼就自己來建立一個印表機的佇列吧！同樣的在 CUPS 畫面中按下『 Add Printer 』來新增一個印表機：</p>
+
+		<center><img src="0610hardware/cups_usb_02.gif" alt=" 輸入佇列名稱" 
+		title=" 輸入佇列名稱" border="1" /><br />
+		圖 2.4.2 、 輸入佇列名稱<br /></center><br />
+
+		<center><img src="0610hardware/cups_usb_03.gif" alt="指向第一個 USB 裝置處" 
+		title="指向第一個 USB 裝置處" border="1" /><br />
+		圖 2.4.3 、指向第一個 USB 裝置處<br /></center>
+
+		<p>如上圖所示，你要指定的是那個有 #1 的位置，那就是我們的第一個 USB 插槽位置喔！</p>
+
+		<center><img src="0610hardware/cups_usb_04.gif" alt="選擇印表機的驅動程式" 
+		title="選擇印表機的驅動程式" border="1" /><br />
+		圖 2.4.4 、選擇印表機的驅動程式<br /></center><br />
+
+		<center><img src="0610hardware/cups_usb_05.gif" alt="最終結果" 
+		title="最終結果" border="1" /><br />
+		圖 2.4.5 、最終結果<br /></center>
+
+		<p>如上圖所示，最後就會多出一個名為 deskjet_f380 的印表機名稱，接下來當然就是『 Print Test Page 』測試看看能否列印囉。
+		如果能夠列印得出來，那就是設定妥當了。所以說， USB 印表機的設定要簡單太多囉！ ^_^</p>
+	</div>
+
+	<hr /><a name="cups_server"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">將 Linux 
+	本機印表機開放成為網路印表機</span><br />
+	<div class="block2">
+		<p>想像一個狀況，你僅有 USB 印表機安裝在 Linux 上頭，整個辦公室或實驗室裡面僅有這部印表機。
+		雖然你可以加裝列印伺服器來使 USB 印表機變成網路印表機，但總是得多花錢啊！
+		有沒有辦法可以讓你的本機印表機變成網路印表機呢？有的，那就是修改 CUPS 的設定即可。如何修改呢？
+		我們還是透過 CUSP 的瀏覽器介面來處理即可喔！選擇『Administration』會出現如下畫面(在畫面的最右邊)：</p>
+
+		<center><img src="0610hardware/cups_server_01.gif" alt="勾選可讓 CUPS 成為列印伺服器的功能" 
+		title="勾選可讓 CUPS 成為列印伺服器的功能" border="1" /><br />
+		圖 2.5.1 、勾選可讓 CUPS 成為列印伺服器的功能<br /></center>
+
+		<p>如上圖所示，在箭頭指定的地方進行勾選即可。勾選完畢後按下『 Change Settings 』就能夠讓你的 CUPS 變成列印伺服器！
+		而你原本的印表機就會成為：『ipp://你的IP:631/printers/印表機佇列名稱』，舉例來說，鳥哥這部 Laserjet p2015dn 
+		在網路上看到的就會是：『ipp://192.168.201.250/printers/hp_lj_p2015dn』的名稱啊！
+		你可以在其他用戶端電腦上面以這個 URI 來進行連線哩！</p>
+	</div>
+
+	<hr /><a name="cups_manu"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">手動設定印表機</span><br />
+	<div class="block2">
+		<p>事實上我們剛剛在上面所進行的各項動作大多是在修改 /etc/cups/ 裡面的幾個檔案而已啊！幾個重要的檔案為：</p>
+
+		<ul class="text_import2">
+		<li>/etc/cups/printers.conf：印表機的設定值，都寫在這個檔案中；</li>
+		<li>/etc/cups/cupsd.conf：CUPS 的主要設定檔，包括做為伺服器之用途的設定。</li>
+		<li>/etc/cups/ppd/*.ppd：就是各個印表機的驅動程式 (PPD 設定檔)；</li>
+		</ul>
+
+		<p>既然只是改了這幾個設定檔，你當然也可以使用 vim 去編輯，不過，因為涉及硬體連線的問題，
+		因此還是建議使用 web 介面來進行修改啦。不過，某些時候如果你沒有瀏覽器介面時，那麼使用終端機介面的指令來修改也是可以的。
+		我們底下只以鳥哥辦公室擁有的這一部 HP P2015dn 的雷射印表機來作為範例喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">1. 下載合適的 PPD 驅動程式定義檔</li></ul>
+
+		<p>首先你必須要前往<a href="http://www.linuxfoundation.org/en/OpenPrinting" 
+		target="_blank">印表機網站</a>下載你的印表機驅動程式定義檔。鳥哥之前已經查詢過，這部印表機使用預設的 PPD 檔案即可。
+		所以鳥哥這部印表機的驅動程式定義檔基本上在： /usr/share/cups/model/postscript.ppd.gz 。
+		如果你有自己下載自己印表機的驅動程式時，請將你下載的檔案放置到 /usr/share/cups/model/ 目錄下，
+		因為後續要操作的指令會到此目錄中找尋驅動程式定義檔喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">2. 啟動 CUPS 以及印表機</li></ul>
+
+		<p>接下來請確定你的 CUPS 是有啟動的，而且印表機也已經打開電源了。啟動 CUPS 的方法與檢查是否啟動 CUPS 的操作如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 重新啟動 CUPS 的方法！</span>
+[root@www ~]# <span class="term_command">/etc/init.d/cups restart</span>
+正在停止 cups:                  [  確定  ]
+正在啟動 cups:                  [  確定  ]
+
+[root@www ~]# <span class="term_command">netstat -tlunp | grep 631</span>
+tcp   0  0 0.0.0.0:631       0.0.0.0:*      LISTEN      4939/cupsd
+tcp   0  0 :::631            :::*           LISTEN      4939/cupsd
+udp   0  0 0.0.0.0:631       0.0.0.0:*                  4939/cupsd
+<span class="term_say"># 因為 CUPS 啟動的網路服務埠口就是 port 631 ！所以確定是啟動的！</span>
+
+<span class="term_hd"># 2. 確認印表機提供的服務為何</span>
+[root@www ~]# <span class="term_command">nmap 192.168.201.253</span>
+Starting Nmap 4.11 ( http://www.insecure.org/nmap/ ) at 2009-06-03 00:43 CST
+Interesting ports on 192.168.201.253:
+Not shown: 1676 closed ports
+PORT     STATE SERVICE
+80/tcp   open  http
+139/tcp  open  netbios-ssn
+<span class="term_write">515/tcp  open  printer
+9100/tcp open  jetdirect</span>
+<span class="term_say"># 再次強調，鳥哥這部印表機僅有提供 HP 自家的印表機協定 9100 埠口！</span>
+</pre></td></tr></table>
+
+		<p>從上面的輸出可以很清楚的看到鳥哥的印表機與 Linux 上面的 CUPS 都有順利的運作中！其中還是要強調，
+		你千萬不要拿 nmap 去掃瞄別人家的系統！很可怕的！而由於上面輸出的結果，我們也知道鳥哥這部印表機在網路上的連線方式為：
+		socket://192.168.201.253:9100 的樣式喔！這個地方也請先記錄下來。<br /><br /></p>
+
+		<a name="lpadmin"></a>
+		<hr /><ul class="list1"><li class="text_import1">3. 使用 lpadmin 進行印表機的建立與刪除</li></ul>
+
+		<p>指令設定/刪除印表機的方式就是透過 lpadmin 這個指令啊！這個指令的語法是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lpadmin [-p 自訂佇列名] [-v URI] [-m PPD] [-E]</span> <span class="term_note">&lt;==建立印表機</span>
+[root@www ~]# <span class="term_command">lpadmin [-d 已存在的佇列名]</span>  <span class="term_note">&lt;==設定成為預設印表機</span>
+[root@www ~]# <span class="term_command">lpadmin [-x 已存在的佇列名]</span>  <span class="term_note">&lt;==刪除此一印表機佇列</span>
+<span class="term_say">選項與參數：
+-p ：後面接的就是印表機的佇列名稱，這個名稱可自訂，但還是定為有意義較佳。
+-v ：後面接的就是裝置的相關位置，常見的裝置有：
+     序列埠      ： parallel:/dev/lp0
+     USB         ： usb:/dev/usb/lp0
+     網路印表機  ： ipp://192.168.201.253/
+     提供特殊插槽： socket://192.168.201.253:9100
+-m ：後面接的通常就是 PPD 的定義檔，注意，要放置到 /usr/share/cups/model/ 底下！
+-E ：作為可接受 (accept) 此列印工作之意！</span>
+
+<span class="term_hd"># 1. 先列出本機上面所有已經存在的印表機吧！</span>
+[root@www ~]# <span class="term_command">lpstat -a</span>
+Deskjet_F300_series accepting requests since Tue Jun  2 00:48:59 2009
+deskjet_f380 accepting requests since Mon Jun  1 23:34:21 2009
+hp_lj_p2015dn accepting requests since Tue Jun  2 00:22:31 2009
+
+<span class="term_hd"># 2. 刪除所有已經存在的印表機吧！</span>
+[root@www ~]# <span class="term_command">lpadmin -x Deskjet_F300_series</span>
+[root@www ~]# <span class="term_command">lpadmin -x deskjet_f380</span>
+[root@www ~]# <span class="term_command">lpadmin -x hp_lj_p2015dn</span>
+[root@www ~]# <span class="term_command">lpstat -a</span>
+lpstat: No destinations added.
+<span class="term_say"># 這樣就確定沒有任何存在的印表機囉！</span>
+
+<span class="term_hd"># 3. 加入 hp_p2015 印表機，印表機參數如前面兩小節所示：</span>
+[root@www ~]# <span class="term_command">lpadmin -p hp_p2015 -v socket://192.168.201.253:9100 \</span>
+&gt; <span class="term_command">-m postscript.ppd.gz -E</span>
+
+<span class="term_hd"># 4. 因為僅有一部印表機，因此讓此印表機成為預設列印印表機</span>
+[root@www ~]# <span class="term_command">lpadmin -d hp_p2015</span>
+</pre></td></tr></table>
+
+		<p>其實這個 lpadmin 指令只是在更新 /etc/cups/ 目錄裡面的兩個資料而已，
+		一個是 /etc/cups/printers.conf ，這個檔案主要是規範了印表機的相關裝置、是否接受列印工作、
+		印表機的佇列名稱、頁面的限制等等，反正就是整個印表機的規範就是了。
+		至於這個印表機相關的 PPD 檔案則是以印表機的佇列名稱連結到 /etc/cups/ppd/ 目錄下。
+		不相信嗎？讓我們來瞧瞧 printers.conf 的檔案內容吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/cups/printers.conf</span>
+# Printer configuration file for CUPS v1.2.4
+# Written by cupsd on 2009-06-03 01:06
+&lt;DefaultPrinter <span class="term_write">hp_p2015</span>&gt;                <span class="term_note">&lt;==這就是印表機佇列名稱</span>
+Info hp_p2015
+DeviceURI <span class="term_write">socket://192.168.201.253:9100</span>  <span class="term_note">&lt;==就是印表機所在的裝置位置</span>
+State Idle
+StateTime 1243962326
+Accepting Yes
+Shared Yes
+JobSheets none none
+QuotaPeriod 0
+PageLimit 0
+KLimit 0
+OpPolicy default
+ErrorPolicy stop-printer
+&lt;/Printer&gt;
+
+[root@www ~]# <span class="term_command">ll /etc/cups/ppd</span>
+-rw-r--r-- 1 root root 7714 Jun  3 01:05 hp_p2015.ppd
+<span class="term_say"># 這就是剛剛捉過來的，給 hp_p2015 用的印表機定義檔！</span>
+</pre></td></tr></table><br />
+
+		<a name="lpstat"></a>
+		<hr /><ul class="list1"><li class="text_import1">4. 印表機狀態的觀察</li></ul>
+
+		<p>設定完印表機後，來觀察一下目前的印表機狀態吧！底下的 lpstat 是個不錯用的觀察指令喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lpstat [-adprt]</span>
+<span class="term_say">選項與參數：
+-a  ：列出目前可以接受列印工作的印表機佇列名稱；
+-d  ：列出目前系統的預設印表機 (未指定列印佇列時，預設輸出的印表機)；
+-p  ：列出每部印表機目前的工作狀態，包含工作的 ID；
+-r  ：列出目前 CUPS 服務是否有在運作？
+-t  ：列出目前列印系統中更為詳細的資訊說明，很適合查詢喔！</span>
+
+<span class="term_hd"># 1. 列出目前系統上面所有的印表機佇列與接受工作與否的情形</span>
+[root@www ~]# <span class="term_command">lpstat -a</span>
+hp_p2015 accepting requests since Wed Jun  3 01:05:26 2009
+<span class="term_say"># 有一部名為 hp_p2015 的印表機，從 2009/6/3 開始接受列印工作之意！</span>
+
+<span class="term_hd"># 2. 列出目前的『列印系統』狀態，不止包括印表機而已。</span>
+[root@www ~]# <span class="term_command">lpstat -t</span>
+scheduler is running   <span class="term_note">&lt;==CUPS 這個服務有在運作的意思</span>
+system default destination: hp_p2015  <span class="term_note">&lt;==預設的印表機為這一部 hp_2015</span>
+device for hp_p2015: socket://192.168.201.253:9100 <span class="term_note">&lt;==這部印表機的裝置位址</span>
+hp_p2015 accepting requests since Wed Jun  3 01:05:26 2009
+printer hp_p2015 is idle.  enabled since Wed Jun  3 01:05:26 2009
+<span class="term_say"># 這部印表機目前是發呆 (Idle) 的狀態，但可接受列印工作！</span>
+</pre></td></tr></table>
+
+		<p>如果不清楚你的印表機狀態，使用 lpstat 就能夠看的清楚囉～接下來，讓我們開始來使用列印指令產生列印工作吧！
+		<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">5. 利用 lpr 與 lp 來產生列印工作</li></ul>
+
+		<p>如果你沒有瀏覽器或者是說，你沒有圖形介面的軟體時，可以透過 lpr 或者是 lp 
+		這兩個指令來列印某些檔案或資料流重導向的東東。底下的測試會實際列印出資料來，因此，建議你可以先將印表機電源關閉，
+		讓 CUPS 可以接受列印佇列的工作，卻無法輸出到印表機，這樣也方便我們後續管理指令的查詢！
+		所以，請將印表機的電源關閉先。來看看這兩個指令如何操作吧！</p>
+
+<a name="lpr"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lpr [-P printer佇列] [-#  列印份數] -U [username] file</span>
+<span class="term_say">選項與參數：
+-P  ：若沒有預設印表機 (default) 或者想要由不同印表機輸出時，可用 -P 指定印表機
+-#  ：如果這份文件你想要列印多個副本時，用這個 -# 加上份數就對了！
+-U  ：有些印表機有限制可使用的使用者帳號，此時就得要使用這個選項；</span>
+
+<span class="term_hd"># 1. 指定 hp_p2015 這部印表機來列印 /etc/passwd 這個檔案</span>
+[root@www ~]# <span class="term_command">lpr -P hp_p2015 /etc/passwd</span>
+
+<span class="term_hd"># 2. 關閉印表機後，將 /root/ 底下的檔案檔名輸出到這部印表機</span>
+[root@www ~]# <span class="term_command">ll /root | lpr -P hp_p2015</span>
+</pre></td></tr></table>
+
+		<p>要注意的是，因為鳥哥有指定預設印表機，因此上面的範例中，即使沒有加上 [-P hp_p2015] 
+		這個項目時，依舊能夠順利的列印。但如果你沒有指定預設印表機，那麼就一定要加上這個項目，
+		否則 lpr 會不知到要將資料輸出到哪裡去喔！看完了 lpr ，再來聊聊 lp 這個指令的用法吧：</p>
+
+<a name="lp"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lp [-d printer佇列] [-n 列印份數] file</span>
+<span class="term_say">選項與參數：
+-d  ：後面接的是印表機的佇列名稱。如果有多部印表機才需要指定；
+-n  ：就是列印的份數啊！</span>
+
+<span class="term_hd"># 1. 列印出 2 份 /etc/issue 資料</span>
+[root@www ~]# <span class="term_command">lp -d hp_p2015 -n 2 /etc/issue</span>
+request id is hp_p2015-11 (1 file(s))  <span class="term_note">&lt;==以 hp_p2015 來列印，工作號碼為 11</span>
+</pre></td></tr></table>
+
+		<hr /><ul class="list1"><li class="text_import1">6. 列印工作的觀察 (lpq) 與刪除 (lprm)</li></ul>
+
+		<p>我們已經有產生三個工作，但是第一個工作有順利的列印 (印表機是開啟的)，因此還有兩個工作尚未完成才對！
+		那我們如何知道還有哪些列印工作在佇列內呢？可以使用底下的指令來觀察喔！</p>
+
+<a name="lpq"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lpq [-al] [-P 列印佇列]</span>
+<span class="term_say">選項與參數：
+-a  ：列出所有印表機上面在佇列當中的工作情況；
+-l  ：用其他較長格式來輸出列印的相關資訊 (擁有者與檔案大小等等)
+-P  ：後面接特定的印表機，與 -a 不同。</span>
+
+<span class="term_hd"># 1. 顯示出目前所有印表機的工作佇列狀況</span>
+[root@www ~]# <span class="term_command">lpq -a</span>
+Rank    Owner   Job     File(s)               Total Size
+active  root    10      (stdin)               1024 bytes
+1st     root    11      issue                 1024 bytes
+<span class="term_say"># 上面的意思是，有 2 份工作，第一個工作為來自 stdin 的資料流，列印號碼為 10 ，
+# 整份列印資料佔去 1024 bytes 。同理，第二份工作為檔案，檔名為 issue。</span>
+
+<span class="term_hd"># 2. 用更詳細的資訊顯示列印工作</span>
+[root@www ~]# <span class="term_command">lpq -l -P hp_p2015</span>
+hp_p2015 is ready and printing
+
+root: active                  [job 10 localhost]
+        (stdin)                       1024 bytes
+
+root: 1st                     [job 11 localhost]
+        <span class="term_write">2 copies of issue</span>             1024 bytes
+<span class="term_say"># 你可以看到， issue 會被列印兩份的資料！</span>
+</pre></td></tr></table>
+
+		<p>如果這些列印工作你想要取消呢？那就使用 lprm 吧！</p>
+
+<a name="lprm"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lprm [-P printer佇列] job_id</span>
+<span class="term_say">選項與參數：
+-P  ：後面直接指定某部印表機的某個工作號碼。注意，那個 job_id
+      就是剛剛我們使用 lpq 查看到的那個 Job 的號碼啦！</span>
+
+<span class="term_hd"># 1. 將使用 lpq 看到的第 11 號列印工作取消！</span>
+[root@www ~]# <span class="term_command">lprm 11</span>
+[root@www ~]# <span class="term_command">lpq -a</span>
+Rank    Owner   Job     File(s)               Total Size
+active  root    10      (stdin)               1024 bytes
+<span class="term_say"># 瞧！只剩下一個工作而已囉！</span>
+</pre></td></tr></table>
+
+		<p>整個指令模式處理印表機的任務大約到此為止，其他的，還是使用 Web 介面去管理比較方便啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">7. 一個簡單的練習</li></ul>
+		<p>假設你目前的 CentOS 主機上面接著一台 USB 介面的印表機，這台 USB 介面的印表機是 Samsung 的 ML-1210 印表機，
+		請問，您可以如何安裝這部印表機？</p>
+		<ol>
+		<li>先下載 PPD 定義檔，檔名為： Samsung-ML-1210-gdi.ppd 到 /usr/share/cups/model/ 當中；</li>
+		<li>加入印表機，使用下列方法：<br />
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lpadmin -p samsung -v usb:/dev/usb/lp0 \</span>
+&gt; <span class="term_command">-m Samsung-ML-1210-gdi.ppd -E</span>
+</pre></td></tr></table></li>
+		<li>開始給他測試練習一下：『 lpr -P samsung /etc/passwd 』如果有東西印出來，那就是 OK 啦！</li>
+		</ol>
+
+		<p>另外，如果老是看到螢幕前面顯示：『 Printer not connected; will retry in 30 seconds...』，
+		很有可能是因為我們的裝置代號輸入錯誤，請使用『 lpstat -t 』查閱一下是否正確的設定好了？
+		基本上，安裝一部 Linux 有支援的印表機，真的是快速啦！</p>
+	</div>
+</div>
+
+
+<hr /><a name="hw"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">硬體資料收集與驅動，及 lm_sensors</span><br />
+<div class="block1">
+	<p>『工欲善其事，必先利其器』，這是一句大家耳熟能詳的古人名言，在我們的資訊設備上面也是一樣的啊！
+	如同前面小節談到的，如果你的印表機本身就沒有提供給 Linux 系統用的驅動程式，那麼我們就不要浪費時間在該印表機設備上了。
+	同理可證，如果我們想要好好的使用 Linux 安裝在自己的主機上面，那麼主機上面的硬體資訊最好還是能夠瞭解一下的好。
+	現在一般主機板也都有提供 CPU 電壓與溫度的偵測，那我們也能夠透過 lm_sensors 這個軟體來取得該數據喔！
+	底下就讓我們來玩玩吧！<br /><br /></p>
+
+	<hr /><a name="hw_pre_find"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">硬體資訊的收集與分析</span><br />
+	<div class="block2">
+		<p>現在我們知道系統硬體是由作業系統核心所管理的，由<a 
+		href="/linux_basic/0510osloader.php">第二十章</a>的開機流程分析中，我們也知道 Linux kernel 
+		在開機時就能夠偵測主機硬體並載入適當的模組來驅動硬體了。
+		而核心所偵測到的各項硬體裝置，後來就會被記錄在 /proc 與 /sys 當中了。
+		包括 /proc/cpuinfo, /proc/partitions, /proc/interrupts 等等。
+		更多的 /proc 內容介紹，先回到<a 
+		href="/linux_basic/0440processcontrol.php#proc">第十七章的程序管理</a>瞧一瞧先！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實核心所偵測到的硬體可能並非完全正確喔！因為他僅是『使用最適當的模組來驅動這個硬體』而已，
+		所以有時候難免會誤判啦 (雖然機率非常之低)！那你可能想要以最新最正確的模組來驅動你的硬體，
+		此時，重新編譯核心是一條可以達成的道路。不過，現在的 Linux 系統並沒有很建議你一定要重新編譯核心就是了。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>那除了直接呼叫出 /proc 底下的檔案內容之外，其實 Linux 有提供幾個簡單的指令來將核心所偵測到的硬體叫出來的～
+		常見的指令有底下這些：</p>
+
+		<ul>
+		<li><a href="/linux_basic/0230filesystem.php#fdisk">fdisk</a>：第八章曾經談過，可以使用 fdisk -l 將分割表列出；</li>
+		<li><a href="/linux_basic/0230filesystem.php#hdparm">hdparm</a>：第八章談過的，可觀察硬碟的資訊與測試讀寫速度；</li>
+		<li><a href="/linux_basic/0440processcontrol.php#dmesg">dmesg</a>：第十七章談過，
+		觀察核心運作過程當中所顯示的各項訊息記錄；</li>
+		<li><a href="/linux_basic/0440processcontrol.php#vmstat">vmstat</a>：第十七章談過，可分析系統 
+		(CPU/RAM/IO) 目前的狀態；</li>
+		<li>lspci：列出整個 PC 系統的 PCI 介面裝置！很有用的指令；</li>
+		<li>lsusb：列出目前系統上面各個 USB 埠口的狀態，與連接的 USB 裝置；</li>
+		<li>iostat：與 vmstat 類似，可即時列出整個 CPU 與周邊設備的 Input/Output 狀態。</li>
+		</ul>
+
+		<p>lspci, lsusb, iostat 是本章新談到的指令，尤其如果你想要知道主機板與各周邊相關設備時，那個 lspci 
+		真是不可多得的好工具！而如果你想要知道目前 USB 插槽的使用情況以及偵測到的 USB 裝置，
+		那個 lsusb 則好用到爆！至於 iostat 則是一個即時分析軟體，與 vmstat 有異曲同工之妙！
+		既然本節是想要使用 lm_sensors 分析各元件的溫度與電壓，那麼這幾個指令得要來使用看看才行啊！ ^_^</p>
+
+		<p>基本上，想要知道你 Linux 主機的硬體配備，最好的方法還是直接拆開機殼去察看上面的資訊 (這也是為何<a
+		href="/linux_basic/0105computers.php">第零章會談計概</a>啊)！
+		如果環境因素導致您無法直接拆開主機的話，那麼直接 lspci 是很棒的一的方法：<br /><br /></p>
+
+		<hr /><a name="lspci"></a><ul class="list1"><li class="text_import1">lspci</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lspci [-vvn]</span>
+<span class="term_say">選項與參數：
+-v  ：顯示更多的 PCI 介面裝置的詳細資訊；
+-vv ：比 -v 還要更詳細的細部資訊；
+-n  ：直接觀察 PCI 的 ID 而不是廠商名稱</span>
+
+<span class="term_hd">範例一：查閱您系統內的 PCI 裝置：</span>
+[root@www ~]# <span class="term_command">lspci</span>
+<span style="font: 8pt '細明體'">00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 30)
+00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
+00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC Bridge)
+00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB 1.1 Controller (rev 07)
+00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.1 Controller (rev 07)
+00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS] SiS PCI Audio 
+Accelerator (rev 02)
+00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual PCI-to-PCI bridge (AGP)
+00:0e.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+ (rev 10)
+01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS] 630/730 PCI/AGP 
+VGA Display Adapter (rev 21)</span>
+<span class="term_say"># 不必加任何的參數，就能夠顯示出目前主機上面的各個 PCI 介面的裝置呢！</span>
+</pre></td></tr></table>
+
+		<p>不必加上任何選項，就能夠顯示出目前的硬體配備為何。上面就是鳥哥的測試機所使用的主機配備。
+		包括使用 SIS 這家公司推出的 630 主機板晶片組，使用 USB 驅動為 1.1 版的控制器，
+		內建 SIS 的音效卡，使用內建整合的 SIS 的 AGP 顯示卡，以及網路卡為螃蟹卡 (型號為 RTL-8139)。
+		您瞧瞧！很清楚，不是嘛。</p>
+
+		<p>由於目前的主機配備實在太高檔了，因此很多朋友學習 Linux 時，習慣以類似 <a href="http://www.virtualbox.org/"
+		target="_blank">Virtualbox</a> 或 <a href="http://www.vmware.com/tw/" target="_blank">VMWare</a>
+		等虛擬機器進行模擬，此時你得要特別注意，<span class="text_import2">你的硬體配備將是 Virtualbox 
+		或 VMWare 模擬出來的，並不是原本的主機配備</span>喔！實在是由於討論區太多網友發問類似『我的螃蟹卡為何捉不到』等問題，
+		詢問後，才發現他使用 VMWare 模擬硬體。此時你就得要使用 lspci 去列出 Linux 核心捉到的硬體，
+		而不是你原本的硬體啦！注意注意！</p>
+
+		<p>如果你還想要瞭解某個設備的詳細資訊時，可以加上 -v 或 -vv 來顯示更多的資訊喔！
+		舉例來說，鳥哥想要知道那個乙太網路卡更詳細的資訊時，可以使用如下的選項來處理：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lspci -s 00:0e.0 -vv</span>
+</pre></td></tr></table>
+
+		<p>-s 後面接的那個怪東西每個設備的匯流排、插槽與相關函數功能啦！那個是我們硬體偵測所得到的數據囉！
+		你可以對照底下這個檔案來瞭解該串數據的意義：</p>
+
+		<ul class="text_import2"><li>/usr/share/hwdata/pci.ids</li></ul>
+
+		<p>其實那個就是 PCI 的標準 ID 與廠牌名稱的對應表啦！
+		此外，剛剛我們使用 lspci 時，其實所有的資料都是由 /proc/bus/pci/ 
+		目錄下的資料所取出的呢！瞭解了吧！ ^_^<br /><br /></p>
+
+		<hr /><a name="lsusb"></a><ul class="list1"><li class="text_import1">lsusb</li></ul>
+
+		<p>剛剛談到的是 PCI 介面裝置，如果是想要知道系統接了多少個 USB 裝置呢？那就使用 lsusb 吧！
+		這個指令也是很簡單的！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lsusb [-t]</span>
+<span class="term_say">選項與參數：
+-t  ：使用類似樹狀目錄來顯示各個 USB 埠口的相關性</span>
+
+<span class="term_hd">範例一：列出目前鳥哥的測試用主機 USB 各埠口狀態</span>
+[root@www ~]# <span class="term_command">lsusb</span>
+Bus 001 Device 001: ID 0000:0000
+Bus 002 Device 001: ID 0000:0000
+Bus 002 Device 002: ID 0d62:a100 Darfon Electronics Corp. Benq Mouse
+<span class="term_say"># 如上所示，鳥哥的主機有兩個 USB 控制器 (bus)，而 Bus 002 有接了一個設備，
+# 該設備的 ID 是 0d62:a100，對應的廠商與產品為 Benq 的滑鼠。</span>
+</pre></td></tr></table>
+
+		<p>確實非常清楚吧！其中比較有趣的就屬那個 ID 號碼與廠商型號對照了！那也是寫入在
+		/usr/share/hwdata/pci.ids 的東西，你也可以自行去查詢一下喔！更多資訊我們留待下一小節再來討論吧！<br /><br /></p>
+
+		<hr /><a name="iostat"></a><ul class="list1"><li class="text_import1">iostat</li></ul>
+
+		<p>剛剛那個 lspci 找到的是目前主機上面的硬體配備，那麼整部機器的儲存設備，
+		主要是硬碟對吧！請問，您硬碟由開機到現在，已經存取多少資料呢？這個時候就得要 iostat 這個指令的幫忙了！
+		不過，預設 CentOS  並沒有安裝這個軟體，因此你必須要先安裝他才行！如果你已經有網路了，
+		那麼使用『 yum install sysstat 』先來安裝此軟體吧！否則無法進行如下的測試喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">iostat [-c|-d] [-k|-m] [-t] [間隔秒數] [偵測次數]</span>
+<span class="term_say">選項與參數：
+-c  ：僅顯示 CPU 的狀態；
+-d  ：僅顯示儲存設備的狀態，不可與 -c 一起用；
+-k  ：預設顯示的是 block ，這裡可以改成 K bytes 的大小來顯示；
+-m  ：與 -k 類似，只是以 MB 的單位來顯示結果。
+-t  ：顯示日期出來；</span>
+
+<span class="term_hd">範例一：顯示一下目前整個系統的 CPU 與儲存設備的狀態</span>
+[root@www ~]# <span class="term_command">iostat</span>
+Linux 2.6.18-92.el5 (www.vbird.tsai)    06/03/2009
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.35    0.31    0.25    0.03    0.00   99.06
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+hda               0.29         3.46         4.01    1116645    1295796
+<span class="term_say"># 瞧！上面數據總共分為上下兩部分，上半部顯示的是 CPU 的當下資訊；
+# 下面數據則是顯示儲存裝置 /dev/hda 的相關數據，他的數據意義：
+# tps       ：平均每秒鐘的傳送次數！與資料傳輸『次數』有關，非容量！
+# kB_read/s ：開機到現在平均的讀取單位；
+# kB_wrtn/s ：開機到現在平均的寫入單位；
+# kB_read   ：開機到現在，總共讀出來的檔案單位；
+# kB_wrtn   ：開機到現在，總共寫入的檔案單位；</span>
+
+<span class="term_hd">範例二：每兩秒鐘偵測一次，並且共偵測三次儲存裝置</span>
+[root@www ~]# <span class="term_command">iostat -d 2 3</span>
+Linux 2.6.18-92.el5 (www.vbird.tsai)    06/03/2009
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+hda               0.29         3.46         4.01    1116645    1296276
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+hda               0.00         0.00         0.00          0          0
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+hda               0.00         0.00         0.00          0          0
+<span class="term_say"># 仔細看一下，如果是有偵測次數的情況，那麼第一次顯示的是『從開機到現在的數據』，
+# 第二次以後所顯示的資料則代表兩次偵測之間的系統傳輸值！舉例來說，上面的資訊中，
+# 第二次顯示的資料，則是兩秒鐘內(本案例)系統的總傳輸量與平均值。</span>
+</pre></td></tr></table>
+
+		<p>透過 lspci 及 iostat 可以約略的瞭解到目前系統的狀態啊！
+		還有目前的主機硬體資料呢！知道這些資訊後，我們就可以來玩一些比較不一樣的東西囉！ ^_^</p>
+	</div>
+
+	<hr /><a name="hw_pre_usb"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">驅動 USB 裝置</span><br />
+	<div class="block2">
+		<p>在現在的電腦裡面，你或許真的無法想像沒有 USB 介面裝置的主機～
+		因為不論我們的鍵盤、滑鼠、印表機、掃描器、隨身碟等等，幾乎都是使用到 USB 來作為傳輸的介面的。
+		所謂這 USB (Universal Serial Bus) 最早是在 1994 年被發展出來，到 1996 年前後發展出 version 
+		1.0 ，當時的速度大約在 12Mbit/second，到了 2000 年發展出 version 2.0 ，這一版的速度則提高到 480Mbit/second，
+		這也是目前使用最廣泛的一個速度。2008 年則釋出 USB 3.0，這一版的速度比 2.0 要快十倍喔！
+		不過目前市面上的產品還是非常的少見。(<a href="#ps2">註2</a>)</p>
+
+		<p>USB 有很多的優點啦，包括他是可以延伸的，每個 USB port 都可以最多接到 127 個裝置！
+		速度又快，又具有 Plug and Play (隨插即用) 的優點，所以近期以來被用來作為攜帶式裝置的主要資料傳輸介面呢！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">關於 USB 的晶片版本</li></ul>
+
+		<p>目前 USB 1.1版本的控制器主要有兩種規格，分別是：</p>
+
+		<ul class="text_import2">
+		<li>OHCI (Open Host Controller Interface)：主要由 Compaq 所發展，包括 Compaq, SiS, ALi 
+			等等廠商發展的晶片都是用這個模組；<br /><br /></li>
+		<li>UHCI (Universal Host Controller Interface)：主要由 Intel 所發展，
+			包括 Intel, VIA 等等廠商發展的晶片都是使用這個模組。</li></ul>
+
+		<p>由於我們的 Linux 會將這兩種 USB 的驅動程式載入，因此不論你的 USB 是使用哪種晶片，我們的 Linux
+		都可以順利的偵測到並且正確的驅動的啦！至於 USB 2.0 在 Linux 上都以 Enahnced Host Controller Interface (EHCI)
+		來驅動的。我們使用 lsmod 來找一下 hci 這個關鍵字看看，鳥哥的測試主機驅動了多少 USB 模組了呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lsmod | grep hci</span>
+Module                  Size  Used by
+uhci_hcd               25421  0
+ohci_hcd               23261  0
+ehci_hcd               33357  0
+<span class="term_say"># 三個模組都有載入，再來找一下 ehci_hcd 的說明看看：</span>
+
+[root@www ~]# <span class="term_command">modinfo ehci_hcd</span>
+filename:       /lib/modules/2.6.18-92.el5/kernel/drivers/usb/host/ehci-hcd.ko
+license:        GPL
+author:         David Brownell
+description:    10 Dec 2004 <u>USB 2.0 'Enhanced' Host Controller (EHCI) Driver</u>
+srcversion:     006DD5CF82C35E943696BE7
+<span class="term_say">....(底下省略)....</span>
+</pre></td></tr></table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">啟動 USB 的隨身碟或快閃碟</li></ul>
+
+		<p>我們之前談過 USB 的磁碟代號是： /dev/sd[a-p] 之類的，類似 SCSI 硬碟的代號，
+		這是因為 USB 的磁碟裝置使用 SCSI 相關的裝置代號，因此，如果您要使用 USB
+		隨身碟的話，嘿嘿！那麼您的 Linux 主機就得要支援 SCSI 裝置才行～</p>
+
+		<p>此外，為了讓 USB 磁碟裝置順利的被使用，因此，有時候還得要啟動 usb-storage 模組才行～
+		所以囉，光是有 USB 的 uhci 模組還不行，還得要配合 usb-storage 啦～
+		而一般 USB 的裝置都會被主動的偵測，核心也會主動的載入 USB 裝置的驅動模組，
+		所以你應該不需要手動載入 usb-storage 才是。不過，如果老是無法驅動時，那麼不妨手動載入 usb-storage 試看看。</p>
+
+		<p>順利載入各個需要的模組之後，直接下達 fdisk -l 應該就可以看到您的 USB 
+		隨身碟的裝置代號才是！一般來說，如果是第一個 USB 磁碟裝置的話，
+		應該可以看到一個名為 /dev/sda1 的裝置，使用 mount  將他掛載起來即可啊！</p>
+
+		<p>在這裡要強調的是，如果你是使用類似筆記型電腦的 2.5 吋硬碟作為隨身硬碟的話，由於他就是硬碟的規格，
+		因此你可以看到一個完整的 /dev/sda 之類的磁碟資訊，你也可以進行額外的分割。但如果是快閃碟的話，
+		快閃碟並不是傳統的硬碟，他並不是使用磁碟讀取頭與磁碟盤來記錄資料，因此你只能使用 /dev/sda1 之類的檔名來掛載，
+		理論上是無法進行額外分割的喔！這部份要特別強調一下。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">啟動 USB 印表機</li></ul>
+
+		<p>要驅動 USB  印表機也很簡單啊！只要做好 USB 印表機的裝置代號即可！反正我們的 usb 模組已經載入了嘛！
+		目前的 CentOS 5.x 會主動的幫我們建立印表機的裝置檔名，所以底下的動作我們根本不需要進行。
+		不過如果你的 Linux 是較老式的系統，那可能得要使用 mknod 來建立起 USB 印表機才行。
+		透過<a href="http://www.kernel.org/pub/linux/docs/device-list/devices.txt"
+		target="_blank">核心裝置代碼</a>(<a href="#ps3">註3</a>)的查詢，我們知道 USB 印表機的主要/次要裝置代碼為 180 /0~15，
+		所以，建立的方法為：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 假設你已經有 /dev/usb/lp0 ，那我們來嘗試建立 /dev/usb/lp1 看看</span>
+[root@www ~]# <span class="term_command">mkdir -p /dev/usb</span>
+[root@www ~]# <span class="term_command">mknod /dev/usb/lp1 c 180 1</span>
+[root@www ~]# <span class="term_command">chown root:lp /dev/usb/lp1</span>
+[root@www ~]# <span class="term_command">chmod 660 /dev/usb/lp1</span>
+[root@www ~]# <span class="term_command">ls -l /dev/usb/lp1</span>
+crw-rw---- 1 root lp 180, 1 Jun  3 14:27 /dev/usb/lp1
+[root@www ~]# <span class="term_command">echo "testing" &gt; /dev/usb/lp1</span>
+</pre></td></tr></table>
+
+		<p>在我們一般的生活當中，最常見的兩種 USB 裝置就是隨身碟與印表機了，
+		所以鳥哥在這裡僅就這兩種裝置來介紹啟動的方法，如果您還有其他的 USB 裝置要驅動的話，
+		請參考底下這一篇的內容啊！</p>
+
+		<ul><li><a href="http://www.linux-usb.org/USB-guide/book1.html"
+		target="_blank">http://www.linux-usb.org/USB-guide/book1.html</a></li></ul>
+	</div>
+
+	<hr /><a name="hw_pre_lm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用 lm_sensors 取得溫度、電壓等資訊</span><br />
+	<div class="block2">
+		<p>玩電腦硬體的朋友們一定都聽過所謂的『超頻』這玩意兒，所謂的『超頻』就是讓系統原有的運作時脈增加，
+		讓 CPU/PCI/VGA 前端匯流排速度提升到非正規的頻率，以取得較高的電腦效能。
+		這在早期對於單價還是很貴的電腦來說，可以讓我們花比較少的錢去獲得比較高效能的電腦哩！
+		不過，超頻要注意的地方可不少，包括電壓不可高出 CPU 的負荷、CPU 風扇必須要強有力，
+		避免因為溫度過高導致系統當機等等。</p>
+
+		<p>不過現今的電腦速度已經夠快了，我們的 Linux 主機也實在不建議您超頻，因為整體效能可能增加不了多少，
+		但是卻會讓您的主機壽命減少、系統不穩定呢！而由早期超頻的『技術培養』過程當中，我們知道『<span 
+		class="text_import2">CPU 的溫度、系統的相關電壓</span>』
+		是影響主機是否穩定的一項重要指標喔！所以囉，如果能夠隨時掌握溫度、電壓，
+		其實對於系統還是有一定程度的監控啦。</p>
+
+		<p>其實各大主要主機板商與晶片組，都會有溫度、電壓的偵測器在主機內，這個我們可以在主機板操作手冊或者是在 
+		BIOS 內的『 Monitor 』項目找到相關的溫度、電壓資料。在 Windows 系統當中，廠商有推出相關的軟體來偵測，那麼在 
+		Linux 當中呢？呵呵！也是有啊！那就是 lm_sensors 這套好用的東西了！</p>
+
+		<p>目前較新的 Linux distributions 都預設會幫忙安裝這套軟體，但如果你的 Linux 
+		是比較早期的版本，那麼就只好請您自行前往 <a href="http://www.lm-sensors.org/"
+		target="_blank">http://www.lm-sensors.org/</a> 官方網站直接下載 tarball	並且安裝他囉～<br /><br /></p>
+
+		<a name="sensors-detect"></a>
+		<hr /><ul class="list1"><li class="text_import1">偵測主機板的型號</li></ul>
+
+		<p>由於 lm_sensors 主要是依據『主機板晶片組的型號，帶入相關的模組後，再偵測其溫度、電壓』的，
+		如果該主機板晶片組並不是 lm_sensors 所支援的模組，那自然就無法找出該晶片組的溫壓囉～
+		所以啦，我們在使用 lm_sensors 之前，必須要確定主機板是有提供溫度、電壓的，
+		再來，必須要載入主機板的驅動模組，然後才有辦法使用 lm_sensors 來進行偵測。</p>
+
+		<p>好消息是， lm_sensors 本來就提供我們一個不錯的主機板晶片組偵測程式，
+		那就是 sensors-detect 這個指令。偵測到主機板晶片組後，將該資訊寫入設定檔當中，
+		就可以使用 sensors 指令直接讀取目前的 CPU、機殼、電源、風扇等等的資訊了！
+		直接來作看看吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sensors-detect</span>
+# sensors-detect revision 1.413 (2006/01/19 20:28:00)
+<span class="term_say">....(中間省略)....</span>
+It is generally safe and recommended to accept the default answers to all
+questions, unless you know what you're doing. <span class="term_note">&lt;==就一直接受就對了！</span>
+
+ We can start with probing for (PCI) I2C or SMBus adapters.
+ You do not need any special privileges for this.
+ Do you want to probe now? (YES/no): <span class="term_command">y</span>
+Probing for PCI bus adapters...
+Use driver `i2c-sis630' for device 00:00.0: <span class="term_write">Silicon Integrated Systems SIS630</span>
+Probe succesfully concluded.
+<span class="term_say"># 接下來的行為當中，反正你就一直按 Enter 就可以了！讓他自動去偵測！</span>
+
+To make the sensors modules behave correctly, add these lines to
+/etc/modprobe.conf:
+
+<span class="term_write">#----cut here----
+# I2C module options
+alias char-major-89 i2c-dev
+#----cut here----</span>
+
+To load everything that is needed, add this to some /etc/rc* file:
+
+<span class="term_write">#----cut here----
+# I2C adapter drivers
+modprobe i2c-sis630
+modprobe i2c-isa
+# I2C chip drivers
+modprobe eeprom
+modprobe it87
+# sleep 2 # optional
+/usr/bin/sensors -s # recommended
+#----cut here----</span>
+
+Do you want to generate /etc/sysconfig/lm_sensors? (YES/no):
+Copy prog/init/lm_sensors.init to /etc/rc.d/init.d/lm_sensors
+for initialization at boot time.
+</pre></td></tr></table>
+
+		<p>上面就進行好型號的偵測，並且主動的建立了 /etc/sysconfig/lm_sensors 的參數設定檔。不過我們依舊需要進行一些額外的處理！
+		包括讓系統開機主動載入模組的功能！這樣我們就能夠直接使用 lm_sensors 來偵測而不需要手動載入偵測模組啊！
+		你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/modprobe.conf</span>
+<span class="term_write">alias char-major-89 i2c-dev</span>
+<span class="term_say"># 將剛剛偵測到的模組給他寫入到這個檔案當中！</span>
+
+[root@www ~]# <span class="term_command">vi /etc/rc.d/rc.local</span>
+<span class="term_write"># I2C adapter drivers
+modprobe i2c-sis630
+modprobe i2c-isa
+# I2C chip drivers
+modprobe eeprom
+modprobe it87
+sleep 2s
+/usr/bin/sensors -s</span>
+
+[root@www ~]# <span class="term_command">chkconfig --list  lm_sensors</span>
+lm_sensors      0:off   1:off   2:on    3:on    4:on    5:on    6:off
+<span class="term_say"># 確定 lm_sensors 預設開機會啟動即可！此時你可以重新 reboot ，
+# 或者執行上述的 modprobe 之後，在進行底下的偵測囉！</span>
+</pre></td></tr></table><br />
+
+		<a name="sensors"></a>
+		<hr /><ul class="list1"><li class="text_import1">利用 sensors 偵測溫度、電壓等硬體參數</li></ul>
+
+		<p>偵測的指令就是 sensors 啊！直接動作吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sensors</span>
+it87-isa-0290  <span class="term_note">&lt;==使用到的模組功能！</span>
+Adapter: ISA adapter
+VCore 1:   +1.55 V  (min =  +1.42 V, max =  +1.57 V)
+VCore 2:   +1.09 V  (min =  +2.40 V, max =  +2.61 V)   ALARM
++3.3V:     +1.25 V  (min =  +3.14 V, max =  +3.47 V)   ALARM
++5V:       +2.69 V  (min =  +4.76 V, max =  +5.24 V)   ALARM
++12V:      +5.82 V  (min = +11.39 V, max = +12.61 V)   ALARM
+-12V:     -17.05 V  (min = -12.63 V, max = -11.41 V)   ALARM
+-5V:       -7.40 V  (min =  -5.26 V, max =  -4.77 V)   ALARM
+Stdby:     +2.07 V  (min =  +4.76 V, max =  +5.24 V)   ALARM
+VBat:      +0.40 V
+fan1:        0 RPM  (min =    0 RPM, div = 2)
+fan2:        0 RPM  (min = 3000 RPM, div = 2)          ALARM
+fan3:     2689 RPM  (min = 3000 RPM, div = 2)
+M/B Temp:    +33°C  (low  =   +15°C, high =   +40°C)   sensor = diode
+CPU Temp:    +37°C  (low  =   +15°C, high =   +45°C)   sensor = thermistor
+Temp3:        -5°C  (low  =   +15°C, high =   +45°C)   sensor = disabled
+<span class="term_say"># 你可以發現一大堆的錯誤訊息！沒關係的！這是因為鳥哥的主機板太舊，
+# 導致 lm_sensors 誤判，所以輸出的結果就會有點差異！至少轉速與溫度是正常的啦！ </span>
+</pre></td></tr></table>
+
+		<p>基本上，只要這樣的步驟，您的主機就可以主動的偵測溫度與電壓，還有風扇轉速等等資訊。
+		不過，事實上，由於主機板設計的不同，所以偵測的結果很有可能是有誤差的。以鳥哥的情況來說，
+		我所使用的主機板型號是太舊了，lm_sensors 確實捉到錯誤的資訊啊！此時或許就需要進行調校了。
+		調校的步驟很簡單，先確定使用 sensors 顯示的結果每個項目代表的意義 (可以參考 BIOS 
+		硬體偵測結果的順序來排列) ，然後進入 /etc/sensors.conf 進行修改即可。</p>
+
+		<p>如果想要以圖表輸出的話，那麼不妨搭配 MRTG 來進行網頁繪圖～
+		這部分網路上面文章就比較多一點，也可以先參考鳥哥的一篇舊文章：</p>
+
+		<ul><li><a href="http://linux.vbird.org/linux_security/old/04mrtg.php"
+		target="_blank">http://linux.vbird.org/linux_security/old/04mrtg.php</a></li></ul>
+	</div>
+
+	<hr /><a name="udev"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">udev 與 hal 簡介</span><br />
+	<div class="block2">
+		<p>從上面的介紹中，我們不難發現目前新的 Linux distributions 大多能夠類似視窗作業系統，就是能夠即時的偵測隨插即用硬體！
+		例如 USB 介面的各項硬體設備等等。那我們也知道其實所有的硬體都是檔案，這些裝置檔案必須要使用 mknod 才能建立的！
+		那到底 (1)硬體如何偵測與 (2)裝置檔案如何主動建立呢？這就與 udev 及 HAL 這兩個東西有關了。</p>
+
+		<p>事實上，系統所有的硬體應該都是給核心管理的，但我們知道作業系統在記憶體內是受保護的，使用者根本無權使用作業系統核心。
+		為了解決這個問題於是有 udev 的產生。這個 udev 是個使用者層級軟體，他可以讓使用者自行處理 /dev 底下的裝置！
+		如此一來就能夠解決一般用戶在使用類似 USB 時，需要額外硬體的問題。(<a href="#ps4">註4</a>)</p>
+
+		<p>但我們如何知道系統上面多了個硬體呢？這時候就得要硬體抽象層 (Hardware Abstraction Layer, HAL) 的輔助了。
+		HAL 可以將系統目前的所有硬體進行快照，並持續檢視這個快照的內容(<a href="#ps5">註5</a>)。如果有新的 PnP 硬體插入時，
+		HAL 就會發現目前的硬體與快照不同，此時就會通知 udev 進行新的裝置的建置了！如此一來，兩者的配合就能夠讓你的裝置 PnP 
+		囉！</p>
+
+		<p>目前這兩個咚咚在 CentOS 上面都會是啟動的，其中 udev 是在 /etc/rc.d/rc.sysinit 就啟動了，
+		而 hal 則是在 /etc/init.d/haldaemon 這個服務才啟動。讓我們檢查看看是否真的有啟動啊！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">pstree -p | egrep '(udevd|hal)'</span>
+        |-hald(4814)---hald-runner(4815)-+-hald-addon-acpi(4822)
+        |                                |-hald-addon-keyb(4827)
+        |                                `-hald-addon-stor(4837)
+        |-udevd(401)
+<span class="term_say"># 確實有啟動喔！一個是 udevd 一個是 hald 啦！</span>
+</pre></td></tr></table>
+
+		<p>老實說，如果你已經啟動了這兩個傢伙，那麼其他的事不需要進行，交給這兩個小玩意兒自己處理即可。
+		但如果你想要多瞭解 udev 是如何進行裝置的建立時，那麼我們可以來玩玩底下的咚咚。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">自訂裝置名稱進行裝置建立</li></ul>
+
+		<p>假設你想要將你的隨身碟取名為較有趣的裝置，不想再使用類似 /dev/sda1 之類的名稱時，可以怎麼作呢？
+		我們可以透過更改 udev 的規則 (rule) 來使用 mknod 建立不同名稱的裝置檔案。舉例來說，
+		鳥哥這部測試機的硬碟使用為 /dev/hda ，因此第一個 USB 快閃碟裝置應該是 /dev/sda1 才對！
+		如果你的系統使用 SATA 磁碟，那麼你的快閃碟可能就得要由 /dev/sdb1 開始編號起來了。</p>
+
+		<p>udev 建立裝置檔案的規則放置到 /etc/udev/rules.d/ 目錄下，在該目錄下的檔案可以依序進行處理的。
+		以最簡單的語法來看，在該目錄下可以使用的變數與對應可以是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+KERNEL=="核心能夠分析到的檔名", NAME="你要使用的裝置檔名"
+</pre></td></tr></table>
+
+		<p>當然還有很多語法，不過這裡我們先不介紹，有興趣的查一下本文最後的連結去看看吧！
+		假設鳥哥的 /dev/sda1 要取名字成為 /dev/vbirdusb ，你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先在規則目錄下新增一個檔案，檔名設定為 99-vbirdusb.rules 好了</span>
+[root@www ~]# <span class="term_command">cd /etc/udev/rules.d/</span>
+[root@www rules.d]# <span class="term_command">vi 99-vbirdusb.rules</span>
+<span class="term_write">KERNEL=="sda1", NAME="vbirdusb"</span>
+<span class="term_say"># 上面這一行就足夠啦！注意，檔名前的 /dev 不需要寫入！</span>
+
+<span class="term_hd"># 2. 插入一支隨身碟，然後檢查看看：</span>
+[root@www rules.d]# <span class="term_command">ll /dev/sda* /dev/vbirdusb</span>
+brw-r----- 1 root disk 8, 0 Jun  3 16:43 /dev/sda
+brw-r----- 1 root disk 8, 1 Jun  3 16:43 /dev/vbirdusb
+<span class="term_say"># 唔！ /dev/sda1 不見了！取而代之的是 /dev/vbirdusb 啦！</span>
+
+[root@www rules.d]# <span class="term_command">mount /dev/vbirdusb /mnt</span>
+[root@www rules.d]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_say">....(中間省略)....</span>
+<span class="term_write">/dev/vbirdusb</span>           976064    192784    783280  20% /mnt
+<span class="term_say"># 很有趣吧！裝置名稱被鳥哥改過了！</span>
+</pre></td></tr></table>
+
+		<p>雖然這樣很具有個性化的需求，不過總是不太可靠～萬一哪天忘記自己有進行這些動作，偏偏用核心預設的檔名去處理時，
+		會發生很多不明的錯誤啊！所以將剛剛建立的資料反向刪除回來吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先卸載系統吧！</span>
+[root@www ~]# <span class="term_command">umount /dev/vbirdusb</span>
+
+<span class="term_hd"># 2. 拔除隨身碟，並將規則檔刪除！</span>
+[root@www ~]# <span class="term_command">rm /etc/udev/rules.d/99-vbirdusb.rules</span>
+
+<span class="term_hd"># 3. 再插入隨身碟，測試一下檔名有沒有恢復正常？</span>
+[root@www ~]# <span class="term_command">ll /dev/sda*</span>
+brw-r----- 1 root disk 8, 0 Jun  3 16:50 /dev/sda
+brw-r----- 1 root disk 8, 1 Jun  3 16:50 /dev/sda1
+<span class="term_say"># 看起來，檔名確實恢復正常囉！</span>
+</pre></td></tr></table>
+
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>CentOS 提供了好用的 setup 功能，可以幫忙設定 (1)認證方式 (2)防火牆設定 (3)鍵盤格式設定 (4)網路設定
+		(5)系統預設啟動的服務設定 (6)時區設定 (7)X 解析度與硬體設定 等功能；</li>
+	<li>網際網路 (Internet) 就是 TCP/IP ，而 IP 的取得需與 ISP 要求。一般常見的取得 IP 的方法有：(1)手動直接設定
+		(2)自動取得 (dhcp) (3)撥接取得 (4)cable寬頻 等方式。</li>
+	<li>主機的網路設定要成功，必須要有底下的資料：(1)IP (2)Netmask (3)gateway (4)DNS 伺服器 等項目；</li>
+	<li>DNS 伺服器 IP 的指定，需寫入 /etc/resolv.conf 這個檔案中；</li>
+	<li>預設 Linux 的列印服務使用 CUPS ，更早之前則是使用 lpd 這個服務；</li>
+	<li>Linux 支援的印表機網站查詢： http://www.linuxfoundation.org/en/OpenPrinting</li>
+	<li>列印元件主要有：列印指令、列印工作、列印佇列、列印服務、印表機</li>
+	<li>網路印表機的格式主要有： ipp, smb 等類別；</li>
+	<li>CUPS 可使用 http://localhost:631 來連接，然後使用瀏覽器介面來管理！</li>
+	<li>PPD 指的是 postscript 列印定義檔，可視為印表機的驅動程式；</li>
+	<li>指令列管理印表機的方式主要透過： lpadmin, lpstat, lpq, lprm 等指令。至於產生列印工作的指令則為 lpr, lp</li>
+	<li>本章新增硬體資訊的收集指令有： lspci, lsusb, iostat 等；</li>
+	<li>USB 的驅動模組主要有 OHCI 與 UHCI，至於 USB 2.0 則使用 EHCI。</li>
+	<li>lm_sensors 可用來偵測主機板的溫度、電壓、風扇轉速等功能；</li>
+	<li>動態管理硬體，透過使用者層級的管理方式，主要透過 udev 與 HAL 的管理！</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看)
+<div class="block1">
+簡答題部分：
+<ul>
+	<li>如果你硬是要建立一個不存在的印表機裝置檔案，例如： /dev/usb/lp8，該如何處置？
+	<div class="blockex">
+		首先，必須要查閱得該裝置的主要裝置代號，亦即 180，至於次要代號則是 8 ，
+		再使用 mknod 來建立，因此，需要這樣做：<br /><font face="細明體">
+		mknod /dev/usb/lp8 c 180 8<br />
+		chown root:lp /dev/usb/lp8<br />
+		chmod 660 /dev/usb/lp8<br /></font>
+	</div></li>
+
+	<li>如果你想要知道整個系統的周邊硬體裝置，可以使用哪個指令查詢？
+	<div class="blockex">
+		lspci 可以查詢到，更可使用 lspci -v 來查詢更詳細資訊。
+	</div></li>
+
+	<li>承上題，那麼如果單純只想要知道 USB 裝置呢？又該如何查詢？
+	<div class="blockex">
+		lsusb就可以查詢的到！
+	</div></li>
+
+	<li>試說明 (1)列印工作 (2)列印佇列 (3)列印指令 (4)列印服務 (5)印表機之間的相關性。
+	<div class="blockex">
+		列印指令可以產生列印工作，列印工作會在列印佇列裡面排隊等待被列印。在佇列內的資料於列印服務有啟動的環境下，
+		該資料可以被轉成印表機可讀的格式，最終列印服務會將佇列工作轉成適合的資料交給印表機列印出來。
+		詳細資料可參考圖 2.1.4 的說明。
+	</div></li>
+
+	<li>說出三種以上目前常見的網路列印通訊協定。
+	<div class="blockex">
+		例如 IPP, LPD, SMB 等均是列印的通訊協定。
+	</div></li>
+
+	<li>如何使用 lm_sensors 偵測主機內的溫度，詳細說明整個步驟？
+	<div class="blockex">
+		<ul><li>先確定您的主機板具有溫度與電壓等偵測晶片，可使用 lspci 檢查晶片組；</li>
+		<li>開機進入 BIOS 後，查詢一下是否具有硬體偵測溫度、電壓的項目，將輸出的項目順序記一下；</li>
+		<li>確定 Linux 已經安裝了 lm_sensors，再使用 sensors-detect 檢查所需要的設定項目；</li>
+		<li>依據上個步驟，設定 /etc/modprobe.conf 及 /etc/rc.d/rc.local 兩個檔案；</li>
+		<li>使用 chkconfig 讓 lm_sensors 開機啟動，並且重新開機 (reboot)；</li>
+		<li>開始使用 sensors 進行偵測，也可以嘗試修改 /etc/sensors.conf 的內容，以符合實際狀況。</li>
+		</ul>
+	</div></li>
+
+	<li>(挑戰題)如果你的網路設定妥當了，但是卻老是發現網路不通，你覺得應該如何進行測試？
+	<div class="blockex">
+		(1)先檢查硬體，每個環節 (網卡、hub/switch、路由器等) 的燈號是否有亮？有亮再進行下個動作；<br />
+		(2)使用 ifconfig 檢查 IP 與 netmask 的資料是否正確，若正確才可進行下一步；<br />
+		(3)使用 route  看看 default gateway 是否正確，若正確再進行下一步；<br />
+		(4)使用 ping -c 3 [gateway IP] ，若有回應才進行下一步；<br />
+		(5)使用 ping -c 3 [外部IP，例如 168.95.1.1] ，若有回應則 IP 正常，若無回應，請檢查 gateway 的設定<br />
+		(6)使用 dig www.google.com 看看能否找到 IP ，找不到則請檢查 /etc/resolv.conf 的設定。<br />
+	</div></li>
+
+</ul>
+</div>
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：PPD 的解釋：<a href="http://en.wikipedia.org/wiki/PostScript_Printer_Description"
+		target="_blank">http://en.wikipedia.org/wiki/PostScript_Printer_Description</a></li>
+	<li><a name="ps2"></a>註2：USB 的相關解釋與書籍<br />
+		維基百科的解釋：<a href="http://en.wikipedia.org/wiki/Universal_Serial_Bus"
+		target="_blank">http://en.wikipedia.org/wiki/Universal_Serial_Bus</a><br />
+		USB 的線上書籍：<a href="http://www.linux-usb.org/USB-guide/book1.html"
+		target="_blank">http://www.linux-usb.org/USB-guide/book1.html</a><br />
+		Linux USB ：<a href="http://www.linux-usb.org/"
+		target="_blank">http://www.linux-usb.org/</a></li>
+	<li><a name="ps3"></a>註3：核心代碼的相關網頁：<a href="http://www.kernel.org/pub/linux/docs/device-list/devices.txt"
+		target="_blank">http://www.kernel.org/pub/linux/docs/device-list/devices.txt</a></li>
+	<li><a name="ps4"></a>註4：關於 udev 的簡單說明：<br />
+		核心網站的說明：<a href="http://kernel.org/pub/linux/utils/kernel/hotplug/udev.html"
+		target="_blank">http://kernel.org/pub/linux/utils/kernel/hotplug/udev.html</a><br />
+		linuxjournal 的說明：<a href="http://www.linuxjournal.com/article/7316"
+		target="_blank">http://www.linuxjournal.com/article/7316</a></li>
+	<li><a name="ps5"></a>註5：hal 的官網 <a href="http://www.freedesktop.org/wiki/Software/hal"
+		target="_blank">http://www.freedesktop.org/wiki/Software/hal</a></li>
+	<li>LM_sensors 官方網站：<a href="http://www.lm-sensors.org/"
+		target="_blank">http://www.lm-sensors.org/</a></li>
+</ul>
+</div>
+
+<hr /><span class="text_history">
+2005/10/25：準備準備～寫一些跟硬體比較有關係的資料！<br />
+2005/11/08：準備完畢 <a href="#hw_pre_usb">USB</a> 與 <a href="#hw_pre_lm">lm_sensors</a> 
+	的部分了～啊！拖了真久～還有 <a href="#raid_raid">RAID</a> 的說明也差不多哩！<br />
+2005/11/09：加入了 FC4 的 <a href="#fc_setup">setup</a> 指令，尤其是印表機的部分，可以參考參考！<br />
+2005/11/10：終於將 iSCSI 的裝置寫好了～這部份真的是很有趣！不過，一般使用者可能碰不到就是了。<br />
+2005/11/13：終於將 CUPS 架構設定好自己的 Printer 部分了！<br />
+2005/11/14：連同 LVM 也大致的給他寫完了！那個 resize2fs 指令確實有趣！<br />
+2005/11/25：加入一個簡單的練習題～利用 dd 配合 resize2fs 來製作備份的資料！<br />
+2009/04/30：將 LVM 移動到 <a href="/linux_basic/0420quota.php#lvm">第十五章</a> ，且拿掉 <a 
+	href="0610hardware/0610hardware-fc4.php">iSCSI 的說明</a>了。<br />
+2009/04/30：將舊的基於 FC4 撰寫的版本移動到 <a href="0610hardware/0610hardware-fc4.php">此處</a> 。<br />
+2009/06/03：加入 udev 與 hal 的簡單說明！<br />
+2009/09/15：簡單修訂一些語句，修改章節的習題，並沒有改到什麼重要的資訊。<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

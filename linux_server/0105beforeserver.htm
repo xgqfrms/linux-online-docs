@@ -1,0 +1,1060 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 架站前技能分析</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0105beforeserver.htm">
+    <span class="text_head0">架站之前所需的技能分析</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0105beforeserver.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/06/06</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	很多剛接觸 Linux 的朋友常常會問的一句話就是：『我學 Linux 
+	就是為了架站，既然只是為了架站，為什麼我還要學習 Linux 的其他功能？例如：例行性工作排程、Bash
+	Shell 、幹嘛去認識所有的登錄檔等等，我又用不到！此外，既然有好用的
+	Web 介面的 Server 架設軟體，可以簡單的將網站架設起來，為什麼我還要去學習
+	vi 手動的去編輯一些設定檔？幹嘛還需要去理解他的原理？』
+	上面這些話對於剛剛學會架設網站的人來說，真是替他們道出了<b>一個新手的心聲</b>啊！
+	不過，對於任何一個曾經有過架設公開網站的朋友來說，上面這些話，<b>真的是會害死人</b>～<br /><br />
+	要知道，『<b>架站容易維護難</b>』啊！更深一層來說，『<b>維護還好、除錯更難啊！</b>』
+	架設一個網站有什麼難的？即使您完全沒有摸過
+	Linux ，只要參考鳥哥的書籍或者是網站，而且一步一步照著做，
+	包準您一個下午就可以架設完成五個以上的網站了！所以說，架站有什麼難的？
+	但是，要曉得的是，這樣的一個網站，多則三天，少則數小時，立刻就會被入侵了！
+	此外，被入侵之後，或許可以藉由一些工具來幫您將
+	root 的密碼救回來，可惜的是，這樣的一個網站還是有被做為中繼站的危險存在的！此外，如果您使用工具
+	(例如 Webmin) 卻怎麼也架設不起來某個網站時，要怎麼解決？如果您不懂該 Server
+	的運作原理與 Linux 系統的除錯訊息，那麼難道只能無語問蒼天？不要懷疑這種情況的可能性，參考一下
+	BBS 上面的留言就可以很清楚的知道這種情況的存在有越來越明顯的趨勢呢！<br /><br />
+	所以說，架站之前還是有一些基本的技能需要學會的！而且這些技能是『<b>一旦學會之後，真正是終身受用啊！</b>』
+	只要花一個學期(三~六個月)就能學會一輩子可以使用的技能，這個學習的投資報酬率真是太高了！
+	所以，一開始的學習不要覺得苦，那真的是值得的喔！^_^
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">前言</a><br />
+2. <a href="#server">基本架站流程</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#server_network_basic">瞭解網路基礎</a><br />
+	　　2.2 <a href="#server_target">瞭解架站的目的</a><br />
+	　　2.3 <a href="#server_partition">Linux 安裝硬碟規劃</a><br />
+	　　2.4 <a href="#server_services">瞭解欲架設的網站服務原理</a><br />
+	　　2.5 <a href="#server_update_install">服務的套件安裝、漏洞修補、套件升級...</a><br />
+	　　2.6 <a href="#server_server">主機設定、啟動、觀察與除錯</a><br />
+	　　2.7 <a href="#server_client">用戶端設定、觀察與除錯</a><br />
+	　　2.8 <a href="#server_security">安全性設定</a><br />
+	　　2.9 <a href="#server_logfile">服務日誌、登錄檔與備份管理</a><br />
+	　　2.10 <a href="#server_final">小結語</a><br />
+	</span>
+3. <a href="#canI">自我評估是否已經具有架站的能力</a><br />
+4. <a href="#ex">課後練習</a><br />
+<span class=text_h2>
+5. <a href="http://phorum.vbird.org/viewtopic.htm?t=23676"
+   target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=23676</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">前言</span><br />
+<div class=block1>
+	如果有人問你：『<span class=text_import2>Linux 最強大的功能是什麼</span>』？
+	大概大家都會回答『<span class=text_import2>是網路功能啊</span>！』，
+	接下來，如果對方再問：『<span class=text_import2>所以學 Linux 就是為了架站囉？</span>』
+	呵呵！這個問題可就見仁見智囉！說穿了， Linux
+	其實就是一套非常穩定的作業系統，那麼任何工作只要能在 Linux 這個作業系統上面跑，那他就是
+	Linux 可以達成的功能之一囉！所以 Linux 的作用實在不止於網路伺服器的架設吶。<br /><br />
+
+	舉例來說，在 Linux 上面開發跨平台的程式 (program) 諸如大型的數值模式，由於 Linux 
+	的穩定與完善的資源分配功能，使得在
+	Linux 上面開發出來的程式運作的又快又穩定。此外，諸如 KDE, GNOME 等漂亮的圖形介面，搭配諸如
+	Open Office 等辦公室軟體，Linux 立刻搖身一變而成為優秀的的辦公室桌面電腦了
+	(Desktop)。所以說，千萬不要小看了 Linux 的多樣功能吶。<br /><br />
+
+	不過，不管怎麼說， Linux 的強大網路功能確實是造成 Linux 能夠在伺服器領域內佔有一席之地的重要項目。
+	既然如此，我們就好好的來探索一下 Linux 的網路世界吧！首先， Linux 
+	到底可以達成哪些網路功能呢？這可就多著咯！不論是
+	<a href="0360apache.htm">WWW</a>, <a href="0380mail.htm">Mail</a>, <a href="0410vsftpd.htm">FTP</a>, 
+	<a href="0350dns.htm">DNS</a>, 或者是 <a href="0340dhcp.htm">DHCP</a>, <a href="0250simple_firewall.htm#nat">NAT</a> 與 
+	<a href="0230router.htm">Router</a> 等等，Linux 系統都可以達到，而且，只要一部
+	Linux 就能夠達到上面所有的功能了！當然，那是在不考慮網路安全與效能的情況下，您可以使用一部
+	Linux 主機來達成所有的網路功能。<br /><br />
+
+	『<span class=text_import2>哇！Linux 有那麼多的功能啊！那麼我可以輕輕鬆鬆的就架設好一部以
+	Linux 為作業系統的伺服器嗎</span>？！』呵呵！很可惜，答案是『<span class=text_import2>否</span>』！
+	您無法輕鬆的就完成一部『堪稱完美』的伺服器架設，而是必需要很用心，
+	並且學習很多相關的概念與操作方法後，才能夠架設好一部完美的伺服器。什麼！要很用心啊！使用
+	Windows 作業系統隨隨便便就可以架設好好幾個伺服器了，那麼我幹嘛要花時間去學習 Linux
+	來架設伺服器呢？<br /><br />
+
+	唉！這真是傷腦筋吶！『<span class=text_import2>誰說使用 Windows 架設伺服器就很簡單</span>』的？
+	就鳥哥的感覺來說，架設 Windows 伺服器一點也不輕鬆。為什麼呢？<ol>
+	<li><span class=text_import1>授權模式</span><br />
+	首先，在尚未進入伺服器設定之前，您必需就『授權模式』進行深入的研究，因為，
+	不同的使用者數量將會影響到您的伺服器的『價格！』，光是這一點，就可能讓鳥哥一個頭兩三個大了～
+	因為，玩工程的，對於『價格』這東西，總是缺乏一點概念啊～</li><br />
+
+	<li><span class=text_import1>圖形介面的設定比較好？</span><br />
+	好了，經過了授權模式的洗禮之後，再來進入到伺服器的設定方面，呵呵！這個部分可就容易的多了吧！沒錯，
+	確實是按幾下滑鼠按鈕就可以架設好一兩個伺服器了。不過『萬一』該伺服器架設完成後，
+	並不符合您當初的要求時該怎麼辦？不會發生這樣的事情嗎？當然會發生啦！因為
+	Windows 為了達成所謂的『親和性與便利性』，所以在您的設定過程中他會『很親和的自動幫您加入某些參數』，
+	不過可惜的是，這些參數並不見得適合每個人，所以有時候您必需要自行修改這些設定值。偏偏
+	Windows 伺服器大部分的設定檔都是一些特殊格式，您無法使用簡易的文書編輯器去修改～</li><br />
+
+	<li><span class=text_import1>除錯的登錄檔資料分析</span><br />
+	再者更遺憾的是，如果伺服器設定出了點小問題，總是無法達成您的要求，設定也都看過了，
+	那麼要如何除錯呢？如果您沒有網路的基本概念，以及
+	Windows 相關的登錄檔案管理技巧，呵呵！即使 Windows 在設定上做了很多的簡化，我想，
+	您依舊無法設定出適合您自己的伺服器的啦！</li></ol>
+
+	所以說，不管是 Windows 還是 Linux ，其實，要架設好一部堪稱完美的伺服器，『基本功課』還是得做的，這包括了：
+	<ol><span class=text_import2>
+	<li>該作業系統的簡易操作，以及登錄分析、帳號管理、文書編輯器的使用等等的技巧；</li>
+	<li>網路的基本概念；</li>
+	<li>防火牆方面的相關知識等等。</li>
+	</span></ol>
+
+	而且，每一個項目裡面所需要學習的技巧可多著呢！『什麼？要學的東西那麼多啊！』是啊！
+	所以，不要以為資訊管理人員整天閒閒沒事幹的吶，大家可是天天在出賣知識的，同時，
+	還得天天應付隨時可能會發生的各種漏洞與網路攻擊手法呢！真不是人幹的工作～～<br /><br />
+
+	這麼說的話，架站真的是挺難的喔！事實上，架站其實蠻簡單的哩！咦！～怎麼又說架站簡單了？
+	不是說架站難嗎？呵呵！其實『架站很難』是由於朋友們學習的角度有點偏差的原因啦！
+	還記得當初進入理工學院的時候，天天在唸的東西是基礎物理、基礎化學、工程數學與流體力學等基礎科目，
+	這些科目花了我們一至兩學期的時間，而且內容還很難吶～都是一大堆的理論背不完。
+	怪了？我們進理工學院是為了求取更高深的知識，那麼這些基礎知識學了有什麼用吶？
+	呵呵！更高深的知識都是建構在這些基本科目的理論上面的，所以
+	<span class=text_import2>萬一您基礎的科目沒有讀好，那麼專業科目裡面提到的基本理論怎麼可能聽的懂？</span><br /><br />
+
+	這樣說應該就不難瞭解了吧！沒錯！認識作業系統與該作業系統的基本操作，還有那個重要的網路基礎，
+	就是我們在架站前的『基礎科目』啦！所以說，在進入
+	Linux 的伺服器世界之前，真的不能夠略過網路基礎的相關知識，同時， Linux
+	系統的基本技能也必需要能夠理解吶！<br /><br />
+
+	好了，或許您還是對於 Linux 系統裡面『<span class=text_import2>什麼是很重要的知識</span>』不甚瞭解，
+	果真如此的話，那麼我們就舉個簡單的例子來說明一下囉！底下列出一般的架站流程，
+	我們由架設伺服器的流程當中，來看一看什麼是重要的
+	Linux 相關技能吧！ ^_^。<br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	在這一章當中，鳥哥不再就 linux 基礎指令進行解析，因為在
+	『<a href="../linux_basic/">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』裡面已經詳細的介紹過了！
+	如果持續的介紹指令，簡直是浪費篇幅～所以底下僅介紹一個
+	Linux 基礎學習重要性的分析喔！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div></div>
+
+
+<hr><a NAME="server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>基本架站流程：</span><br />
+<div class=block1>
+	雖然不同的 Server 提供的服務並不相同，而且每種服務的原理也不見得都一樣，
+	不過，每種伺服器由規劃、架設到後續的安全維護，其實整個流程是大同小異的。
+	所以，底下我們就整個伺服器的簡易架設流程當中來分析一下，
+	<span class=text_import2>為什麼瞭解作業系統的基礎對於網站維護是相當重要的呢</span>？<br /><br />
+
+	首先，先來分析一下，如果你要架設一個網站時，架設的基礎流程是怎樣的一回事。大致的流程有點像底下這樣：
+	<ol>
+	<li><span class=text_import1>瞭解網路基礎 ：</span><br />
+		既然要架設網站，如果對於網站最基本的網路基礎知識無法具備的話，
+		那麼.....當然無法管理好網站啦！舉個例子來說，不論何種作業系統，
+		常常會使用到所謂的『網域』的概念，當您發現一個設定為
+		192.168.1.0/255.255.255.0 時，曉得那是什麼鬼東西嗎？
+		如果不知道的話，呵呵！絕對無法設定好網站的啦！</li><br />
+	<li><span class=text_import1>瞭解架站的目的：</span><br />
+		想要架站，架什麼站？架這個站後，要不要對 Internet
+		開放？要不要提供什麼服務給其他外面 (指 Internet 上的用戶) 的使用者？提供這些服務時，需不需要做限制
+		(例如限制使用者可以使用的硬碟空間或網頁、郵件的最大容量)？
+		如果要做限制時，需要怎麼樣選購您的主機硬體？要進行這些規劃時，都需要知道架站的目的呢。
+		不過，如果架站只是為了『練功』而已，呵呵！那就不需要考慮太多了～</li><br />
+	<li><span class=text_import1>Linux 安裝硬碟規劃</span><br />
+		好了，不論您的網站規模有多大，只要是對 Internet
+		開放的網站，幾乎一定都需要硬碟的啊！因為網站的資料需要有地方可以儲存吶！
+		那麼您要如何選購硬碟？還有，硬碟應該進行怎樣的分割
+		(Partition) 比較好？舉個例子來說，如果您想要架設郵件主機，那麼硬碟應該如何規劃呢？給您猜～</li><br />
+	<li><span class=text_import1>瞭解欲架設的網站服務原理</span><br />
+		這個與剛剛第一點有點類似，也是屬於基本原理方面啦！舉個例子來說，當您曉得了
+		Mail Server 的運作原理，自然就比較容易架設成功，此外，也比較容易進行除錯！</li><br />
+	<li><span class=text_import1>服務的套件安裝、漏洞修補、套件升級...</span><br />
+		好不容易決定了硬碟的規劃，並且 partition 與 Linux
+		這個作業系統都安裝好了，接下來自然就是安裝我們所想要架設的伺服器軟體啦！例如：如果要架設
+		Mail Server ，那麼 Sendmail 或者是 Postfix 這兩個郵件伺服器軟體就派上用場啦！咦！
+		有兩種郵件伺服器軟體啊？呵呵！當然不止～郵件軟體可多的很呢！那我要選擇哪一個郵件伺服器軟體？
+		需要考慮安全性、架設的便利性、以及執行的效能與穩定性等等！呵呵！累了吧！</li><br />
+	<li><span class=text_import1>主機設定、啟動、觀察與除錯</span><br />
+		在完成了 Linux 安裝，並且將伺服器軟體安裝好了之後，再來當然就是設定囉！
+		這個部分就是我們常常看到的一些文件說的比較多的部分啦！在主機的設定當中，其實設定項目並不難，
+		了不起都是照著文件設定就可以了！不過，由於每個人的主機環境不一樣 
+		(例如安裝的套件版本啦, Linux distribution 的不同啦, 
+		編譯器的不同啦，這些都是主機環境的一環！)，
+		所以同樣的一份設定在不同的機器上，嘿嘿，可能不會一定百分之百能執行的吶！
+		這個時候，觀察主機的登錄檔與相關的訊息，並加以進行錯誤克服
+		(debug) 的動作可就相當的重要了呢！這也是大家常常會忽略的部分。</li><br />
+	<li><span class=text_import1>用戶端設定、觀察與除錯</span><br />
+		這部份也是需要的，因為有的伺服器需要用戶端也進行設定才行！例如郵件主機加上身份認證功能時，
+		就需要在用戶端上面設定好身份認證的確認囉！</li><br />
+	<li><span class=text_import1>安全性設定</span><br />
+		網路安全是很重要的，問題是，要怎麼樣達成網路安全的相關設定呢？
+		有哪些檔案、套件、指令與資料可以查尋？</li><br />
+	<li><span class=text_import1>服務日誌、登錄檔與備份管理</span><br />
+		呵呵！畢竟沒有人敢說『<span class=text_import2>我的網路是絕對安全的，
+		我的硬體是絕對沒有問題的</span>！』既然如此的話，備份就成了重要的課題了！
+		問題是，如何備份呢？使用什麼指令來備份？使用什麼媒體來備份？需不需要手動來備份？
+		還是交給系統自行每日、每週自動備份？這都是挺重要的！</li>
+	</ol>
+
+	整個伺服器的架設流程大概就如同上面所提的幾個步驟囉！那麼每個步驟底下與
+	Linux 系統基本操作有關的資料有哪些呢？我們就分項目來談一談吧！<br /><br />
+
+
+	<hr><a NAME="server_network_basic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>瞭解網路基礎</span><br />
+	<div class=block2>
+		既然是要架設網站，那麼網站最基本的知識，就是那個
+		<a href="0110network_basic.htm#whatisnetwork_osi">OSI 七層協定</a>，至少就需要瞭解一下囉！雖然只是一個
+		OSI 七層協定，但這裡面包含了：
+		<ul>
+		<li><span class=text_import2>硬體與設備的等級與好壞</span>：例如網路線有哪些等級？CAT
+		5 是目前常見的 RJ-45 接頭的網路線等級，為什麼要選擇這種網路線？啊什麼是
+		RJ-45 的接頭？如果這個都不知道的話，那麼要如何自己將所有的電腦接起來呢？
+		呵呵！很難吧！所以，這種基本的硬體配備的選擇需要有一定程度的認知喔；</li><br />
+		<li><span class=text_import2>TCP/IP 與封包的概念</span>：例如
+		IP, Netmask, Broadcast 的概念與書寫的格式等；</li><br />
+		<li><span class=text_import2>路由 (route)</span>：您的資料封包是如何傳送到
+		Server 上的呢？資料在 Internet 上面是怎麼跑的呢？！</li><br />
+		<li><span class=text_import2>領域名稱系統 (Domain Name System, DNS )</span>：
+		常常會聽到『主機名稱』吧！是否我自己設定一個主機名稱，大家就可以通過
+		Internet 連接到我的主機了？當然不是！還需要透過上層 DNS 主機的授權喔！那麼如何授權？</li><br />
+		<li><span class=text_import2>各種網路設備的選擇與搭配</span>：例如什麼是
+		Hub/Switch ？該如何選擇？以及什麼是下行/上行 2M/128Kbits ？什麼是平行線與跳線等等；</li></ul>
+
+		還有我們最關心的，網路頻寬到底是由哪一個設備所限制，以及在區域網路內的佈線該如何配置。
+		哇！說起來好像很麻煩！其實只要稍微深入瞭解一下基本的原理，就可以約略的釐清您一些網路概念了。
+		這對於您未來架設防火牆以及維護網站，尤其是發生問題後的問題認定與除錯，都有很大的關係吶！
+		事實上，不論您是使用什麼作業系統來架設您的網站，這個網路基礎的部分都是一定要瞭解的！
+		通常不了解網路基礎的朋友，在架設網站的時候，最容易發生一些基礎設定的錯誤了！
+		所以，這部份的學習千萬不能省略啊！<br /><br />
+
+		對於網路基礎的問題當中，一個最常見的經典案例是：
+		<span class=text_import2>『192.168.1.0/24』是什麼東西</span>？呵呵！這東西代表的是一個『網域』，
+		這個網域起始到結束的 IP 範圍是多少您看得出來嗎？這種表示方法在各種伺服器的架設中很常見到，
+		如果您不了解的話，呵呵！當然無法進行伺服器的架設囉
+		(<span class=text_vbird> 註：各種作業系統均會出現這樣的設定值喔</span> )。還有，如果您的主機明明就可以使用
+		ping 這個指令去接觸遠方的主機 (ping IP)，但是就是無法使用 ping hostname
+		去接觸遠方的主機，請問，這個原因是什麼呢？瞭解網路基礎的朋友一看就知道幾乎是
+		DNS 出問題了，不曉得的朋友就是想破頭也得不到答案～<br /><br />
+
+		其實這些概念說難不難，但是至少一定得需要學習過吶！
+		而且，這些知識在您學會之後，未來再接觸到其他不同的作業系統時，可讓您學習的過程『順暢無比』吶！
+		因為那是最最基本的理論，各個作業系統都是建構在這些網路基礎上面，所以，當您換了另外一套作業系統後，
+		基本上只有指令的下達方式不一樣而已，基本原理是一樣的吶！所以說，學習的過程當然會順暢到底囉！
+		^_^。<br /><br />
+
+		而且，網路基礎會影響到您的網路設定是否正確，這真的很重要吶，因為，如果您的網路不通，
+		那麼即使伺服器架設成功了，別人可以看的到嗎？所以說，要架站，真的得對網路基礎的部分下一些功夫才行的。
+		關於網路基礎這部份的介紹我們會在<a href="0110network_basic.htm">下一章網路基礎</a>時再詳加說明喔！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_target"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>瞭解架站的目的</span><br />
+	<div class=block2>
+		架站的目的與您的主機規劃是一體兩面的！因為我們必需要瞭解主機未來的用途與使用的用戶端數目，
+		才能夠開始選擇硬體與分配網路頻寬，並且規劃我們的
+		Linux 系統啊！所以說，瞭解架站目的是很重要的！舉幾個例子來說好了：<br /><br />
+
+		<li><span class=text_import2>如果我們的主機是學校單位提供同學們郵件與 WWW 個人網頁的功能，而全校有
+		5000 多位同學，那麼硬體應該如何選擇？還有，如果需要對每個同學進行網頁空間與郵件容量的限制時，
+		硬碟又該如何分割</span>？</li>
+		<div class=block2>
+		在這個例子當中，您必需要瞭解郵件與
+		WWW 個人網頁的資料所放置的目錄在哪裡？而由於主機有進行硬碟的容量限制，因此，
+		<a href="../linux_basic/0420quota.htm">quota</a>
+		的原理與設定的技巧就不能不知道啦！此外，既然是架站嘛！申請一個『合法』的主機名稱就顯的相當的重要，另外，
+		DNS 裡面的 MX 標誌對於郵件主機的用途也需要特別去瞭解呢！<br /><br />
+		</div>
+
+		<li><span class=text_import2>如果我們的主機僅提供研究室不到十個人的服務，且服務僅開放檔案伺服器
+		(File Server) ，那麼硬體又該如何選擇，此外，是否需要註冊一個合法的主機名稱呢？</span></li>
+		<div class=block2>
+		因為僅開放檔案伺服器，那麼這部主機應該是在內部了，所以，當然就不是很需要一個合法的主機名稱了！
+		不過，因為仍然有對區域網路提供檔案伺服器的功能，因此，硬碟的容量也不能太小，此外，
+		為避免未來使用者的抱怨，也需要預留空間來進行
+		<a href="../linux_basic/0420quota.htm">quota</a> 與增加硬碟等工作呢！<br /><br />
+		</div>
+
+		<li><span class=text_import2>如果我們的主機主要的目的是進行數值模式的運算
+		(就是有點像是超級電腦在算軍事或者天文物理現象的模式)，
+		那麼應該要考慮的是否反而就是在系統安全性與資料傳輸的速率上面？</span></li>
+		<div class=block2>
+		當然啦！這樣的一個系統最主要的目的就在於『穩定性』與『速度』上面了！因此，您就需要瞭解
+		<a href="../linux_basic/0540kernel.htm">核心 (Kernel) 的編譯技巧</a>，
+		此外，由於不同的套件在設計最佳化的時候，通常都使用較為常見的
+		Linux distribution ，因此，對於 Linux distribution 的選擇可又重要的多了呢！<br /><br />
+		</div>
+
+		由上面的例子來看，不同功能的主機在硬體配備與軟體規劃上面是不一樣的！所以，在進行
+		Linux 主機的規劃之前，建議一定要瞭解這個主機的功能，甚至最好還能預設一些未來可能加入的功能規劃呢！
+		那我怎麼知道我的主機要有什麼樣的功能？又什麼樣的功能可以滿足我的需求呢？這當然是需要經驗的！
+		呵呵！這又得要回到剛剛前一個主題囉！至少需要瞭解到網路的基礎，
+		這樣就能夠知道您應該架設什麼樣的網站啦！<br /><br />
+
+		舉個例子來說，如果您只是想要讓
+		Linux 達成頻寬分享而已，那麼 <a href="0230router.htm">Router</a> 或者是 
+		<a href="0250simple_firewall.htm#nat">NAT</a> 的設定即可滿足你的需求，
+		萬一您還需要瞭解每個使用者經常使用的網站，那麼最好就是搭配
+		Proxy 以及分析軟體來分析。然而 NAT 不需要很好的硬體配備即可達成，Proxy
+		如果要效能好一點，就必需要比較高檔的硬體來搭配～咦！我怎麼知道的？
+		這當然是鳥哥已經較為熟悉每種服務所使用的硬體狀態與他的服務原理啊。
+		所以囉！在主機的規劃之前，務必要先瞭解主機的架設目的喔！<br /><br />
+
+		那麼這部份與 Linux 基礎有何關係？！關係大了！
+
+		<ol>
+		<li><span class=text_import1>必需熟悉 Linux 的檔案配置與架構：</span><br /><br />
+		例如 /boot 放置的是開機核心資料、 /usr 放置的是預設的系統程式以及原始檔與一些
+		man page 、/home 是一般身份用戶的預設家目錄所在、 /var 則是登錄檔、暫存檔、
+		郵件信箱檔案等放置的目錄、/tmp
+		是任何人皆可使用的暫存目錄等等，您必需要熟悉 Linux 各個目錄的用途，
+		這樣在未來進行硬碟的規劃時，才能夠符合需求！<br /><br />
+
+		舉例來說，因為磁碟配額 (<a href="../linux_basic/0420quota.htm">Quota</a>) 僅能針對整個 
+		partition 來動作，而如果您想讓每個使用者有兩種 <a href="../linux_basic/0420quota.htm">quota</a>
+		數值 (例如每人擁有郵件 20MB 以及 WWW 10MB 的硬碟空間) ，就必需要預設針對
+		/home 與 /var/spool/mail 規劃出兩個獨立的 partition 才行啊！當然啦，使用連結檔
+		(<a href="../linux_basic/0230filesystem.htm#ln">link file</a>) 也是一個可行的方案，不過，
+		您就得要預留一些硬碟空間來預備使用吶！</li><br />
+
+		<li><span class=text_import1>硬碟的代號：</span><br /><br />
+		硬碟的代號真的是挺重要的，因為在 Linux 底下，每一個裝置都以檔案來表示的！
+		因此，您必需要瞭解到硬碟與排線的接法對於硬碟在
+		Linux 系統中的代號的關係。例如：<br /><br />
+
+<table width=80% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow class="text_import2">
+<tr bgcolor=lightblue align=center><td>　</td><td>Master</td><td>Slave</td></tr>
+<tr align=center><td bgcolor=lightblue>IDE 1</td><td>/dev/hda</td><td>/dev/hdb</td></tr>
+<tr align=center><td bgcolor=lightblue>IDE 2</td><td>/dev/hdc</td><td>/dev/hdd</td></tr>
+</table><br />
+
+		上面的磁碟代號只與 IDE 介面的裝置有關，什麼是 IDE 介面啊！就是目前所謂的
+		Ultra DMA 66/100/133 的硬碟啊，或者是光碟機與燒錄機，這些裝置均可直接以主機板上面的
+		IDE 排線接在一起說。還有，目前主流的硬碟已經變成 SATA 介面了，這種 SATA
+		介面可以模擬成為 IDE 介面，因此，您的 IDE 裝置還可能具有 /dev/hde, /dev/hdf 等等呢！
+		若是使用 SATA 介面的話，那麼該硬碟的代號就可能變成 /dev/sda 之類的檔名。<br /><br />
+
+		不過，萬一您使用的不是 IDE 裝置呢？例如 SCSI 介面的硬碟！那麼就得由
+		<span class=text_import2>/dev/sda</span> 開始算起了！同時，目前很常見的 USB 
+		介面的隨身碟或者是 USB 的外接式硬碟，他的代號也是
+		<span class=text_import2>/dev/sda</span>
+		開始算起喔！除了這些基本概念外，在硬碟的 partition (分割) 部分，例如第一個
+		IDE 插槽的硬碟分割成為五個分割槽，此時，您必需要瞭解什麼是 Primary 與 Extended
+		及 Logical 等磁碟分割槽的概念才行！必需清楚的知道一個硬碟最多只能有一個
+		Extended ，而 Primary + Extended 最多只能有四個！至於 Logical 則是由 Extended
+		再分割出來的。<br /><br />
+
+		每一顆硬碟分割出來的 partition 代號為 /dev/hd[a-d][1-63] ，亦即原本的硬碟代號後面加上一組數字就是了。
+		舉例來說， IDE1 的 Master 的第一個 partition 即是： /dev/hda1 ，
+		由於 1-4 號是保留給 Primary 與 Extended 分割槽的，因此，第一個由
+		Extended 分割出來的 Logical 代號則為 /dev/hda5 (注意：這裡舉例的是第一個
+		IDE 的 Master 硬碟接法)。這些部分在『<a href="../linux_basic/">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』
+		有詳細的說明，如果您還是不了解，可得趕緊回去翻一翻啊！因為這很重要的！
+		</ol>
+
+		還不止此吶，上面這些動作的判斷尚包含了：
+		<a href="../linux_basic/0210filepermission.htm">Linux 系統檔案的樹狀目錄</a>、
+		<a href="../linux_basic/0220filemanager.htm#file_find">檔案所在目錄的搜尋方法</a>、
+		<a href="../linux_basic/0420quota.htm">磁碟配額 (Quota) 的設定</a>、
+		<a href="../linux_basic/0310vi.htm">文書編輯器 vi 的使用</a>、
+		<a href="../linux_basic/0520source_code_and_tarball.htm">核心的編譯技巧</a>、
+		<a href="../linux_basic/0610hardware.htm">硬碟的安裝與維護</a>等等，所以囉，
+		<a href="../linux_basic/">基礎的文件</a>還是需要閱讀過的吶！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_partition"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>Linux 安裝硬碟規劃</span><br />
+	<div class=block2>
+		OK！瞭解了架站目的，也知道硬體應該是如何搭配之後，接下來，自然就是安裝
+		Linux distribution 了！到底選擇哪一套 distribution 好呢？是 Fedora/SuSE/Mandriva
+		還是.....這個時候您就需要清楚的瞭解到 Linux 其實就是一個『Kernel』囉！而目前 (2007/01) 的
+		Kernel 最常用的就是 2.6 這個版本，如果您使用較舊的 Linux distribution 例如
+		Red Hat 9 時，那麼 Kernel 版本是較為早期的 2.4 版，這個時候，在新版的
+		2.6 核心上面開發出來的各種類軟體就無法在 Red Hat 9 的系統上面動作了，
+		而且，不同核心的函式庫也不相同啊！
+		所以說，選擇 Linux distribution 時，需要知道該 distribution 的核心版本才好。<br /><br />
+
+		一般來說，我們會建議大家不要使用太冷門的
+		distribution ，因為，支援度可能會比較不夠好！所以，目前較為推薦的還是台灣地區比較多人使用的
+		Red Hat 系統 (Red Hat/Fedora/CentOS 均是 Red Hat 系統)，以及操作介面良好的 SuSE ，
+		還有 Mandriva 也不錯啊！<br /><br />
+
+		選擇了 distribution 後，當然要開始安裝了！安裝的第一個要件就是剛剛上個步驟的規劃，
+		因為上面提過了，所以這裡我們就不再談規劃的工作了。規劃完成之後，再來就是整個安裝的流程了。
+		安裝流程最重要的大概有三個地方：
+
+		<ol>
+		<li><span class=text_import1>硬碟的 partition 與掛載：</span><br /><br />
+		除了硬碟的代號需要特別留意之外，當然磁碟分割也不能不清楚啊！磁碟分割方面，需要學習的有
+		<a href="../linux_basic/0230filesystem.htm#fdisk">fdisk 這個重要的分割程式</a>。
+		在分割完成之後，接下來就需要格式化硬碟啦！格式化就需要瞭解
+		<a href="../linux_basic/0230filesystem.htm#mke2fs">mke2fs 這個指令的用法了</a>！
+		再來，格式化完成後，就需要與掛載點 (目錄咯！) 
+		搭配來掛載！掛載使用的指令為 <a href="../linux_basic/0230filesystem.htm#mount">mount</a>。
+		而掛載前，想要檢查一下該 partition 有沒有問題，就需要使用 
+		<a href="../linux_basic/0230filesystem.htm#fsck">fsck</a> 來檢測，另外，記得啊！使用 
+		fsck 時，要被檢查的 partition 請務必給他卸載啊 (使用 
+		<a href="../linux_basic/0230filesystem.htm#umount">umount</a>)。<br /><br />
+
+		還有還有，如果要讓某些 partition
+		在開機的時候就自動掛載，要記得寫入 <a href="../linux_basic/0230filesystem.htm#fstab">/etc/fstab</a>
+		當中，或者是將指令完整的寫到
+		/etc/rc.d/rc.local 當中。哇！這麼多指令怎麼看的懂？呵呵！這時又得要知道
+		<a href="../linux_basic/0160startlinux.htm#manual">man 這個好用的指令</a>的！
+		這部份硬碟的管理真的很重要的！不要忽略了！</li><br />
+
+		<li><span class=text_import1>套件的選擇與安裝：</span><br /><br />
+		好了，將硬碟整理好之後，終於要將 Linux 安裝上來了！這個時候請特別留意，因為
+		Linux 提供了圖形介面與文字介面的預設登入 (<a href="linux_basic/0510osloader.htm">run level</a>)，
+		事實上，圖形介面挺容易造成系統的資源損耗，因此伺服器上面較少使用圖形介面喔！
+		所以，通常鳥哥都是不安裝圖形介面的套件的啦！再來，為了未來的升級與重新安裝套件的便利性，
+		所以，在選擇套件時，請務必將底下幾個套件選擇進來：<br /><br />
+
+		<ul><span class=text_import2 style="font-family:細明體">
+		<li>make</li>
+		<li>gcc</li>
+		<li>kernel-source 及 (或) kernel-header 及 (或) kernel-devel</span></li>
+		</ul><br />
+
+		因為 make 與 gcc 是編譯套件所必需要的軟體，至於 kernel-devel
+		則是一些驅動程式在編譯時會使用到的一些函式庫或系統資料，
+		這些東西對於桌上型電腦並不很重要，因此在各大
+		distribution 的預設套件上面『<span class=text_import2>都沒有安裝</span>』，
+		所以，<span class=text_import2>您需要自行挑選啊</span>！這些套件通常都會放在
+		<span class=text_import2>Software develop</span> 或者 
+		<span class=text_import2>Utility</span> 的項目當中，請仔細的選擇喔！</li><br />
+
+		<li><span class=text_import1>開機的設定 ( Grub/Lilo ) ：</span><br /><br />
+		在我們進入系統之前，主機會先讀取 BIOS 的資訊，然後會讀取第一塊硬碟的主要開機磁區
+		(Master Boot Recorder, MBR)，這個動作是為了讓我們的主機瞭解資料格式，
+		以順利的將系統的資料讀取進來啊！而在這個
+		MBR 上面的程式，就被稱為<a href="../linux_basic/0510osloader.htm#grub">開機管理程式</a>了！在
+		Linux 上面主要的開機管理程式有 Grub 與 Lilo 這兩支，他們的運作方式有點不太相同！
+		LILO 是直接將所有的資訊都給他寫入 MBR 裡面，所以如果您設定完成設定檔 /etc/lilo.conf
+		之後，還得將 LILO 重新安裝到 MBR 當中。至於 Grub 則是使用類似指向 (point)
+		的功能，將開機資訊導向設定檔 /boot/grub/menu.lst 當中！
+		這兩個管理程式各有優缺點，可依照個人喜好來選擇安裝。<br /><br />
+
+		另外，其實我們的主機是可以達成所謂的『多重開機』的系統的！也就是一部主機上面可以有多個作業系統，包括
+		Windows 與多個 Linux 。如果要達成多個系統在同一部主機上面的話，您又得要必須瞭解
+		MBR 與 Super Block 的異同點才行！這都是需要學習的呢！</li></ol>
+
+		真的很不容易喔！安裝一部好的 Linux 主機，最大的重點就在於硬碟的 partition
+		了！硬碟分割的考量會影響到您的主機未來的擴充性與實用性，還有『安全性！』呢！所有的種種都需要有一定程度的
+		Linux 概念才行吶！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_services"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>瞭解欲架設的網站服務原理</span><br />
+	<div class=block2>
+		事實上，瞭解每種服務的運作原理，對於您未來在進行除錯 (debug)
+		是相當的有用的啊！而且，在主機的規劃上面也會有一定程度的幫助。舉例來說好了，在
+		Linux 上面很有名氣的檔案伺服器 <a href="0370samba.htm">SAMBA</a> ，他的運作原理主要是 NetBIOS over
+		TCP/IP ，而如果您瞭解最原始的 NetBIOS 是無法跨網域的，亦即無法跨路由器
+		(Router) 的，那麼就比較容易瞭解為何 Windows 
+		的網路上的芳鄰顯示的電腦數量只有區域網路內部這麼多而已！<br /><br />
+
+		另外，如果您熟悉 FTP 的運作模式時，才有可能會瞭解『被動式』與『主動式』連線對於 
+		FTP 主機的設定其實是『大有關係』的！或許在這裡您完全不曉得鳥哥在談些什麼
+		(因為這些基礎知識在後續的章節才會陸續的提及啊！這裡還沒有講到啦！)
+		，只不過，請大家先有個概念，理解服務 (Services) 
+		的運作流程，將有助於您未來的架設與維護喔！所以，這一部份也不要忽略了！<br /><br />
+
+		這還只是各個伺服器的服務原理呢！如果是在 Linux 上面運作呢？那麼您至少就得要瞭解『什麼是
+		daemon ？』而 daemons 的形式有所謂的 stand alone 以及 super daemon 的管理！這兩種形式有什麼差別？每種
+		daemon 管控的 port number 是否相同？如果需要更改 daemon 的 port number
+		，應該要改 /etc/services 這個檔案，您是否瞭解如何去修改？還有還有，除了伺服器才需要的
+		daemon 之外，其實我們 Linux 主機裡面本來就有很多 daemon 存在，例如幾乎一定要存在的
+		crond, syslogd, atd 等等，這都是需要瞭解的基本知識！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_update_install"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>服務的套件安裝、
+	漏洞修補、套件升級...</span><br />
+	<div class=block2>
+		好了，假設您已經將網路硬體配置搞定了，主機也規劃好了，並且也已經可以連上
+		Internet 了，此外，也已經知道了該伺服器的服務原理，那麼再來當然就是：『
+		<span class=text_import2>我的主機上面是否有我要架設的伺服器軟體了</span>？』舉個例子，
+		如果我問你，你的 Linux 主機上面有沒有 Apache 這個 WWW 
+		伺服器的軟體呢？聰明的管理員大概已經想到了使用
+		<a href="../linux_basic/0520rpm_and_srpm.htm">RPM</a> 來尋找，而如果不是使用 RPM 
+		來管理軟體的系統管理員，也會立刻想到 
+		<a href="../linux_basic/0220filemanager.htm#file_find">locate, find, which</a> 
+		等等的指令來搜尋相關的檔案或指令，例如 Apache 的主要設定檔是
+		httpd.conf ，那麼只要找到該檔案，就能夠瞭解是否已經安裝了這個套件～因此，立刻使用
+		locate httpd.conf 即可發現啦！<br /><br />
+
+		好了，假設您的主機並沒有安裝 Apache 這個套件，那麼您要如何安裝呢？
+		這個時候就需要考慮到『套件管理員』這咚咚了！目前
+		Linux 上面的套件管理員大多使用 RPM 與 Tarball 這兩個咚咚！使用 RPM 
+		最大的優點是方便管理！因為所有的檔案與資訊都有紀錄，所以在搜尋、升級、反安裝上面都相當的容易！
+		不過，卻也因為相依屬性的問題常常導致新手無法立刻進入狀況！此外，RPM
+		有版本方面的問題，不同的 Linux distribution 上面的 RPM 還不能互相挪用吶！呵呵！真是苦惱～<br /><br />
+
+		如果您對於 RPM 的相依屬性有相當大的反感程度，那麼使用原始碼 (source
+		code) 來進行編譯則是一個不錯的思考方向。在系統上面能夠執行的檔案屬於 Binary
+		(二進位檔) ，那麼這些 binary 是怎麼來的呢？！我們以 Linux 常見的 binary
+		製作方法：使用 gcc 來編譯的動作來說明好了。要製作 binary file 
+		之前，首先就必須要撰寫程式碼，這些程式碼大多是以文書編輯器編輯而成的
+		ASCII 格式檔案，這就是通稱的『Source code』咯。然後這些程式碼必需要經過編譯器
+		(compiler) 編譯成為我們的系統認識的 binary 可執行檔才行！在編譯的過程中，可能還會使用到很多的函式庫
+		(library) 呢！需要注意的是，目前 linux 上常見的編譯器就有 gcc, g77 
+		等，您的原始碼必須要針對這些編譯器的語法進行撰寫才行！<br /><br />
+
+		一般來說，當套件釋出時，大多採用原始碼的方式釋出的，但是因為原始碼所佔用的檔案空間比較大，
+		因此常常會加以壓縮之後，才放上網站上供人下載，那就是所謂的
+		Tarball 了！因此，您必須要瞭解 
+		<a href="../linux_basic/0240tarcompress.htm">tar, gzip, bzip, compress</a> 等指令的用法才能夠解開
+		Tarball 的檔案！此外，由於 Tarball 是原始碼，因此您還必須要有 compiler
+		以及相關的 make 與 Kernel 相關的函式庫，才能夠成功的將這個套件給他編譯成為可以在您的系統上面跑的
+		binary file ！使用 Tarball 的安裝方式，最大的優點是具有彈性！
+		您可以將套件安裝在任何您想安裝的目錄，還可以自行加入一些額外的參數來設定該套件呢！
+		不過，還是有缺點的啦！那就是當平台不一樣時，可能由於某些函式庫無法找到，
+		或者是使用者的基本知識不足，就無法成功的將
+		Tarball 編譯成功！另外，用 Tarball 安裝時，某些特殊的套件很難進行反安裝的動作吶！
+		造成升級與移除上的困擾！<br /><br />
+
+		反正 RPM 與 Tarball 是各有優缺點啦，鳥哥個人比較偏向於使用系統預設的
+		RPM 來進行伺服器的設定，不過，由於並非每個 Linux distributions 都適合某個套件的
+		RPM 參數，所以，這個時候我就會開始考慮使用 Tarball 了！無論如何，
+		既然您要架設伺服器，就必須要有該伺服器的套件在您的系統上面，那麼學習上面這兩個套件管理員，是必要的動作！<br /><br />
+
+		<li><span class=text_import1>漏洞修補的重要性</span>：</li>
+		<div class=block2>
+		很多的新手在架設好了伺服器之後，
+		就以為『<span class=text_import2>萬事 OK</span> 』了！
+		所以就不再繼續的監視網路上面公佈的套件漏洞資訊！事實上這是很危險的！因為目前由於
+		Internet 的發達，網路的危險性其實是越來越嚴重的！稍一不小心，您的主機可能就會立刻的『中標』。
+		為了隨時修補漏洞，您應該要熟悉如何進行套件的升級！一般來說，使用
+		RPM 安裝的套件就以 RPM 的方式來升級，使用 Tarball 的話，比較麻煩，
+		需要先移除後再進行升級！無論如何，套件的升級是系統管理員經常要進行的工作！<br /><br />
+
+		目前各大版本的 Linux distributions 都有釋出線上自動更新的機制，包括 Red Hat 的 up2date, 
+		CentOS/Fedora 的 yum, SuSE 的 YOU，以及 Debian 的 APT 等等，都值得您花時間去學習的，
+		因為可以讓您的主機變的更加的安全喔！<br />
+		</div>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">			程式設計師所撰寫的程式並非十全十美的，所以，總是可能有些地方沒有設計好，
+			因此就造成所謂的『程式漏洞』囉。程式漏洞所造成的問題有大有小，
+			小問題可能是造成主機的當機，大問題則可能造成主機的機密資料外流，
+			或者主機的操控權被 cracker 取得。在現今網路發達的年代，
+			程式的漏洞問題是造成主機被攻擊、入侵的最主要因素之一了。
+			因此，快速、有效的針對程式漏洞進行修補，是一個很重要的維護課題。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+
+	<hr><a NAME="server_server"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>主機設定、啟動、觀察與除錯</span><br />
+	<div class=block2>
+		在所有的前置作業都完成之後，終於可以來到『主機設定』的地方了！
+		所以您看看，要設定一部堪稱完美的主機，前置作業就得學會這麼多的基礎功夫吶！
+		並不簡單喔！好好的用功學習吧！主機的設定大致的流程是這樣的：
+
+		<ol>
+		<li><span class=text_import1>找出設定檔：</span><br /><br />
+			主機設定第一個步驟就是需要『找到主要設定檔』，因為不論您使用的是 
+			<a href="../linux_basic/0520rpm_and_srpm.htm">RPM</a>
+			還是 <a href="../linux_basic/0520source_code_and_tarball.htm">Tarball</a>，
+			由於都是同一個套件，所以設定檔的檔名是不變的！舉例來說，
+			Apache 的設定檔檔名都是 httpd.conf ，而 SAMBA 的設定檔檔名都是 smb.conf
+			，您必須找到該設定檔之後才能夠進行設定啊！所以，熟悉 locate, rpm, find,
+			grep 等指令就顯的很重要了！</li><br />
+
+		<li><span class=text_import1>編輯設定檔：</span><br /><br />
+			既然要設定，當然就需要編輯啦！既然要編輯，那麼 Unix Like 標準的文書處理器
+			<a href="../linux_basic/0310vi.htm">vi</a> 
+			是否學會了呢？ vi 是學 Linux 過程中相當重要的一課！如果不會 vi ，那麼學習
+			Linux 之路就會顯的跌跌撞撞呢！此外，設定檔的內容該如何編輯呢？例如 httpd.conf
+			裡面有些虛擬主機的設定項目，要如何設定吶？！要瞭解這裡面的設定項目，您就必須要學會使用
+			man, info 等指令，也需要知道套件的文件資料 (documentation) 放置在我們系統的
+			/usr/share/doc 裡面說！如果您知道如何快速的查閱設定項目，那麼設定檔的編輯對您而言，
+			就簡單的很吶！</li><br />
+
+		<li><span class=text_import1>啟動伺服器：</span><br /><br />
+			設定完成伺服器的設定檔之後，再來就是需要啟動伺服器啦！
+			而且，如果您在伺服器啟動之後進行設定檔的修改，也需要重新啟動伺服器才行喔！
+			要啟動伺服器，您就必須要瞭解什麼是
+			<a href="../linux_basic/0560daemons.htm">daemons ，而 daemons 又有 
+			super daemon, stand alone 兩種模式</a>，在 Linux
+			預設的路徑當中， stand alone 的服務在 /etc/init.d/* 這個目錄當中，而裡面的檔案是以
+			<a href="../linux_basic/0340bashshell-scripts.htm">BASH shell script</a> 
+			寫成的，所以除了瞭解 daemon 之外，您還必須要熟悉 shell
+			script 的相關語法才行！另外，如果是 super daemon 的話，必須知道啟動伺服器的設定檔會放置
+			/etc/xinetd.d 裡面，啟動的話，則是重新啟動 /etc/init.d/xinetd 這個
+			super daemon 才行！<br /><br />
+
+			萬一您的伺服器軟體是以 Tarball 安裝的，那麼啟動的時候可能是直接執行
+			binary file ，如此一來，就沒有 shell script 幫助您啟動、關閉、
+			重新讀取設定檔等伺服器啟動的動作！當真如此的話，您就必須要以
+			<a href="../linux_basic/0440processcontrol.htm">程序 (process) 與訊號 (signal)</a> 
+			的方法使伺服器動作了！這部份您就必須要熟悉 ps,
+			top, kill 以及 signal number 的意義等等！很重要的吶，尤其是當您想要將目前某個連線中斷時，
+			netstat 配合 kill 的用法是很重要的。</li><br />
+
+		<li><span class=text_import1>觀察啟動的狀態：</span><br /><br />
+			雖然似乎已經啟動了伺服器，但是啟動後的伺服器就一定能夠正常的運作嗎？
+			如何觀察他是否正常的運作呢！？首先，您就必須要具有
+			PID 的概念，利用 netstat 觀察 PID 與 port number 
+			的訊息，來觀察伺服器是否正確的在工作呢？！還有，任何系統資訊都會
+			<a href="../linux_basic/0570syslog.htm">記錄到登錄檔 (log files)</a> 
+			裡面去，所以，啟動完伺服器後，到該伺服器的登錄檔當中察看一下資訊，是相當正確的一個行為！例如啟動
+			DNS 之後，雖然觀察 port 確定有啟動，但是其實伺服器可能是不正常的啟動，此時就必須要觀察
+			/var/log/messages 的內容來判定 DNS 的設定是否正確說～
+
+			而既然要觀察登錄檔，那麼 linux 主機上面控制登錄檔的 syslogd 這個 daemon
+			就不能不知道啊！您必須要瞭解 syslogd 的設定檔在 /etc/syslog.conf ，並且可以搭配
+			logrotate 來進行登錄檔的輪替！</li><br />
+
+		<li><span class=text_import1>Server 與 Client 的權限問題：</span><br /><br />
+			好了，伺服器已經正常的啟動了！觀察所有的狀態也都沒有問題！那麼我總可以對
+			Client 進行正確的服務了吧？『錯！』您還尚未考慮到『權限』的概念吶！舉個例子來說，架設過
+			WWW 主機的朋友大概都知道如果需要開放個人家目錄的首頁時，將該使用者的家目錄設定權限為
+			755 是必須的！因為如此一來，啟動 Apache 程序 owner 才能夠進入該目錄進行瀏覽的動作！
+
+			為了要瞭解權限的概念，您必須至少具有 
+			<a href="../linux_basic/0410accountmanager.htm">UID, GID 等 Linux 系統上面的帳號概念</a>，
+			而每個帳號的特殊參數在 /etc/passwd 與 /etc/shadow 
+			也是必須要知道的！此外，每個檔案或目錄具有十個屬性的特徵也是最基礎的觀念，
+			真的重要吶這一部分！而如果要讓使用者管理系統的話，身份轉換成為系統管理員
+			(root) 也是必須的！如此您就必須要教育使用者瞭解 
+			<a href="../linux_basic/0410accountmanager.htm#userswitch">su 及 sudo</a> 
+			的用法！再來，為了預防系統被破壞，適時的減少
+			SUID 與 SGID 等特殊權限的 binary file 則顯的相當的重要！咦！這些東西都不懂～那....不要架站喔！
+			^_^</li><br />
+
+		<li><span class=text_import1>設定開機啟動該伺服器：</span><br /><br />
+			終於將伺服器設定好，啟動正確，對於 Client 端的權限與服務也設定妥當，
+			再來就是要進行一開機就將伺服器載入記憶體的動作了。如何進行這個動作呢？在
+			Red Hat/SuSE/Mandriva 有 
+			<a href="../linux_basic/0560daemons.htm#starting_daemon">chkconfig</a> 
+			可以輔助， Red Hat 更有 ntsysv 可以達成簡單的設定！然而，如果是其他的
+			Linux distributions 呢？那麼就得瞭解正常的開關機程序，這裡面包含了 Run
+			Level 的觀念，Run Level 的讀取檔案在 /etc/inittab 裡頭呢！還得要瞭解 /etc/rc.d/
+			裡面的目錄與 /etc/rc.d/rc.local 這個檔案的用途才行！一般來說，我們使用
+			Tarball 的套件想要在開機時就啟動，都會藉由 /etc/rc.d/rc.local 這個檔案來達成！呵呵！很重要吧！
+		</ol>
+
+		經過上面的流程，您就可以知道啦，架設好一部主機需要知道：<span class=text_import2>(1)各個
+		process 與 signal 的觀念；(2)帳號與群組的觀念與相關性；(3)檔案與目錄的權限，這當然包含與帳號相關的特性；
+		(4)套件管理員的學習；(5)BASH 的語法與 shell scripts 的語法，還有那個很重要的 vi 
+		囉！：(6)開機的流程分析，以及記錄登錄檔的設定與分析；(7)還得知道類似
+		quota 以及連結檔等等的概念</span>。要知道的真的很多，而且還是不能省略的步驟喔！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_client"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>用戶端設定、觀察與除錯</span><br />
+	<div class=block2>
+		一般來說，目前的伺服器大多只要針對 Server 設定好即可， Client 
+		端我們不太需要去管理的。不過，某些特殊的套件，例如
+		SSH, Mail, SAMBA, NAT 等等，就必須要連同 client 的權限與設定一起包含進去設定呢！
+		如果您是一個系統管理員的話，那麼『教育
+		Client 端的使用者，正確的使用網路與主機提供的服務』就是一個相當重要的工作了！<br /><br />
+
+		最常發生的錯誤在於 Client 端架設了『個人防火牆』，這部份相當的惱人～那我怎麼知道
+		Client 端的服務要求被防火牆給他中斷呢？這當然可以由 Server 以 netstat 來簡略的檢查，當然，到
+		Client 端視查一下使用者的使用習性與作業系統，也是一個可行的方案。不過，總體來說，
+		<span class=text_import2>教育您的
+		Client 使用者具有最最基礎的 Linux 帳號、群組、檔案權限等概念，才是一個徹底解決問題的方法說</span>！尤其是
+		Client 端的使用者在使用類似 SAMBA (網路芳鄰) 進行資料存取時，最容易發生權限觀念這樣的錯誤了！<br /><br />
+
+		總之，系統管理員對於 Client 端的使用者還是有一定程度的責任與義務的，至少我們要進行好教育的任務！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_security"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>安全性設定</span><br />
+	<div class=block2>
+		前面說過，網路的安全有越來越需要注意的趨勢。所以，架設一個相對安全的網站是很重要的！
+		那麼如何架設好一個相對安全的網站呢？您至少需要有這樣的概念：
+
+		<ol>
+		<li><span class=text_import1>嚴格規範使用者的密碼設定規則：</span><br />
+		『猜密碼』仍是一個不可忽視的入侵手段！例如 SSH 如果對 Internet 開放的話，您又沒有將
+		root 的登入權限關閉，那麼對方將可能以 root 嘗試登入您的 Linux 主機，
+		這個時候對方最重要的步驟就是猜出您 root 的密碼了！如果您 root 
+		的密碼設定成『1234567』哈哈！想不被入侵都很難～
+		所以當然需要嚴格的規範使用者密碼的設定了！那麼如何規範嚴格的密碼規則呢？可以藉由
+		(1)修改 /etc/login.defs 檔案裡面的規則，以讓使用者需要每半年更改一次密碼，且密碼長度需要長於
+		8 個字元呢！(2)利用 /etc/security/limits.conf 來規範每個使用者的相關權限，讓您的
+		Linux 可以較為安全一點點～(3)利用 pam 模組來額外的進行密碼的驗證工作。</li><br />
+
+		<li><span class=text_import1>利用 Super daemon 與 TCP Wrappers 管理服務權限：</span><br />
+		如果您使用 xinetd 這個 super daemon ，或者是直接使用 tcp wrappers 的函式庫，那麼您將可以直接使用
+		/etc/hosts.allow 以及 /etc/hosts.deny 來管理是否能夠登入系統的某個 daemon
+		的權限！在 hosts.allow(deny) 裡面，能夠限制的有 IP, 網段, 網域等等的設定，如此一來，可以讓您的
+		daemon 提供有限的信任網域，畢竟是安全一些的！</li><br />
+
+		<li><span class=text_import1>利用 netfilter 防火牆：</span><br />
+		除了 /etc/hosts.allow(deny) 之外，利用防火牆機制 iptables 來設定您的主機單機防火牆是很重要的！
+		如果您的核心是 2.4.xx 以上版本(包含 2.6)的話(利用 uname 查詢核心版本)，防火牆機制為 iptables ，如果是
+		2.2.xx 的話，則是使用 ipchains 。如果不是因為特殊需求的話，目前我們大概都會建議大家使用
+		iptables 這個機制，因為不但設定較為簡單，而且功能更為強大！</li><br />
+
+		<li><span class=text_import1>持續進行套件修補：</span><br />
+		讓我們做一個簡單的想法：『<span class=text_import2>架設了防火牆，是否就安全無虞了</span>』？
+		如果您的答案為『是』，那麼仔細的觀察一下底下的說法吧！如果您的主機有開放
+		WWW 也就是 port 80 ，既然要開放 port 80 ，當然防火牆就必須要開放 Client
+		登入。也就是說，雖然您架設了防火牆，可以抵擋非 port 80 以外的連線，不過，
+		不論來自何方的連線，只要連接到您的
+		port 80 ，那麼該連線就會予以通過！好啦，萬一這個 www 軟體被偵測出有漏洞的話，由於您的
+		port 80 是允許大家登入的，結果呢？呵呵！當然別人就可以利用 WWW 
+		的漏洞成功的入侵您的主機了！這樣說可以理解為什麼系統管理員需要常常更新套件以修補漏洞了吧？
+		^_^</ol>
+
+		無論如何，以現今的網路功能及維護來看，
+		<span class=text_import2>架設一個『功能性強』的主機，還不如架設一個『穩定且安全的主機』比較好一點</span>！
+		因此，對於主機的安全要求就需要嚴格的要求啦！就鳥哥的觀點來看，
+		如果您的主機是用來替你賺錢的，例如某些研究單位的大型
+		Cluster 運算主機，那麼即使架設一個甚至讓您覺得很不方便的防火牆系統，都是合理的手段！
+		因為主機被入侵就算了，若資料被竊取，呵呵！那可不是鬧著玩的！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_logfile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>服務日誌、登錄檔與備份管理</span><br />
+	<div class=block2>
+		除了安全性之外，主機也可能因為硬體問題或者是人為使用不當而產生錯誤訊息等問題！這些訊息會放置在
+		/var/log 裡面，不過，還是得視 syslogd 這個 daemon 的設定檔 /etc/syslog.conf
+		的設定而定喔！這些登錄檔的資訊是相當重要的，他可以記錄曾經發生過的事情，
+		如果再經由系統管理員自行寫的分析軟體，那麼就可以很輕鬆的管理好主機了！
+		也可以在最短的時間內發現主機的可能漏洞呢！不可說不重要啊！<br /><br />
+
+		我們常常說主機的服務越單純越好，原因是什麼呢？如果哪一天我們發現主機的登錄檔有點問題，
+		要來進行入侵管道的查詢，萬一主機的服務過多，很難追查出到底是哪一個
+		daemon 造成主機的問題啊！如果主機的服務很單純，分析登錄檔也會比較輕鬆呢！
+		此外，系統管理員最好有製作工作日誌的習慣，可以讓您未來管理主機比較容易快速的進入狀況！
+		總之，要良好的管理主機，利用主機的工作排程(crontab)也是很重要的喔！<br /><br />
+
+		當然啦，主機<a href="../linux_basic/0580backup.htm">隨時的給他備份</a>是一個很良好的行為，要怎麼備份呢？
+		您必須要瞭解主機的相關資訊，例如郵件主機，您可能就得備份
+		/etc 與 /home 及 /var/spool/mail 等目錄，而如果是 WWW 主機，就得找到 WWW
+		主頁的目錄，才能進行備份吶！要用什麼工具呢？可以選擇 
+		tar 或者是 cpio 等工具，當然，您還得配合備份的媒體，例如抽取式硬碟啊、可燒錄光碟啊等等的媒體說！<br /><br />
+	</div>
+
+
+	<hr><a NAME="server_final"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>小結語</span><br />
+	<div class=block2>
+		由上面的整個架站流程來看，由規劃到安裝、主機設定、帳號與檔案權限管理、
+		後續安全性維護與管理以及重要的備份工作等等，必需要每個環節都很清楚，
+		才能夠設定出一個較為穩定而可正常工作的伺服器。而上面的每一個工作都涉及到相當多的
+		Linux 基礎操作與相關的概念，所以說，
+		<span class=text_import1>想要學架站，真的真的不能省略了 Linux 的基礎學習</span>，
+		<span class=text_import2>這也是為什麼我們一再強調 Linux 
+		新手不要一頭栽入想要單純架設伺服器的迷思當中吶！</span>
+		如果您對於上面談到的幾個基礎概念不是很清楚的話，那麼建議您由底下的兩個網站學起：
+
+		<ul>
+		<li><a href="http://www.study-area.org" target="_blank">http://www.study-area.org</a></li>
+		<li><a href="http://linux.vbird.org">http://linux.vbird.org</a></li>
+		</ul>
+
+		在這一本書當中，鳥哥並沒有再花篇幅再繼續介紹一些 Linux 的基礎指令以及相關的設定，
+		<span class=text_import2>這一本書本來就定位在已經具有
+		Linux 知識的朋友的工具書</span>，所以，對於尚未接觸過 Linux 
+		的朋友來說，這部份其實並不適合您！建議您還是得要重頭學起吶！若想要一本
+		Linux 基礎知識的工具書在手邊，也可以考慮鳥哥前一本著作
+		『<a href="../linux_basic/">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』喔！
+		(好像有點老王賣瓜了喔！ ^_^ )大家加油的啦！
+	</div>
+</div>
+
+
+<hr><a NAME="canI"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>自我評估是否已經具有架站的能力</span><br />
+<div class=block1>
+	由前一節的內容介紹中，不難知道要架設一個堪稱完美的網站，
+	得事前花諾大的心力來培養您自己的『能力』才行！說實在的，架站實在不能貪圖『便利』，
+	因為越是『便利自己』就越是『便利 Cracker 的入侵』啊！此外，上面談到的都屬於技術層面的部分喔！
+	要有架站的能力，不只有『技術』就可以了喔！還需要其他心理層面的輔助呢！
+	@_@ 咦！搞什麼～架站還需要心理層面的因素？我們是在玩心理戰是吧？！<br /><br />
+
+	這裡要請您特別注意的一點是，如果您架了一個網站，一般來說，您自然就是系統管理員
+	(root) 的身份了。而要曉得的是，在 Linux 系統當中， root 具有『至高無上』的權力，
+	他可以進行任何系統的設定，也可以察看任何使用者的檔案或郵件或什麼機密文件等等的，
+	還可以讓使用者寄出、寄入的郵件都送一份到自己的信箱去！所以，如果身為
+	root ，還擁有『極高度的偷窺慾望』時，那麼您的 user 豈不是毫無祕密可言？換個角度來想，如果您是一般的
+	user ，而您的 root 卻擁有很高的偷窺慾，我想，您應該也不見得會有多快樂吧？
+	就好像在家裡被人家裝了針孔式攝影機一樣，感覺絕對不可能太好！所以，要成為
+	root 之前，您必須做好心理建設，那就是擁有相當高水準的『道德感』。<br /><br />
+
+	一般來說，<span class=text_import1>網管人員需要什麼能力</span>呢？我想，
+	架幾個站跟作一個稱職的網管人員，相差是甚遠的！架站，說真的，是一件很簡單的事情，
+	看著書本一步一步的作上去，一定可以成功的！但是，很多人都只曉得
+	『<span class=text_import2>如何架站</span>』卻不知到
+	『<span class=text_import2>如何維護一個網站的安全</span>』！基本上，
+	維護一個已經架設好的網站的正常運作，真的要比架設一個網站難的多了！您得要隨時知道您的系統狀況，
+	隨時注意是否有新的套件漏洞而去修補他，隨時要注意各種服務的登錄檔案(logfile)以瞭解系統的運作情況！
+	得知道發生問題的時候，到底問題點是在哪一個！比如說當機了，那麼您知道當機的原因嗎？
+	即使不知道，也可得需要約略猜得出來才行。而，如果安全出了問題，被入侵了，除了
+	<span class=text_import2>format + 重灌</span>之外，可有辦法在不移除系統的情況下修補漏洞？
+	這些都是網管人員需要學習的，而且，通常都是需要經驗的累積才會知道問題的所在！
+	此外，保持身心的活力以隨時注意線上公布的安全防備資訊等等！都需要具備的！<br /><br />
+
+	此外，最嚴重的問題是，網管人員其實最需要的是
+	『<span class=text_import2>道德感與責任感</span>』！您可要曉得您的機器上所有人的隱私都在您的監控之下，
+	如果您本身就已經有偷窺慾了，可知道這有多可怕嗎？另外，如果沒有責任感的人作為一個網管，
+	可能會瘋掉，因為不論何時何地，只要是你監控的主機出了問題，嘿嘿嘿嘿，你一定是第一個被想到的人物，
+	所以，你得隨時隨地做好可能隨時會被召喚回主機跟前的心理準備！更可笑的是，如果你服務的人群中，
+	有幾個連開機的時候軟碟機塞了一塊不可開機的軟碟，導致無法正常開機，
+	也都會跟你抱怨說『<span class=text_import2>唉呦！您經手的電腦怎麼這麼爛，動不動就不能開機</span>』的時候，
+	您得要有容人的雅量，說說冷笑話解解悶吧！總之，網管人員並不是只要會架站就可以了，
+	『道德感』『責任感』還有『耐心』呵呵！套一句現在人喜歡說的口頭禪『這是一定要的啦！』<br /><br />
+
+	那麼<span class=text_import1>網管人員是什麼</span>？ 前一陣子看到了報紙的一篇報導，
+	內容大概是說：臺灣的網路管理人員對於『網路安全性防護』的認知不夠，或許是防火牆機制建立不完整，
+	或者是認為駭客不會入侵小型網站，所以在不甚瞭解的情況下，被所謂的『中東駭客組織』所入侵，
+	然後以臺灣被入侵的電腦為跳板，去攻擊賓拉登的仇敵美國，然後引起美國高度的不滿。由於臺灣的立場有點得罪不得美國
+	( 這邊不提及政治因素，反正目前的情況是這樣。 ) ，所以一接到美國來的抗議信函就很棘手。
+	這只是一個事件問題，不過這個事件問題也點出了一個重點，就是我們的網路資訊可能真的是蠻發達的，
+	不過，管理網路的人員可能在認知的程度上就有點參差不齊了！網路安全是蠻重要的，只是，
+	大家常常會忘記他！個人認為，網管是蠻重要的角色，應該不能等閒視之才對。<br /><br />
+
+	好了，如果您瞭解了上面小弟所想要表達的意念之後，來評估看看您是否適合當一個稱職的網管人員吧！<br />
+
+	<ol>
+	<li><span class=text_import2>是否具有 Linux 的基礎概念</span>：<br />
+		這當然包含很多部分，例如帳號管理、BASH、權限的概念、Process
+		與 signal 的概念、簡易的硬體與 Linux 相關性 (如 mount)的認識、登錄檔案的解析、daemon
+		的認識等等，都需要有一定程度的瞭解；</li><br />
+
+	<li><span class=text_import2>是否具備基礎網路知識</span>：<br />
+		沒有網路知識想要架站，那是天方夜譚！請確認您已經熟悉
+		IP, Netmask, route, DNS, daemon 與 port, TCP 封包的概念等基本知識；</li><br />
+
+	<li><span class=text_import2>是否已經身心活化了</span>：<br />
+		網管人員必須要隨時注意網站的相關資訊，這包括網站套件的漏洞修補、
+		網路上公告的網路安全通報等等，還有，得要每日分析主機的登錄檔，
+		您是否已經具備了隨時注意這些資訊的『耐心』呢？</li><br />
+
+	<li><span class=text_import2>是否具有道德感與責任感</span>：<br />
+		如果還是具有一點點的偷窺慾，再加油吧！^_^
+		，另外，如果老闆想要請您『偷窺』時，請想盡任何方法，讓他理解這麼做是多麼的可笑～</li>
+	</ol>
+
+	當然，一再強調的，架設一個 Linux 伺服器是很簡單的，但是維護的工作除了身心已經活化，
+	並且還要擁有高標準的道德感，否則.....倒站可能是可以預見的一個後果.....<br /><br />
+</div>
+
+
+<hr><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class=text_h1>課後練習：</span><br />
+<div class=block1>
+<ul>
+	<li>請簡述進行網站架設前，應該具備何種基本技能？</li>
+	<div class=block2><font color=white size=-1>
+	<ol>
+	<li>Linux 系統操作上，至少需要瞭解帳號管理、檔案屬性與權限、程序與資源管理、
+		硬體如硬碟之掛載與軟體套件之安裝如RPM套件管理員等等，而 vi 與 Shell 
+		亦是不可忽略之基本技能，更重要者，日誌的管理以及系統服務的原理(如 stand alone 與 super deamon 
+		服務啟動的方式差異等)亦需同時釐清，以方便未來架設網站時除錯的技巧；</li>
+	<li>在網路的基礎知識上，TCP/IP 的觀念以及路由的概念相當的重要，此外，DNS 的概念也很重要。</li>
+	<li>在心態的調整上面，系統管理員需要的道德感以及使命感需要較高的標準。</ol>
+	</font></div>
+
+	<li>如果我有一顆硬碟在 A 主機上面安裝了 Linux 之後，拿到另一台配備相同的 B
+	主機上面去進行開機，結果竟然無法順利開機，您認為可能的原因是什麼？</li>
+	<div class=block2><font color=white size=-1>
+	由於配備相同，所以排除硬體的問題，不過，考慮到 IDE 排線與 partition 的代號，以及 /etc/fstab 的對應，所以應該是由於 IDE 
+	插槽放置錯誤所致(Linux 系統下，每個 IDE 插槽對應的 partition 名稱皆不相同喔！)。此外，
+	上次不正常關機也可能造成硬碟損害而無法開機成功！ 
+	</font></div>
+
+	<li>一般來說，在 Linux 系統上，使用者預設的家目錄在那個目錄下？另外，新增一個使用者時，
+	該使用者預設的家目錄內容來自那個目錄下？</li>
+	<div class=block2><font color=white size=-1>
+	在 /etc/default/useradd 這個檔案裡面會規範使用者的預設家目錄以及預設家目錄的內容，一般來說，使用者預設家目錄在 
+	/home ，至於家目錄內的檔案則複製來源在 /etc/skel 裡面。
+	</font></div>
+
+	<li>磁碟配額 ( quota ) 能否針對某個特定的目錄進行限制？Quota 有什麼較為特殊的使用限制？</li>
+	<div class=block2><font color=white size=-1>
+	Quota 目前僅能針對整個 partition 進行限額配置，如果該特定目錄是一個 partition 那就可以進行 quota 
+	設定，否則無法針對特定目錄！此外， Quota 除了特定目錄以及需要 ext2, ext3 等磁碟格式才支援之外，也需要核心的支援喔！ 
+	</font></div>
+
+	<li>在 Linux 系統下，要尋找一個檔名為 vbird.document 的檔案，可以使用什麼指令進行搜尋？
+	又，如果要尋找在一天內更動過的檔案，又該如何進行？</li>
+	<div class=block2><font color=white size=-1>
+	如果是執行檔可以使用 which command 來搜尋，如果是檔案，就必須要使用 locate vbird.document 或 whereis vbird.document 或 
+	find / -name vbird.document 。如果要找到一天內更動過的檔案，可以使用 find 配合參數，如：『 find / -ctime 1』。 
+	</font></div>
+
+	<li>在 Linux 系統中，常見的套件管理員有 RPM 與 Tarball ，請分別說明這兩個套件管理員的優缺點。</li>
+	<div class=block2><font color=white size=-1>
+	RPM 套件管理員在安裝套件的時候，會將該套件的檔案名稱、套件功能與訊息等等資訊記錄於 /var/lib/rpm 
+	目錄內，由於有這些套件的資本資訊，因此在系統內很容易進行 RPM 的升級、安裝、移除等動作。不過，由於 RPM 
+	檔案之間的相依性相當的強，因此常常會有版本不合或者是欠缺某樣前驅套件的問題發生。<br /><br />
+	至於 Tarball 則是原始碼，使用者可以自行設定套件的編譯參數，以符合自己的 Linux 平台。此外，由於 Tarball 
+	是原始碼，因此需要在您的系統上面進行編譯，編譯的過程中需要 gcc, make, 以及 kernel-devel 
+	等套件，還有您所想要安裝的套件所需要的前驅套件也同時需要先安裝後，才能進行 Tarball 的安裝。注意，幾乎每個 
+	Tarball 以 tar 程式解開後，在新增的目錄下均會有 README 以及 INSTALL 檔案，請務必先查閱過後才進行編譯工作。
+	</font></div>
+
+	<li>如果我下載了一個檔名為 httpd-2.0.52.tar.gz 的檔案，一般來說，這個檔案代表的意義為何？我該如何讓這個檔案能夠在我的
+	Linux 系統上面安裝？</li>
+	<div class=block2><font color=white size=-1>
+	由於附檔名是 .tar.gz 或者是 .tgz 的檔案，所以可以認定該檔案為一個 Tarball 的檔案。至於檔名的配置方面，httpd 
+	為套件名稱，2.0.52 則通常為該套件的版本名稱了！那如何安裝？由於該檔案為 httpd 這個套件，且格式為 Tarball ，所以您必須要：
+	<ol>
+	<li>系統上面務必具有 tar, make, gcc 等相關的編譯套件；
+	<li>使用 tar 解開 httpd-2.0.52.tar.gz 之後，務必進入該目錄內讀取 REAME 或/與 
+	INSTALL 檔案，以瞭解是否還需要其他的相關套件的搭配安裝；
+	<li>以 ./configure --help 查閱一下是否有相關可以加入或者取消的編譯內容；
+	<li>使用 make 讀取 Makefile 來編譯程式；
+	<li>使用 make install 來安裝程式！</ol>
+	</font></div>
+
+	<li>我以原始碼的方式進行一個套件的安裝，但是在分析系統的時候，分析程式一直告訴我找不到
+	cc 這個指令，請問這是什麼問題？為何需要 cc ？又，我該如何解決這個問題，好讓套件可以順利的被安裝在我的
+	Linux 上面？</li>
+	<div class=block2><font color=white size=-1>
+	如前面幾個題目所說的，因為是原始碼，所以還需要編譯程式來將該原始碼編譯成為可以在您的 Linux 系統上面跑的 binary 
+	檔案，在 Linux 上頭預設的編譯程式就是 gcc 這個編譯器(compiler)。如果您在安裝 Linux 的時候，使用 Linux Installer 
+	預設的套件選擇，那通常會沒有安裝 gcc 以及 make 等套件，此時，請拿出您的原版光碟，以 mount 指令掛載後，使用 RPM 
+	將一個一個相關的套件安裝即可(過程會蠻複雜的！)^_^ 
+	</font></div>
+
+	<li>我發現我的 Linux 系統怪怪的，似乎有什麼不知名的程序在記憶體當中跑，我該如何將這個不知名的程序捉出來，並且將他移除？</li>
+	<div class=block2><font color=white size=-1>
+	如果要捉出程序(process)的話，可以使用 ps -aux 或者是直接輸入 top 來查詢 process 的 ID (PID)，找到 PID 號碼後，再以 
+	kill -9 PID 來刪除該程序即可。
+	</font></div>
+
+	<li>我總是無法編輯某個檔案，您認為應該是什麼問題造成的？那又要怎麼解決？</li>
+	<div class=block2><font color=white size=-1>
+	無法編輯某個檔案，可以先使用 file 這個指令來查詢一下該檔案的格式，例如想察看 /etc/shadow 的格式，可以下達：
+	『file /etc/shadow』，如果是文字檔，卻還是無法編輯，那麼最可能發生的原因就是『權限』的問題了。可以使用 
+	ls -l filename 察看檔案權限，再以 chmod 或 chown 來修訂該檔案的權限。此外，該檔案也可能含有隱藏屬性，可以使用 
+	lsattr filename 查閱，再以 chattr 來修訂隱藏屬性。 
+	</font></div>
+
+	<li>什麼是 UID 與 GID ？UID 有哪些等級？</li>
+	<div class=block2><font color=white size=-1>
+	在 Linux 系統下，使用者與群組其實都是以『ID(數字)』的格式來設定的，所以使用者與群組其實都是 UID 或 GID (User ID 與 
+	Group ID)，Linux 對於檔案權限也都是使用 UID/GID 來分辨。不過人類習慣使用文字來記憶，所以才會有 /etc/passwd 與 
+	/etc/group 來轉譯 ID 與 User 及 Group 之間，這也才會發生為何在 Internet 上面捉下來的 Tarball 
+	解開之後，往往會有檔案擁有人與群組為數字的型態，因為您 Linux 系統上面的 /etc/passwd 與 /etc/group 
+	沒有相關的對應文字說。至於 UID 的等級主要有兩種，分別是超級管理員(root)，其 UID 為 0，其他非為 0 的 UID 
+	基本上身份是相同的！不過 Linux 通常會將小於 500 的 UID 保留給系統使用。 
+	</font></div>
+
+	<li>使用者的家目錄參數、UID、GID以及其他相關參數，還有密碼檔案，放置在哪些檔案裡面？</li>
+	<div class=block2><font color=white size=-1>
+	放置在 /etc/passwd 與 /etc/shadow 當中。當然還有 /etc/login.defs 喔！
+	</font></div>
+
+	<li>您認為一個稱職的網管人員應該具備什麼能力？</li>
+	<div class=block2><font color=white size=-1>
+	能力需求相當高，如了(1)作業系統的基礎知識(不論是 Linux/Unix/MAC/MS)；(2)網路基礎的知識；(3)個別 Internet Services 
+	的運作知識之外，還需要(4)身心保持在備戰狀態，以及(5)具有相當高程度的道德感、責任感與使命感。 
+	</font></div>
+
+	<li>我要啟動一個系統預設的 Service，請問我可能可以由執行或修改哪些目錄底下的檔案來啟動？</li>
+	<div class=block2><font color=white size=-1>
+	如果是 stand alone 的服務，可以經由 /etc/rc.d/init.d/* 裡面的檔案，如 /etc/rc.d/init.d/syslog start；<br />
+	如果是 Super daemon 的服務，就必須(1)先到 /etc/xinetd.d 或者是 /etc/inetd.conf 修改相關檔案或參數；
+	(2)以 /etc/rc.d/init.d/xinetd restart 來啟動。 
+	</font></div>
+
+	<li>我要關掉 cron 這個服務，應該怎麼關掉他？如果正常的方法無法關閉這個服務，可以使用什麼方法來關閉？</li>
+	<div class=block2><font color=white size=-1>
+	因為 cron 是一個 stand alone 的服務，所以可以使用 /etc/rc.d/init.d/cron stop 來關閉；如果還是無法正常關閉，可以使用 
+	ps -aux | grep cron 捉出該程序的 PID ，然後以 kill -9 PID 來關閉。 
+	</font></div>
+
+	<li>如果一開機就要執行某個程式，應該要將該程式寫入那個檔案裡面？</li>
+	<div class=block2><font color=white size=-1>
+	可以直接在 /etc/rc.d/rc[run-level].d 裡面加入 S 開頭的檔案，不過，更簡單的作法是直接將該程式寫入 /etc/rc.d/rc.local 
+	，不過，請注意該程式必須要具有可執行的權限，且 rc.local 也必須要是可執行喔！ 
+	</font></div>
+</div>
+
+
+<hr><span class="text_history">
+2003/07/30：第一次完成日期！<br />
+2003/08/19：加入了課後練習，如果您無法回答上面的問題.....不要懷疑，趕緊回去參考 Linux 基礎篇！<br />
+2003/09/06：加入課後練習的<a href="1000results.htm#0105beforeserver">參考用解答</a><br />
+2006/02/07：將原本的舊文移到<a href="0105beforeserver/0105beforeserver.htm">此處</a><br />
+2006/06/06：將 SATA 介面的硬碟代號再次做個修訂！目前 SATA 的格式有分兩種呢！<br />
+2007/01/02：將一些排版重整，將一些日期方面的資料重整，將課後練習補上來<br />
+
+</span>
+<hr><span class="text_date">2003/07/30以來統計人數</span><br />
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0105beforeserver" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

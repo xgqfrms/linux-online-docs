@@ -1,0 +1,1033 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 認識網路安全</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0240network-secure-1.htm">
+    <span class="text_head0">認識網路安全</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0240network-secure-1.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/09/06</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在介紹了『<a href="0110network_basic.htm">網路基礎</a>』、『<a href="0210port_limit.htm">限制連線
+	port number </a>』、『<a href="0220upgrade.htm">網路升級套件</a>』之後，再來準備要上
+	Internet 了嗎？！如果只是想要上 Internet 去瀏覽，那麼自然沒有問題，如果是想要對
+	Internet 開放網路服務，那麼最好還是先認識一下網路安全會比較好一些。什麼？套件也更新了，
+	port 也關閉了，還需要認識什麼網路安全啊？！呵呵！當然啦！因為難保我們的主機不會被新的套件漏洞以及阻斷式攻擊
+	(DoS)所困擾啊！在這個章節裡面，我們會稍微介紹一些基礎的網路防護觀念，尤其是系統管理員應該要做的事情吶！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#packet_flow">網路封包連線進入主機的流程</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#packet_flow_2">封包進入主機的流程</a><br />
+	　　1.2 <a href="#packet_flow_protect">主機能作的保護：權限設定、套件更新、SELinux</a><br />
+	</span>
+2. <a href="#acl">主機的細部權限規劃：ACL 的使用</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#acl_what">什麼是 ACL ？</a><br />
+	　　2.2 <a href="#acl_support">如何啟動 ACL？</a><br />
+	　　2.3 <a href="#acl_use">ACL 的設定技巧</a>： <a href="#getfacl">getfacl</a>
+		, <a href="#setfacl">setfacl</a><br />
+	</span>
+3. <a href="#attack">一些常見的攻擊手法與主機的保護方式</a><br />
+4. <a href="#repair">被入侵後的修復工作</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#repair_need">網管人員的額外技巧與任務</a><br />
+	　　4.2 <a href="#repair_step">入侵恢復工作</a><br />
+	</span>
+5. <a href="#review">重點回顧</a><br />
+6. <a href="#ex">課後練習</a><br />
+7. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+8. <a href="http://phorum.vbird.org/viewtopic.htm?p=114062"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=114062</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="packet_flow"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">網路封包連線進入主機的流程</span><br />
+<div class=block1>
+	在這一章當中，我們要討論的是，當來自一個網路上的連線要求想進入我們的主機時，
+	這個網路封包在進入主機實際取得資料的整個流程是如何？瞭解了整個流程之後，
+	你才會發現：<span class=text_import2>原來系統操作的基本概念是如此的重要</span>！
+	而你也才會瞭解要如何保護你的主機安全吶！閒話少說，咱們趕緊來瞧一瞧先。<br /><br />
+
+	<hr /><a NAME="packet_flow_2"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">封包進入主機的流程</span><br />
+	<div class=block2>
+		在<a href="0110network_basic.htm">網路基礎</a>章節當中我們談到過目前的網路架構主要是 TCP/IP 為主，
+		而絕大部分的網路連線是雙向的，其中又以 <a href="0110network_basic.htm#protocol_tcp">TCP 封包</a>為代表。
+		另外，根據 Server/Client 的連線方向與 TCP/IP 的概念，我們會知道建立一條可靠的網路連線需要一組
+		<a href="0110network_basic.htm#protocol_tcp_socket">Socket Pair</a> 的輔助，
+		亦即成對的來源與目標之 IP 與 port 囉，以使連線的兩端可以順利的連接到相對的應用軟體上。<br /><br />
+
+		上面談到的這些都是屬於網路的基礎概念，在這裡我們要談的是，那麼要讓這個 TCP 封包順利的進入到 Linux 主機上，
+		然後使用 port 所對應的軟體來存取系統的檔案系統資源時，還得要經過哪些關卡呢？
+		舉例來說，如果你的 Linux 主機有開啟 WWW 的 port 80 網路服務，而 port 80 是由一個名稱為 httpd 
+		的程式所啟動的，這個程式的設定檔為 httpd.conf ，那麼 Client 的連線要進入到你 Linux 主機的 WWW 時，
+		會經過什麼階段呢？基本上，會經過如下圖的幾個階段：<br /><br >
+
+		<a name="fig_1"></a><center>
+		<img src="0240network-secure-1/security-2.png"
+		title="網路封包進入本機的流程順序" alt="網路封包進入本機的流程順序"><br />
+		圖一、網路封包進入本機的流程順序</center><br />
+
+		<ol>
+		<li><span class=text_import1>封包過濾防火牆：IP Filtering 或 Net Filter</span><br />
+		要進入 Linux 本機的封包都會先通過 Linux 核心的預設防火牆，就是稱為 IP Filter 或 Net Filter 的咚咚，
+		簡單的說，就是 <span class=text_import2>iptables</span> 這個軟體所提供的防火牆功能。iptables 這個
+		Linux 預設的防火牆軟體可以針對網路封包的 IP, port, MAC, 以及連線狀態如 SYN, ACK 等資料進行分析，
+		以過濾不受歡迎的網路封包呢！舉例來說，如果有個 IP 為 aaa.bbb.ccc.ddd 是個惡意網站來源，
+		那你就可以透過 iptables 抵擋來自該 IP 的網路封包的連線，以達到基本的主機防火牆功能。
+		這部份我們會在下一章深入瞭解。<br /><br />
+
+		<li><span class=text_import1>第二層防火牆：TCP Wrappers</span><br />
+		通過 IP Filter 之後，網路封包會開始接受 <a href="../linux_basic/0560daemons.htm">Super daemons</a> 及 
+		<a href="../linux_basic/0560daemons.htm#tcp_wrappers">TCP_Wrappers</a> 的檢驗，那個是什麼呢？
+		呵呵！說穿了<span class=text_import2>就是 /etc/hosts.allow 與 /etc/hosts.deny 的設定檔功能囉</span>。
+		這個功能也是針對 TCP 的 Header 進行再次的分析，同樣你可以設定一些機制來抵制某些 
+		IP 或 Port ，好讓來源端的封包被丟棄或通過檢驗；<br /><br />
+
+		<li><span class=text_import1>服務 (daemon) 的功能：</span><br />
+		前面這兩個動作基本上是 Linux 預設的功能，而這第三個步驟就是屬於軟體功能了。
+		舉例來說，你可以在 httpd.conf 這個設定檔之內規範某些 IP 來源不能使用 httpd 這個服務來取得主機的資料，
+		那麼即使該 IP 通過前面兩層的過濾，他依舊無法取得主機的資源喔！但要注意的是，
+		<span class=text_import2>如果 httpd 這支程式本來就有問題的話，那麼 client 
+		端將可直接利用 httpd 軟體的漏洞來入侵主機，而不需要取得主機內 root 的密碼！</span>因此，
+		要小心這些啟動在網際網路上面的軟體喔！
+		所以前一章<a href="0220upgrade.htm">網路升級套件</a>是很重要的！<br /><br />
+
+		<li><span class=text_import1>使用主機的檔案系統資源：</span><br />
+		想一想，你使用瀏覽器連接到 WWW 主機最主要的目的是什麼？當然就是讀取主機的 WWW 資料啦！
+		那 WWW 資料是啥？就是檔案啊！^_^！所以，最終網路封包其實是要向主機要求檔案系統的資料啦。
+		我們這裡假設你要使用 httpd 這支程式來取得系統的檔案資料，但 httpd 預設是由一個系統帳號名稱為
+		httpd 來啟動的，所以：<span class=text_import2>你的網頁資料的權限當然就是要讓 httpd 
+		這支程式可以讀取</span>才行啊！如果你前面三關的設定都 OK ，最終權限設定錯誤，
+		使用者依舊無法瀏覽你的網頁資料的。
+		</ol>
+
+		在這些步驟之外，我們的 Linux 以及相關的軟體都可能還會支援登錄檔記錄的功能，
+		為了記錄歷史歷程，以方便管理者在未來的錯誤查詢與入侵偵測，良好的分析登錄檔的習慣是一定要建立的，
+		尤其是 /var/log/messages 與 /var/log/secure 這些個檔案！
+		雖然各大主要 Linux distribution 大多有推出適合他們自己的登錄檔分析套件，例如 CentOS 的 
+		logwatch ，不過畢竟該套件並不見得適合所有的 distributions ，所以鳥哥嘗試自己寫了一個 logfile.sh 的 
+		shell script，您可以在底下的網址下載該程式：<br />
+		<ul><li><a href="http://linux.vbird.org/download/index.htm?action=detail&fileid=60"
+		target="_blank">http://linux.vbird.org/download/index.htm?action=detail&fileid=60</a></li></ul>
+
+		好了，那麼根據這些流程，你覺得我們可以如何保護自己的主機呢？<br /><br />
+	</div>
+
+	<hr /><a NAME="packet_flow_protect"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機能作的保護：
+	權限設定、套件更新、SELinux</span><br />
+	<div class=block2>
+		在<a href="../linux_basic">基礎篇</a>裡面的前面幾章我們談到很多關於檔案權限方面的注意事項，
+		<span class=text_import2>關於目錄最重要的是那個 w (可寫入)的權限，至於對檔案來說，那個 
+		r (可讀取) 也是非常重要的！</span>而由前一小節的<a 
+		href="#fig_1">圖一</a>我們也知道網路服務其實就是提供主機的檔案資源給 client 端來查閱就是了。<br /><br />
+
+		根據這樣的說法，你可以知道，如果你有某些不想要被讀取的資料在主機上面的話，
+		那麼<span class=text_import2>將該資料的權限設定為不能被某些網路服務讀取的情況，
+		就能達到最基礎的保護了。</span>所以您說檔案權限重不重要啊！很重要的！不是嗎？<br /><br />
+
+		<hr /><li><span class=text_import1>權限的重要性</span><br />
+		<div class=block2>
+		鳥哥常常在上課的時候會開玩笑，說如果你只要下達一個指令，那你的系統就得要重新安裝了！
+		那就是：『chmod -R 777 /』，這個指令可是『極度危險』的喔！為何呢？因為系統上面本來就有很多需要被保護的資料，
+		例如 /etc/shadow 以及 /etc/passwd 等，尤其是 shadow 密碼檔案。雖然裡頭是加密過的資料，
+		不過別忘了，現在的 PC 速度實在太快了，而網路上又有太多暴力破解密碼的軟體，
+		如果你的 /etc/shadow 被取得後，嘿嘿！你的密碼其實就算『公開了』。那萬一你有開放某些網路服務的話，
+		例如可連線登入的 ssh 服務或 mail 服務，那任何人都可以使用你的主機來登入，
+		或者是利用你的主機來收你主機上的其他使用者的信，唉！糗大了！<br /><br />
+
+		再者，很多朋友在主機上面常常喜歡建立權限為 drwxrwxrwx 的目錄來提供使用者上傳資料，
+		這實在是很危險ㄟ！如果使用者的功力夠高的話，他可以在網路軟體如 httpd 的使用上，
+		來建立一些危險的 <a href="../linux_basic/0340bashshell-scripts.htm">script</a> 
+		在你的 drwxrwxrwx 的目錄中，那如果你不小心進入到該目錄，
+		又不小心執行了該惡意使用者所建立的 script ，恭喜您～中標！<br /><br />
+
+		另外，如果你是學校老師，為了公平與同學本身的權益起見，你會希望同學們所上傳的資料不會被其他同學所竊取。
+		那麼你該如何進行權限的規範？如果單純的讓學生通通上傳到單一目錄，並且沒有指定特殊的權限時，
+		不但某些同學的資料可能會被竊取與複製，更慘的是，可能資料會被某些惡意同學所刪除！
+		那可就麻煩了！所以，權限的設定真的很重要啦！<br /><br />
+
+		而除了傳統的權限之外，事實上目前 Linux 支援一種稱為 ACL 的額外權限控制方式，
+		也支援更強化安全的 SELinux ，這兩個小東西我們會在本章的後面部分繼續介紹。<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>嚴格的密碼的重要性：</span><br />
+		<div class=block2>
+		很多使用者為了方便記憶，老是跟系統管理員說：『喂！我的密碼可不可以簡單一點啊？
+		太麻煩的我都記不住！』如果您是那個可憐的系統管理員，你該如何回應？
+		如果你大開方便之門，未來可是後患無窮的！舉例來說，如果你的 mail server 上面某個使用者帳號為
+		alex 好了，那麼他的 email address 將會是：『 alex@your.host.name 』，
+		那這個使用者由於使用習慣不良，他將他的 mail address 留在 Internet 上，所以很多人都知道這個 address。<br /><br />
+
+		知道就知道，會有什麼了不起嗎？呵呵！了不起的很！如果有個壞傢伙，他想要偷偷的收取 alex 的信，
+		那他就在他的收信軟體上面偷偷填上你的主機，然後偷偷輸入帳號 alex 並且輸入密碼為 alex ，
+		如果你真的幫 alex 這個使用者建立同名的密碼，哈哈！系啊(請台語發音，謝謝)！這個 alex 
+		永遠都收不到他的信了！<br /><br />
+
+		這算還好吶！如果你有開放遠端連線登入的服務，那麼壞傢伙就可以利用 alex 這個帳號與密碼來登入你的主機，
+		如果你沒有做好權限規劃的話，哇！整部主機的資料被偷光光！那可有的瞧的了！
+		所以，您說密碼不重要嗎？我可不認為！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>套件更新的重要性：</span><br />
+		<div class=block2>
+		很多朋友由於網路文章的關係，可能會拿比較舊的 Linux distribution 來作為架站的平台，
+		舉例來說，使用 Red Hat 9 來架站的朋友想必還是不少的。如果你真的利用舊的版本來進行網站的架設，
+		而且還對 Internet 開放服務的話，那麼你的主機將會在不到一天的時間內被『綁架』的！
+		為什麼呢？因為套件軟體都是可能有漏洞的，如果你沒有補洞的話.....<br /><br />
+
+		有些朋友認為：『我的密碼設定的嚴格一點，應該就好了吧？』真的嗎？讓我們瞧一瞧<a href="#fig_1">圖一</a>的流程，
+		第三個步驟是否使用到 httpd 這個程式的功能了，萬一這個程式有問題怎麼辦？
+		舉例來說，<a href="http://phorum.study-area.org" 
+		target="_blank">酷學園</a>的朋友曾經在他舉辦的研討會當中露一手如何綁架沒有修補漏洞的 Linux 系統，
+		利用的就是 httpd 這個軟體的漏洞，整個入侵的過程沒有花費一分鐘以上！
+		而且他取到的可是 root 的權限吶！不是什麼阿貓阿狗的喔！
+		而且他完全沒有輸入任何密碼，使用的入侵程式則是由 Internet 上面取得的。<br /><br />
+
+		在上頭這個例子鳥哥不是要說該朋友的功力，而是要提醒大家，套件修補的重要性！
+		要取得破解程式的管道實在太多了，但如果你都有在最短的時間內取得套件的更新的話，
+		那麼至少該破解程式對你的系統就不會生效！你的主機自然就會比較安全些。
+		而這個問題在所有的作業系統上面都是存在的！ Windows 系統也是每個月必須要推出他們的套件程式修補，
+		否則一樣會被攻擊或入侵啊！不過 Linux 的套件漏洞修補要快多了！<br /><br />
+		</div>
+
+		<a name=selinux></a><hr /><li><span class=text_import1>SELinux</span><br />
+		<div class=block2>
+		在最新的 Linux 2.6 版核心上所發展的 distributions 目前預設都會啟動一個名為 SELinux 的核心模組，
+		這個 SELinux 必須要在開機載入核心時就得要載入，那這個玩意兒是啥咚咚？
+		<span class=text_import2>SELinux 是 Security Enhanced Linux (安全加強的 Linux) 的縮寫，
+		他並不是一個防火牆的軟體，而是一個『針對檔案系統權限作更細部規劃的一個模組</span>』。<br /><br />
+
+		傳統的 Linux 權限是分為三種身份 (owner, group, others) 以及三種權限 (r, w, x)，
+		但事實上，這三種身份的三種權限組合並無法有效的管理所有系統上的 daemon 存取資料時所需要的行為。
+		因此美國國家安全局便發展出這個可以更細部規劃檔案權限功能的 SELinux 了。<br /><br />
+
+		由於 SELinux 主要是進行檔案系統的細部權限設定，所以想要使用 SELinux  的配置時，
+		需要對 Linux 的檔案系統以及基礎的作業系統概念要很清楚，否則將會使得很多的網路服務無法正確的啟用系統資源，
+		導致你的主機很多服務無法存取系統資料！因此，對於我們剛接觸到 Linux 架站的朋友來說，
+		<span class=text_import2>建議你先關閉 SELinux ，等到兩三年後對於 Linux 有很深的概念後，
+		再來嘗試配置 SELinux 這個有趣的咚咚！</span><br /><br />
+
+		也就是說，如果你沒有關閉 SELinux 的話，那麼你就得要針對 SELinux 進行檔案權限的額外配置，
+		否則你的網路服務就不可能會正常的啟動！那麼如何關閉 SELinux 呢？你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先關閉 /etc/selinux/config 的內容 </span>
+[root@linux ~]# <span class=term_command>vi /etc/selinux/config</span>
+<span class=term_say># 將底下的設定值改成這樣：</span>
+<span class=term_write>SELINUX=disabled</span>
+
+<span class=term_hd>2. 修改開機時 grub 的設定檔</span>
+[root@linux ~]# <span class=term_command>vi /boot/grub/menu.lst</span>
+<span class=term_say>.....省略.....</span>
+    kernel /boot/vmlinuz-2.6.9 ro root=/dev/hda1 rhgb <span class=term_write>selinux=0</span>
+<span class=term_say>.....省略.....</span>
+
+<span class=term_hd>3. 重新開機</span>
+[root@linux ~]# <span class=term_command>sync; reboot</span>
+</pre></td></tr></table>
+
+		因為 SELinux 必須要在開機的時候載入，同樣的，要卸載也必須要重新開機才行！
+		因此，如果你使用的是您 distributions 的預設安裝，那麼幾乎 SELinux 都是預設啟動的！
+		你可以依據上述的幾個步驟將 SELinux 取消後，重新開機即可。如果對於 SELinux 有興趣的話，
+		底下的連結可以參考看看：<br />
+		<ul>
+		<li><a href="http://fedora.redhat.com/docs/selinux-faq-fc5/"
+			target="_blank">http://fedora.redhat.com/docs/selinux-faq-fc5/</a></li>
+		<li><a href="http://selinux.sourceforge.net/"
+			target="_blank">http://selinux.sourceforge.net/</a></li>
+		<li><a href="http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/selinux-guide/index.html"
+			target="_blank">http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/selinux-guide/index.html</a>
+		</ul>
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="acl"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">主機的細部權限規劃：ACL 的使用</span><br />
+<div class=block1>
+	在前一小節當中我們提到 Linux 系統的權限是很重要的，偏偏傳統的權限僅有三種身份、三種權限而已，
+	配合 <a href="../linux_basic/0210filepermission.htm#chmod">chmod</a>, 
+	<a href="../linux_basic/0220filemanager.htm#umask">umask</a>, 
+	<a href="../linux_basic/0210filepermission.htm#chown">chown</a>, 
+	<a href="../linux_basic/0210filepermission.htm#chgrp">chgrp</a> 
+	等指令來進行使用者與群組相關權限的設定。如果要進行比較複雜的權限設定時，
+	例如某個目錄要開放給某個特定的使用者來使用時，傳統的 owner,group,others 的權限方法可能就無法滿足了。
+	不過還好，我們有 ACL 這個玩意兒可以使用！這玩意挺有趣的，底下我們就來談一談：<br /><br />
+
+	<hr /><a NAME="acl_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 ACL？</span><br />
+	<div class=block2>
+		<span class=text_import2>ACL 是 Access Control List 的縮寫，主要的目的是在提供傳統的 
+		owner,group,others 的 read,write,execute 權限之外的細部權限設定。ACL 可以針對單一使用者，
+		單一檔案或目錄來進行 r,w,x 的權限規範，對於需要特殊權限的使用狀況非常有幫助。</span><br /><br />
+
+		由於 ACL 是傳統的 Unix-like 作業系統權限的額外支援項目，因此要使用 ACL 必須要有檔案系統的支援才行。
+		目前絕大部分的檔案系統都有支援 ACL 的功能，包括 ReiserFS, EXT2/EXT3, JFS, XFS 等等。
+		在 SuSE 這個版本當中，預設是有啟動 ACL 控制的，不過在 CentOS 則預設沒有啟動 ACL。
+		所以等一下要使用 ACL 的功能時，你必須要先啟動你系統 filesystem 的支援才行喔！<br /><br />
+
+		那 ACL 主要可以針對哪些方面來控制權限呢？他主要可以針對幾個項目：<br />
+		<ul>
+		<li>使用者 (user)：可以針對使用者來設定權限；
+		<li>群組 (group)：針對群組為對象來設定其權限；
+		<li>預設屬性 (mask)：還可以針對在該目錄下在建立新檔案/目錄時，規範新資料的預設權限；
+		</ul>
+		好了，再來看看如何讓你的檔案系統可以支援 ACL 吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="acl_support"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">如何啟動 ACL</span><br />
+	<div class=block2>
+		要讓你的檔案系統支援 ACL 非常的簡單！假如要讓你的 /home 支援 ACL 的話，可以直接這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mount -o remount,acl /home</span>
+[root@linux ~]# <span class=term_command>mount | grep /home</span>
+/dev/hda5 on /home type ext3 (rw,<span class=term_write>acl</span>)
+</pre></td></tr></table>
+
+		看到那個出現的 ACL 了吧！那就對了～如果沒有出現這一行，你的檔案系統是無法支援 ACL 的，
+		那下一節的練習您可就無能為力了～那如果想要一開機就讓你的檔案系統支援 ACL 呢？
+		呵呵！修改 /etc/fstab 就對了！將他改成類似底下的模樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/fstab</span>
+/dev/hda5  /home   ext3   defaults<span class=term_write>,acl</span>   1 2
+</pre></td></tr></table>
+
+		加入那一段特殊字體的資料，那麼下次開機就能夠支援 ACL 了！很簡單吧！ ^_^
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="acl_use"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ACL 的設定技巧： getfacl, setfacl</span><br />
+	<div class=block2>
+		好了，讓你的 filesystem 啟動 ACL 支援後，接下來該如何設定與觀察 ACL 呢？
+		很簡單，利用這兩個指令就可以了：<br />
+		<ul>
+		<a name=getfacl></a><li>getfacl：取得某個檔案/目錄的 ACL 設定項目；
+		<a name=setfacl></a><li>setfacl：設定某個目錄/檔案的 ACL 規範。
+		</ul>
+		先讓我們來瞧一瞧 setfacl 如何使用吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>setfacl [-mxdb] 設定值</span>
+<span class=term_say>參數：
+-m  ：設定一個 ACL 規範；
+-x  ：取消一個 ACL 規範；
+-b  ：全部的 ACL 規範都移除；
+-d  ：設定預設的 ACL 規範，僅能針對目錄使用。</span>
+</pre></td></tr></table>
+
+		最常用的就是那個 -m 的參數啦！用來定義一筆 ACL 的設定規範說。那麼 ACL 該如何設定呢？
+		不同的使用者、群組與預設權限設定方法有點不同，不過，基本上有底下這三種簡易的設定方法：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 針對使用者</span>
+<span class=term_say>設定值的規範為： u:[使用者帳號列表]:[rwx]
+例如針對 dmtsai 這個使用者來規範其權限為 rx ，則：</span>
+[root@linux ~]# <span class=term_command>setfacl -m u:dmtsai:rx somefilename</span>
+
+<span class=term_hd>2. 針對群組來設定</span>
+<span class=term_say>設定值的規範為： g:[群組名]:[rwx]
+例如針對 users 這個群組來規範其權限為 rw ，則：</span>
+[root@linux ~]# <span class=term_command>setfacl -m g:users:rw somefilename</span>
+
+<span class=term_hd>3. 針對預設權限來規範，類似 umask 的功能</span>
+<span class=term_say>設定值的規範為： m:[rwx]
+例如假設預設權限為 rwx，則：</span>
+[root@linux ~]# <span class=term_command>setfacl -m m:rwx somefilename</span>
+</pre></td></tr></table>
+
+		瞭解了上面的設定方式後，現在讓我們來實際操作一下吧！假設：<br />
+		<ul>
+		<li>你已經將 /home 這個獨立的 partition	設定了 ACL 的支援了，
+		<li>並且在 /home 底下設定了一個名稱為 project 的目錄，
+		<li>該目錄要給 eric 這個使用者，且屬於 users 這個群組，預設權限應該是 770 ；
+		<li>有個使用者帳號名稱為 jordan ，他屬於 jordan 那個群組，但他想要進入到 project 那個目錄來工作，
+			意思是說，jordan 在該目錄下需有 w 的權限才行；
+		<li>有個使用者他是其他班級的老師，名稱為 tip ，群組名亦為 tip ，他想要進入該目錄查閱所有檔案資料，
+			但是不能夠進行刪除與新增的工作，亦即他不能擁有 w 的權限。
+		</ul>
+		在傳統的 Linux 檔案權限中，要達成上述的功能時，你得要讓 jordan 與 tip 這兩個使用者加入 users
+		那個群組才行，但是 jordan 是希望可以在該目錄內工作的，所以他必須要擁有 w 的權限，
+		而 tip 卻僅能讀取，所以他不能擁有 w  的權限！哇！如此一來，就無法完成上述的交代事項了！
+		此時我們只好透過 ACL 來單獨的針對 tip/jordan 這兩個使用者來設定他的權限吶！整個流程可以是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 建立該目錄並規劃好權限：</span>
+[root@linux ~]# <span class=term_command>mkdir /home/project</span>
+[root@linux ~]# <span class=term_command>chown eric:users /home/project</span>
+[root@linux ~]# <span class=term_command>chmod 770 /home/project</span>
+[root@linux ~]# <span class=term_command>ls -ld /home/project</span>
+<span class=term_write>drwxrwx---</span>  2 <span class=term_write>eric users</span> 4096 Sep  5 15:54 /home/project/
+<span class=term_say># 瞧！已經將需要的目錄規劃好了！使用者/群組與權限都OK了；</span>
+
+<span class=term_hd>2. 建立 jordan 的使用權限(需要有 w)：</span>
+[root@linux ~]# <span class=term_command>cd /home</span>
+[root@linux home]# <span class=term_command>setfacl -m u:jordan:rwx project</span>
+
+[root@linux home]# <span class=term_command>getfacl project</span>
+# file: project    <span class=term_say>&lt;==前面三行只是指出這個檔名的傳統 Linux 權限</span>
+# owner: eric
+# group: users
+user::rwx          <span class=term_say>&lt;==注意看，這是針對『預設使用者』的權限設定；</span>
+user:jordan:rwx    <span class=term_say>&lt;==這是針對 jordan 的權限設定</span>
+group::rwx         <span class=term_say>&lt;==這是針對『預設群組』的權限設定</span>
+mask::rwx          <span class=term_say>&lt;==這玩意兒則是預設屬性啦！</span>
+other::---
+<span class=term_say># 上面這個輸出共 8 行我們會在底下詳細說明！</span>
+
+[root@linux home]# <span class=term_command>ls -ld project</span>
+<span class=term_write>drwxrwx---+</span> 2 eric users 4096 Sep  5 15:54 project
+<span class=term_say># 看看！多了一個 + 的標誌喔！</span>
+</pre></td></tr></table>
+
+		那個 getfacl 指令可以用來取得某個檔名的 ACL 資料啦！至於輸出的共 8 行資料你必須要這樣看：<br />
+		<ul>
+		<li>第 1-3 行：前面三行會顯示出這個檔案的 Linux 傳統屬性，包括使用者、群組與檔名，預設會用 # 
+			開頭作為說明；<br /><br />
+		<li>接下來的每一行的輸出會以底下的格式來處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+針對的目標(使用者、群組等]:[各種帳號列表]:[rwx]
+針對的目標主要有：
+	user	使用者
+	group	群組
+	mask	預設權限
+	other	非本群組的其他使用者
+各種帳號列表中，如果沒有任何資料，如 user::rwx ，則代表預設使用者帳號；
+</pre></td></tr></table>
+			主要有三個欄位，用『 : 』來隔開三個欄位；<br /><br />
+		<li>第 4 行『user::rwx』：由於使用者列表欄位中沒有填寫任何帳號，所以代表這個權限是針對預設使用者，
+			亦即是這個目錄的擁有人 eric 啦，是 eric 的權限為『 rwx 』的意思說！<br /><br />
+		<li>第 5 行『user:jordan:rwx』：使用者 jordan 在這個目錄下具有 rwx 的權限的意思啦！<br /><br />
+		<li>第 6 行『group::rwx』：沒有填寫群組名稱，所以同樣是預設群組，亦即是那個 users 囉，
+			該群組的權限為『rwx』啦；<br /><br />
+		<li>第 7 行『mask::rwx』：預設的 mask 為 rwx 的意思，這個 mask 是有用途的！底下會說明。<br /><br />
+		<li>第 8 行『other::---』：指的就是其他的未規定的使用者與群組的權限了<br />
+		</ul>
+
+		好了，現在 jordan 這位朋友當他進入 /home/project 後，立刻就會擁有 rwx 的權限了！
+		而不需要加入 users 這個群組呢！真是很方便吧！太好了！
+		另外，你如何知道某個檔名具有額外的 ACL 權限呢？可以參考上面最終的輸出結果中，
+		會發現 /home/project 這個目錄的權限項目竟然是出現『 drwxrwx---+ 』呢！
+		那個多出來的『 + 』就是表示該檔名有額外的 ACL 控制項目啦！
+		那接下來如何處理 tip 呢？同樣使用 ACL 來控制：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>3. 設定 tip 這個使用者的權限資料： </span>
+[root@linux home]# <span class=term_command>setfacl -m u:tip:rx project</span>
+[root@linux home]# <span class=term_command>getfacl project</span>
+# file: project
+# owner: eric
+# group: users
+user::rwx
+<span class=term_write>user:tip:r-x</span>   <span class=term_say>&lt;==瞧！多出來的咚咚啦！</span>
+user:jordan:rwx
+group::rwx
+mask::rwx
+other::---
+</pre></td></tr></table>
+
+		如此一來， tip 這位使用者則僅能進入該目錄去讀取而已，而無法進行寫入的動作呢！
+		是否很方便啊！有了 ACL 的控制項目後，您就可以將你系統內的有需要使用到特殊權限設定的目錄進行細部設定，
+		讓你的系統變的更合理，更安全啊！<br /><br />
+
+		<hr /><li><span class=text_import1>ACL 內的 mask 項目</span><br/>
+		<div class=block2>
+		雖然這樣就能夠設定好一個 ACL 控制項目，不過你還需要瞭解到在 ACL 內的 mask 所代表的意義喔！
+		在上面的那個小案例當中，我們並沒有去設定這個 mask，mask 需要與使用者的權限進行邏輯運算 (AND) 後，
+		才是有效的權限吶(effective permission)！<br /><br />
+
+		舉例來說，如果你覺得你的目錄要讓所有的人都暫時僅能讀取不能寫入時，可以將 ACL 內的 mask 設定為 rx 即可，
+		那其他人就不需要再額外的設定了！看看底下這個例子：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /home</span>
+[root@linux home]# <span class=term_command>setfacl -m m:rx project</span>
+[root@linux home]# <span class=term_command>getfacl project</span>
+# file: project
+# owner: eric
+# group: users
+user::rwx
+user:tip:r-x
+user:jordan:rwx        #effective:r-x
+group::rwx             #effective:r-x
+mask::r-x
+other::---
+</pre></td></tr></table>
+
+		上面的輸出全部都是 getfacl 的輸出結果，鳥哥並沒有加工啊！ ^_^！
+		原本的 jordan 具有『rwx』的權限，而 mask 僅有『r-x』，兩者去比較後
+		『<span class=text_import2>兩者都有的權限才會生效，就稱為有效權限 (effective permission) 囉</span>』！
+		所以，jordan 則僅會有 rx 的權限而已啊！這樣對 mask 的用法瞭了嗎？
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="attack"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">一些常見的攻擊手法與主機的保護方式</span><br />
+<div class=block1>
+	我們由<a href="#fig_1">圖一</a>瞭解到資料傳送到本機時所需要經過的幾道防線後，
+	現在您應該比較清楚為何我們常常在基礎篇裡面一直談到<span class=text_import2>設定正確的權限可以保護您的主機</span>了吧？
+	那麼除了前面的談到的<a href="#packet_flow_protect">主機基本保護</a>之外，
+	通常人家是如何攻擊你的 Linux 主機呢？底下我們就來談一談吧！
+	先瞭解一下人家是如何攻擊你的，我們才有辦法想到如何防禦，您說是吧？！<br /><br />
+
+	<hr /><li><span class=text_import1>取得帳號資訊後猜密碼：</span><br />
+	<div class=block2>
+		由於很多人喜歡用自己的名字來作為帳號資訊，因此帳號的取得是很容易的！
+		舉例來說，如果你的朋友將你的 email address 不小心洩漏出去，例如： dmtsai@your.host.name 之類的樣式，
+		那麼人家就會知道你有一部主機，名稱為 your.host.name，且在這部主機上面會有一個使用者帳號，
+		帳號名稱為 dmtsai ，之後這個壞傢伙再利用某些特殊軟體例如 <a href="0210port_limit.htm#nmap">nmap</a>
+		來進行你主機的 port scan 之後，嘿嘿！他就可以開始透過你主機有啟動的軟體功能來猜你這個帳號的密碼了！<br /><br />
+
+		另外，如果你常常觀察你的主機登錄檔，那你也會發現如果你的主機有啟動 Mail server 的服務時，
+		你的登錄檔就會常常出現有些怪傢伙嘗試以一些奇怪的常見帳號在試圖猜測你的密碼，
+		舉例來說像：admin, administrator, webmaster .... 之類的帳號，嘗試來竊取你的私人信件。
+		如果你的主機真的有這類的帳號，而且這類的帳號還沒有良好的密碼規劃，那就容易『中標』！
+		唉！真是麻煩！所以我們常講，<span class=text_import2>系統帳號千萬不能給予密碼，容易被猜密碼啊</span>！<br /><br />
+
+		這種猜密碼的攻擊方式算是最早期的入侵模式之一了，攻擊者知道你的帳號，或者是可以猜出來你的系統有哪些帳號，
+		欠缺的就只是密碼而已，
+		因此他會『很努力的』去猜你的密碼，此時，你的密碼規劃如果不好的話，很容易就被攻擊了！
+		主機也很容易被綁架啊！所以，<span class=text_import2>良好的密碼設置習慣是很重要的</span>。<br /><br />
+
+		不過這種攻擊方式比較費時，因為目前很多軟體都有密碼輸入次數的限制，
+		如果連續輸入三次密碼還不能成功的登入，那該次連線就會被斷線！
+		所以，這種攻擊方式日益減少，目前偶而還會看到就是了！這也是初級 cracker 會使用的方式之一。
+		那我們要如何保護呢？基本方式是這樣的：<br />
+
+		<ul>
+		<li><span class=text_import2>減少資訊的曝光機會</span>：例如不要將 Email Address 隨意散佈到 Internet 上頭；
+		<li><span class=text_import2>建立較嚴格的密碼設定規則</span>：包括 /etc/shadow, /etc/login.defs 等檔案的設定，
+			建議您可以參考<a href="../linux_basic">基礎篇</a>內的
+			<a href="../linux_basic/0410accountmanager.htm">帳號管理</a>那一章來規範你的使用者密碼變更時間等等，
+			如果主機夠穩定且不會持續加入某些帳號時，也可以考慮使用 
+			<a href="../linux_basic/0220filemanager.htm#chattr">chattr</a> 來限制帳號 (/etc/passwd, /etc/shadow)
+			的更改；
+		<li><span class=text_import2>完善的權限設定</span>：由於這類的攻擊方式會取得你的某個使用者帳號的登入權限，
+			所以如果你的系統權限設定得宜的話，那麼攻擊者也僅能取得一般使用者的權限而已，
+			對於主機的傷害比較有限啦！所以說，權限設定是重要的；
+		</span></ul>
+	</div>
+
+	<hr /><li><span class=text_import1>利用系統的程式漏洞『主動』攻擊：</span><br />
+	<div class=block2>
+		由<a href="#fig_1">圖一</a>裡面的第三個步驟中，我們知道如果你的主機有開放網路服務時，
+		就必須有啟動某個網路軟體嘛！我們也知道由於軟體可能撰寫方式的問題，可能產生一些會被 cracker
+		亂用的臭蟲程式碼，而這些臭蟲程式碼由於產生問題的大小，有分為 bug (臭蟲，可能會造成系統的不穩定或當機) 與
+		Security (安全問題，程式碼撰寫方式會導致系統的使用權限被惡意者所掌握) 等問題。<br /><br />
+
+		當程式的問題被公布後，某些較高階的 cracker 會嘗試撰寫一些針對這個漏洞的攻擊程式碼，
+		並且將這個程式碼放置到 cracker 常去的網站上面，藉以推銷自己的『功力』.....
+		鳥哥要提醒的是，這種程式碼『<span class=text_import2>是很容易被取得的</span>』。
+		當更多『盈盈美黛子(台語，閒閒沒事幹之意)』取得這些程式碼後，他可能會想要『試一試這個攻擊程式的威力』，
+		所以就拿來『掃射』一番，如果你八字比較輕，或者當天星座學家說你比較倒楣時，
+		可能就會被不小心的攻擊到......<br /><br />
+
+		這種攻擊模式是目前最常見的，因為攻擊者只要拿到攻擊程式就可以進行攻擊了，
+		『<span class=text_import2>而且由攻擊開始到取得你系統的 root 權限不需要猜密碼，
+		不需要兩分鐘，就能夠立刻入侵成功</span>』，所以『盈盈美黛子』們最愛的就是這個咚咚了。
+		但這個玩意兒本身是靠『你主機的程式漏洞』來攻擊的，所以，如果你的主機隨時保持在即時更新的階段，
+		或者是關閉大部分不需要的程式，那就可以躲避過這個問題。因此，你應該要這樣做：<br />
+		<ul>
+		<li><span class=text_import2>關閉不需要的網路服務：</span>開的 port 越少，可以被入侵的管道越少，
+			一部主機負責的服務越單純，越容易找出問題點。看看前面談到的
+			<a href="0210port_limit.htm">限制 Linux 的連線埠口</a> 一章吧！
+		<li><span class=text_import2>隨時保持更新：</span>這個沒話講！一定要進行的！參考前一章
+			<a href="0220upgrade.htm">網路升級套件</a>。
+		<li><span class=text_import2>關閉不需要的軟體功能：</span>舉例來說，後面會提到的遠端登入伺服器 SSH 
+			可以提供 root 由遠端登入，那麼危險的事情當然要給他取消啊！^_^
+		</ul>
+	</div>
+
+	<hr /><li><span class=text_import1>利用社交工程作欺騙：</span><br />
+	<div class=block2>
+		社交工程 (Social Engineering) 指的其實很簡單，就是透過人與人的互動來達到『入侵』的目的！
+		@_@！人與人的互動可以入侵你的主機？鳥哥在呼嚨你嗎？當然不是。<br /><br />
+
+		近日在台灣的社會你不是常看到某些人會以『退稅、中獎、花小錢買貴重物品』等名義來欺騙善良老百姓，
+		讓老百姓掏出口袋裡的金錢給那些可惡的金光黨嗎？社交工程也是類似的方法。在大公司裡面，
+		或許你可能會接到這樣的電話：『我是人事部門的經理，我的帳號為何突然間不能登入了？
+		你給我看一看，恩？乾脆直接幫我另建一個帳號，我告訴你我要的密碼是....』。如果你一時不查給他帳號密碼的話，
+		你的主機可能就這樣被綁走了～<br /><br />
+
+		社交工程的欺騙方法多的是，包括使用『好心的 email 通知』、『警告信函』、『中獎單』等等，
+		在在都是要欺騙你的帳號密碼，有的則利用釣魚方式來欺騙你在某些惡意網站上面輸入你的帳號密碼，
+		很討厭的啦！那要如何防範呢？<br />
+		<ul>
+		<li><span class=text_import2>追蹤對談者：</span>不要一味的相信對方，你必須要有信心的向上呈報，
+			不要一時心慌就中了計！
+		<li><span class=text_import2>不要隨意透露帳號/密碼等資訊：</span>最好不要隨意在 Internet 上面填寫這些資料，
+			真的很危險的！因為在 Internet 上面，你永遠不知道對方螢幕前面坐著的是誰？
+		</ul>
+	</div>
+
+	<hr /><li><span class=text_import1>利用程式功能的『被動』攻擊：</span><br />
+	<div class=block2>
+		啥？除了主動攻擊之外，還有所謂的被動攻擊喔？沒錯啊，『系金ㄟ』！那如何作被動攻擊呢？
+		那就得要由『惡意網站』講起了。如果你喜歡上網隨意瀏覽的話，那麼有的時候可能會連上一些廣告很多，
+		或者是一堆彈出式視窗的網站，這些網站有時還會很好心的『提供你很多好用的軟體自動下載與安裝』的功能，
+		如果該網站是你所信任的，例如 Red Hat, CentOS, Windows 官網的話，那還好，
+		如果是一個你也不清楚他是幹嘛的網站，那你是否要同意下載安裝該軟體？<br /><br />
+
+		如果你常常在注意一些網路危機處理的相關新聞時，常會發現 Windows 的瀏覽器 (IE) 有問題，
+		有時則是全部的瀏覽器 (Firefox, Netscap, IE...) 都會出現問題。那你會不會覺得奇怪啊，
+		怎麼『瀏覽器也會有問題？』這是因為很多瀏覽器會主動的答應對方 WWW 主機所提供的各項程式功能，
+		或者是自動安裝來自對方主機的軟體，有時瀏覽器還可能由於程式發生安全問題，
+		讓對方 WWW 瀏覽器得以傳送惡意程式碼給你的主機來執行，嘿嘿！中標！<br /><br />
+
+		那你又會想啊，那我幹嘛瀏覽那樣的惡意網站？喝！總是會有些粗心大意的時候啊！
+		如果你今天不小心收到一個 email ，裡面告訴你你的銀行帳號有問題，
+		希望你趕緊連上某個網頁去看看你的帳號是否在有問題的行列中，你會不會去？
+		如果今天有個網路消息說某某網頁在提供大特價商品，那你會不會去碰碰運氣？
+		都是可能的啊！不過，這也就很容易被對方攻擊到了。<br /><br />
+
+		那如何防備啊？當然建立良好的習慣最重要了：<br />
+		<ul>
+		<li><span class=text_import2>隨時更新主機上的所有套件：</span>如果你的瀏覽器是沒有問題的，
+			那對方傳遞惡意程式碼時，你的瀏覽器就不會執行，那自然安全的多啊！
+		<li><span class=text_import2>較小化軟體的功能：</span>舉例來說，讓你的收信軟體不要主動的下載檔案，
+			讓你的瀏覽器在安裝某些軟體時，要通過你的確認後才安裝，這樣就比較容易克服一些小麻煩；
+		<li><span class=text_import2>不要連接到不明的主機：</span>其實鳥哥認為這個才最難！
+			因為很多時候我們都用 google 在搜尋問題的解決之道啊，那你如何知道對方是否是騙人的？
+			所以，前面兩點防備還是很重要的！不要以為沒有連接上惡意網站就不會有問題啊！
+		</ul>
+	</div>
+
+	<hr /><li><span class=text_import1>蠕蟲或木馬的 rootkit：</span><br />
+	<div class=block2>
+		rootkit 意思是說可以取得 root 權限的一群工具組 (kit)，就如同前面主動攻擊程式漏洞的方法一樣，
+		rootkit 主要也是透過主機的程式漏洞。不過， rootkit 也會透過社交工程讓使用者下載、安裝 rootkit 軟體，
+		結果讓 cracker 得以簡單的綁架對方主機啊！<br /><br />
+
+		rootkit 除了可以透過上述的方法來進行入侵之外，rootkit 還會偽裝或者是進行自我複製，
+		舉例來說，很多的 rootkit 本身就是蠕蟲或者是木馬間諜程式。蠕蟲會讓你的主機一直發送封包向外攻擊，
+		結果會讓你的網路頻寬被吃光光，例如 2001-2003 年間的 Nimda, Code Red 等等；至於木馬程式 (Trojan Horse)
+		則會對你的主機進行開啟後門 (開一個 port 來讓 cracker 主動的入侵)，結果就是....綁架、綁架、綁架！<br /><br />
+
+		rootkit 其實挺不好追蹤的，因為很多時候他會主動的去修改系統觀察的指令，
+		包括 ls, top, netstat, ps, who, w, last, find 等等，讓你看不到某些有問題的程式，
+		如此一來，你的 Linux 主機就很容易被當成是跳板了！有夠危險！那如何防備呢？<br />
+
+		<ul>
+		<li><span class=text_import2>不要隨意安裝不明來源的檔案或者是不明網站的檔案資料；</span>
+		<li><span class=text_import2>不要讓系統有太多危險的指令：</span>例如 SUID/SGID 的程式，
+			這些程式很可能會造成使用者不當的使用，而使得木馬程式有機可趁！
+		<li><span class=text_import2>可以定時以 rkhunter 之類的軟體來追查：</span>有個網站提供 rootkit 
+			程式的檢查，你可以前往下載與分析你的主機：<br />
+			<a href="http://www.rootkit.nl/projects/rootkit_hunter.html"
+			target="_blank">http://www.rootkit.nl/projects/rootkit_hunter.html</a>
+		</ul>
+	</div>
+
+	<hr /><li><span class=text_import1>DoS 攻擊法 ( Denial of Service )</span><br />
+	<div class=block2>
+		這類型的攻擊中文翻譯成『阻斷式攻擊』，這種攻擊法也很要命，而且方法有很多，最常見的就屬 SYN Flood 
+		攻擊法了！還記得我們在<a href="0110network_basic.htm">網路基礎</a>裡面提到的，當主機接收了一個帶有 
+		SYN 的 TCP 封包之後，就會啟用對方要求的 port 來等待連線，並且發送出回應封包 (帶有 SYN/ACK 旗標的 
+		TCP 封包)，並等待 Client 端的再次回應。<br /><br />
+
+		好了，在這個步驟當中我們來想一想，如果 cient 端在發送出 SYN 的封包後，卻將來自 Server 
+		端的確認封包丟棄，那麼您的 Server 端就會一直空等，而且 Client 
+		端可以透過軟體功能，在短短的時間內持續發送出這樣的 SYN 封包，那麼您的 Server 
+		就會持續不斷的發送確認封包，並且開啟大量的 port 在空等～呵呵！等到全部主機的 port 
+		都啟用完畢，那麼.....系統就掛了！<br /><br />
+
+		更可怕的是，通常攻擊主機的一方不會只有一部！他會透過 Internet 上面的僵屍主機
+		(已經成為跳板，但網站主卻沒有發現的主機) 發動全體攻擊，讓你的主機在短時間內就立刻掛點。
+		這種 DoS 的攻擊手法比較類似『玉石俱焚』的手段，
+		<span class=text_import2>他不是入侵您的系統，而是要讓您的系統掛點呢！</span>
+		最常被用來作為阻斷式服務的網路服務就是 WWW 了，因為 WWW 通常得對整個 Internet 開放服務。<br /><br />
+
+		這種攻擊方法也是最難處理的，因為要嘛就得要系統核心有支援自動抵擋 DoS 攻擊的機制，
+		要嘛您就得要自行撰寫偵測軟體來判斷！真是麻煩啊～而除非您的網站非常大，
+		並且『得罪不少人』，否則應該不會被 DoS 攻擊啦！ ^_^<br /><br />
+	</div>
+
+	<hr /><li><span class=text_import1>其他：</span><br />
+	<div class=block2>
+		上面提到的都是比較常見的攻擊方法，是還有一些高竿的攻擊法啦，
+		不過那些攻擊法都需要有比較高的技術水準，例如 IP 欺騙。他可以欺騙你主機告知該封包來源是來自信任網域，
+		而且透過封包傳送的機制，由攻擊的一方持續的主動發送出確認封包與工作指令。
+		如此一來，你的主機可能就會誤判該封包確實有回應，而且是來自內部的主機。<br /><br />
+
+		不過我們知道網際網路是有路由的，而每部主機在每一個時段的 ACK 確認碼都不相同，
+		所以這個方式要達成可以登入，會比較麻煩，所以說，不太容易發生在我們這些小型主機上面啦！
+		不過你還是得要注意一下說：<br />
+
+		<ul>
+		<li><span class=text_import2>設定規則完善的防火牆：</span>利用 Linux 內建的防火牆軟體 iptables 
+			建立較為完善的防火牆，可以防範部分的攻擊行為；
+		<li><span class=text_import2>核心功能：</span>這部份比較複雜，您必須要對系統核心有很深入的瞭解，
+			才有辦法設定好你的核心網路功能。
+		<li><span class=text_import2>登錄檔與系統監控：</span>你可以透過分析登錄檔來瞭解系統的狀況，
+			另外也可以透過類似 <a href="../linux_security/old/04mrtg.htm">MRTG 之類的監控軟體</a>
+			來即時瞭解到系統是否有異常，這些工作都是很好的努力方向！
+		</ul>
+	</div>
+
+	<hr /><li><span class=text_import1>主機防護小結語：</span><br />
+	<div class=block2>
+		要讓你的系統更安全，沒有『三兩三』是沒辦法達成的！我們也一直鼓吹，
+		『維護網站比架設網站還要重要』的觀念！因為『一人得道雞犬升天』，同樣的道理：『一人中標全員掛點』，
+		不要以為你的主機沒有啥重要資料，被入侵或被植入木馬也沒有關係，
+		因為我們的伺服器通常會對內部來源的主機規範的較為寬鬆，如果你的主機在公司內部，
+		但是不小心被入侵的話，那麼貴公司的伺服器是否就會暴露在危險的環境當中了？<br /><br />
+
+		另外，在蠕蟲很『發達』的年代，我們也會發現只要區域網路裡面有一部主機中標，
+		整個區域網路就會無法使用網路了，因為頻寬已經被蠕蟲塞爆！
+		如果老闆發現他今天沒有辦法收信了，但無法收信的原因並非伺服器掛點，
+		而是因為內部人員的某部個人電腦中了蠕蟲，而那部主機中蠕蟲的原因只是因為該使用者不小心去看了一下色情網站，
+		你覺得老闆會高興的跟該員工一起看色情網站還是 fire 掉該人員？<br /><br />
+
+		所以啊，主機防護還是很重要的！不要小看了！提供幾個方向給大家思考看看吧：<br />
+		<ol><span class=text_import2>
+		<li>建立完善的登入密碼規則限制；
+		<li>完善的主機權限設定；
+		<li>設定自動升級與修補套件漏洞、及移除危險套件；
+		<li>在每項系統服務的設定當中，強化安全設定的項目；
+		<li>利用 iptables, TCP_Wrappers 強化網路防火牆；
+		<li>利用主機監控軟體如 MRTG 與 logwatch 來分析主機狀況與登錄檔；
+		</span></ol>
+	</div>
+</div>
+
+
+<hr /><a NAME="repair"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">被入侵後的修復工作</span><br />
+<div class=block1>
+	如果你的主機被入侵的話，而你也由於瞭解到主機監控的需要，所以在最短的時間內發現此一事件，
+	那麼該如何針對這個被入侵的主機來修復？那如果你要修復的話，你這個網管人員還需要哪些額外的技能？
+	底下我們就來談一談。<br /><br />
+
+	<hr /><a NAME="repair_need"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">網管人員的額外技巧與任務</span><br />
+	<div class=block2>
+		從前一小節的分析當中，您會發現網管還真的是挺累的，他需要對於作業系統有一定程度的熟悉，
+		對於程序的運作 (process) 與權限概念，則需要更瞭解！否則就麻煩了！那除了作業系統的基本概念之外，
+		咱們網管還需要啥特殊技巧呢？當然需要啊！<span class=text_import2>其實一部主機最常發生問題的狀況，
+		都是由『內部的網路誤用所產生的』</span>，所以啊，你只管好主機而已是『沒有辦法杜絕問題』的啦！
+		底下就來談談你還需要啥技巧呢？<br /><br />
+
+		<li><span class=text_import1>瞭解什麼是需要保護的內容：</span><br />
+		<div class=block2>
+		我的天吶，還要知道什麼是需要保護的呀？呵呵！沒錯，就是如此！由剛剛我們知道的主機入侵方法當中，
+		不難瞭解，只要有人坐在您的主機前面，那麼任何事都有可能會發生！因此，如果您的主機相當的重要，
+		請『不要讓任何人靠近！』您可以參考一下湯姆克魯斯在『不可能的任務』裡面要竊取一部電腦內的資料的困難度！ ^_^""
+		<ul><li>硬體：能鎖就鎖吧！<li>軟體：還包含最重要的資料呢！</ul>
+		</div>
+
+		<li><span class=text_import1>預防黑客( Black hats )的入侵：</span><br />
+		<div class=block2>
+		這可不是開玩笑的，什麼是黑客呀！這是因為原本在西部電影當中，壞人都是戴黑色帽子的，
+		所以之前的人們就稱網路攻擊者為 Black hats 啦！在預防這方面的攻擊者時，除了嚴格管制網路的登入之外，
+		還需要特別控制原本您的主機中的人物！就我們小網站來說，不要以為好朋友就隨便他啦！
+		他說要指定密碼是跟他的帳號相同比較好記，您就答應他！等到人家用他的密碼登入您的主機，並破壞您的主機，
+		那可就得不償失了！如果是大企業的話，那麼員工使用網路時，也要分等級的呢！ ^_^<br /><br />
+		</div>
+
+		<li><span class=text_import1>主機環境安全化：</span><br />
+		<div class=block2>
+		沒什麼好講的，除了多關心，還是多關心！仔細的分析登錄檔，常常上網看看最新的安全通告，這都是最基礎的！
+		還包含了以最快的速度更新有問題的套件！因為，越快更新您的套件，就越快可以杜絕黑客的入侵！<br /><br />
+		</div>
+
+		<li><span class=text_import1>防火牆規則的訂定：</span><br />
+		<div class=block2>
+		這部份比較麻煩一些啦！因為您必需要不斷的測試測試再測試！以取得最佳化的網路安全設定！
+		怎麼說呢？要曉得的是，如果您的防火牆規則訂定得太多的時候，
+		那麼一個資料封包就要經過越多的關卡才能完整的通過防火牆，以進入到主機內部！嘿嘿！
+		這可是相當的花費時間的！會造成主機的效能不彰！特別留意這一點呢！<br /><br />
+		</div>
+
+		<li><span class=text_import1>即時維護您的主機：</span><br />
+		<div class=block2>
+		就像剛剛說的，您必需要隨時維護您的主機，因為，防火牆不是一經設定之後就不用在再他了！
+		因為，再嚴密的防火牆，也會有漏洞的！這些漏洞包括防火規則設定不良、利用較新的偵測入侵技術、
+		利用您的舊軟體的服務漏洞等等！所以，必需要即時維護您的主機呀！這方面除了分析 log files 
+		之外，也可以藉由即時偵測來進行這個工作！例如 PortSentry 就是蠻不錯的一套軟體呢！<br /><br />
+		</div>
+
+		<li><span class=text_import1>良好的教育訓練課程：</span><br />
+		<div class=block2>
+		不是所有的人都是電腦網路高手，尤其雖然現在資訊爆炸但是仍然有很多的機會會遇到電腦白癡呀！
+		這個時候，要曉得的是，我們對於內部網域通常沒有太多的規範，那如果他用內部的電腦去做壞事怎麼辦？
+		有時候還是無心的～挖哩～所以說，需要特別的教育訓練課程呀！這也是公司需要網管的主因之一！<br /><br />
+		</div>
+
+		<li><span class=text_import1>完善的備份計畫：</span><br />
+		<div class=block2>
+		天有不測風雲，人有旦夕禍福呀！什麼人都不知道什麼時候會有大地震、我們也都不知道什麼時候會突然的硬碟掛掉去～
+		所以說，完善的備份計畫是相當重要的！此外，大概沒有人會說他的主機是 100% 的安全吧！
+		那如果你的系統被入侵，造成資料的損毀時，你要如何復原你的主機啊？呵呵！一個良好的網站管理人員，
+		無時無刻都會進行重要資料的備份的！很重要啊！
+		這一部份請參考一下<a href="../linux_basic">基礎學習篇</a>之
+		<a href="../linux_basic/0580backup.htm">Linux 主機備份</a>的內容吧！
+		本書後續的遠端連線伺服器 SSH 章節內也會提到一個很棒的 rsync 工具，您可以瞧瞧！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="repair_step"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">入侵恢復工作</span><br />
+	<div class=block2>
+		所謂『百密一疏』啊，人不是神，總會有考慮不週的情況，萬一您的主機就因為這『一疏』導致被入侵了，
+		那該怎麼辦？由上面的說明當中，我們知道『木馬』是很嚴重的，因為他會在您的系統下開個後門(Back
+		door)讓攻擊者可以登入您的主機，而且還會竄改您 Linux 上面的程式，讓您找不到該木馬程式！怎麼辦？<br /><br />
+
+		很多朋友都習慣『<span class=text_import2>反正只要將 root 的密碼改回來就好了</span>』
+		這樣的觀點，事實上，那樣一部主機還是有被做為中繼站的危險啊！所以，
+		<span class=text_import2>萬一您的主機被入侵了，最好的方法還是『重新安裝Linux 』會比較乾淨</span>！<br /><br />
+
+		那該如何重新安裝呢？很多朋友一再地安裝，卻一再地被入侵～為什麼呢？因為他沒有『記取教訓』啊！呵呵！
+		底下我們就來談一談，一部被入侵的主機應該如何修復比較好？<br />
+
+		<ol>
+		<li><span class=text_import1>立即拔除網路線：</span><br /><br />
+		既然發現被入侵了，那麼第一件事情就是拿掉網路功能！拿掉網路功能最簡單的作法自然就是拔掉網路線了！
+		事實上，拿掉網路線最主要的功能除了保護自己之外，還可以保護同網域的其他主機。怎麼說呢？舉個最近
+		(2003/08) 發病的疾風病毒好了，他會感染同網域之內的其他主機喔！所以，拔除網路線之後，
+		遠端的攻擊者立即就無法進入您的
+		Linux 主機，而且您還可以保護網域內的其他相關主機啊！<br /><br />
+
+		<li><span class=text_import1>分析登錄檔資訊，搜尋可能的入侵途徑：</span><br /><br />
+		被入侵之後，決不是只要重新安裝就好，還需要額外分析
+		『<span class=text_import2>為什麼我的主機這一次會被入侵，對方是如何入侵的？</span>』，
+		如果您能夠找出問題點，那麼不但您的 Linux 功力立刻增強了，主機也會越來越安全喔！
+		而如果您不知道如何找出被入侵的可能途徑，那麼重新安裝後，下次還是可能被以同樣的方法入侵啊！
+		粉麻煩的啦！好了，那該如何找出入侵的途徑呢？<br /><br />
+		<ul>
+		<li><span class=text_import2>分析登錄檔</span>：低級的 cracker 
+		通常僅是利用工具軟體來入侵您的系統，所以我們可以藉由分析一些主要的登錄檔來找出對方的
+		IP 以及可能有問題的漏洞。可以分析 /var/log/messages, /var/log/secure 還有利用
+		last 指令來找出上次登入者的資訊。</li><br />
+		<li><span class=text_import2>檢查主機開放的服務</span>：很多 Linux 
+		使用者常常不曉得自己的系統上面開了多少的服務？我們說過，
+		每個服務都有其漏洞或者是不應該啟用的增強型或者是測試型功能，所以，找出您系統上面的服務，
+		並且檢查一下每個服務是否有漏洞，或者是在設定上面有了缺失，然後一個一個的整理吧！</li><br />
+		<li><span class=text_import2>查詢 Internet 上面的安全通報</span>：
+		透過安全通報來瞭解一下最新的漏洞資訊，說不定您的問題就在上面！</li>
+		</ul><br />
+
+		<li><span class=text_import1>重要資料備份：</span><br /><br />
+		主機被入侵後，顯得問題相當的嚴重，為什麼呢？因為主機上面有相當重要的資料啊！
+		如果主機上面沒有重要的資料，那麼直接重新安裝就好了！所以，被入侵之後，檢查完了入侵途徑，
+		再來就是要備份重要的資料了。好了，問個問題，什麼是『<span class=text_import2>重要資料</span>』？
+		who, ps, ls 等等指令是重要資料嗎？還是 httpd.conf 等設定檔是重要資料？又或者是
+		/etc/passwd, /etc/shadow 才是重要資料？<br /><br />
+
+		呵呵！基本上，重要的資料應該是『<span class=text_import2>非
+		Linux 系統上面原有的資料</span>』，例如 /etc/passwd, /etc/shadow, WWW 網頁的資料,
+		/home 裡面的使用者重要檔案等等，至於 /etc/*, /usr/, /var 等目錄下的資料，就不見得需要備份了。
+		注意：不要備份一些 binary 執行檔，因為 Linux 系統安裝完畢後本來就有這些檔案，此外，
+		這些檔案也很有可能『已經被竄改過了』，那備份這些資料，反而造成下次系統還是不乾淨！<br /><br />
+
+		<li><span class=text_import1>重新全新安裝：</span><br /><br />
+		備份完了資料，再來就是重新安裝 Linux 系統了。而在這次的安裝中，
+		您最好選擇適合您自己的安裝套件即可，不要全部套件都給他安裝上去啊！挺危險的！<br /><br />
+
+		<li><span class=text_import1>套件的漏洞修補：</span><br /><br />
+		記得啊，重新安裝完畢之後，請立即更新您的系統套件，否則還是會被入侵的啦！鳥哥喜歡先在其他比較乾淨的環境下將
+		Internet 上面的漏洞修補套件下載下來，然後燒錄起來，然後拿到自己的剛剛安裝完成的系統上面，mount
+		CD 之後全部給他更新，更新之後，並且設定了相關的防火牆機制，同時進行下一步驟『
+		<span class=text_import2>關閉或移除不需要的服務</span>』後，我才將網路線插上主機的網路卡上！
+		因為鳥哥不敢確定在安裝完畢後，連上 Internet 去更新套件的這段時間，會不會又受到入侵攻擊說....<br /><br />
+
+		<li><span class=text_import1>關閉或移除不需要的服務：</span><br /><br />
+		這個重要性不需要再講了吧？！啟用越少的服務，系統當然可以被入侵的可能性就比較低。<br /><br >
+
+		<li><span class=text_import1>資料回復與恢復服務設定：</span><br /><br />
+		剛剛備份的資料要趕緊的複製回來系統，同時將系統的服務再次的重新開放，請注意，
+		這些服務的設定最好能夠再次的確認一下，避免一些不恰當的設定參數在裡頭喔！<br /><br />
+
+		<li><span class=text_import1>連上 Internet：</span><br /><br />
+		所有的工作都進行的差不多了，那麼才將剛剛拿掉的網路線接上來吧！恢復主機的運作了！</ol>
+
+		經過這一連串的動作後，您的主機應該會恢復到比較乾淨的環境，此時還不能掉以輕心，
+		最好還是參考防火牆的設定，並且多方面的參考
+		Internet 上面一些老手的經驗，好讓您的主機可以更安全一些！
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li> 要管制登入伺服器的來源主機，得要瞭解網路封包的特性，這主要包括 TCP/IP 的封包協定，
+		以及重要的 Socket Pair ，亦即來源與目標的 IP 與 port 等。在 TCP 封包方面，則還得瞭解 SYN/ACK 等封包狀態；
+	<li>TCP 封包要進入我們 Linux 本機，至少需要通過 IP Filter, super daemon/TCP Wrappers, Daemons, 密碼驗證功能 等等步驟；
+	<li>主機的基本保護之一，就是擁有正確的權限設定。而複雜的權限設定可以利用 ACL 或者是 SELinux 來輔助；
+	<li>ACL 必須要讓 Filesystem 支援，故可以在 /etc/fstab 內加入 acl 的控制參數；
+	<li>關閉 SELinux 可在 /etc/selinux/config 檔案內設定，亦可在核心功能中加入 selinux=0 的項目；
+	<li>ACL 主要可針對 user, group, mask 來設定，可針對單一個人帳號設定權限；
+	<li>設定 ACL 的方法為使用 setfacl, 查閱則以 getfacl 指令來動作；
+	<li>ACL 內的 mask 是很重要的，必須與使用者的權限進行邏輯 AND 的運算，才會得到正確的最終權限；
+	<li>rootkit 為一種取得 root 的工具組，您可以利用 rkhunter 來查詢您主機是否被植入 rootkit；
+	<li>網管人員應該注意在員工的教育訓練還有主機的完善備份方案上面；
+	<li>一些所謂的黑客軟體，幾乎都是透過您的 Linux 上面的套件漏洞來攻擊 Linux 主機的；
+	<li>套件升級是預防被入侵的最有效方法之一；
+	<li>良好的登錄檔分析習慣可以在短時間內發現系統的漏洞，並加以修復。
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>我老是發現我的系統怪怪的，似乎有點停頓的模樣，懷疑可能是 CPU 
+	負荷太大，所以要去檢查一下系統相關的資訊。請問，我該以什麼指令去檢查我的系統相關的資訊？</li>
+	<div class=block2><font color=white size=-1>
+	可以使用 top, sar, free, ps -aux, uptime, last 等功能去查詢系統的相關資訊喔！然後再以 kill 之類的指令刪除；
+	</font></div>
+
+	<li>我懷疑我的系統上面有過多的具有 SUID 的檔案存在，導致一般使用者可以隨意的取得
+	root 的權限，請問，我要如何找出這些具有 SUID 權限的檔案？</li>
+	<div class=block2><font color=white size=-1>
+	因為 SUID 是 4000 這個權限的模樣，所以我可以這樣做：<br />
+	find / -perm +4000 
+	</font></div>
+
+	<li>我由國內一些 ftp 網站上下載了 Red Hat 公司釋出的套件，我想安裝他，但又不知道該套件檔案是否被修改過！
+	請問我該如何確定這個套件的可用性？</li>
+	<div class=block2><font color=white size=-1>
+	利用最簡易的 MD5 編碼來測試一下，例如『 md5sum 套件名稱』，再比對與原始套件釋出的 MD5 數據是否相同！？
+	</font></div>
+
+	<li>如果我發現使用『 setfacl -m u:dmtsai:rwx /path/to/file 』時，系統卻顯示『setfacl:  Operation not supported』，
+	你認為是哪裡出問題？</li>
+	<div class=block2><font color=white size=-1>
+	這是由於您的 filesystem 沒有啟用 ACL 支援，或者是系統的核心不支援。
+	請先使用 mount -o remount,acl /mount_point 測試看能否支援 ACL ，若不支援時，則可能是由於核心版本太舊了。
+	</font></div>
+
+	<li>如果要設定 dmtsai 可以使用 /home/project 這個目錄 (假設 /home 已經支援 ACL)，在該目錄內
+	dmtsai 可以擁有完整的權限。請問該如何設定該目錄？</li>
+	<div class=block2><font color=white size=-1>
+	除了使用 setfacl -m u:dmtsai:rwx /home/project 之外，還需要設定 setfacl -m m:rwx /home/project ，
+	因為 ACL 在目錄方面，必須透過使用者權限及 mask 的邏輯運算後才能生效！
+	</font></div>
+
+	<li>SELinux 是否為防火牆？</li>
+	<div class=block2><font color=white size=-1>
+	SELinux 並非防火牆，他是用來作為更細部權限設定的一個核心模組。
+	</font></div>
+
+	<li>良好的密碼規劃是防備主機的第一要務，請問 Linux 系統當中，關於密碼相關的檔案與規則設定在哪些檔案裡面？</li>
+	<div class=block2><font color=white size=-1>
+	密碼的設定規則在 /etc/login.defs 裡面！至於密碼檔案在 /etc/shadow 內！
+	</font></div>
+
+	<li>簡易說明，當一部主機被入侵之後，應該如何處理？</li>
+	<div class=block2><font color=white size=-1>
+	找出問題、重新安裝、漏洞修補、資料還原！請參考本章最後一節的說明。
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>Fedora 的 SELinux FAQ：<a href="http://fedora.redhat.com/docs/selinux-faq/"
+		target="_blank">http://fedora.redhat.com/docs/selinux-faq/</a></li>
+	<li>SELinux 的發展網站：<a href="http://selinux.sourceforge.net/"
+		target="_blank">http://selinux.sourceforge.net/</a></li>
+	<li>Red Hat 之 RHEL 4 
+		的 SELinux 指南：<a href="http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/selinux-guide/index.html"
+		target="_blank">http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/selinux-guide/index.html</a></li>
+	<li>美國國家安全局的 SELinux 簡介：<a href="http://www.nsa.gov/selinux/"
+		target="_blank">http://www.nsa.gov/selinux/</a></li>
+	<li>Rootkit hunter：<a href="http://www.rootkit.nl/projects/rootkit_hunter.html"
+		target="_blank">http://www.rootkit.nl/projects/rootkit_hunter.html</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/12：第一次完成日期！<br />
+2003/08/23：重新編排與增加重點回顧、課後練習<br />
+2006/08/31：將舊的文章移動到<a href="0240network-secure-1/0240network-secure-1.htm">此處</a>。<br />
+2006/09/06：增加 <a href="#selinux">SELinux</a> 的簡單說明，增加 <a href="#acl">ACL</a> 的控制項目！<br />
+</span>
+<hr><span class="text_date">2002/08/12以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0240network-secure-1.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

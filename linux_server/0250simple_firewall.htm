@@ -1,0 +1,1763 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 防火牆與 NAT 主機</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0250simple_firewall.htm">
+    <span class="text_head0"><span class="text_head_en">Linux </span>防火牆與<span class="text_head_en"> NAT </span>主機</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0250simple_firewall.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/11/08</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在談完了基本的網路安全觀念之後，這個章節主要就要針對『防火牆』來進行介紹了！目前的防火牆機制主要是以
+	Linux Kernel 2.6 版的 iptables 為主的，而 iptables 可以使用指令來下達，也可以透過編寫
+	shell script 來進行指令的整合。鳥哥本人比較習慣使用 scripts 來進行 iptables
+	的機制規劃呢！除了 iptables 之外，事實上，比較簡單的還有 TCP Wrappers 
+	這個玩意兒，他則主要是針對某些服務來進行管理的吶！本章的內容主要就是在介紹這兩個重要的防火牆軟體了！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#firewall">認識防火牆</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#firewall_why">為何需要防火牆</a><br />
+	　　2.2 <a href="#firewall_type">Linux 系統上防火牆的主要類別</a><br />
+	　　2.3 <a href="#firewall_topo">防火牆的一般線路佈線與抵擋技巧</a><br />
+	　　2.4 <a href="#firewall_limit">防火牆的使用限制</a><br />
+	</span>
+3. <a href="#netfilter">Linux 的封包過濾機制： iptables</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#netfilter_version">不同 Linux 核心版本的防火牆軟體</a><br />
+	　　3.2 <a href="#netfilter_iptables">iptables 的表格與封包進入流程</a><br />
+	　　3.3 <a href="#netfilter_syntax">本機的 iptables 語法</a><br />
+	　　　　<a href="#netfilter_syntax_clean">規則的清除與觀察</a><br />
+	　　　　<a href="#netfilter_syntax_policy">定義預設政策 (policy)</a><br />
+	　　　　<a href="#netfilter_syntax_comp">封包的基礎比對 IP/netmask I/O 裝置</a><br />
+	　　　　<a href="#netfilter_syntax_tcp">TCP, UDP 的規則比對</a><br />
+	　　　　<a href="#netfilter_syntax_state">狀態模組：MAC 與 RELATED</a><br />
+	　　　　<a href="#netfilter_syntax_icmp">ICMP 封包規則的比對</a><br />
+	　　3.4 <a href="#netfilter_save">防火牆的記錄、回復與測試</a><br />
+	　　3.5 <a href="#netfilter_kernel">IPv4 的核心管理功能：/proc/sys/net/ipv4/*</a><br />
+	</span>
+4. <a href="#local">本機防火牆的一個實例</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#local_rule">規則草擬</a><br />
+	　　4.2 <a href="#local_script">實際設定</a><br />
+	</span>
+5. <a href="#nat">NAT 主機的設定</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#nat_what">什麼是 NAT？ SNAT？ DNAT？</a><br />
+	　　5.2 <a href="#nat_ip_share">最陽春 NAT 主機： IP 分享功能</a><br />
+	　　5.3 <a href="#nat_modules">iptables 的額外核心模組功能</a><br />
+	　　5.4 <a href="#nat_dnat">在防火牆後端之網路伺服器 DNAT 設定</a><br />
+	</span>
+<span class=text_h2>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a><br />
+8. <a href="#reference">參考資料</a><br />
+9. <a href="http://phorum.vbird.org/viewtopic.htm?p=114475"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=114475</a><br />
+</span>
+
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	由於這個章節裡面談到非常多的封包概念，包括 <a href="0110network_basic.htm#fig_mac">MAC</a>, 
+	<a href="0110network_basic.htm#ipandmac_ip">IP</a>, 
+	<a href="0110network_basic.htm#protocol_tcp">TCP</a>, 
+	<a href="0110network_basic.htm#protocol_udp">UDP</a>, 
+	<a href="0110network_basic.htm#protocol_icmp">ICMP</a> 等協定，
+	以及如何抵擋外部 IP 來源的防火牆基礎，還有 IP/netmask 的整體網域寫法等等。
+	而鳥哥對於您學習防火牆的建議是希望你可以使用 shell script
+	來撰寫腳本，如此一來可以讓你的防火牆規則比較清晰一點。所以在您開始瞭解底下的資料之前，
+	希望你可以先閱讀過相關的資料了：<br />
+	<ul>
+	<li>已經認識 <a href="../linux_basic/0320bash.htm">Shell</a> 以及 
+		<a href="../linux_basic/0340bashshell-scripts.htm">Shell script</a>；
+	<li>已經閱讀過<a href="0110network_basic.htm">網路基礎</a>那一個章節的內容；
+	<li>已經閱讀過前一篇<a href="0240network-secure-1.htm">認識網路安全</a>；
+	<li>已經閱讀過 <a href="0230router.htm">路由器</a>那一章節的內容，瞭解路由的概念；
+	<li>最好擁有兩部主機以上的小型區域網路環境，以方便測試防火牆；
+	<li>Linux 主機上最好有兩張網卡，可以進行多種測試，並架設 NAT 主機；
+	<li>使用 uname -r 確認你的核心是 2.4 或 2.6 版；
+	</ul>
+	若準備妥當了，趕緊來開始進行吧！<br /><br />
+</div>
+
+
+<hr /><a NAME="firewall"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">認識防火牆</span><br />
+<div class=block1>
+	網路安全除了隨時注意套件的漏洞，以及網路上的安全通報之外，你最好能夠依據自己的環境來訂定防火牆機制，
+	這樣對於你的網路環境，會比較有保障一點喔！那麼什麼是防火牆呢？
+	其實<span class=text_import2>防火牆就是在管制進入到我們網域內的主機(或者可以說是網域)的資料封包的一種機制</span>，
+	例如我們在前一章節<a href="0240network-secure-1.htm">認識網路安全</a>當中提到的
+	iptables 就是一種防火牆機制了。當然了，更廣義的來說，
+	<span class=text_import2>只要能夠分析與過濾進出我們管理之網域的封包資料，就可以稱為防火牆</span>。<br /><br />
+
+	而這個防火牆又可以分為硬體防火牆與本機的軟體防火牆。硬體防火牆是由廠商設計好的主機硬體，
+	這部硬體防火牆內的作業系統主要以提供封包資料的過濾機制為主，並將其他的功能拿掉。因為單純作為防火牆功能而已，
+	因此封包過濾的速度與效率較佳。至於軟體防火牆呢？那就是我們這個章節要來談論的啊！
+	軟體防火牆本身就是在保護系統網路安全的一套軟體(或稱為機制)，例如
+	iptables 與 TCP Wrappers 都可以稱為軟體防火牆。<br /><br />
+
+	無論怎麼分，反正防火牆就是用來保護我們網路安全的咚咚就對啦！呵呵！我們這個章節主要在介紹
+	Linux 系統本身提供的軟體防火牆的功能，那就是 iptables 。至於 TCP Wrappers 
+	請前往基礎篇的 <a href="../linux_basic/0560daemons.htm#tcp_wrappers">認識系統服務</a> 參考參考喔！<br /><br />
+
+	<hr /><a NAME="firewall_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">為何需要防火牆</span><br />
+	<div class=block2>
+		基本上，如果你的系統 <span class=text_import2>(1)已經關閉不需要而且危險的服務； 
+		(2)已經將整個系統的所有套件都保持在最新的狀態； (3)權限設定妥當且定時進行備份工作；
+		(4)已經教育使用者具有良好的網路、系統操作習慣</span>。
+		那麼你的系統實際上已經頗為安全了！要不要架設防火牆？那就見仁見智囉！<br /><br />
+
+		不過，畢竟網路的世界是很複雜的，而 Linux 主機也不是一個簡單的東西，
+		說不定哪一天你在進行某個軟體的測試時，主機突然間就啟動了一個網路服務，
+		如果你沒有管制該服務的使用範圍，那麼該服務就等於對所有 Internet 開放，
+		那就麻煩了！因為該服務可能可以允許任何人登入你的系統，那不是挺危險？<br /><br />
+
+		所以囉，防火牆能作什麼呢？<span class=text_import2>防火牆最大的功能就是幫助你『限制某些服務的存取來源』</span>！
+		舉例來說： (1)你可以限制檔案傳輸服務 (FTP) 只在子網域內的主機才能夠使用，而不對整個 Internet 開放；
+		(2)你可以限制整部 Linux 主機僅可以接受客戶端的 WWW 要求，其他的服務都關閉；
+		(3)你還可以限制整部主機僅能主動對外連線，對我們主機主動連線的封包狀態 (TCP 封包的 SYN flag) 就予以抵擋等等。
+		這些就是最主要的防火牆功能了！<br /><br />
+
+		所以鳥哥認為，防火牆最重要的任務就是在規劃出：<br />
+		<ul><span class=text_import2>
+		<li>切割被信任(如子網域)與不被信任(如 Internet)的網段；
+		<li>劃分出可提供 Internet 的服務與必須受保護的服務；
+		<li>分析出可接受與不可接受的封包狀態；
+		</span></ul>
+		當然啦，咱們 Linux 的 iptables 防火牆軟體還可以進行更細部深入的 NAT (Network Address Translation)
+		的設定，並進行更彈性的 IP 封包偽裝功能，不過，對於單一主機的防火牆來說，
+		最簡單的任務還是上面那三項就是了！所以，你需不需要防火牆呢？理論上，當然需要！
+		而且你必須要知道『你的系統哪些資料與服務需要保護』，針對需要受保護的服務來設定防火牆的規則吧！
+		底下我們先來談一談，那在 Linux 上頭常見的防火牆類型有哪些？<br /><br />
+	</div>
+
+	<hr /><a NAME="firewall_type"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 系統上防火牆的主要類別</span><br />
+	<div class=block2>
+		除了以軟體及硬體作為防火牆的分類之外，我們也可以使用
+		<span class=text_import2>防火牆對於資料封包的取得方式來進行分類</span>。主要可以分為兩大類，
+		分別是<span class=text_import2>代理伺服器 (Proxy) 以及 IP Filter</span>。在代理伺服器方面，
+		由名稱我們就可以知道，代理伺服器僅是代理 Client 端去向 Internet 要求資料，所以 
+		Proxy 其實已經將可代理的協定限制的很少很少，並且由於內部與外部電腦的並不能直接互通，
+		所以可以達到良好的保護效果；另一種則是上面提到的 IP fileter 啦！利用封包過濾的方式來達到防火牆的目的！<br /><br />
+
+		<hr /><li><span class=text_import1>IP filter (封包過濾機制)</span><br />
+		<div class=block2>
+		直接使用進入本機的 TCP/IP 上面的封包協定來進行過濾分析，例如利用 TCP/IP 封包表頭的 IP 來源、 Port number 
+		等資料進行過濾，以判斷該封包是否能夠進入本機取得本機資源。由於這種方式可以直接分析最底層的封包表頭資料，
+		所以包括硬體位址(MAC), 軟體位址 (IP), TCP, UDP, ICMP 等封包的資訊都可以進行過濾分析的功能，
+		因此用途非常的廣泛。<br /><br />
+
+		在 Linux 上面我們使用核心內建的 iptables 軟體來作為防火牆封包過濾的機制，
+		由於 iptables 是核心內建的功能，因此他的效率非常的高！非常適合於一般小型環境的設定呢！
+		他利用一些封包過濾的規則設定，來定義出什麼資料可以接收，什麼資料需要剔除，以達到保護主機的目的喔！		
+		<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>Proxy (代理伺服器)</span><br />
+		<div class=block2>
+		其實代理伺服器是一種網路服務 (service, daemon)，他可以『代理』使用者的需求，
+		而代為前往伺服器取得相關的資料。就有點像底下這個圖示吧：<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/proxy_server.png"
+		title="Proxy Server 的運作原理簡介" alt="Proxy Server 的運作原理簡介"><br />
+		圖一、Proxy Server 的運作原理簡介</center><br />
+
+		以上圖為例，當 Client 端想要前往 Internet 取得 WWW 的資料時，他取得資料的流程是這樣的：<br />
+		<ol>
+		<li>他會向 proxy server 要求資料，請 proxy 幫忙處理；
+		<li>Proxy 可以分析使用者的 IP 來源是否合法？使用者想要去的 WWW 伺服器是否合法？
+			如果這個 client 的要求都合法的話，那麼 Proxy 就會主動的幫忙 client 前往 WWW 伺服器取得資料；
+		<li>Internet 所回傳的資料是傳給 Proxy server 的喔，所以 WWW 伺服器上面看到的是 Proxy Server 的 IP 囉；
+		<li>最後 Proxy 將 client 的要求傳回給 client。
+		</ol>
+		這樣瞭解了嗎？沒錯， client 並沒有直接連上 Internet ，所以在實線部分(步驟 1, 4)只要 Proxy 與 Client
+		可以連線就可以了！此時 client 甚至不需要擁有 public IP 哩！而當有人想要攻擊 client 端的主機時，
+		除非他能夠攻破 Proxy server ，否則是無法與 client 連線的啦！<br /><br />
+
+		另外，一般 proxy 主機通常僅開放 port 80, 21, 20 等 WWW 與 FTP 的埠口而已，
+		而且通常 Proxy 就架設在 Router 上面，因此可以完整的掌控區域網路內的對外連線！
+		讓你的 LAN 變的更安全啊！更詳細的 Proxy 設定我們會在後續的
+		<a href="0420squid.htm">代理伺服器</a> 章節當中提及的！<br /><br />
+		</div>
+
+		在這個章節中，我們先不談 Proxy 這個東西，而是介紹過濾機制的 iptables 囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="firewall_topo"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">防火牆的一般線路佈線與抵擋技巧</span><br />
+	<div class=block2>
+		由前面的說明當中，您應該可以瞭解到一件事，那就是防火牆除了可以『
+		<span class=text_import2>保護防火牆機制 (iptables) 本身所在的那部主機</span>』之外，還可以『
+		<span class=text_import2>保護防火牆後面的主機或 PC</span>』。呵呵！
+		也就是說，防火牆除了可以防備主機被入侵之外，
+		<span class=text_import2>他還可以架設在路由器上面藉以控管進出本地端網域 (LAN) 的網路封包</span>。
+		這種規劃對於內部私有網域的安全也有一定程度的保護作用呢！底下我們稍微談一談目前常見的防火牆配置吧：<br /><br />
+
+		<hr /><li><span class=text_import1>單一 Linux 主機兼任防火牆功能：</span><br />
+		<div class=block2>
+		防火牆除了可以作為 Linux 本機的基本防護之外，他還可以架設在路由器上面以管控整個區域網路的封包進出。
+		因此，在這類的防火牆上頭通常至少需要有兩個介面，將可信任的內部與不可信任的 Internet 分開，
+		所以可以分別設定兩塊網路介面的防火牆規則啦！整個環境如同下列圖二所示。<br /><br />
+
+		在圖二中，由於防火牆是設定在所有網路封包都會經過的路由器上頭，
+		因此這個防火牆可以很輕易的就掌控到區域網路內的所有封包，
+		而且你只要管理這部防火牆主機，就可以很輕易的將來自 Internet 的不良網路封包抵擋掉吶。
+		只要管理一部主機就能夠造福整的 LAN 裡面的 PC，很划算的啦。<br /><br />
+
+		如果你想要將區域網路控管的更嚴格的話，那你甚至可以在這部 Linux 防火牆上面架設更嚴格的代理伺服器，
+		讓用戶端僅能連上你所開放的 WWW 伺服器而已，而且還可以透過代理伺服器的登錄檔分析功能，
+		明確的查出來那個使用者在某個時間點曾經連上哪些 WWW 伺服器，您瞧瞧！厲害吧！
+		如果在這個防火牆上面再加裝類似 <a href="../linux_security/old/04mrtg.htm">MRTG</a> 
+		的流量監控軟體，還能針對整個網域的流量進行監測。
+		這樣配置的優點是：<br />
+
+		<ul><span class=text_import2>
+		<li>因為內外網域已經分開，所以安全維護在內部可以開放的權限較大！
+		<li>安全機制的設定可以針對 Linux 主機來維護即可！
+		<li>對外只看的到 Linux 主機，所以對於內部可以達到有效的安全防護！
+		</span></ul>
+
+		<a name="fig_02"></a><center>
+		<img src="0250simple_firewall/firewall_01.png"
+		title="單一 Linux 防火牆主機" alt="單一 Linux 防火牆主機"><br />
+		圖二、單一 Linux 防火牆主機</center><br />
+
+		</div>
+
+		<hr /><li><span class=text_import1>單一 Linux 防火牆，但 LAN 內另設防火牆</span><br />
+		<div class=block2>
+		一般來說，我們的防火牆對於 LAN 的防備都不會設定的很嚴格，因為是我們自己的 LAN 
+		嘛！所以是信任網域之一囉！不過，最常聽到的入侵方法也是使用這樣的一個信任漏洞！
+		因為您不能保證所有使用企業內部電腦的使用者都是公司的員工，也無法保證您的員工不會『搞破壞！』
+		<span class=text_import2>更多時候是由於某些外來訪客利用移動式裝置 (筆記型電腦)
+		連接到公司內部的無線網路來加以竊取企業內部的重要資訊。</span><br /><br />
+
+		呵呵！所以，如果您有特別重要的部門需要更安全的保護網路環境，那麼將 LAN 裡
+		面再加設一個防火牆，將安全等級分類，那麼將會讓您的重要資料獲得更佳的保護喔！
+		整個架構有點像下圖三所示。<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/firewall_02.png"
+		title="單一 Linux 防火牆主機，但 LAN 內另設防火牆" 
+		alt="單一 Linux 防火牆主機，但 LAN 內另設防火牆"><br />
+		圖三、單一 Linux 防火牆主機，但 LAN 內另設防火牆</center><br />
+		</div>
+
+		<hr /><li><span class=text_import1>在防火牆後端的主機設定</span><br />
+		<div class=block2>
+		還有一種更有趣的設定，那就是將提供網路服務的伺服器放在防火牆後面，這有什麼好處呢？
+		如下圖四所示，Web, Mail 與 FTP 都是透過防火牆連到 Internet 上面去，所以，
+		底下這四部主機在 Internet 上面的 Public IP 都是一樣的！
+		(這個觀念我們會在本章底下的 NAT 主機的時候再次的強調)。
+		只是透過防火牆的封包分析後，將 WWW 的要求封包轉送到 Web 主機，將 Mail 送給 Mail Server 
+		去處理而已(透過 port 的不同來轉遞)。<br /><br />
+
+		好了，因為四部主機在 Internet 上面看到的 IP 都相同，但是事實上卻是四部不同的主機，
+		而當有攻擊者想要入侵您的 FTP 主機好了，他使用各種分析方法去進攻的主機，其實是『防火牆』那一部，
+		攻擊者想要攻擊您內部的主機，除非他能夠成功的搞定您的防火牆，否則就很難入侵您的內部主機呢！<br /><br />
+
+		而且，由於主機放置在兩部防火牆中間，內部網路如果發生狀況時 (例如某些使用者不良操作導致中毒啊、
+		被社交工程攻陷導致內部主機被綁架啊等等的) ，是不會影響到網路主機的正常運作的。
+		這種方式適用在比較大型的企業當中，因為對這些企業來說，網路主機能否提供正常穩定的服務是很重要的！<br /><br />
+
+		不過，這種架構下所進行的設定就得包含 port 的轉遞，而且要有很強的邏輯概念，
+		可以釐清封包雙向溝通時的流動方式。對於新手來說，設定上有一定的難度，
+		鳥哥個人不太建議新手這麼做，還是等以後有經驗之後再來玩這種架構吧！<br /><br />
+
+		<a name="fig_04"></a><center>
+		<img src="0250simple_firewall/firewall_03.png"
+		title="架設在防火牆後端的主機伺服器" alt="架設在防火牆後端的主機伺服器"><br />
+		圖四、架設在防火牆後端的主機伺服器</center><br />
+
+		通常像上圖四的環境中，將網路伺服器獨立放置在兩個防火牆中間的網路，
+		我們稱之為非軍事區域 (DMZ)。 DMZ 的目的就如同前面提到的，重點在保護伺服器本身，
+		所以將 Internet 與 LAN 都隔離開來，如此一來不論是伺服器本身，或者是 LAN 被攻陷時，
+		另一個區塊還是完好無缺的！<br /><br />
+		</div>
+
+		好了，那麼我們 Linux 防火牆軟體 iptables 是可以進行封包過濾的，他可以分析網路封包的 socket pair ，
+		還可以分析不同網路協定的狀態，例如 TCP 封包的旗標 (flags) ，甚至可以分析網路卡的卡號呢！
+		經由分析這些資料後，咱們的 iptables 至少可以有底下這幾種抵擋封包的方式：<br />
+
+		<ul>
+		<li><span class=text_import2>拒絕讓 Internet 的封包進入 Linux 主機的某些 port</span><br />
+			這個應該不難瞭解吧！例如您的 port 20-21 這個 FTP 相關的 port ，
+			您只要開放給內部網路的話，所以不對 Internet 開放，那麼當 Internet 來的封包想要進入您的 
+			port 20-21 的話，就可以將該資料封包丟掉！因為我們可以分析的到該封包所帶有的 port 號碼呀！<br /><br />
+		<li><span class=text_import2>拒絕讓某些來源 IP 的封包進入</span><br />
+			例如您已經發現某個 IP 主要都是來自攻擊行為的主機，那麼只要來自該 IP 
+			的資料封包，就將他丟棄！這樣也可以達到基礎的安全呦！<br /><br />
+		<li><span class=text_import2>拒絕讓帶有某些特殊旗標( flag )的封包進入</span><br />
+			最常拒絕的就是帶有 SYN 的主動連線的旗標了！只要一經發現，嘿嘿！您就可以將該封包丟棄呀！<br /><br />
+		<li><span class=text_import2>分析硬體位址(MAC)來提供服務</span><br />
+			如果您的區域網路裡面有比較搗蛋的但是又具有比較高強的網路功力的高手時，如果您使用 IP 
+			來抵擋他使用網路的權限，而他卻懂得反正換一個 IP 就好了，都在同一個網域內嘛！
+			同樣還是在搞破壞～怎麼辦？沒關係，我們可以鎖死他的網路卡硬體位址啊！因為 MAC 
+			是銲在網路卡上面的，所以您只要分析到該使用者所使用的 MAC 之後，可以利用防火牆將該 
+			MAC 鎖住，呵呵！除非他能夠一換再換他的網路卡來取得新的 MAC，否則換 IP 是沒有用的啦！
+		</ul>
+
+		當然還有更多的使用技巧，你可以參考本章最後列出的參考資料，
+		裡頭有更多可用的小技巧喔。我們這裡僅會真對簡單的本機防火牆，以及作為類似 IP 分享器的
+		NAT 主機作簡單的介紹而已啦！ ^_^！好了，開始來玩一玩那個 iptables 吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="firewall_limit"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆的使用限制</span><br />
+	<div class=block2>
+		什麼？！設定防火牆之後還不安全啊？！那當然啦！誰說設定了防火牆之後您的系統就一定安全？
+		防火牆雖然可以防止不受歡迎的封包進入我們的網路當中，不過，某些情況下，
+		他並不能保證我們的網路一定就很安全。舉幾個例子來談一談：<br />
+
+		<ul>
+		<li><span class=text_import1>防火牆並不能很有效的抵擋病毒或木馬程式</span><br />
+		假設您已經開放了 WWW 的服務，那麼您的 WWW 主機上面，防火牆一定得要將 WWW 服務的 port 開放給 Client 
+		端登入才行吧！否則您的 WWW 主機設定了等於沒有用對吧！也就是說，只要進入您的主機的封包是要求 
+		WWW 資料的，就可以通過您的防火牆。那好了，『萬一您的 WWW 伺服器軟體有漏洞，或者本身向您要求 
+		WWW 服務的該封包就是病毒在偵測您的系統』時，您的防火牆可是一點辦法也沒有啊！
+		因為本來設定的規則就是會讓他通過啊。<br /><br />
+		<li><span class=text_import1>防火牆對於來自內部 LAN 的攻擊較無承受力</span><br />
+		一般來說，我們對於 LAN 裡面的主機都沒有什麼防火牆的設定，因為是我們自己的 LAN 
+		啊，所以當然就設定為信任網域了！不過， LAN 裡面總是可能有些網路小白啊，雖然他們不是故意要搞破壞，
+		但是他們就是不懂嘛！所以就亂用網路了。這個時候就很糟糕，因為防火牆對於內部的規則設定通常比較少，
+		所以就容易造成內部員工對於網路誤用或濫用的情況。
+		</ul>
+
+		所以啦，在您的 Linux 主機實地上網之前，還是得先：<br />
+		<ul><span class=text_import2>
+		<li>關閉幾個不安全的服務；
+		<li>升級幾個可能有問題的套件；
+		<li>架設好最起碼的安全防護--防火牆--
+		</span></ul>
+
+		其他相關的訊息請到 <a href="0240network-secure-1.htm">認識網路安全</a> 裡面去看一看怎麼增加自身的安全吧！
+		<br />
+	</div>
+</div>
+
+
+
+<hr /><a NAME="netfilter"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 的封包過濾機制：iptables</span><br />
+<div class=block1>
+	上面談了這麼多，主要還是希望您能瞭解到防火牆是什麼這個議題！而且也希望您知道防火牆並非萬能的。
+	好了，那麼底下我們終於可以來瞧一瞧，那目前我們的 2.6 版這個 Linux 核心到底使用什麼核心功能來進行防火牆設定？
+	<br /><br />
+
+	<hr /><a NAME="netfilter_version"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">不同 Linux 
+	核心版本的防火牆軟體</span><br />
+	<div class=block2>
+		Linux 的防火牆為什麼功能這麼好？這是因為他本身就是由 Linux kernel 所提供，
+		由於直接經過核心來處理，因此效能非常好！不過，不同核心版本所使用的防火牆軟體是不一樣的！
+		因為核心支援的防火牆是逐漸演進來的嘛！<br />
+		<ul><span class=text_import2>
+		<li>Version 2.0：使用 ipfwadm 這個防火牆機制；
+		<li>Version 2.2：使用的是 ipchains 這個防火牆機制；
+		<li>Version 2.4 與 2.6 ：主要是使用 iptables 這個防火牆機制，不過在某些早期的 Version 2.4 
+		版本的 distributions 當中，亦同時支援 ipchains (編譯成為模組)，好讓使用者仍然可以使用來自 
+		2.2 版的 ipchains 的防火牆規劃。不過，不建議在 2.4 以上的核心版本使用 ipchains 喔！
+		</span></ul>
+
+		因為不同的核心使用的防火牆機制不同，且支援的軟體指令與語法也不相同，
+		所以在 Linux 上頭設定屬於你自己的防火牆規則時，要注意啊，先用 
+		<a href="../linux_basic/0440processcontrol.htm#uname">uname -r</a> 追蹤一下你的核心版本再說！
+		如果你是安裝 2004 年以後推出的 distributions ，那就不需要擔心了，因為這些 distributions
+		幾乎都使用 kernel 2.6 版的核心啊！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="netfilter_iptables"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">iptables 
+	的表格與封包進入流程</span><br />
+	<div class=block2>
+		前面的幾個小節裡面我們一直談到：『防火牆規則』，咦！啥是規則啊？因為 iptables 是利用封包過濾的機制，
+		所以他會分析封包的表頭資料。根據表頭資料與定義的『規則』來決定該封包是否可以進入主機或者是被丟棄。
+		意思就是說：『<span class=text_import2>根據封包的分析資料 "比對" 你預先定義的規則內容，
+		若封包資料與規則內容相同則進行動作，否則就繼續下一條規則的比對！</span>』
+		重點在那個『比對與分析順序』上。<br /><br />
+
+		舉個簡單的例子，假設我預先定義 10 條防火牆規則好了，那麼當 Internet 來了一個封包想要進入我的主機，
+		那麼防火牆是如何分析這個封包的呢？我們以底下的圖示來說明好了：<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/iptables_01.png"
+		title="封包過濾的規則動作及分析流程" alt="封包過濾的規則動作及分析流程"><br />
+		圖五、封包過濾的規則動作及分析流程</center><br />
+
+		當一個網路封包要進入到主機之前，會先經由 NetFilter 進行檢查，那就是 iptables 的規則了。
+		檢查通過則接受 (ACCEPT) 進入本機取得資源，如果檢查不通過，則可能予以丟棄 (DROP) ！
+		上圖五主要的目的在告知您：『規則是有順序的』！例如當網路封包進入 Rule 1 的比對時，
+		如果<span class=text_import2>比對結果符合 Rule 1 ，此時這個網路封包就會進行 Action 1 
+		的動作，而不會理會後續的 Rule 2, Rule 3.... 等規則的分析了</span>。<br /><br />
+
+		而如果這個封包並不符合 Rule 1 的比對，那就會進入 Rule 2 的比對了！如此一個一個規則去進行比對就是了。
+		那如果所有的規則都不符合怎辦？此時就會透過預設動作 (封包政策, Policy) 來決定這個封包的去向。
+		所以啦，<span class=text_import2>當您的規則順序排列錯誤時，就會產生很嚴重的錯誤了</span>。
+		怎麼說呢？讓我們看看底下這個例子：<br /><br />
+
+		假設您的 Linux 主機提供了 WWW 的服務，那麼自然就要針對 port 80 來啟用通過的封包規則，但是您發現 
+		IP 來源為 192.168.100.100 老是惡意的嘗試入侵您的系統，所以您想要將該 IP 拒絕往來，最後，所有的非 
+		WWW 的封包都給他丟棄，就這三個規則來說，您要如何設定防火牆檢驗順序呢？<br />
+
+		<ol><span class=text_import2>
+		<li>Rule 1 先抵擋 192.168.100.100 ；
+		<li>Rule 2 再讓要求 WWW 服務的封包通過；
+		<li>Rule 3 將所有的封包丟棄。
+		</span></ol>
+
+		這樣的排列順序就能符合您的需求，不過，萬一您的順序排錯了，變成：<br />
+
+		<ol>
+		<li>Rule 1 先讓要求 WWW 服務的封包通過；
+		<li>Rule 2 再抵擋 192.168.100.100 ；
+		<li>Rule 3 將所有的封包丟棄。
+		</ol>
+
+		此時，那個 192.168.100.100 『可以使用您的 WWW 服務』喔！因為只要他對您的主機送出 
+		WWW 要求封包，就可以使用您的 WWW 主機功能了，因為您的規則順序定義第一條就會讓他通過，
+		而不去考慮第二條規則！這樣可以理解規則順序的意義了嗎！現在再來想一想，如果 Rule 1 
+		變成了『將所有的封包丟棄』，Rule 2 才設定『WWW 服務封包通過』，請問，我的 client 
+		可以使用我的 WWW 服務嗎？呵呵！答案是『否～』想通了嗎？ ^_^ <br /><br />
+
+		<hr /><li><span class=text_import1>iptables 的表格與鏈 (chain)</span><br />
+		<div class=block2>
+		事實上，那個圖五所列出的規則僅是 iptables 眾多表格當中的一個鏈 (chain) 而已。
+		什麼是鏈呢？這得由 iptables 的名稱說起。為什麼稱為 ip"tables" 呢？
+		因為<span class=text_import2>這個防火牆軟體裡面有多個表格 (table) ，每個表格都定義出自己的預設政策與規則，
+		且每個表格都用途都不相同</span>。我們可以使用底下這張圖來稍微瞭解一下：<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/iptables_02.png"
+		title="iptables 的表格示意圖" alt="iptables 的表格示意圖"><br />
+		圖六、iptables 的表格示意圖</center><br />
+
+		剛剛<span class=text_import2>圖五的規則內容僅只是圖六內的某個 chain 而已</span>！
+		而預設的情況下，咱們 Linux 的 iptables 
+		至少就有三個表格，包括管理本機進出的 filter 、管理後端主機 (防火牆內部的其他電腦) 的 nat 、
+		管理特殊旗標使用的 mangle (較少使用) 。更有甚者，我們還可以自訂額外的鏈呢！
+		真是很神奇吧！每個表格與其中鏈的用途分別是這樣的：<br />
+
+		<ul>
+		<li><span class=text_import1>filter</span>：主要跟 Linux 本機有關，這個是預設的 table 喔！
+			<ul><li><span class=text_import2>INPUT</span>：主要與封包想要進入我們 Linux 本機有關；
+			<li><span class=text_import2>OUTPUT</span>：主要與我們 Linux 本機所要送出的封包有關；
+			<li><span class=text_import2>FORWARD</span>：這個咚咚與 Linux 
+			本機比較沒有關係，他可以封包『轉遞』到後端的電腦中，與 nat 這個 table 相關性很高。</ul></li><br />
+		<li><span class=text_import1>nat</span>：這個表格主要在用作來源與目的之 IP 或 port 的轉換，
+			與 Linux 本機較無關，主要與 Linux 主機後的區域網路內的電腦較有相關。
+			<ul><li><span class=text_import2>PREROUTING</span>：在進行路由判斷之前所要進行的規則(DNAT/REDIRECT)
+			<li><span class=text_import2>POSTROUTING</span>：在進行路由判斷之後所要進行的規則(SNAT/MASQUERADE)
+			<li><span class=text_import2>OUTPUT</span>：與發送出去的封包有關</ul></li><br />
+		<li><span class=text_import1>mangle</span>：這個表格主要是與特殊的封包的路由旗標有關，
+			早期僅有 PREROUTING 及 OUTPUT 鏈，不過從 kernel 2.4.18 之後加入了 INPUT 及 FORWARD 鏈。
+			由於這個表格與特殊旗標相關性較高，所以像咱們這種單純的環境當中，較少使用 mangle 這個表格。
+		</ul>
+
+		那麼各個表格與鏈的相關性可以使用下圖來表示：<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/iptables_03.png"
+		title="iptables 內建各表格與鏈的相關性" alt="iptables 內建各表格與鏈的相關性"><br />
+		圖七、iptables 內建各表格與鏈的相關性</center><br />
+
+		上面的圖示很複雜喔！不過基本上你依舊可以看出來，我們的 iptables 可以控制兩種封包的流向：<br />
+		<ul><span class=text_import2>
+		<li>如上圖的 A ，封包主要是要讀取我們 Linux 本機內的資料，會經過 filter 的 INPUT 鏈，
+			而資料的輸出則是經過 filter 的 OUTPUT 鏈；
+		<li>如上圖的 B ，封包主要是要透過防火牆而去後端，也就是說，該封包的目標並非我們的 Linux 本機。
+			主要經過的鏈是 filter 的 FORWARD 以及 nat 的 POSTROUTING, PREROUTING。
+		</span></ul>
+
+		由於 mangle 這個表格很少被使用，如果將圖七的 mangle 拿掉的話，那就容易看的多了：<br /><br />
+
+		<a name="fig_08"></a><center>
+		<img src="0250simple_firewall/iptables_04.png"
+		title="iptables 內建各表格與鏈的相關性(簡圖)" alt="iptables 內建各表格與鏈的相關性(簡圖)"><br />
+		圖八、iptables 內建各表格與鏈的相關性(簡圖)</center><br />
+
+		透過圖八你就可以更輕鬆的瞭解到，事實上與本機最有關的其實是 filter 這個表格內的 INPUT 與 OUTPUT
+		這兩條鏈，如果你的 iptables 只是用來防備 Linux 主機本身的話，那 nat 
+		的規則根本就不需要理他，直接設定為開放即可。<br /><br />
+
+		不過，如果你的防火牆事實上是用來管制 LAN 內的其他主機的話，那麼你就必須要再針對
+		filter 的 FORWARD 這條鏈，還有 nat 的 PREROUTING, POSTROUTING 以及 OUTPUT 進行額外的規則訂定才行。
+		nat 表格的使用需要很清晰的路由概念才能夠設定的好，建議新手先不要碰！
+		最多就是先玩一玩最陽春的 nat 功能『IP 分享器的功能』就好了！ ^_^！
+		這部份我們在本章的最後一小節會介紹的啦！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="netfilter_syntax"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">本機的 iptables 語法</span><br />
+	<div class=block2>
+		理論上，當你安裝好 Linux 之後，系統應該會主動的幫你啟動一個陽春的防火牆規則才是。
+		不過如果您是依照鳥哥的建議來安裝 Linux 時，那麼安裝完畢後，你的系統應該是沒有防火牆的啦。
+		另外，某些早期的版本 (例如 Red Hat 9) 本身同時提供 iptables 及 ipchains 這兩個防火牆模組，
+		不過這兩個模組是無法同時存在的！所以你僅能啟動其中一個，那當然是啟動 iptables 才對啊！
+		如果不小心啟動了 ipchains 的話 (新版的 Linux 都不會有這個困擾) ，那請使用 rmmod 來移除吧！<br /><br />
+
+		不過，在開始進行底下的練習之前，鳥哥這裡有個很重要的事情要告知一下。
+		因為 iptables 的指令會將網路封包進行過濾及抵擋的動作，所以
+		<span class=text_import2>請不要在遠端主機上進行防火牆的練習</span>，因為您很有可能一不小心將自己關在家門外！
+		盡量在本機前面登入 tty1-tty6 終端機進行練習，否則常常會發生悲劇啊！
+		鳥哥以前剛剛在玩 iptables 時，就常常因為不小心規則設定錯誤，導致常常要請遠端的朋友幫忙重新開機...<br /><br />
+
+		剛剛提到咱們的 iptables 至少有三個預設的 table (filter, nat, mangle)，較常用的是本機的 filter 表格，
+		這也是預設表格啦。另一個則是後端主機的 nat 表格，至於 mangle 較少使用，所以這個章節我們並不會討論 mangle。
+		由於不同的 table 他們的鏈不一樣，導致使用的指令語法或多或少都有點差異。
+		在這個小節當中，我們主要將針對 filter 這個預設表格的三條鏈來做介紹。底下就來玩一玩吧！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		防火牆的設定主要使用的就是 iptables 這個指令而已。而防火牆是系統管理員的主要任務之一，
+		且對於系統的影響相當的大，因此『只能讓 root 使用 iptables 』，不論是設定還是觀察防火牆規則喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<a name="netfilter_syntax_clean"></a><hr /><li><span class=text_import1>規則的清除與觀察</span><br />
+		<div class=block2>
+		如果你在安裝的時候選擇沒有防火牆的話，那麼 iptables 在一開始的時候應該是沒有規則的，不過，
+		可能因為你在安裝的時候就有選擇系統自動幫您建立防火牆機制，那系統就會有預設的防火牆規則了！
+		無論如何，我們先來看看目前本機的防火牆規則是如何吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables [-t tables] [-L] [-nv]</span>
+<span class=term_say>參數：
+-t ：後面接 table ，例如 nat 或 filter ，若省略此項目，則使用預設的 filter
+-L ：列出目前的 table 的規則
+-n ：不進行 IP 與 HOSTNAME 的反查，顯示訊息的速度會快很多！
+-v ：列出更多的資訊，包括通過該規則的封包總位元數、相關的網路介面等</span>
+
+<span class=term_hd>範例：列出 filter table 三條鏈的規則</span>
+[root@linux ~]# <span class=term_command>iptables -L -n</span>
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+
+<span class=term_hd>範例：列出更多的資訊</span>
+[root@linux ~]# <span class=term_command>iptables -L -nv</span>
+Chain INPUT (policy ACCEPT <span class=term_write>5748 packets, 746K bytes</span>)
+ pkts bytes target     prot opt in     out     source               destination
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table>
+
+		仔細看到上面表格的輸出，因為沒有加上 -t 的參數，所以預設就是 filter 這個表格內的 INPUT, 
+		OUTPUT, FORWARD 三條鏈的規則囉。由於沒有規則嘛！所以每個鏈內部的規則都是空的。
+		同時注意一下，在每個 chain 後面括號內的 policy 項目，那就是『預設動作(政策)』咯！以上面來看，
+		雖然我們啟動了 iptables ，但是我們沒有設定規則，然後政策又是 ACCEPT，
+		所以是『任何封包都會接受』的意思喔！至於如果加上 -v 的參數時，
+		則連同該規則所通過的封包總位元數也會被列出來啊。底下則是 nat 表格的規則項目： <br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -t nat -L -n</span>
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination
+
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination
+</pre></td></tr></table>
+
+		瞧！與 fiter 表格一模一樣吧！只是三條鏈的內容不同囉！要注意啊！ ^_^！
+		以後當你設定每一條防火牆的規則時，記得瞧一瞧設定先！好，那如何清除規則？這樣做就對了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables [-t tables] [-FXZ]</span>
+<span class=term_say>參數：
+-F ：清除所有的已訂定的規則；
+-X ：殺掉所有使用者 "自訂" 的 chain (應該說的是 tables ）囉；
+-Z ：將所有的 chain 的計數與流量統計都歸零</span>
+
+<span class=term_hd>範例：清除本機防火牆 (filter) 的所有規則</span>
+[root@linux ~]# <span class=term_command>iptables -F</span>
+[root@linux ~]# <span class=term_command>iptables -X</span>
+[root@linux ~]# <span class=term_command>iptables -Z</span>
+</pre></td></tr></table>
+
+		由於這三個指令會將本機防火牆的所有規則都清除，但卻不會改變預設政策 (policy) ，
+		所以如果你不是在本機下達這三行指令時，很可能你會被自己擋在家門外 (若 INPUT 設定為 DROP 時)！
+		要小心啊！<br /><br />
+
+		一般來說，我們在重新定義防火牆的時候，都會先將規則給他清除掉。還記得我們前面談到的，
+		<span class=text_import2>防火牆的『規則順序』是有特殊意義的</span>，所以囉，
+		當然先清除掉規則，然後一條一條來設定會比較容易一點啦。底下就來談談定義預設政策吧！<br /><br />
+		</div>
+
+		<a name="netfilter_syntax_policy"></a><hr /><li><span class=text_import1>定義預設政策 (policy)</span><br />
+		<div class=block2>
+		清除規則之後，再接下來就是要設定規則的政策啦！還記得政策指的是什麼嗎？『
+		<span class=text_import2>當您的封包不在您設定的規則之內時，則該封包的通過與否，以 Policy 
+		的設定為準</span>』，在本機方面的預設政策中，假設您對於內部的使用用者有信心的話，
+		那麼 filter 內的 INPUT 鏈方面可以定義的比較嚴格一點，而 FORWARD 與 OUTPUT 
+		則可以訂定的鬆一些！通常鳥哥都是將 INPUT 的 policy 定義為 DROP 啦，其他兩個則定義為 ACCEPT。
+		至於 nat table 則暫時不理會他。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables [-t nat] -P [INPUT,OUTPUT,FORWARD] [ACCEPT,DROP]</span>
+<span class=term_say>參數：
+-P ：定義政策( Policy )。注意，這個 P 為大寫啊！
+ACCEPT ：該封包可接受
+DROP   ：該封包直接丟棄，不會讓 client 端知道為何被丟棄。</span>
+
+<span class=term_hd>範例：將本機的 INPUT 設定為 DROP ，其他設定為 ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -P   INPUT DROP</span>
+[root@linux ~]# <span class=term_command>iptables -P  OUTPUT ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -P FORWARD ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -L -n</span>
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination
+
+Chain INPUT (policy <span class=term_write>DROP</span>)
+target     prot opt source               destination
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+<span class=term_say># 由於 INPUT 設定為 DROP 而又尚未有任何規則，所以上面的輸出結果顯示：
+# 所有的封包都無法進入你的主機！是不通的防火牆設定！(網路連線是雙向的)</span>
+</pre></td></tr></table>
+
+		看到輸出的結果了吧？INPUT 被修改設定了喔！其他的 nat table 三條鏈的設定也是一樣的，例如：『
+		<span class=text_import2>iptables -t nat -P PREROUTING ACCEPT</span> 』就設定了 nat table
+		的 PREROUTING 鏈為可接受的意思！預設政策設定完畢後，來談一談關於封包的基礎比對設定吧。<br /><br />
+		</div>
+
+		<a name="netfilter_syntax_comp"></a><hr /><li><span class=text_import1>封包的基礎比對 IP/netmask 
+		I/O 裝置</span><br />
+		<div class=block2>
+		開始來進行封包的比對設定吧！我們先由最基礎的 IP 與網域的特徵談起，再談裝置 (網路卡) 的限制等等。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables [-AI 鏈] [-io 網路介面] [-p 協定] \</span>
+> <span class=term_command>[-s 來源IP/網域] [-d 目標IP/網域] -j [ACCEPT|DROP]</span>
+<span class=term_say>參數：
+-AI 鏈：針對某的鏈進行規則的 "插入" 或 "累加"
+    -A ：新增加一條規則，該規則增加在原本規則的最後面。例如原本已經有四條規則，
+         使用 -A 就可以加上第五條規則！
+    -I ：插入一條規則。如果沒有指定此規則的順序，預設是插入變成第一條規則。
+         例如原本有四條規則，使用 -I 則該規則變成第一條，而原本四條變成 2~5 號
+    鏈 ：有 INPUT, OUTPUT, FORWARD 等，此鏈名稱又與 -io 有關，請看底下。
+
+-io 網路介面：設定封包進出的介面規範
+    -i ：封包所進入的那個網路介面，例如 eth0, lo 等介面。需與 INPUT 鏈配合；
+    -o ：封包所傳出的那個網路介面，需與 OUTPUT 鏈配合；
+
+-p 協定：設定此規則適用於哪種封包格式
+   主要的封包格式有： tcp, udp, icmp 及 all 。
+
+-s 來源 IP/網域：設定此規則之封包的來源項目，可指定單純的 IP 或包括網域，例如：
+   IP  ：192.168.0.100
+   網域：192.168.0.0/24, 192.168.0.0/255.255.255.0 均可。
+   若規範為『不許』時，則加上 ! 即可，例如：
+   -s ! 192.168.100.0/24 表示不許 192.168.100.0/24 之封包來源；
+
+-d 目標 IP/網域：同 -s ，只不過這裡指的是目標的 IP 或網域。
+
+-j ：後面接動作，主要的動作有接受 (ACCEPT)、丟棄 (DROP) 及記錄 (LOG)</span>
+</pre></td></tr></table>
+
+		iptables 的基本參數就如同上面所示的，僅只談到 IP 、網域與裝置等等的資訊，
+		至於 TCP, UDP 封包特有的埠口 (port number) 與狀態 (如 SYN 旗標) 則在下小節才會談到。
+		好，先讓我們來看看最基礎的幾個規則，例如開放 lo 這個本機的介面以及某個 IP 來源吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例一：所有的來自 lo 這個介面的封包，都予以接受</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i lo -j ACCEPT</span>
+<span class=term_say># 仔細看上面並沒有列出 -s, -d 等等的規則，這表示：不論封包來自何處或去到哪裡，
+# 只要是來自 lo 這個介面，就予以接受！這個觀念挺重要的，就是
+#『沒有設定的規定，則表示該規定完全接受』的意思！例如這個案例當中，
+# 關於 -s, -d...等等的參數沒有規定時</span>
+
+<span class=term_hd>範例二：目標來自 192.168.0.1 這個 IP 的封包都予以接受</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -s 192.168.0.1 -j ACCEPT</span>
+<span class=term_say># 不管什麼封包格式，只要來自 192.168.0.1 就予以接受。</span>
+
+<span class=term_hd>範例三：目標來自 192.168.1.0/24 可接受，但 192.168.1.10 丟棄</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -s 192.168.1.10 -j DROP</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -s 192.168.1.0/24 -j ACCEPT</span>
+<span class=term_say># 上述這兩個範例很重要啊！因為有點關係！要先丟棄 192.168.1.10 才能接受該網域。</span>
+
+[root@linux ~]# <span class=term_command>iptables -L -n</span>
+Chain INPUT (policy DROP)
+target     prot opt source               destination
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0
+ACCEPT     all  --  192.168.0.1          0.0.0.0/0
+DROP       all  --  192.168.1.10         0.0.0.0/0
+ACCEPT     all  --  192.168.1.0/24       0.0.0.0/0
+<span class=term_say># 瞧！剛剛的設定在這裡已經生效囉！</span>
+</pre></td></tr></table>
+
+		這就是最單純、簡單的防火牆規則的設定與觀察方式。你在設定完畢後，都可以利用 iptables -L -n 或
+		iptables -L -v 來簡單的查閱一下。而如果你想要記錄某個規則的紀錄怎麼辦？可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -s 192.168.2.200 -j LOG</span>
+[root@linux ~]# <span class=term_command>iptables -L -n</span>
+target prot opt source         destination
+LOG    all  --  192.168.2.200  0.0.0.0/0   LOG flags 0 level 4
+</pre></td></tr></table>
+
+		看到輸出結果的最左邊，會出現的是 LOG 喔！只要有封包來自 192.168.2.200 這個 IP 時，
+		那麼該封包的相關資訊就會被寫入到核心訊息，亦即是 /var/log/messages 這個檔案當中。
+		<span class=text_import2>然後該封包會繼續進行後續的規則比對。</span>所以說，
+		LOG 這個動作僅在進行記錄而已，並不會影響到這個封包的其他規則比對的。
+		好了，接下來我們分別來看看 TCP,UDP  以及 ICMP 封包的其他規則比對吧！<br /><br />
+		</div>
+
+		<a name="netfilter_syntax_tcp"></a><hr /><li><span class=text_import1>TCP, UDP 的規則比對</span><br />
+		<div class=block2>
+		我們在<a href="0110network_basic.htm">網路基礎</a>談過各種不同的封包格式，
+		在談到 TCP 與 UDP 時，比較特殊的就是那個埠口 (port number)，在 TCP 方面則另外有所謂的連線封包狀態，
+		包括最常見的 SYN 主動連線的封包格式。那麼如何針對這兩種封包格式進行防火牆規則的設定呢？你可以這樣看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables [-AI 鏈] [-io 網路介面] [-p tcp,udp] \</span>
+> <span class=term_command>[-s 來源IP/網域] [--sport 埠口範圍] \</span>
+> <span class=term_command>[-d 目標IP/網域] [--dport 埠口範圍] -j [ACCEPT|DROP]</span>
+<span class=term_say>參數：
+--sport 埠口範圍：限制來源的埠口號碼，埠口號碼可以是連續的，例如 1024:65535
+--dport 埠口範圍：限制目標的埠口號碼。</span>
+</pre></td></tr></table>
+
+		事實上就是多了那個 --sport 及 --dport 這兩個玩意兒，重點在那個 port number 上面啦！
+		底下讓我們來進行幾個小測試：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例一：想要連線進入本機 port 21 的封包都抵擋掉：</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p tcp --dport 21 -j DROP</span>
+
+<span class=term_hd>範例二：想連到我這部主機的網芳 (upd port 137,138 tcp port 139,445) 就放行</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p udp --dport 137:138 -j ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p tcp --dport 139 -j ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p tcp --dport 445 -j ACCEPT</span>
+</pre></td></tr></table>
+
+		瞧！你可以利用 UDP 與 TCP 協定所擁有的埠口號碼來進行某些服務的開放或關閉喔！
+		你還可以綜合處理呢！例如：只要來自 192.168.1.0/24 的 1024:65535 埠口的封包，
+		只要想要連線到本機的 ssh port 就予以抵擋，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p tcp -s 192.168.1.0/24 \</span>
+> <span class=term_command>--sport 1024:65534 --dport ssh -j DROP</span>
+</pre></td></tr></table>
+
+		注意啊！如果你有使用到 --sport 及 --dport 的參數時，<span class=text_import2>就必須指定 udp 或 tcp 
+		的封包格式才行！</span>否則的話， iptables 的指令就會出現如下的錯誤：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 --dport 21 -j DROP</span>
+iptables v1.2.11: Unknown arg `--dport'
+Try `iptables -h' or 'iptables --help' for more information.
+</pre></td></tr></table>
+
+		你應該會覺得很奇怪，怎麼『 --dport 』會是未知的參數 (arg) 呢？這是因為你沒有加上 -p tcp  或 -p udp
+		的緣故啊！因為 port 是 TCP,UDP 特有的，其他類似 ICMP 則沒有這種類的埠口資料啊！
+		這樣說，您可以理解吧！ ^_^<br /><br>
+
+		除了埠口之外，在 TCP 還有特殊的旗標啊！最常見的就是那個主動連線的 SYN 旗標了。
+		我們在 iptables 裡面還支援『 --syn 』的處理方式，我們以底下的例子來說明好了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例：將來自任何地方來源 port 1:1023 的主動連線到本機端的 1:1023 連線丟棄</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -i eth0 -p tcp --sport 1:1023 \</span>
+> <span class=term_command>--dport 1:1023 --syn -j DROP</span>
+</pre></td></tr></table>
+
+		一般來說，client 端啟用的 port 都是大於 1024 以上的埠口，而 server 端則是啟用小於 1023 
+		以下的埠口在監聽的。所以我們可以讓來自遠端的小於 1023 以下的埠口資料的主動連線都給他丟棄！
+		但不適用在 FTP 的主動連線中！這部份我們未來在 FTP 章節當中再來談吧！<br /><br />
+		</div>
+
+		<a name="netfilter_syntax_state"></a><hr /><li><span class=text_import1>狀態模組：MAC 與 RELATED</span><br />
+		<div class=block2>
+		在早期的 kernel 2.2 以前使用 ipchains 管理防火牆時，通常會讓系統管理員相當頭痛！
+		因為 ipchains 沒有所謂的封包狀態模組，因此我們必須要針對封包的進、出方向進行管控。
+		舉例來說，如果你想要連線到遠端主機的 port 22 時，你必須要針對兩條規則來設定：<br />
+		<ul><li>本機端的 1024:65535 到遠端的 port 22 必須要放行 (OUTPUT 鏈)；
+		<li>遠端主機 port 22 到本機的 1024:65535 必須放行 (INPUT 鏈)；</ul>
+		這會很麻煩！因為如果你要連線到 10 部主機的 port 22 時，假設 OUTPUT 為預設開啟 (ACCEPT)，
+		你依舊需要填寫十行規則，讓那十部遠端主機的 port 22 可以連線到你的本地端主機上。
+		那如果開啟全部的 port 22 呢？又擔心某些惡意主機會主動以 port 22 連線到你的機器上！
+		同樣的道理，如果你要讓本地端主機可以連到外部的 port 80 (WWW 服務)，那就更不得了～
+		這就是網路連線是雙向的一個很重要的概念！<br /><br />
+
+		好在我們的 iptables 免除了這個困擾！他可以透過一個狀態模組來分析
+		『<span class=text_import2>這個想要進入的封包是否為剛剛我發出去的回應？</span>』
+		如果是剛剛我發出去的回應，那麼就可以予以接受放行！哇！真棒！這樣就不用管遠端主機是否連線進來的問題了！
+		那如何達到呢？看看底下的語法：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -m state --state 狀態</span>
+<span class=term_say>參數：
+-m ：一些 iptables 的模組，主要常見的有：
+     state ：狀態模組
+     mac   ：網路卡硬體位址 (hardware address)
+--state ：一些封包的狀態，主要有：
+     INVALID    ：無效的封包，例如資料破損的封包狀態
+     ESTABLISHED：已經連線成功的連線狀態；
+     NEW        ：想要新建立連線的封包狀態；
+     RELATED    ：這個最常用！表示這個封包是與我們主機發送出去的封包有關</span>
+
+<span class=term_hd>範例：只要已建立或相關封包就予以通過，只要是不合法封包就丟棄</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -m state \</span>
+> <span class=term_command>--state RELATED,ESTABLISHED -j ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -m state --state INVALID -j DROP</span>
+</pre></td></tr></table>
+
+		所以說，如果你的 Linux 主機只想要作為 client 的用途，不許所有主動對你連線的來源，
+		那麼你可以這樣做即可：<br />
+		<ol><span class=text_import2>
+		<li>清除所有已經存在的規則 (iptables -F...)
+		<li>設定預設政策，除了 INPUT 預設為 DROP 其他為預設 ACCEPT；
+		<li>開放本機的 lo 可以自由放行；
+		<li>設定有相關的封包狀態可以連線進入本機。
+		</span></ol>
+
+		這就是最最陽春的防火牆，你可以透過第二步驟抵擋所有遠端的來源封包，
+		而透過第四步驟讓你要求的遠端主機回應封包可以進入，
+		加上讓本機的 lo 這個內部迴圈裝置可以放行，嘿嘿！一部 client 專用的防火牆規則就 OK 了！
+		你可以在某個 script 上面這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+#!/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin; export PATH
+iptables -F
+iptables -X
+iptables -Z
+iptables -P   INPUT DROP
+iptables -P  OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -i eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+#iptables -A INPUT -i eth0 -s 192.168.1.0/24 -j ACCEPT
+</pre></td></tr></table>
+
+		那如果區域網路內有其他的主機時，再將上表最後一行的 # 取消，就可以接受來自本地 LAN 的其他主機的連線了。
+		而如果你擔心某些 LAN 內的惡意來源主機會主動的對你連線時，那你還可以針對信任的本地端主機的 MAC 進行過濾！
+		同樣是使用狀態模組！這次的狀態則是 MAC 的比對。舉例來說：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例一：針對區域網路內的 aa:bb:cc:dd:ee:ff 主機開放其連線</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -m mac --mac-source aa:bb:cc:dd:ee:ff \</span>
+>  <span class=term_command>-j ACCEPT</span>
+<span class=term_say>參數：
+--mac-source ：就是來源主機的 MAC 啦！</span>
+</pre></td></tr></table>
+
+		透過這個玩意兒，你就可以定義更嚴格的 LAN 內的其他主機能否連線到你的主機的權限了！<br /><br />
+		</div>
+
+		<a name="netfilter_syntax_icmp"></a><hr /><li><span class=text_import1>ICMP 封包規則的比對</span><br />
+		<div class=block2>
+		在<a href="0110network_basic.htm#protocol_icmp">網路基礎的 ICMP 協定當中</a>我們知道 
+		ICMP 的格式相當的多，而且很多 ICMP 封包的類型格式都是為了要用來進行網路檢測用的！
+		所以最好不要將所有的 ICMP 封包都丟棄！通常我們會把 ICMP type 8 (echo request) 拿掉而已，
+		讓遠端主機不知道我們是否存在，也不會接受 ping 的回應就是了。ICMP 封包格式的處理是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -p icmp --icmp-type 類型 -j ACCEPT</span>
+<span class=term_say>參數：
+--icmp-type ：後面必須要接 ICMP 的封包類型，也可以使用代號，
+              例如 8  代表 echo request 的意思。</span>
+
+<span class=term_hd>範例：讓 0,3,4,11,12,14,16,18 的 ICMP type 可以進入本機：</span>
+[root@linux ~]# <span class=term_command>vi somefile</span>
+#!/bin/bash
+icmp_type="0 3 4 11 12 14 16 18"
+for typeicmp in $icmp_type
+do
+   iptables -A INPUT -i eth0 -p icmp --icmp-type $typeicmp -j ACCEPT
+done
+
+[root@linux ~]# <span class=term_command>sh  somefile</span>
+</pre></td></tr></table>
+
+		這樣就能夠開放部分的 ICMP 封包格式進入本機進行網路檢測的工作了！真好！不是嘛！^_^
+		</div>
+	</div>
+
+	<hr /><a NAME="netfilter_save"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆的記錄、回復與測試</span><br />
+	<div class=block2>
+		剛剛上面我們談了很多的設定了，那麼我該如何觀察目前主機上面的防火牆規則呢？
+		我們可以使用『iptables -L -n 』來觀察，不過，該指令所顯示的資訊其實還是不太足夠的。
+		這個時候，我們其實可以使用底下的兩個指令來將目前主機上面的防火牆機制『儲存』下來，
+		在下次想要將這個規則『回復』的時候，就能夠直接利用指令將規則直接回復喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables-save &gt; filename</span>
+[root@linux ~]# <span class=term_command>iptables-restore &lt; filename</span>
+</pre></td></tr></table>
+
+		一個是儲存一個是回復！而在 Red Hat 系統的 RHEL,CentOS,Fedora 當中，如果你將那個 filename 檔案存成『 
+		<span class=text_import2>/etc/sysconfig/iptables</span> 』，並且利用 chkconfig 將 iptables 
+		在開機時預設啟動的話，那麼一開機系統就會主動的幫你把防火牆的規則給載入了就是！
+		那麼使用 iptables-save 所得到的結果會是如何呢？讓我們來看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iptables-save</span>
+# Generated by iptables-save v1.2.11 on Mon Sep 11 17:47:35 2006
+*filter    <span class=term_say>&lt;==使用的 table</span>
+:INPUT DROP [7335:859454] <span class=term_say>&lt;==三條預設的鏈與預設政策</span>
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [16992:13134791]
+-A INPUT -i lo -j ACCEPT  <span class=term_say>&lt;==開始各個規則的設定</span>
+-A INPUT -m state --state RELATED -j ACCEPT
+-A INPUT -m mac --mac-source 00:04:75:D0:A2:58 -j ACCEPT
+-A INPUT -m state --state ESTABLISHED -j ACCEPT
+-A INPUT -i eth0 -p icmp -m icmp --icmp-type 0 -j ACCEPT
+-A INPUT -i eth0 -p icmp -m icmp --icmp-type 3 -j ACCEPT
+<span class=term_say>....中間省略....</span>
+-A INPUT -i eth0 -p tcp -m tcp --dport 22 -j ACCEPT
+COMMIT
+# Completed on Mon Sep 11 17:47:35 2006
+<span class=term_say># 井號 (#) 是註解，星號 (*) 代表預設的 table，而冒號 (:) 代表各條鏈的預設政策；
+# 後續的動作則是各個規則啦！</span>
+</pre></td></tr></table>
+
+		你瞧到輸出的結果啦！整個資料幾乎就是類似手動在指令列模式輸入的指令！
+		比起 iptables -L -n 所得到的資訊要仔細的多。這也是 iptables 的特殊格式，
+		可以用在 iptables-restore 的指令讀入呢！
+		比起這種方式，鳥哥還是比較喜歡使用 script 來撰寫自己的防火牆規則啦。
+		制訂好規則後當然就是要測試囉！那麼如何測試呢？<br />
+		<ol><span class=text_import2>
+		<li>先由主機向外面主動連線試看看；
+		<li>再由私有網域內的 PC 向外面主動連線試看看；
+		<li>最後，由 Internet 上面的主機，主動連線到您的 Linux 主機試看看；
+		</span></ol>
+
+		一步一步作下來，看看問題出在哪裡，然後多多的去改進、改良！基本上，
+		網路上目前很多的資料可以提供您不錯的參考了！這一篇的設定寫的是很簡單，
+		大部分都還在介紹階段而已！希望對大家有幫助！
+		鳥哥在<a href="#reference">參考資料</a>當中列出幾個有用的防火牆網頁，
+		希望大家有空真的要多多的去看看！會很有幫助的！<br /><br />
+	</div>
+
+	<hr /><a NAME="netfilter_kernel"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">IPv4 的核心管理功能：
+	/proc/sys/net/ipv4/*</span><br />
+	<div class=block2>
+		除了 iptables 這個防火牆軟體之外，其實咱們 Linux kernel 2.6 提供很多核心預設的攻擊抵擋機制喔！
+		由於是核心的網路功能，所以相關的設定資料都是放置在 /proc/sys/net/ipv4/ 這個目錄當中。
+		至於該目錄下各個檔案的詳細資料，可以參考核心的說明文件：<br />
+		<ul><li>/usr/src/linux-{version}/networking/ip-sysctl.txt</li></ul>
+		上面的這個說明資料可以由 <a href="http://www.kernel.org"
+		target="_blank">http://www.kernel.org</a> 這個網站下載任何一個核心原始碼後，解壓縮就能夠看到。
+		鳥哥這裡也放一份備份：<br />
+		<ul><li><a href="0250simple_firewall/ip-sysctl.txt"
+		target="_blank">http:/linux.vbird.org0250simple_firewall/ip-sysctl.txt</a></li></ul>
+		有興趣的話應該要自行去查一查比較好的喔！我們底下就拿幾個簡單的檔案來作說明吧！<br /><br />
+
+		<hr /><li><span class=text_import1>/proc/sys/net/ipv4/tcp_syncookies</span><br />
+		<div class=block2>
+		我們在前一章談到所謂的<a href="0240network-secure-1.htm#attack">阻斷式服務 (DoS)</a>
+		攻擊法當中的一種方式，就是利用 TCP 封包的 
+		<a href="0110network_basic.htm#protocol_tcp_3_handshake">SYN 三向交握</a>原理所達成的，
+		這種方式稱為 SYN Flooding 。那如何預防這種方式的攻擊呢？我們可以啟用核心的 SYN Cookie 模組啊！
+		這個 SYN Cookie 模組可以在系統用來啟動隨機連線的埠口 (1024:65535) 即將用完時自動啟動。<br /><br />
+
+		<span class=text_import2>當啟動 SYN Cookie 時，主機在發送 SYN/ACK 確認封包前，會要求 
+		Client 端在短時間內回覆一個序號，
+		這個序號包含許多原本 SYN 封包內的資訊，包括 IP、port 等。若 Client 端可以回覆正確的序號，
+		那麼主機就確定該封包為可信的，因此會發送 SYN/ACK 封包，否則就不理會此一封包</span>。<br /><br />
+
+		透過此一機制可以大大的降低無效的 SYN 等待埠口，而避免 SYN Flooding 的 DoS 攻擊說！
+		那麼如何啟動這個模組呢？很簡單，這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>echo "1" > /proc/sys/net/ipv4/tcp_syncookies</span>
+</pre></td></tr></table>
+
+		但是這個設定值由於違反 TCP 的三向交握 (因為主機在發送 SYN/ACK 之前需要先等待 client 的序號回應)，
+		所以可能會造成某些服務的延遲現象，例如 SMTP (mail server)。
+		不過總的來說，這個設定值還是不錯用的！
+		<span class=text_import2>只是不適合用在負載已經很高的伺服器內喔</span>！
+		因為負載太高的主機有時會讓核心誤判遭受 SYN Flooding 的攻擊呢。<br /><br />
+
+		如果是為了系統的 TCP 封包連線最佳化，則可以參考 tcp_max_syn_backlog, 
+		tcp_synack_retries, tcp_abort_on_overflow 這幾個設定值的意義。<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>/proc/sys/net/ipv4/icmp_echo_ignore_broadcasts</span><br />
+		<div class=block2>
+		阻斷式服務常見的是 SYN Flooding ，不過，我們知道系統其實可以接受使用 ping 的回應，
+		而 <a href="0140networkcommand.htm#ping">ping</a> 的封包是可以給很大的！想像一個狀況，
+		如果有個搞破壞的人使用 1000 台主機傳送 ping 給你的主機，而且每個 ping 都高達數百 K bytes時，
+		你的網路頻寬會怎樣？要嘛就是頻寬被吃光，要嘛可能系統會當機！
+		這種方式分別被稱為 ping flooding (不斷發 ping) 及 ping of death (發送大的 ping 封包)。<br /><br />
+
+		那如何避免呢？取消 ICMP 類型 8 的 ICMP 封包回應就是了。我們可以透過防火牆來抵擋，
+		這也是比較建議的方式。當然也可以讓核心自動取消 ping 的回應。不過您必須要瞭解，
+		<span class=text_import2>某些區域網路內常見的服務 (例如動態 IP 分配 DHCP 協定) 會使用 ping 
+		的方式來偵測是否有重複的 IP ，所以你最好不要取消所有的 ping 回應比較好。</span><br /><br />
+
+		核心取消 ping 回應的設定值有兩個，分別是：/proc/sys/net/ipv4 內的 icmp_echo_ignore_broadcasts
+		(僅有 ping broadcast 位址時才取消 ping 的回應)
+		及 icmp_echo_ignore_all (全部的 ping 都不回應)。鳥哥建議設定 icmp_echo_ignore_broadcasts 就好了。
+		你可以這麼做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>echo "1" >  \</span>
+> <span class=term_command>/proc/sys/net/ipv4/icmp_echo_ignore_broadcasts</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>/proc/sys/net/ipv4/conf/網路介面/*</span><br />
+		<div class=block2>
+		咱們的核心還可以針對不同的網路介面進行不一樣的參數設定喔！網路介面的相關設定放置在
+		/proc/sys/net/ipv4/conf/ 當中，每個介面都以介面代號做為其代表，例如 eth0 介面的相關設定資料在
+		/proc/sys/net/ipv4/conf/eth0/ 內。那麼網路介面的設定資料有哪些比較需要注意的呢？
+		大概有底下這幾個：<br />
+		<ul>
+		<li><span class=text_import1>rp_filter</span>：稱為逆向路徑過濾 (Reverse Path Filtering)，
+		可以藉由分析網路介面的路由資訊配合封包的來源位址，來分析該封包是否為合理。舉例來說，你有兩張網卡，eth0 為
+		192.168.10.100/24 ，eth1 為 public IP 。那麼當有一個封包自稱來自 eth1 ，但是其 IP 來源為 192.168.10.200 ，
+		那這個封包就不合理，應予以丟棄。這個設定值建議可以啟動的。<br /><br />
+		<li><span class=text_import1>log_martians</span>：這個設定資料可以用來啟動記錄不合法的 IP 來源，
+		舉例來說，包括來源為 0.0.0.0、127.x.x.x、及 Class E 的 IP 來源，因為這些來源的 IP 不應該應用於 Internet 啊。
+		記錄的資料預設放置到核心放置的登錄檔 /var/log/messages。<br /><br />
+		<li><span class=text_import1>accept_source_route</span>：或許某些路由器會啟動這個設定值，
+		不過目前的設備很少使用到這種來源路由，你可以取消這個設定值。<br /><br />
+		<li><span class=text_import1>accept_redirects</span>：當你在同一個實體網域內架設一部路由器，
+		但這個實體網域有兩個 IP 網域，例如 192.168.0.0/24, 192.168.1.0/24。此時你的 192.168.0.100 想要向
+		192.168.1.100 傳送訊息時，路由器可能會傳送一個 ICMP redirect 封包告知 192.168.0.100 直接傳送資料給
+		192.168.1.100 即可，而不需透過路由器。因為 192.168.0.100 與 192.168.1.100確實是在同一個實體線路上 
+		(兩者可以直接互通)，所以路由器會告知來源 IP 使用最短路徑去傳遞資料。但那兩部主機在不同的 IP 
+		段，卻是無法實際傳遞訊息的！這個設定也可能會產生一些輕微的安全風險，所以建議關閉他。<br /><br />
+		<li><span class=text_import1>send_redirects</span>：與上一個類似，只是此值為發送一個 ICMP redirect 封包。
+		同樣建議關閉。(事實上，鳥哥在某補教中心教同學架設路由器時，就曾經為了這個 ICMP redirect 的問題傷腦筋！
+		其實關閉 redirect 的這兩個項目即可啊！)
+		</ul>
+		要達成上面的功能你必須要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi somefile</span>
+for i in /proc/sys/net/ipv4/conf/*/rp_filter; do
+    echo "1" > $i
+done
+for i in /proc/sys/net/ipv4/conf/*/log_martians; do
+    echo "1" > $i
+done
+for i in /proc/sys/net/ipv4/conf/*/accept_source_route; do
+    echo "0" > $i
+done
+for i in /proc/sys/net/ipv4/conf/*/accept_redirects; do
+    echo "0" > $i
+done
+for i in /proc/sys/net/ipv4/conf/*/send_redirects; do
+    echo "0" > $i
+done
+
+[root@linux ~]# <span class=term_command>sh somefile</span>
+</pre></td></tr></table>
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="local"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本機防火牆的一個實例</span><br />
+<div class=block1>
+	介紹了這麼多的防火牆語法與相關的注意事項後，終於要來架設防火牆了。如同前面談到的，
+	你當然可以使用 iptables-save 的語法將相關的防火牆規則轉存到 /etc/sysconfig/iptables 去，
+	然後透過 iptables-restore 或者是重新啟動 iptables 來啟用你的新防火牆規則。
+	不過鳥哥還是比較習慣使用 shell script 來撰寫防火牆規則，而且此一特色還可以用在呼叫其他的 scripts ，
+	可以讓防火牆規則具有較為靈活的使用方式。好了，那就來談談如何設定咱們的防火牆規則吧！<br /><br />
+
+	<hr /><a NAME="local_rule"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">規則草擬</span><br />
+	<div class=block2>
+		鳥哥底下介紹的這個防火牆，其實可以用來作為路由器上的防火牆，也可以用來作為本機的防火牆。
+		假設硬體連線如同<a href="#fig_02">圖二</a>所示那樣的環境， Linux 主機本身也是內部 LAN 的路由器！
+		亦即是一個簡單的 IP 分享器的功能啦！假設鳥哥網路介面有底下這些：<br />
+		<ul>
+		<li>外部網路使用 eth1 (如果是撥接，有可能是 ppp0，請針對您的環境來設定)；
+		<li>內部網路使用 eth0 ，且內部使用 192.168.1.0/24 這個 Class ；
+		<li>主機預設開放的服務有 WWW, SSH, SMTP 等等；
+		</ul>
+		<span class=text_import2>由於希望將信任網域 (LAN) 與不信任網域 (Internet) 整個分開的完整一點，
+		所以希望你可以在 Linux 上面安裝兩塊以上的實體網卡，將兩塊網卡接在不同的網域，這樣可以避免很多問題。</span>
+		至於最重要的防火牆規則是：『<span class=text_import1>關閉所有的連線，僅開放特定的服務</span>』模式。
+		而且假設內部使用者已經受過良好的訓練，因此在 filter table 的三條鏈個預設政策是：<br />
+		<ul>
+		<li>INPUT 為 DROP
+		<li>OUTPUT 及 FORWARD 為 ACCEPT</ul>
+		為了未來修改的方便，鳥哥將整個 script 拆成三部分，分別是：<br />
+		<ul>
+		<li>iptables.rule：設定最基本的規則，包括清除防火牆規則、載入模組、設定服務可接受等；
+		<li>iptables.deny：設定抵擋某些惡意主機的進入；
+		<li>iptables.allow：設定允許某些自訂的後門來源主機！</ul>
+		鳥哥底下預計提供的防火牆流程是這樣的：<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/simple_firewall.png"
+		title="防火牆規則的流程" alt="防火牆規則的流程"><br />
+		圖九、防火牆規則的流程</center><br />
+
+		原則上，內部 LAN 主機與主機本身的開放度很高，因為 Output 與 Forward 
+		是完全開放不理的！對於小家庭的主機是可以接受的，因為我們內部的電腦數量不多，而且人員都是熟悉的，
+		所以不需要特別加以控管！但是：『<span class=text_import2>在大企業的內部，這樣的規劃是很不合格的，
+		因為您不能保證內部所有的人都可以按照您的規定來使用 Network</span> ！』也就是說『家賊難防』呀！
+		因此，連 Output 與 Forward 都需要特別加以管理才行！
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="local_script"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實際設定</span><br />
+	<div class=block2>
+		事實上，我們在設定防火牆的時候，不太可能會一個一個指令的輸入，通常是利用 shell scripts 
+		來幫我們達成這樣的功能吶！底下是利用上面的流程圖所規劃出來的防火牆 scripts，您可以參考看看，
+		但是您需要將環境修改成適合您自己的環境才行喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir -p /usr/local/virus/iptables</span>
+[root@linux ~]# <span class=term_command>cd /usr/local/virus/iptables</span>
+<a name="iptables.rule"></a>[root@linux iptables]# <span class=term_command>vi iptables.rule</span>
+#!/bin/bash
+
+<span class=term_say># 請先輸入您的相關參數，不要輸入錯誤了！</span>
+  EXTIF="<span class=term_write>eth1</span>"              # 這個是可以連上 Public IP 的網路介面
+  INIF="<span class=term_write>eth0</span>"               # 內部 LAN 的連接介面；若無請填 ""
+  INNET="<span class=term_write>192.168.1.0/24</span>"    # 內部 LAN 的網域，若沒有內部 LAN 請設定為 ""
+  export EXTIF INIF INNET
+
+<span class=term_say># 第一部份，針對本機的防火牆設定！###########################
+# 1. 先設定好核心的網路功能：</span>
+  echo "1" > /proc/sys/net/ipv4/tcp_syncookies
+  echo "1" > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+  for i in /proc/sys/net/ipv4/conf/*/rp_filter; do
+        echo "1" > $i
+  done
+  for i in /proc/sys/net/ipv4/conf/*/log_martians; do
+        echo "1" > $i
+  done
+  for i in /proc/sys/net/ipv4/conf/*/accept_source_route; do
+        echo "0" > $i
+  done
+  for i in /proc/sys/net/ipv4/conf/*/accept_redirects; do
+        echo "0" > $i
+  done
+  for i in /proc/sys/net/ipv4/conf/*/send_redirects; do
+        echo "0" > $i
+  done
+
+<span class=term_say># 2. 清除規則、設定預設政策及開放 lo 與相關的設定值</span>
+  PATH=/sbin:/usr/sbin:/bin:/usr/bin; export PATH
+  iptables -F
+  iptables -X
+  iptables -Z
+  iptables -P INPUT   DROP
+  iptables -P OUTPUT  ACCEPT
+  iptables -P FORWARD ACCEPT
+  iptables -A INPUT -i lo -j ACCEPT
+  iptables -A INPUT -m state --state RELATED -j ACCEPT
+
+<span class=term_say># 3. 啟動額外的防火牆 script 模組</span>
+  if [ -f /usr/local/virus/iptables/iptables.deny ]; then
+        sh /usr/local/virus/iptables/iptables.deny
+  fi
+  if [ -f /usr/local/virus/iptables/iptables.allow ]; then
+        sh /usr/local/virus/iptables/iptables.allow
+  fi
+  if [ -f /usr/local/virus/httpd-err/iptables.http ]; then
+        sh /usr/local/virus/httpd-err/iptables.http
+  fi
+  iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+
+<span class=term_say># 4. 允許某些類型的 ICMP 封包進入</span>
+  AICMP="0 3 3/4 4 11 12 14 16 18"
+  for tyicmp in $AICMP
+  do
+     iptables -A INPUT -i $EXTIF -p icmp --icmp-type $tyicmp -j ACCEPT
+  done
+
+<a name="script_daemon"></a><span class=term_say># 5. 允許某些服務的進入，請依照您自己的環境開啟</span>
+# iptables -A INPUT -p TCP -i $EXTIF --dport  22  -j ACCEPT   # SSH
+# iptables -A INPUT -p TCP -i $EXTIF --dport  25  -j ACCEPT   # SMTP
+# iptables -A INPUT -p UDP -i $EXTIF --sport  53  -j ACCEPT   # DNS
+# iptables -A INPUT -p TCP -i $EXTIF --sport  53  -j ACCEPT   # DNS
+# iptables -A INPUT -p TCP -i $EXTIF --dport  80  -j ACCEPT   # WWW
+# iptables -A INPUT -p TCP -i $EXTIF --dport 110  -j ACCEPT   # POP3
+# iptables -A INPUT -p TCP -i $EXTIF --dport 443  -j ACCEPT   # HTTPS
+
+<a name="script_part2"></a><span class=term_say># 第二部份，針對後端主機的防火牆設定！##############################
+# 1. 先載入一些有用的模組</span>
+  modules="ip_tables iptable_nat ip_nat_ftp ip_nat_irc ip_conntrack 
+ip_conntrack_ftp ip_conntrack_irc"
+  for mod in $modules
+  do
+        testmod=`lsmod | grep "${mod} "`
+        if [ "$testmod" == "" ]; then
+                modprobe $mod
+        fi
+  done
+
+<span class=term_say># 2. 清除 NAT table 的規則吧！</span>
+  iptables -F -t nat
+  iptables -X -t nat
+  iptables -Z -t nat
+  iptables -t nat -P PREROUTING  ACCEPT
+  iptables -t nat -P POSTROUTING ACCEPT
+  iptables -t nat -P OUTPUT      ACCEPT
+
+<span class=term_say># 3. 開放成為路由器，且為 IP 分享器！</span>
+  if [ "$INIF" != "" ]; then
+    iptables -A INPUT -i $INIF -j ACCEPT
+    echo "1" > /proc/sys/net/ipv4/ip_forward
+    if [ "$INNET" != "" ]; then
+      for innet in $INNET
+      do
+        iptables -t nat -A POSTROUTING -s $innet -o $EXTIF -j MASQUERADE
+      done
+    fi
+  fi
+  <span class=term_say># 如果你的 MSN 一直無法連線，或者是某些網站 OK 某些網站不 OK，
+  # 可能是 MTU 的問題，那你可以將底下這一行給他取消註解來啟動 MTU 限制範圍</span>
+  # iptables -A FORWARD -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss \
+  #          --mss 1400:1536 -j TCPMSS --clamp-mss-to-pmtu
+
+<span class=term_say># 4. 內部伺服器的設定：</span>
+# iptables -t nat -A PREROUTING -p tcp -i $EXTIF --dport 80  \
+#          -j DNAT --to 192.168.1.210:80
+</pre></td></tr></table>
+
+		特別留意上面程式碼的特殊字體部分，基本上，你只要修改一下最上方的介面部分，
+		應該就能夠運作這個防火牆了。不過因為每個人的環境都不相同，
+		因此你在設定完成後，依舊需要測試一下才行喔！不然，出了問題不要怪我啊！....
+		再來看一下關於 iptables.allow 的內容是如何？假如我要讓一個 140.116.44.0/24 
+		這個網域的所有主機來源可以進入我的主機的話，那麼這個檔案的內容可以寫成這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux iptables]# <span class=term_command>vi iptables.allow</span>
+#!/bin/bash
+# 底下則填寫你允許進入本機的其他網域或主機啊！
+  iptables -A INPUT -i $EXTIF -s 140.116.44.0/24 -j ACCEPT
+
+<span class=term_say># 底下則是關於抵擋的檔案設定法！</span>
+[root@linux iptables]# <span class=term_command>vi iptables.deny</span>
+#!/bin/bash
+# 底下填寫的是『你要抵擋的那個咚咚！』
+  iptables -A INPUT -i $EXTIF -s 140.116.44.254 -j DROP
+
+[root@linux iptables]# <span class=term_command>chmod 700 iptables.*</span>
+</pre></td></tr></table>
+
+		將這三個檔案的權限設定為 700 且只屬於 root 的權限後，就能夠直接執行 iptables.rule 囉！
+		不過要注意的是，在上面的案例當中，鳥哥預設將所有的服務的通道都是關閉的！
+		所以你必須要到<a href="#script_daemon">本機防火牆的第 5 步驟</a>處將一些註解符號 (#) 解開才行。
+		同樣的，如果有其他更多的 port 想要開啟時，一樣需要增加額外的規則才行喔！<br /><br />
+
+		不過，還是如同前面我們所說的，這個 firewall 僅能提供基本的安全防護，其他的相關問題還需要再測試測試呢！
+		此外，如果你希望一開機就自動執行這個 script 的話，請將這個檔案的完整檔名寫入 /etc/rc.d/rc.local 
+		當中，有點像底下這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say>.....其他省略.....</span>
+# 1. Firewall
+<span class=term_write>/usr/local/virus/iptables/iptables.rule</span>
+<span class=term_say>.....其他省略.....</span>
+</pre></td></tr></table>
+
+		上述三個檔案請你不要在 Windows 系統上面編輯後傳送到 Linux 上運作，因為 Windows 系統的斷行字元問題，
+		將可能導致該檔案無法執行。建議你直接到底下去下載，傳送到 Linux 後可以利用 
+		<a href="../linux_basic/0310vi.htm#dos">dos2unix</a> 指令去轉換斷行字元！
+		就不會有問題！<br />
+		<ul><li><a href="http://linux.vbird.org/download/index.htm?action=detail&fileid=43"
+		target="_blank">http://linux.vbird.org/download/index.htm?action=detail&fileid=43</a></li></ul>
+
+		這就是一個最簡單、陽春的防火牆。同時，這個防火牆還可以具有最陽春的 IP 分享器的功能呢！
+		也就是在 <a href="#iptables.rule">iptables.rule</a> 這個檔案當中的第二部分了。
+		這部分我們在下一節會再繼續介紹的。
+	</div>
+</div>
+
+
+<hr /><a NAME="nat"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NAT 主機的設定</span><br />
+<div class=block1>
+	呼呼！終於來到這個地方了！我們準備要架設一個<a href="0230router.htm">路由器</a>的延伸伺服器，就稱之為 NAT 主機。
+	NAT 是什麼呢？簡單的說，你可以稱他為內部 LAN 主機的『 IP 分享器』啦！<br /><br />
+	<span class=text_import2>NAT 的全名是
+	Network Address Translation</span>，字面上的意思是『網路位址的轉換』。由字面上的意思我們來想一想，
+	TCP/IP 的網路封包不是有 IP 位址嗎？那 IP 位址不是有來源與目的嗎？我們的 iptables 指令就能夠修改 IP 封包的表頭資料，
+	嘿嘿！連目標或來源的 IP 位址都可以修改呢！甚至連 TCP 封包表頭的 port number 也能修改！真是有趣！<br /><br />
+
+	NAT 主機的功能可以達到類似<a href="#fig_02">圖二</a>所介紹的類似 IP 分享的功能之外，
+	還可以達到類似<a href="#fig_04">圖四</a>所介紹的 DMZ (非軍事區) 的功能！這完全取決於我們的 NAT 是修改：
+	(1)來源 IP 還是 (2)目標 IP ！底下我們就來聊一聊吧！ ^_^<br /><br />
+
+	<hr /><a NAME="nat_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 NAT？ SNAT？ DNAT？</span><br />
+	<div class=block2>
+		在談到 NAT 的實際運作之前，讓我們再來看一下比較簡單的封包透過 iptables 
+		而傳送到後端主機的流程(請往前參考<a href="#fig_08">圖八</a>)。當網路佈線如<a href="#fig_02">圖二</a>的架構，
+		若內部 LAN 有任何一部主機想要傳送封包出去時，那麼這個封包要如何透過 Linux 主機而傳送出去？
+		他是這樣的：<br />
+		<ol><span class=text_import2>
+		<li>先經過 NAT table 的 PREROUTING 鏈；
+		<li>經由路由判斷確定這個封包是要進入本機與否，若不進入本機，則下一步；
+		<li>再經過 Filter table 的 FORWARD 鏈；
+		<li>通過 NAT table 的 POSTROUTING 鏈，最後傳送出去。
+		</span></ol>
+		NAT 主機的重點就在於上面流程的第 1,4 步驟，也就是 NAT table 的兩條重要的鏈：PREROUTING 與 POSTROUTING。
+		那這兩條鏈有什麼重要的功能呢？重點在於修改 IP 嘛！但是這兩條鏈修改的 IP 是不一樣的！
+		<span class=text_import2>POSTROUTING 在修改來源 IP ，PREROUTING 則在修改目標 IP 。</span>
+		由於修改的 IP 不一樣，所以就稱為 來源 NAT (Source NAT, SNAT) 及目標 NAT
+		(Destination NAT, DNAT)。我們先來談一談 IP 分享器功能的 SNAT 吧！<br /><br />
+
+		<hr /><li><span class=text_import1>來源 NAT, SNAT</span><br />
+		<div class=block2>
+		你應該有聽說過 IP 分享器這個玩意兒，他可以讓你家庭裡的好幾部主機同時透過一條 ADSL 網路連線到 Internet 上面，
+		例如<a href="#fig_02">圖二</a>連線的方式來說，那個 Linux 主機就是 IP 分享器啦！那麼他是如何達到 IP 
+		分享的功能？就是透過 NAT 表格的 POSTROUTING 來處理的。假設你的網路佈線如<a href="#fig_02">圖二</a>所示，
+		那麼 NAT 主機是如何處理這個封包的呢？<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/nat_01.png"
+		title="SNAT 封包傳送出去的示意圖" alt="SNAT 封包傳送出去的示意圖"><br />
+		圖十、SNAT 封包傳送出去的示意圖</center><br />
+
+		如上圖所示，在用戶端 192.168.1.100 這部主機要連線到 http://tw.yahoo.com 去時，他的封包表頭會如何變化？<br />
+		<ol>
+		<li>用戶端所發出的封包表頭中，來源會是 192.168.1.100 ，然後傳送到 NAT 這部主機；
+		<li>NAT 這部主機的內部介面 (192.168.1.2) 接收到這個封包後，會主動分析表頭資料，
+			因為<span class=text_import2>表頭資料顯示目的並非 Linux 本機，所以開始經過路由</span>，
+			將此封包轉到可以連接到 Internet 的 Public IP 處；
+		<li><span class=text_import2>由於 private IP 與 public IP 不能互通，所以 Linux 主機透過 
+			iptables 的 NAT table 內的 Postrouting 鏈將封包表頭的來源偽裝成為 Linux 的 Public 
+			IP ，並且將兩個不同來源 (192.168.1.100 及 public IP) 的封包對應寫入暫存記憶體當中，
+			然後將此封包傳送出去了</span>；
+		</ol>
+		此時 Internet 上面看到這個封包時，都只會知道這個封包來自那個 Public IP 而不知道其實是來自內部啦。
+		好了，那麼如果 Internet 回傳封包呢？又會怎麼作？<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/nat_02.png"
+		title="SNAT 封包接收的示意圖" alt="SNAT 封包接收的示意圖"><br />
+		圖十一、SNAT 封包接收的示意圖</center><br />
+
+		<ol start="4">
+		<li>在 Internet 上面的主機接到這個封包時，會將回應資料傳送給那個 Public IP 的主機；
+		<li>當 Linux NAT 主機收到來自 Internet 的回應封包後，會分析該封包的序號，並比對剛剛記錄到記憶體當中的資料，
+			由於發現該封包為後端主機之前傳送出去的，<span class=text_import2>因此在 NAT Prerouting 
+			鏈中，會將目標 IP 修改成為後端主機，亦即那部 192.168.1.100，然後發現目標已經不是本機 (public IP)，
+			所以開始透過路由分析封包流向</span>；
+		<li>封包會傳送到 192.168.1.2 這個內部介面，然後再傳送到最終目標 192.168.1.100 機器上去！
+		</ol>
+
+		經過這個流程，您就可以發現到，所有內部 LAN 的主機都可以透過這部 NAT 主機連線出去，
+		而大家在 Internet 上面看到的都是同一個 IP (就是 NAT 那部主機的 public IP 啦！)，
+		所以，如果內部 LAN 主機沒有連上不明網站的話，那麼內部主機其實是具有一定程度的安全性的啦！
+		因為 Internet 上的其他主機沒有辦法主動攻擊你的 LAN 內的 PC 嘛！所以我們才會說，
+		NAT 最簡單的功能就是類似 IP 分享器啦！那也是 SNAT 的一種。<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		NAT 主機與路由器有啥不同？基本上，NAT 主機一定是路由器，不過， NAT 主機由於會修改 IP 表頭資料，
+		因此與單純轉遞封包的路由器不同。最常見的 IP 分享器就是一個路由器，但是這個 IP 分享器一定會有一個
+		Public IP 與一個 Private IP，讓 LAN 內的 Private IP 可以透過 IP 分享器的 Public IP 傳送出去喔！
+		至於路由器通常兩邊都是 Public IP 或同時為 Private IP。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<hr /><li><span class=text_import1>目標 NAT, DNAT</span><br />
+		<div class=block2>
+		SNAT 主要是應付內部 LAN 連接到 Internet 的使用方式，至於 <span class=text_import2>DNAT 
+		則主要用在內部主機想要架設可以讓 Internet 存取的伺服器啦！
+		就有點類似<a href="#fig_04">圖四</a>的 DMZ 內的主機啊！</span>底下也先來談一談 DNAT 的運作吧！<br /><br />
+
+		<center>
+		<img src="0250simple_firewall/nat_03.png"
+		title="DNAT 的封包傳送示意圖" alt="DNAT 的封包傳送示意圖"><br />
+		圖十二、DNAT 的封包傳送示意圖</center><br />
+
+		如上圖十二所示，假設我的內部主機 192.168.1.210 啟動了 WWW 服務，這個服務的 port 開啟在 port 80 ，
+		那麼 Internet 上面的主機 (61.xx.xx.xx) 要如何連接到我的內部伺服器呢？當然啦，
+		還是得要透過 Linux NAT 主機嘛！所以這部 Internet 上面的機器必須要連接到我們的 NAT 的 public IP 才行。<br />
+
+		<ol>
+		<li>外部主機想要連接到目的端的 WWW 服務，則必須要連接到我們的 NAT 主機上頭；
+		<li>我們的 NAT 主機已經設定好要分析出 port 80 的封包，所以當 NAT 主機接到這個封包後，
+			會將目標 IP 由 public IP 改成 192.168.1.210 ，且將該封包相關資訊記錄下來，等待內部伺服器的回應；
+		<li>上述的封包在經過路由後，來到 private 介面處，然後透過內部的 LAN 傳送到 192.168.1.210 上頭！
+		<li>192.186.1.210 會回應資料給 61.xx.xx.xx ，這個回應當然會傳送到 192.168.1.2 上頭去；
+		<li>經過路由判斷後，來到 NAT Postrouting 的鏈，然後透過剛剛第二步驟的記錄，將來源 IP 由 192.168.1.210
+			改為 public IP 後，就可以傳送出去了！ (類似圖十的狀態！)。
+		</ol>
+
+		其實整個步驟幾乎就等於 SNAT 的反向傳送哩！這就是 DNAT 囉！很簡單吧！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="nat_ip_share"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">最陽春 NAT 主機： 
+	IP 分享功能</span><br />
+	<div class=block2>
+		在 Linux 的 NAT 主機服務當中，最常見的就是類似<a href="#fig_02">圖二</a>的 IP 分享器功能了。
+		而由剛剛的介紹你也該知道，這個 IP 分享器的功能其實就是 SNAT 啦！作用就只是在 iptables 內的
+		NAT 表格當中，那個路由後的 POSTROUTING 鏈進行 IP 的偽裝就是了。另外，
+		你也必須要瞭解，你的 NAT 主機必須要有一個 public IP 介面，以及一個內部 LAN 連接的 
+		private IP 介面才行。<br /><br />
+
+		同樣的，我的假設是這樣的：<br />
+		<ul>
+		<li>外部介面使用 eth1 ，這個介面具有 public IP 喔；
+		<li>內部介面使用 eth0 ，假設這個 IP 為 192.168.1.2 ；
+		</ul>
+		記住！當你利用前面幾章談到的資料來設定你的網路參數後，務必要進行路由的檢測，
+		因為在 NAT 主機的設定方面，最容易出錯的地方就是路由了！尤其是在撥皆產生 ppp0 這個對外介面的環境下，
+		這個問題最嚴重。反正你要記得：『<span class=text_import2>如果你的 public IP 取得的方式是撥接或
+		cable modem 時，你的設定檔 /etc/sysconfig/network, ifcfg-eth0, ifcfg-eth1 
+		等檔案，千萬不要設定 GATEWAY 啦！</span>』否則就會出現兩個 default gateway ，反而會造成問題。<br /><br />
+
+		如果你剛剛已經下載了 <a href="#iptables.rule">iptables.rule</a> ，那麼該檔案內已經含有 NAT 的腳本了！
+		你可以看到該檔案的<a href="#script_part2">第二部份關於 NAT 主機的部分</a>，應該有看到底下這幾行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+iptables -A INPUT -i $INIF -j ACCEPT
+<span class=term_say># 這一行在讓 NAT 主機可接受來自內部 LAN 的封包</span>
+echo "1" > /proc/sys/net/ipv4/ip_forward
+<span class=term_say># 上頭這一行則是在讓你的 Linux 具有 router 的能力</span>
+iptables -t nat -A POSTROUTING -s $innet -o $EXTIF -j MASQUERADE
+<span class=term_say># 這一行最關鍵！就是加入 nat table 封包偽裝！</span>
+</pre></td></tr></table>
+
+		重點在那個『 MASQUERADE 』！這個設定值就是『 <span class=text_import2>IP 偽裝成為封包出去 
+		(-o) 的那塊裝置上的 IP</span> 』！以上面的例子來說，就是 $EXTIF ，也就是 eth1 啦！
+		所以封包來源只要來自 $innet (也就是內部 LAN 的其他主機) ，只要該封包可透過 eth1 傳送出去，
+		那就會自動的修改 IP 的來源表頭成為 eth1 的 public IP 啦！就這麼簡單！
+		你只要將 <a href="#iptables.rule">iptables.rule</a> 下載後，並設定好你的內、外網路介面，
+		執行 iptables.rule 後，你的 Linux 就擁有主機防火牆以及 NAT 主機的功能了！<br /><br />
+
+		<hr /><li><span class=text_import1>LAN 內其他 PC 的設定</span><br />
+		<div class=block2>
+		上面提到的是 NAT 主機的設定，那麼在 LAN 內的其他 PC 網路參數要如何設定呢？很簡單啊，
+		只要記得底下的參數值即可：<br />
+		<ul><span class=text_import2>
+		<li>NETWORK 為 192.168.1.0
+		<li>NETMASK 為 255.255.255.0
+		<li>BROADCAST 為 192.168.1.255
+		<li>IP 可以設定 192.168.1.1 ~ 192.168.1.254 間，不可重複！
+		<li>通訊閘 (Gateway) 需要設定為 192.168.1.2 (NAT 主機的 Private IP)
+		<li>DNS (/etc/resolv.conf) 需設定為 168.95.1.1 (Hinet) 或 139.175.10.20 (Seed Net)，
+			這個請依您的 ISP 而定；
+		</span></ul>
+		這樣就搞定一部陽春的 NAT 主機了！簡單的要命啊！<br />
+		</div>
+		事實上，除了 IP 偽裝 (MASQUERADE) 之外，我們還可以直接指定修改 IP 封包表頭的來源 IP 呢！
+		舉例來說，如下面這個例子：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例：將要由 eth1 傳送出去的封包，封包來源改為 192.168.200.250</span>
+[root@linux ~]# <span class=term_command>iptables -t nat -A POSTROUTING -o eth1 \</span>
+>  <span class=term_command>-j SNAT --to 192.168.200.250</span>
+
+<span class=term_hd>範例：同上，但封包來源為 192.168.200.210~220</span>
+[root@linux ~]# <span class=term_command>iptables -t nat -A POSTROUTING -o eth1 \</span>
+>  <span class=term_command>-j SNAT --to 192.168.200.210-192.168.200.210</span>
+</pre></td></tr></table>
+
+		這樣也可以修改網路封包的來源 IP 資料喔！不過，除非你使用的是固定 IP ，
+		且有多個 IP 可以對外連線，否則一般使用 IP 偽裝即可，不需要使用到這個 SNAT 吧？
+		當然，你也可能有自己的獨特的環境啦！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="nat_modules"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">iptables 
+	的額外核心模組功能</span><br />
+	<div class=block2>
+		如果你剛剛在 <a href="#iptables.rule">iptables.rule</a> 內的<a href="#script_part2">第二部分</a>有仔細看的話，
+		那有沒有覺得很奇怪，為何我們需要載入一些有用的模組？舉例來說， ip_nat_ftp 及 ip_net_irc ？
+		這是因為很多通訊協定使用的封包傳輸比較特殊，尤其是 FTP 檔案傳輸使用到兩個 port 來處理資料！
+		這個部分我們會在 FTP 章節再次的詳談，在這裡你要先知道，我們的 iptables 提供很多好用的模組，
+		這些模組可以輔助封包的過濾用途，讓我們可以節省很多 iptables 的規則擬定，
+		好棒的吶！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="nat_dnat"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">在防火牆後端之網路伺服器 
+	DNAT 設定</span><br />
+	<div class=block2>
+		既然可以做 SNAT 的 IP 分享功能，我們當然可以使用 iptables 做出 DMZ 啦！
+		但是再次重申，不同的伺服器封包傳輸的方式可能有點差異，因此，建議新手不要玩這個咚咚！
+		否則很容易導致某些服務無法順利對 Internet 提供的問題。<br /><br />
+
+		先來談一談，如果我想要處理 DNAT 的功能時， iptables 要如何下達指令？
+		另外，你必須要知道的是， DNAT 用到的是 nat table 的 Prerouting 鏈喔！不要搞錯了。<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例：將連接到 eth1 介面的 port 80 傳導到內部的 192.168.1.210 </span>
+[root@linux ~]# <span class=term_command>iptables -t nat -A PREROUTING -p tcp -i eth1 \</span>
+> <span class=term_command>--dport 80 -j DNAT --to 192.168.1.210:80 </span>
+</pre></td></tr></table>
+
+		那個『 -j DNAT --to IP[:port] 』就是精髓啦！代表從 eth1 這個介面傳入的，且想要使用 port 80 的服務時，
+		將該封包重新傳導到 192.168.1.210:80 的 IP 及 port 上面！可以同時修改 IP 與 port 呢！真方便。
+		其他還有一些較進階的 iptables 使用方式，如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+-j REDIRECT --to-ports &lt;port number>
+<span class=term_say># 這個也挺常見的，基本上，就是進行本機上面 port 的轉換就是了！
+# 不過，特別留意的是，這個動作僅能夠在 nat table 的 PREROUTING 以及
+# OUTPUT 鏈上面實行而已喔！</span>
+
+<span class=term_hd>範例：將要求與 80 連線的封包轉遞到 8080 這個 port</span>
+[root@linux ~]# <span class=term_command>iptables -t nat -A PREROUTING -p tcp  --dport 80 \</span>
+> <span class=term_command>-j REDIRECT --to-ports 8080</span>
+<span class=term_say># 這玩意最容易在您使用了非正規的 port 來進行某些 well known 的協定，
+# 例如使用 8080 這個 port 來啟動 WWW ，但是別人都以 port 80 來連線，
+# 所以，您就可以使用上面的方式來將對方對您主機的連線傳遞到 8080 囉！</span>
+</pre></td></tr></table>
+
+		至於更多的用途，那就有待你自己的發掘囉！ ^_^
+	</div>
+
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>要擁有一部安全的主機，必須要有良好的主機權限設定；隨時的更新套件；定期的重要資料備份；完善的員工教育訓練。
+		僅有防火牆是不足夠的；
+	<li>防火牆最大的功能就是幫助你『限制某些服務的存取來源』，可以管制來源與目標的 IP ；
+	<li>防火牆依據封包抵擋的階層，可以分為 Proxy 以及 IP Filter (封包過濾) 兩種類型；
+	<li>為了將整個網路的信任 (LAN) 與不信任 (Internet) 網域完整切割，防火牆通常具有兩個實體網路介面，
+		分別連結信任與不信任網域；
+	<li>在防火牆內，但不在 LAN 內的伺服器所在網域，通常被稱為 DMZ (非軍事區)，如<a href="#fig_04">圖四</a>所示；
+	<li>封包過濾機制的防火牆，通常至少可以分析 IP, port, flag (如 TCP 封包的 SYN), MAC 等等；
+	<li>防火牆對於病毒的抵擋並不敏感；
+	<li>防火牆對於來自內部的網路誤用或濫用的抵擋性可能較不足；
+	<li>並不是架設防火牆之後，系統就一定很安全！還是需要更新套件漏洞以及管制使用者及權限設定等；
+	<li>核心 2.4 以後的 Linux 使用 iptables 作為防火牆的軟體；
+	<li>防火牆的訂定與『規則順序』有很大的關係；若規則順序錯誤，可能會導致防火牆的失效；
+	<li>iptables 的預設 table 共有三個，分別是 filter, nat 及 mangle ，慣用者為 filter (本機) 與 nat (後端主機)。
+	<li>filter table 主要為針對本機的防火牆設定，依據封包流向又分為 INPUT, OUTPUT, FORWARD 三條鏈；
+	<li>nat table 主要針對防火牆的後端主機，依據封包流向又分為 PREROUTING, OUTPUT, POSTROUTING 三條鏈，
+		其中 PREROUTING 與 DNAT 有關， POSTROUTING 則與 SNAT 有關；
+	<li>iptables 的防火牆為規則比對，但所有規則都不符合時，則以預設政策 (policy) 作為封包的行為依據；
+	<li>核心本身有提供很多網路相關功能，針對 IPv4 之設定值都在 /proc/sys/net/ipv4/* 內；
+	<li>iptables 的指令列當中，可以下達的參數相當的多，當下達 -j LOG 的參數時，則該封包的流程會被紀錄到 
+		/var/log/messages 當中；
+	<li>防火牆可以多重設定，例如雖然已經設定了 iptables ，但是仍然可以持續設定
+		TCP Wrappers ，因為誰也不曉得什麼時候 iptables 會有漏洞～或者是規則規劃不良！
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>為什麼我架設了防火牆，我的主機還是可能中毒？</li>
+	<div class=block2><font color=white size=-1>
+		防火牆不是萬靈丹，他還是可能被病毒或者是木馬程式所入侵的！
+		此外，如果您的主機本身就已經提供了多個網路服務，則當該網路服務的套件有漏洞時，
+		防火牆仍然無法克服該服務的漏洞的！因此仍然需要持續的進行主機的監視工作
+	</font></div>
+
+	<li>請說明為何架設了防火牆，我的主機還是可能被入侵？入侵的依據可能是什麼方法？</li>
+	<div class=block2><font color=white size=-1>
+		因為防火牆僅是抵擋某些不受歡迎的封包，如果您有開放 WWW 的服務時，則要求您主機 port 80 
+		的封包將可直接進入您的主機，萬一 WWW 套件有漏洞時，那麼就可能被入侵了！所以套件的更新很重要！ 
+	</font></div>
+
+	<li>我們知道核心為 2.4 的 Linux 使用的防火牆機制為 iptables ，請問，如何知道我的 Linux 核心版本？</li>
+	<div class=block2><font color=white size=-1>
+		利用 uname -r 可以查得！
+	</font></div>
+
+	<li>請列出 iptables 預設的兩個主要的 table ，以及各個 table 裡面的 chains 與各個
+	chains 所代表的意義；</li>
+	<div class=block2><font color=white size=-1>
+		filter 為預設的 Table，裡頭預設的鏈有：
+		<ul><li>INPUT：為來自外部，想要進入主機的封包；
+		<li>OUTPUT：為來自主機，想要離開主機的封包；
+		<li>FORWARD：為主機內部網域與外部網域的封包(不論進或者出)，但該封包不會進入主機。
+		</ul>
+		還有 nat 這個 table：
+		<ul><li>PREROUTING：進行路由之前的封包傳送過程
+		<li>OUTPUT：離開主機的封包傳送過程；
+		<li>POSTROUTING：已經經過路由了，然後才進行的過濾規則。
+		</ul>
+	</font></div>
+
+	<li>什麼是 iptables 的預設政策 (Policy)？若我要針對 filter 的 INPUT 做成 DROP 的預設政策，指令如何下達？</li>
+	<div class=block2><font color=white size=-1>
+		當封包的所有屬性都不在防火牆的規則當中時，那麼這個封包能否順利的通過防火牆，則以 Policy 
+		作為這個封包的最終動作了！ <br />
+		iptables -P INPUT DROP
+	</font></div>
+
+	<li>假設今天我的 Linux 僅是作為 Client 之用，並沒有對 Internet 進行任何服務，
+	那麼您的防火牆規劃應該如何設定比較好？！</li>
+	<div class=block2><font color=white size=-1>
+		既然沒有對 Internet 提供任何服務，那麼(1)請將所有的對外埠口先關閉吧！(2)防火牆規則當中，最重要的是 
+		INPUT 的 Policy 一定要 DROP ，然後將『 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT 』即可！ 
+	</font></div>
+
+	<li>我要將來自 192.168.1.50 這個 IP 來源的封包，只要是向我的 21~23 埠口要求的封包，就將他抵擋，應該如何下達
+	iptables 指令？</li>
+	<div class=block2><font color=white size=-1>
+		iptables -A INPUT -p tcp -s 192.168.1.50 --dport 21:23 -j DROP
+	</font></div>
+
+	<li>我要將我自己主機 ping 的回應功能取消，應該如何下達 iptables 的指令？</li>
+	<div class=block2><font color=white size=-1>
+		因為 ping 能否回應用的是 icmp 的 type 8 (請參考網路基礎內的 ICMP 相關內容)，所以我可以這樣做：<br />
+		iptables -I INPUT -p icmp --icmp-type 8 -j DROP
+	</font></div>
+
+	<li>請說明為何這個指令是錯誤的？『iptables -A INPUT -p udp --syn -s 192.168.0.20 -j DROP』？</li>
+	<div class=block2><font color=white size=-1>
+		因為只有 TCP 封包才會具有 SYN 的標誌， UDP 並沒有 SYN 的標誌啊！所以上面的指令是錯誤的
+	</font></div>
+
+	<li>DNS 的要求是必須的，那麼我該如何設定我的主機可以接受要求 DNS 的回應呢？</li>
+	<div class=block2><font color=white size=-1>
+		因為 DNS 的來源是 port 53 ，因此要接受來自 port 53 的封包就成為了：<br />
+		iptables -A INPUT -p udp --sport 53 -j ACCEPT<br />
+		iptables -A INPUT -p tcp --sport 53 -j ACCEPT 
+	</font></div>
+
+	<li>如何取消 iptables 在我的系統上面？</li>
+	<div class=block2><font color=white size=-1>
+		先要清除規則後，才能夠將 iptables 移除！不過，我們主要將規則清除即可！<br />
+		iptables -F; iptables -X; iptables -Z<br />
+		iptables -t nat -F; iptables -t nat -X; iptables -t nat -Z 
+	</font></div>
+
+	<li>如何儲存目前的防火牆機制，以及如何將上次儲存下來的機制回復到目前的系統中？</li>
+	<div class=block2><font color=white size=-1>
+		請利用 iptables-save 以及 iptables-restore 這兩個指令，配合命令重導向即可！
+	</font></div>
+
+	<li>如果你的區網當中有個 PC 使用者老是連上 Internet 亂搞，你想要將他的 IP 鎖住，但他總是有辦法修改成其他 IP 來連外，
+	那你該怎麼辦？讓他無法繼續連外？</li>
+	<div class=block2><font color=white size=-1>
+		可以利用封鎖網路卡卡號 MAC 來處理！
+	</font></div>
+
+
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>中文網站：
+	<li><a href="http://www.study-area.org/linux/servers/linux_nat.htm" 
+	target="_blank">http://www.study-area.org/linux/servers/linux_nat.htm</a></li>
+	<li><a href="http://linux.tnc.edu.tw/techdoc/firewall/" 
+	target="_blank">http://linux.tnc.edu.tw/techdoc/firewall/</a></li>
+	<li><a href="http://www.linuxyes.com/tw/tutorial/iptables.html" 
+	target="_blank">http://www.linuxyes.com/tw/tutorial/iptables.html</a></li>
+</ul>
+
+<ul>英文網站：
+	<li><a href="http://www.netfilter.org/" 
+	target="_blank">http://www.netfilter.org/</a></li>
+	<li><a href="http://www.linuxguruz.org/iptables/" 
+	target="_blank">http://www.linuxguruz.org/iptables/</a></li>
+	<li><a href="http://www.netfilter.org/documentation/HOWTO//packet-filtering-HOWTO.html" 
+	target="_blank">http://www.netfilter.org/documentation/HOWTO//packet-filtering-HOWTO.html</a></li>
+	<li><a href="http://www.interhack.net/pubs/fwfaq/" 
+	target="_blank">http://www.interhack.net/pubs/fwfaq/</a></li>
+</ul>
+<ul>其他書籍與資料：
+	<li>Robert L. Ziegler 著，朱亮愷等譯，『實戰 Linux 防火牆--iptables 應用全蒐錄』，上奇出版社，2004。</li>
+	<li>本機的核心文件：/usr/src/linux-{version}/networking/ip-sysctl.txt</li>
+	<li>iptables 的內建 tables 與各個 chain 的相關性：
+	<a href="http://ebtables.sourceforge.net/br_fw_ia/bridge3b.png"
+	target="_blank">http://ebtables.sourceforge.net/br_fw_ia/bridge3b.png</a></li>
+	<li>核心參數的相關說明：<a href="http://www.study-area.org/tips/adv-route/Adv-Routing-HOWTO-12.html"
+	target="_blank">http://www.study-area.org/tips/adv-route/Adv-Routing-HOWTO-12.html</a>
+	<li>使用 PPPoE 導致的 MTU 問題：<a href="http://www.akadia.com/services/pppoe_iptables.html"
+	target="_blank">http://www.akadia.com/services/pppoe_iptables.html</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/20：第一次完成日期！<br />
+2003/08/25：重新設計內容，改寫一些指令介紹，與前一篇『<a href="0240network-secure-1.htm">認識網路安全</a>』
+		分的比較完整一點！<br />
+2006/09/06：將舊的文章移動到<a href="0250simple_firewall/0250simple_firewall.htm">此處</a><br />
+2006/09/11：拿掉了已經在<a href="../linux_basic">基礎篇</a>有介紹過的
+	<a href="../linux_basic/0560daemons.htm#tcp_wrappers">認識服務之 TCP Wrappers</a>。<br />
+2006/09/13：加入 NAT 的說明了，將舊的 NAT 主機移動到 <a href="0250simple_firewall/0320nat.htm"
+	target="_blank">此處</a>。<br />
+2006/09/15：將 iptables.rule 的連結貼上去了！之前忘記修改該檔案了～<br />
+2006/11/08：因為 PPPoE 撥接與 Ethernet 的 MTU 不同，可能在某些情況下會導致使用者無法連線，更新了 iptables.rule 了。<br />
+</span>
+<hr><span class="text_date">2002/08/20以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0250simple_firewall.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,3186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Mail Server</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0380mail.htm">
+    <span class="text_head0"><span class="text_head_en"> Mail </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0380mail.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2007/02/27</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在這個郵件伺服器的架設中，我們首先談論 Mail 與 <a href="0350dns.htm">DNS</a> 
+	的重要相關性，然後依序介紹 Mail Server 的相關名詞，以及 Mail
+	Server 的運作基本流程與協定，也會談到相關的 Relay 與郵件認證機制等項目，
+	這些項目對於未來郵件主機的管理與設定是重要的，請不要忽略了這方面問題的討論喔。
+	在這篇文章中，我們將 sendmail 與 postfix 合在一起講了，因為目前 Postfix 這個伺服器的設定上面具有比較佳的親和力，
+	所以 sendmail 我們僅作個簡單的介紹，主要在以 Postfix 為主的郵件主機架設喔！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#whatmail">郵件伺服器的功能與運作原理</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#whatmail_work">電子郵件的功能與問題</a><br />
+	　　2.2 <a href="#whatmail_dns">Mail server 與 DNS 之間的關係</a><br />
+	　　2.3 <a href="#whatmail_mta">郵件傳輸所需要的元件 (MTA, MUA, MDA) 以及相關協定</a><br />
+	　　2.4 <a href="#whatmail_pop">使用者收信時伺服器端所提供的相關協定</a><br />
+	　　2.5 <a href="#whatmail_relay">Relay 與認證機制的重要性</a><br />
+	　　2.6 <a href="#whatmail_mail">電子郵件的資料內容</a><br />
+	　　2.7 <a href="#whatmail_before">郵件伺服器架設前提</a><br />
+	</span>
+3. <a href="#sendmail">Sendmail 伺服器的簡易架設介紹</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#sendmail_pkg">所需要的套件與套件結構</a><br />
+	　　3.2 <a href="#sendmail_internet">開放 sendmail 的監聽介面與收信主機名稱設定</a><br />
+	　　3.3 <a href="#sendmail_relay">開放使用 MTA Relay 權限設定 /etc/mail/access</a><br />
+	</span>
+4. <a href="#postfix">用 Postfix 達成 MTA 功能</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#postfix_why">Postfix 的產生</a><br />
+	　　4.2 <a href="#postfix_pkg">所需要的套件與套件結構</a><br />
+	　　4.3 <a href="#postfix_basic">讓 Postfix 可監聽 Internet 來收發信件</a><br />
+	　　4.4 <a href="#postfix_flow">信件傳送流程與收信、relay 等重要觀念</a><br />
+	　　4.5 <a href="#postfix_access">設定郵件主機使用權限與過濾機制 /etc/postfix/access</a><br />
+	　　4.6 <a href="#postfix_alias">設定郵件別名</a><br />
+	　　4.7 <a href="#postfix_forward">郵件轉遞 ~/.forward</a><br />
+	　　4.8 <a href="#postfix_mailq">察看信件佇列資訊</a><br />
+	　　4.9 <a href="#postfix_more">設定 relay 的進階功能</a><br />
+	</span>
+5. <a href="#pop">讓你的 MTA 接受 MUA 的讀信要求：POP/IMAP等協定</a><br />
+6. <a href="#mua">用戶端的收發信軟體 (MUA)</a><br />
+	<span class=text_h2>
+	　　6.1 <a href="#mua_mail">Linux mail</a><br />
+	　　6.2 <a href="#mua_telnet">Linux telnet</a><br />
+	　　6.3 <a href="#mua_thun">Thunderbird 好用的跨平台 (Windows/Linux X) 軟體</a><br />
+	</span>
+7. <a href="#adv">郵件主機的進階設定：</a><br />
+	<span class=text_h2>
+	　　7.1 <a href="#adv_perm">一些設定檔所需要注意的『權限』問題</a><br />
+	　　7.2 <a href="#adv_postgrey">簡單的廣告信抵擋機制： postgrey 的動作</a><br />
+	　　7.3 <a href="#adv_ordb">關於黑名單的抵擋機制</a><br />
+	　　7.4 <a href="#adv_auth">開放 SMTP 身份認證之 relay 機制</a><br />
+	　　7.5 <a href="#adv_filter">基礎的郵件過濾機制</a><br />
+	　　7.6 <a href="#adv_relayhost">非固定 IP 也可以有春天： relayhost</a><br />
+	　　7.7 <a href="#adv_scan">郵件掃瞄器：amavisd-new+f-port+spamassanssin</a> 
+		(<a href="#sa-learn">廣告信自動學習</a>)<br />
+	　　7.8 <a href="#adv_other">其他設定小技巧</a><br />
+	</span>
+8. <a href="#other">其他應用說明</a><br />
+	<span class=text_h2>
+	　　8.1 <a href="#other_prob">問題檢查</a><br />
+	　　8.2 <a href="#other_backup">哪些資料要備份</a><br />
+	　　8.3 <a href="#other_quota">quota 與目錄移轉</a><br />
+	</span>
+9. <a href="#review">重點回顧</a><br />
+10.<a href="#ex">課後練習</a><br />
+11.<a href="#reference">參考資料</a><br />
+<span class=text_h2>
+12.<a href="http://phorum.vbird.org/viewtopic.htm?p=117550"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=117550</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	玩過郵件主機的朋友都很清楚，在現在的環境當中想要搞定 Mail server 是很難的一件事情，
+	因為目前網路社會的廣告信、垃圾信、病毒信實在是多的不像話，所以各主要的 ISP 對於郵件控管上面越來越嚴格，
+	因此如果你沒有好好的規劃好一些防備的工作，以及一些事前考慮規劃的動作，
+	那麼由你的郵件主機寄出去的信件很可能老是無法到達目標主機的！而且很重要的一件事情是，
+	郵件主機與 DNS 是不可分割的，尤其是 DNS 的 MX 標誌，還有正反解的結果。無論如何，想要搞定 Mail server 你必需要：<br />
+	<ul>
+	<li>你一定要知道 <a href="#0350dns.htm">DNS</a> 的相關意義， 否則你的郵件主機肯定會發生不明原因的錯誤！
+	<li><a href="0110network_basic.htm">網路基礎</a>也很重要，尤其是一些傳輸與檢查方面的動作；
+	<li><a href="../linux_basic/0330regularex.htm">正規表示法</a>你最好要熟悉一些，因為很多郵件過濾機制是用他來處理的。
+	<li>套件與行程管理也要熟悉，因為 mail server 應用很多額外的程式來管理郵件。
+	<li>無論如何都要強調的，防火牆設定要正確， SELinux 記得先關閉！
+	</ul>
+</div>
+
+<hr /><a NAME="whatmail"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">郵件伺服器的功能與運作原理</span><br />
+<div class=block1>
+	電子郵件是個啥玩意兒？他是利用網路傳遞一些資訊給遠端主機的一種資訊傳遞行為，雖然訊息文字是很冷很硬的電腦文字，
+	確實比不上手寫信件來的讓人覺得溫暖，不過，對於具有時效性的資訊來說，電子郵件可是個不可多得的好幫手！
+	但是，電子郵件系統蓬勃發展的現在卻被某些少部分的特定人士所亂用，導致垃圾信件、色情廣告信件等等的氾濫！
+	真是啊～傷腦筋～底下我們就先來談一談這個電子郵件相關的功能吧！<br /><br />
+
+	<hr /><a NAME="whatmail_work"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">電子郵件的功能與問題</span><br />
+	<div class=block2>
+		在目前的社會當中，沒有電子郵件 (e-mail) 似乎是蠻奇怪的一件事！可以說，現在 e-mail 
+		已經成為一個很普遍的人與人之間的溝通管道了，
+		電子郵件可以很快速的幫你將文件或訊息傳送到地球上的任何一個有網路存在的角落，當然，
+		你也可以在任何有網路的地方，連上 Internet 去收取你的信件！很快樂不是嗎？<br /><br />
+
+		不過，遺憾的是，只要是有人類的地方，就會有很多你意想不到的事情會出現了，當然 e-mail 也不例外，怎麼說呢？
+		我們來慢慢的分析一下電子郵件產生的一些問題吧：<br />
+		<ul>
+		<li><span class=text_import1>夾帶病毒的電子郵件問題：</span><br />
+		你可以常常聽到電子郵件可能夾帶病毒對吧！沒錯，利用電子郵件以及人們對於電子郵件的漫不經心的態度，
+		使得以電子郵件為媒介的電腦病毒更容易『深入人群』當中吶！這個問題造成大大小小的傷害，
+		如果發生在大企業當中，那可真是受不了那～哪個主管受的了一天到晚電腦重新安裝的～
+		而且萬一中毒的是大型主機，光是資料的損毀就可能讓公司倒閉了....</li><br />
+
+		<li><span class=text_import1>怪客透過郵件程式入侵：</span><br />
+		只要是開放給 Internet 用的程式就沒有絕對安全的，只要在 Internet 上面跑的資料就沒有絕對保密的！
+		你可以輕易的使用怪客軟體 (Cracker) 就可以取得使用者在利用 e-mail 傳送過程當中所輸入的帳號與密碼，
+		若經過分析之後，還可能破解對方的郵件主機～哇！真是亂可怕一把的！</li><br />
+
+		<li><span class=text_import1>廣告信與垃圾信等：</span><br />
+		這個可說是目前各大 ISP 心中永遠的痛～這些垃圾信件可以佔掉很多那少的可憐的頻寬，
+		使得正常使用者連線速度與品質下降，更可能造成網路的停頓～當然，常常收到垃圾信件的你，大概也不好過吧！</li><br />
+
+		<li><span class=text_import1>主機被大量不明信件塞爆：</span><br />
+		萬一你沒有將郵件主機設定好，嘿嘿！送信者可以藉由你主機收信的功能，發送大量的信件，
+		讓你『一次收個夠！』灌爆你的主機硬碟，想要不當機都粉難～</li><br />
+
+		<li><span class=text_import1>真實社會的討厭情事：</span><br />
+		『黑函』！聽到會不會很害怕？當然很害怕啦！偏偏，使用 e-mail 就可以作很多的壞事～這真是太不道德了～</li><br />
+
+		<li><span class=text_import1>不實的信件內容：</span><br />
+		只要注意到消基會的訊息就可以知道啦，不明來源的電子郵件說的內容，不要輕易的相信！
+		因為很多可是以訛傳訛，結果，大家都被耍了的～例如，你的朋友收到一封信，認為『哇！這是大事情』，
+		所以在沒有求證的情況下，將信『轉寄』給你看，嘿！你的朋友寄給你的，當然要相信他啦！
+		立刻再轉寄，如此一再地循環，嘿嘿！這個錯誤內容的訊息馬上就讓大家知道，
+		更可怕的是『還會讓大家接受～』所以，看到任何訊息時，請千萬要記得求證一下吶！</li>
+		</ul>
+
+		可怕吧！電子郵件會衍生出這麼多的問題說～另外，這個 email 伺服器的設定與管理真的是網管人員心中永遠的痛！
+		為什麼呢？因為人都是想要越便利越簡單越好，但越便利越不管制的郵件主機就越容易被攻擊或遭利用！
+		反過來說，如果你針對郵件主機管得太嚴厲，那就不太人性化，相信至少您的主管可能就不太滿意，
+		怎麼辦？<br /><br />
+
+		呵呵！沒錯啦！郵件主機就是這麼回事，讓人又愛又怕的一個玩意兒，搞定他，恭喜您啊一切順利圓滿！
+		搞不定他，主機被當成垃圾信件轉運站事小，丟掉工作那可是『茲事體大』呦！
+		就因為他是這麼重要又難以搞定，所以我們可得好好的學學他吶！<br /><br />
+	</div>
+
+	<hr /><a NAME="whatmail_dns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Mail server 與 DNS 之間的關係</span><br />
+	<div class=block2>
+		既然要使用 e-mail ，當然就需要郵件伺服器囉 (Mail Server)！不然你的信要怎樣寄出去呢？事實上，
+		mail server 的原理說難不難，但是說簡單嗎～似乎又有點難以理解ㄋㄟ～，所以，
+		底下我們要來談一談他的原理部分，然後再針對主機的設定來進行說明咯！我們首先要講的就是『
+		<span class=text_import2>Mail server 系統與 DNS 系統有什麼關連性？</span>』
+		這個部分新手最容易被搞混哩，<span class=text_import2>是否要架設 mail server 就『宿命』的一定得架設 
+		DNS server 在你的主機上面嗎？</span><br /><br />
+
+		<li><span class=text_import1>Mail server 與合法的主機名稱</span></li>
+		<div class=block2>
+		事實上目前已經沒有人會使用 IP 來寄信了，我們通常接收到的 email 都是使用『帳號@主機名稱』的方式來處理的，
+		所以說，你的郵件伺服器『<span class=text_import2>就一定要有一個合法註冊過的主機名稱</span>』才可以。為什麼呢？
+		因為郵件伺服器就是一部電腦主機嘛！這部電腦主機是利用 TCP/IP 來進行網路資料的傳輸，
+		所以當然需要有 IP 。不過因為網路使用氾濫的種種因素，導致我們不允許直接利用主機的 IP 來寄信了！
+		因此，你想要架設 mail server 就『必需』要有<a href="0270dynamic_dns.htm">合法的主機名稱</a>囉。<br /><br />
+
+		OK！既然我只要一個合法的主機名稱即可，那麼表示我不需要架設一部 DNS 主機囉？
+		是的，你可以這樣認為！只要你擁有合法的主機名稱，亦即在 DNS 的查詢系統當中你的主機名稱擁有一個 A 的標誌，
+		理論上你的 mail server 就可以架設成功 (相關的 DNS 與合法主機名稱的註冊請參考前面章節的說明)。
+		<span class=text_import2>只不過由於目前網際網路上面的廣告信、垃圾信與病毒信等佔用了太多的頻寬，
+		導致整個網路社會花費過多的成本在消耗這些垃圾資料。</span>
+		所以為了杜絕可惡的垃圾信件，目前的大型郵件主機供應商 (ISP) 都會針對不明來源的郵件加以限制，
+		這也就是說『<span class=text_import2>想要架設一部簡單可以運作的 mail server 越來越難了</span>』。<br /><br />
+		</div>
+
+		<li><span class=text_import1>DNS 的反解也很重要！</span></li>
+		<div class=block2>
+		對於一般的伺服器來說，我們只要使用正解讓用戶端可以正確的找到我們伺服器的 IP 即可架站，
+		舉例來說 WWW 伺服器就是這樣。不過，由於目前收信端的郵件主機會針對郵件來源的 IP 進行反解，
+		而如果你的網路環境是由撥接取得非固定的 IP 時，該種 IP 在 ISP 方面通常會主動的以 xxx.dynamic.xxx 
+		之類的主機名稱來管理，偏偏這樣的主機名稱會被主要的大型郵件伺服器 (例如 hotmail, yahoo 等) 視為垃圾信件，
+		所以你的郵件主機所發出的信件將可能被丟棄，那可就傷腦筋了！<br /><br />
+
+		所以啊，如果你想要架設一部 Mail server 的話，請『務必』向您的上層 ISP 申請 IP 反解的對應，
+		不要再使用預設的反解主機名稱，否則很容易導致您的郵件主機所發出的信件會在 Internet 上面流浪啊！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實你還是可以不用申請 IP 的反解，不過就得要利用所謂的 relayhost 或者是 smarthost 來處理郵件轉遞的問題，
+		這個部分又涉及到上層 ISP 的問題，挺複雜！我們會在後續作說明！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<li><span class=text_import1>需要 DNS 的 MX 及 A 標誌啊！</span></li>
+		<div class=block2>
+		那麼我們的郵件伺服器系統到底是如何使用 DNS 的資訊來進行郵件的傳遞的？
+		還記得在 DNS 章節裡面談到的 MX 這個標誌嗎？當時我們僅說過這個 MX 代表的是 Mail eXchanger，
+		當一封郵件要傳送出去時，郵件主機會先分析那封信的『目標主機的 DNS 』，先取得 MX 標誌，
+		注意，MX 標誌可能會有多部主機喔！然後以最優先 MX 主機為準將信發送出去。
+		看不懂嗎？沒關係，我們以底下這個 DNS 範例來說：<br />
+
+<table class="term"><tr><td class="term"><pre>
+xyz.com.vbird  IN  MX 10 mail.xyz.com.vbird
+xyz.com.vbird  IN  MX 20 mail2.xyz.com.vbird
+xyz.com.vbird  IN  A     aaa.bbb.ccc.ddd
+</pre></td></tr></table>
+
+		假如上述的 DNS 設定是正常的，那麼：<br />
+		<ul>
+		<li>當有一封信要傳給 user@xyz.com.vbird 時，由於 MX 標誌最低者優先，所以該封信會先傳送到 
+			mail.xyz.com.vbird 那部主機。
+		<li>如果 mail.xyz.com.vbird 由於種種原因，導致無法收下該封信時，該封信將以次要 MX 主機來傳送，那就是傳送到
+			mail2.xyz.com.vbird 那部主機上頭；
+		<li>如果兩部 MX 主機都無法負責的話，那麼該封信會直接以 A 的標誌，亦即直接傳送到 aaa.bbb.ccc.ddd 那個 IP 上頭去，
+			也就是 xyz.com.vbird 本身啦！
+		</ul>
+		在這個過程當中，你必需要注意到：mail.xyz.com.vbird 及 mail2.xyz.com.vbird 必需要是可以幫 xyz.com.vbird 
+		轉信的主機才行，也就是說，<span class=text_import2>那兩部主機通常是你公司的最上游的郵件主機，
+		並不是你隨意填寫的！</span>那兩部主機還需要針對你的 xyz.com.vbird 來設定『郵件轉遞』才行！
+		否則你的信會被踢掉的。<br /><br />
+
+		由於現在的很多郵件主機會去搜尋 MX 這個標誌來判斷目標郵件主機是否為合法，所以你要架設 Mail server 
+		雖然不必自行設定 DNS 伺服器，不過你最好要申請一個 MX 的標誌才行。此外，<span class=text_import2>MX
+		標誌一定要設定正確，否則你的信件將可能會直接被 MX 主機踢掉。</span>為了要設定 MX 
+		但是我們沒有上層郵件伺服器時，<span class=text_import2>所以你可以指定 MX 為自己，利用自己當 
+		MX 主機即可</span>。<br /><br />
+
+		那麼你或許會想，這個 MX 有啥好處啊？一般來說，如果目標主機掛點時，你的郵件通常會直接退還給原發信者，
+		但如果有 MX 主機時，這部 MX 主機會先將該封信放在他的佇列 (queue) 當中，等到你的目標主機重新提供郵件服務後，
+		MX 主機會將你的信件傳送給目標主機，如此一來你的信件就比較不會遺失啊！這樣說，您可以瞭解吧！ ^_^
+		<br /><br />
+		</div>
+
+		<li><span class=text_import1>Email 的位址</span></li>
+		<div class=block2>
+		剛剛上頭說過 email 通常是『帳號@主機名稱』的方式來處理，舉例來說鳥哥的 linux.vbird.tsai 主機上面有個 dmtsai
+		的使用者，則我的 email 將會成為：『dmtsai@linux.vbird.tsai』，當有人要寄信給我時，
+		他會分析 @ 後面的主機名稱，亦即 linux.vbird.tsai 的 MX/A 標誌等等，然後再透過剛剛說明的流程來傳出信件。
+		而當我的 linux.vbird.tsai 收到這封信時，他會將信放到 dmtsai 的信箱當中啦！底下我們就來談一談這個流程吧！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="whatmail_mta"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">郵件傳輸所需要的元件 
+	(MTA, MUA, MDA) 以及相關協定</span><br />
+	<div class=block2>
+		在開始介紹郵件的傳送過程之前，我們先來想一想，你是如何寄出電子郵件的？
+		假設你要寄信給一個使用者，他的電子郵件是『a_user@gmail.com』好了，也就是說，
+		你要寄一封信到 gmail.com 這個主機上的意思。
+		那你的桌上型電腦 (舉例來說， Windows 系統) 是否能夠將這封信『直接』透過網路送給 gmail.com 那個主機上？
+		當然不行啦！你得要設定幫你轉信的郵件主機才行！也就是說，<span class=text_import2>你必需要先向某一部郵件主機註冊，
+		以取得一個合法的電子郵件使用權限後，才能夠發送郵件出去的。</span><br /><br />
+
+		所以說，你要寄出一封信件時是需要很多介面的幫忙的，底下列出一個簡單的圖示來說明：<br /><br />
+
+		<a name="fig_01"></a><center><img src="0380mail/mail_comps.png"
+		title="電子郵件傳送的流程示意圖"
+		alt="電子郵件傳送的流程示意圖"><br />
+		圖一、電子郵件傳送的流程示意圖</center><br />
+
+		我們先來解釋一些專有名詞吧！然後再來說明傳送的流程：<br />
+		<ul>
+		<li><span class=text_import1>MUA (Mail User Agent)：</span><br />
+		顧名思義 MUA 就是『郵件使用者代理人』的意思，因為除非你可以直接利用類似 telnet 
+		之類的軟體登入郵件主機來主動發出信件，否則您就得要透過 MUA 來幫你送信到郵件主機上頭去。
+		最常見的 MUA 像是 <a href="http://moztw.org/" target="_blank">Mozilla</a> 推出的
+		<a href="http://moztw.org/thunderbird/" target="_blank">Thunderbird (雷鳥)</a> 自由軟體，
+		或者是 Linux 桌面 KDE 常見的 Kmail ，及 Windows 內件的 Outlook Express (OE) 等。
+		<span class=text_import2>MUA 主要的功能就是收受郵件主機的電子郵件，以及提供使用者瀏覽與編寫郵件的功能！
+		</span></li><br />
+
+		<li><span class=text_import1>MTA (Mail Transfer Agent)：</span></br>
+		MUA 幫用戶傳送郵件到郵件主機上，那這部郵件主機如果能夠幫用戶將這封信寄出去，那他就是一部郵件傳送主機 
+		(MTA) 啦！這個 MTA 就是『郵件傳送代理人』的意思。也來顧名思義一下，既然是『傳送代理人』，
+		那麼使用者寄出的信，與使用者要收信時，就是找他 (MTA) 就對啦！基本上， MTA 的功能有這些：<br /><br />
+		<ol>
+		<li><span class=text_import2>收受信件：使用簡單郵件傳送協定(SMTP)</span><br />
+		MTA 主機最主要的功能就是：將來自用戶端或者是其他 MTA 的來信收下來，這個時候 MTA 使用的是 
+		Simple Mail Transfer Protocol (SMTP)，他使用的是 port 25 啦！</li><br />
+		<li><span class=text_import2>轉遞信件：</span><br />
+		如果該封信件的目的地並不是本身的用戶，且該封信的相關資料符合使用 MTA 的權力，
+		那麼咱們的 MTA 就會將該封信再傳送到下一部主機上。這即是所謂的轉遞 (Relay) 的功能。</li><br />
+		<li><span class=text_import2>回應使用者的收信要求：POP 或 IMAP 協定</span><br />
+		使用者可以透過 MTA 主機提供的郵政服務協定 (Post Office Protocol, POP) 來收下自己的信件，
+		也可以透過 IMAP (Internet Message Access Protocol) 協定將自己的信件保留在郵件主機上面，
+		並進一步建立郵件資料匣等進階工作。
+		</ol><br />
+		總之，我們一般提到的 Mail Server 就是 MTA 啦！而嚴格來說， MTA 其實僅是指 SMTP 這個協定而已。
+		而達成 MTA 的 SMTP 功能的主要套件包括老牌的 sendmail ，後起之秀的 postfix ，還有 qmail 等等。
+		底下我們來看看，那麼在 MTA 上頭還有哪些重要的功能。</li><br />
+
+		<li><span class=text_import1>MDA (Mail Delivery Agent)：</span></br>
+		字面上的意思是『郵件遞送代理人』的意思。事實上，這個 MDA 是掛在 MTA 底下的一個小程式，
+		最主要的功能就是：<span class=text_import2>分析由 MTA 所收到的信件表頭或內容等資料，
+		來決定這封郵件的去向。</span>所以說，上面提到的 MTA 的信件轉遞功能，其實是由 MDA 達成的。
+		舉例來說，如果 MTA 所收到的這封信目標是自己，那麼 MDA 會將這封信給他轉到使用者的信箱 (Mailbox) 去，
+		如果不是呢？那就準備要轉遞出去了。此外，MDA 還有分析與過濾郵件的功能喔！舉例來說：<br /><br />
+		<ol>
+		<li><span class=text_import2>過濾垃圾信件：</span><br />
+		可以根據該封郵件的表頭資料，或者是特定的信件內容來加以分析過濾。例如某個廣告信的主題都是固定的，
+		如『AV情色...』等等，那就可以透過 MDA 來過濾並去除該郵件。</li><br />
+		<li><span class=text_import2>自動回覆：</span><br />
+		如果您出差了導致某一段時間內無法立即回信時，就可以透過 MDA 的功能讓郵件主機可以自動發出回覆信件，
+		如此您的朋友就不會認為你太大牌！^_^
+		</ol><br />
+		各主要的 MTA 程式 (sendmail,postfix...) 都有自己的 MDA 功能，不過有些外掛的程式功能更強大，
+		舉例來說 procmail 就是一個過濾的好幫手，另外 Mailscanner + Spamassassion 也是可以使用的一些 MDA 喔。
+		</li><br />
+
+		<li><span class=text_import1>Mailbox：</span></br>
+		就是電子郵件信箱嘛！簡單的說，就是某個帳號專用的信件收受檔案囉。我們的 Linux
+		系統預設的信箱都是放在 <span class=text_import2>/var/spool/mail/使用者帳號</span> 中！
+		若 MTA 所收到的信件是本機的使用者，MDA 就會將信件送到該 mailbox 當中去囉！
+		</ul>
+
+		好了，那麼來想一想，你如何透過 MUA 來將信件送到對方的郵件信箱 (Mailbox) 去呢？<br />
+
+		<ul>
+		<li><span class=text_import2>Step 0：取得某部 MTA 的使用權限：</span><br />
+		就如<a href="#fig_01">圖一</a>所示，我們本地端的 MUA 想要使用 MTA 來傳出信件時，
+		當然需要取得 MTA 的使用權限。通常就是說：我們必須要向 MTA 註冊一組可使用 email 的帳號與密碼才行。
+		</li><br />
+
+		<li><span class=text_import2>Step 1：使用者在 MUA 上編寫信件後，傳送至 MTA 上頭：</span><br />
+		使用者在 MUA 上面編寫信件，信件的資料主要有：<br />
+		<ul>
+		<li>信件標頭：包括寄件者的 email 以及收件者的 email 位址，還有該封信件的主旨 (subject) 等；
+		<li>信件內容：就是你要跟對方說明的內容啦！
+		</ul>
+		編寫完畢之後只要按下傳送鈕，該封信就會送至你的 MTA 主機上面了，注意：是你的 MTA 而不是對方的 MTA ！
+		如果你確定可以使用該部 MTA 主機，那麼你的這封信就會被放置到 MTA 的佇列 (queue) 當中並等待傳送出去了。
+		</li><br />
+
+		<li><span class=text_import2>Step 2.1：如果該封信的目標是本地端 MTA 自己的帳號</span><br />
+		你是可以寄信給你自己的，所以如果你的 MTA 收到該封信件的目標是自己的用戶時，那就會透過 MDA 
+		將這封信送到 Mailbox 去囉！</li><br />
+
+		<li><span class=text_import2>Step 2.2：如果該封信目的為其他 MTA ，則開始轉遞 (Relay) 的流程：</span><br />
+		那如果這封信的目標是其他的主機呢？這個時候我們的 MTA 就會開始分析該封信是否具有合法的使用權限，
+		若具有使用權限時，則我們的 MDA 會開始進行郵件轉遞，亦即該封信件會透過我們的 MTA 向下一部 MTA 的 smtp (port 25)
+		發送出去。如果該封信件順利的發送出去了，那麼該封信件就會由佇列當中移除掉了。</li><br />
+
+		<li><span class=text_import2>Step 3：對方 MTA 主機收受信件</span><br />
+		如果一切都沒有問題的話，遠端的 MTA 會收到我們 MTA 所發出的那封信，並將該信件放置到正確的使用者信箱當中，
+		等待使用者登入來讀取或下載。<br />
+		</ul>
+
+		在這整個過程當中，你會發現<span class=text_import2>你的信件是由我們的 MTA 幫忙發送出去的，此時 
+		MTA 提供的協定是簡單郵件傳輸協定 (Simple Mail Transfer Protocol, smtp)，</span>
+		並且該封信最終是停留在對方主機的 MTA 上頭！並不是你朋友的 MUA 上頭啊！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		為何特別強調這一點？因為以前有個朋有跟我說：『鳥哥啊，你要寄 email 給我的時候記得跟我講，
+		那我下班前將電腦開著，以免你信寄不到我的信箱』，此時額頭三條線突然跑出來～很不好意思～
+		所以這裡才要特別強調，你的 MUA 不必開著啦！要收信時再打開即可。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		瞭解了傳送信件時 MTA 需要啟動 smtp (port 25) 之後，再來我們得要談談那這封信件對方要如何接收啊？<br /><br />
+	</div>
+
+	<hr /><a NAME="whatmail_pop"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">使用者收信時伺服器端所提供的相關協定</span><br />
+	<div class=block2>
+		那使用者如果想要收信時，當然也可以透過 MUA 直接來連線取得自己的郵件信箱內的資料啊！
+		整個過程有點像底下這樣：<br /><br />
+
+		<a name="fig_02"></a><center><img src="0380mail/mail_comps_pop.png"
+		title="電子郵件收信時的流程示意圖"
+		alt="電子郵件收信時的流程示意圖"><br />
+		圖二、電子郵件收信時的流程示意圖</center><br />
+
+		使用者的 MUA 會透過兩種基本協定來進行信件的收受喔：POP3 及 IMAP。
+		我們先談一談 POP3 的收信方式吧：<br />
+
+		<ol><span class=text_import2>
+		<li>MUA 透過 POP3 (Post Office Protocol version 3) 的協定連接到 MTA 的 port 110，
+		並且輸入帳號與密碼來取得正確的認證與授權；
+		<li>MTA 確認該使用者帳號/密碼沒有問題後，會前往該使用者的 Mailbox (/var/spool/mail/使用者帳號)
+		取得使用者的信件並傳送給使用者的 MUA 軟體上；
+		<li>當所有的信件傳送完畢後，使用者的 mailbox 內的資料將會被刪除！
+		</span></ol>
+
+		在上述的流程當中我們知道 MTA 主機必須要啟動 POP3 這個協定才行，不過這個協定的收件方式比較有趣，
+		因為使用者收信是由第一封信件開始收下直到最後一封信件傳輸完畢為止。
+		<span class=text_import2>不過由於某些 MUA 程式撰寫的問題，
+		若有些郵件有病毒的可能性時，透過防毒軟體將可能導致該 MUA 軟體的斷線！
+		如此一來由於傳輸沒有完畢，因此 MTA 主機並不會將使用者的信件刪除。</span>
+		此時如果使用者又再一次的按下接收按鍵，呵呵！原來已接收的信件又會重複收到，而沒有收到的還是收不到！<br /><br />
+
+		這個時候或許你可以透過登入主機利用 mail 這個指令來處理你有問題的郵件，
+		或許換一種 MUA 也是個不錯的思考方向，又或者暫時將防毒軟體關掉也是可以考慮的手段之一。
+		轉頭過來想一想，因為 POP3 的協定預設會將信件刪除，那如果我今天在辦公室將我的信收到辦公室的電腦中，
+		當我回家時再度啟動 MUA 時，是否能夠收到已經被接收的信件？當然不行，對吧！<br /><br />
+
+		或許你需要更有幫助的協定，亦即 <span class=text_import2>IMAP (Internet Messages Access Protocol) ，
+		這個協定可以讓你將 mailbox 的資料轉存到你主機上的家目錄，亦即 /home/帳號/ 那個目錄下，
+		那你不但可以建立郵件資料匣，也可以針對信件分類管理</span>，而且在任何一個可連上網路的地方你只要登入主機，
+		原本的信件就還是存在吶！真是好啊！<br /><br />
+
+		不過，使用 IMAP 時，使用者的目錄最好能夠加點限制，例如利用 quota 來管理使用者的硬碟使用權限，
+		否則因為信件都在主機上頭，如果使用者過多且誤用時，你的硬碟空間會被吃光光喔！注意注意！<br /><br />
+
+		OK！透過上面的說明你要知道，<span class=text_import2>要架設一部可以使用 MUA 進行收發信件的 MTA
+		伺服器，你至少也需要啟動 SMTP 以及 POP3 這兩個協定才行！</span>而這兩個協定的啟動程式並不相同，
+		所以架設上還是得要小心注意啊！<br /><br />
+	</div>
+
+	<hr /><a NAME="whatmail_relay"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Relay 與認證機制的重要性</span><br />
+	<div class=block2>
+		當你需要 MTA 幫你將信寄送到下一部 MTA 去時，這個動作就稱為郵件轉遞 (Relay) 囉，那就是<a 
+		href="#fig_01">圖一</a>當中的 Step 2.2 那個動作啦。
+		那麼我們來想一想，<span class=text_import2>如果『所有的人都可以藉由這一部 MTA 幫忙進行 Relay 時，
+		這個情況稱之為 Open Relay 的動作』</span>。當你的 MTA 發生 Open Relay 時，會有什麼問題？
+		問題可就大了！<br /><br />
+
+		當你的 MTA 由於設定不良的關係導致具有 Open Relay 的狀況，加上你的 MTA 確實是連上網際網路時，
+		由於網際網路上面用 port scan 軟體的閒人太多，你的 MTA 具有 Open Relay 的功能這件事情，
+		將會在短時間內就被很多人察覺，此時那些不法的廣告信、色情垃圾信業者將會利用你的這部 Open Relay MTA 
+		發送他們的廣告，所以你會發生的問題至少有：<br />
+		<ul><span class=text_import2>
+		<li>你主機所在的網域正常使用的連線速度將會變慢，因為網路頻寬都被廣告、垃圾信吃光了；
+		<li>你的主機可能由於大量發送信件導致主機資源被耗盡，容易產生不明原因當機之類的問題；
+		<li>你的 MTA 將會被網際網路社會定義為『黑名單』，從此很多正常的郵件就會無法收發；
+		<li>你 MTA 所在的這個 IP 將會被上層 ISP 所封鎖，直到你解決這個 Open Relay  的問題為止；
+		<li>某些用戶將會對你的能力產生質疑，對您公司或者是你個人將會有信心障礙！甚至可能流失客源；
+		<li>如果你的 MTA 被利用來發黑函，你是找不到原發信者的，所以你這部 MTA 將會被追蹤為最終站！
+		</span></ul>
+		問題很大呦！所以啊，目前所有的 distributions 都一樣，幾乎都將 MTA 預設啟動為僅監聽內部迴圈介面 (lo)
+		而已，而且也將 Open Relay 的功能取消了。既然取消 Open Relay 的功能，那麼怎麼使用這部
+		MTA 的 Relay 來幫忙轉信啊？呵呵！所以我們在上頭才會一直說，你『必需』取得合法使用該 MTA 的權限啊！
+		這也就是說，設定誰可以使用 Relay 的功能就是我們管理員的任務啦！通常設定 Relay 的方法有這幾種：<br />
+
+		<ul>
+		<li>規定某一個特定用戶端的 IP 或網段，例如規定內部 LAN 的 192.168.1.0/24 可使用 Relay；
+		<li>若用戶端的 IP 不固定時 (例如撥接取得的非固定 IP) 可以利用認證機制來處理。
+		</ul>
+
+		認證機制上面常見的有 SMTP 郵件認證機制，以及 SMTP after POP 兩種，不論是哪一種機制，
+		基本上都是透過讓使用者輸入認證用的帳號與密碼，來確定他有合法使用該 MTA 的權限，
+		然後針對通過認證者開啟 Relay 的支援就是了。
+		如此一來你的 MTA 不再啟動 Open Relay  ，並且用戶端還是可以正常的利用認證機制來收發信件，
+		身為管理員的你可就輕鬆多囉！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="whatmail_mail"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">電子郵件的資料內容</span><br />
+	<div class=block2>
+		看過上頭的資料後，您應該對於 Mail server 有一些程度的認識了。再來要談的是，
+		那麼一封 email 的內容有哪些部分呢？就跟人類社會的郵件有信封袋以及內部的信紙一樣，
+		email 也有所謂的標頭 (header) 以及內容 (body) 兩部份喔！<br /><br />
+
+		email 的標頭部分會有幾個重要資訊，包括：這封信來自那個 MTA、是由誰所發送出來的、要送給誰、
+		主旨為何等等，至於內容則是發信者所填寫的一些說明囉。如果你使用 dmtsai 的身份下達這個指令：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@linux ~]$ <span class=term_command>echo "HaHa.." | mail -s "from vbird" dmtsai</span>
+</pre></td></tr></table>
+
+		然後將自己的信箱內容叫出來，如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@linux ~]$ <span class=term_command>cat /var/spool/mail/dmtsai</span>
+From dmtsai@localhost  Tue Nov 21 00:33:29 2006   <span class=term_say>&lt;==發信者 email</span>
+Return-Path: &lt;dmtsai@localhost&gt;                   <span class=term_say>&lt;==之前的 MTA 來源</span>
+X-Original-To: dmtsai                             <span class=term_say>&lt;==原收件者的資訊</span>
+Delivered-To: dmtsai@localhost                    <span class=term_say>&lt;==最終此郵件轉遞給誰</span>
+Received: by localhost (Postfix, from userid 500) <span class=term_say>&lt;==上一個 MTA 來源</span>
+        id 7A9C3A26B8; Tue, 21 Nov 2006 00:33:29 +0800 (CST)
+To: dmtsai@localhost                              <span class=term_say>&lt;==收件者信箱</span>
+Subject: from vbird                               <span class=term_say>&lt;==主旨</span>
+Message-Id: &lt;20061120163329.7A9C3A26B8@localhost&gt; <span class=term_say>&lt;==給 MTA 看的 ID</span>
+Date: Tue, 21 Nov 2006 00:33:29 +0800 (CST)
+From: dmtsai@localhost (VBird)                    <span class=term_say>&lt;==發信者 email</span>
+<span class=term_say>底下為信件內容</span>
+HaHa..
+</pre></td></tr></table>
+
+		由原本的信件內容上面我們可以看到確實是兩部份，在標頭部分記錄了比較詳細的收、發件者資料，
+		以及相關的來源、目標之 MTA 資訊等等。但你要注意的是，那個『Received:...』那一行資料是『會變動的』，
+		如同前面談到的 MX 標誌，如果一封信由 MUA 傳送到 MTA 在由 MTA 傳送到 MX 主機後，才傳送到最終的 MTA 時，
+		那麼這個 Received: 的資料將會記錄每一部經手過的 MTA 資訊喔！
+		所以你可以藉著這個記錄資料慢慢的找回這封信的傳遞方向呢！<br /><br />
+
+		此外，這個郵件的標頭以及內容的分析部分，你還可以藉由某些分析軟體來進行過濾，
+		這部份我們將在後頭再慢慢的介紹給大家瞭解喔！ ^_^！您先知道一封郵件至少有這些資料，
+		以後咱們再慢慢的解釋囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="whatmail_before"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">郵件伺服器架設前提</span><br />
+	<div class=block2>
+		前面談到 mail server 與 DNS 系統有很大的相關性，所以如果你想要架設一部可以連上 Internet 的郵件伺服器時，
+		你必需要已經取得合法的 A 與 MX 主機名稱，而且最好反解也已經向您的 ISP 申請修改設定了，
+		這可是個大前提！不要忽略他！在底下的練習當中鳥哥以之前 DNS 章節內的設定為依據，
+		主要的參數是這樣的：<br />
+		<ul>
+		<li>郵件主機的主要名稱為： linux.vbird.tsai
+		<li>郵件主機尚有別名為 www.vbird.tsai 及 ftp.vbird.tsai 也可以收發信件；
+		<li>此郵件主機已有 MX 設定，直接指向自己 (linux.vbird.tsai)
+		<li>這個 linux.vbird.tsai 有個 A 的標誌指向 192.168.1.254。
+		</ul>
+		在實際的郵件伺服器設定當中，上述的幾個標誌是很重要的，請自行參考 DNS 章節的介紹吧！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="sendmail"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Sendmail 伺服器的簡易架設介紹</span><br />
+<div class=block1>
+	可達成上述 MTA 功能的軟體非常的多，不過在常見的 Linux distributions 上頭則主要以數十年老牌子的 sendmail 
+	(<a href="http://www.sendmail.org" target="_blank">http://www.sendmail.org</a>) 以及近期以來很熱門的
+	Postfix (<a href="http://www.postfix.org" target="_blank">http://www.postfix.org</a>) 為主，
+	咱們的 CentOS 4.x 兩種軟體都有提供，不過主要是以 sendmail 為預設的 MTA 軟體，所以我們首先會來介紹一下如何在 CentOS 4.x 
+	上面開放 sendmail 監聽所有介面的方法，然後再仔細的聊一聊如何設定 Postfix  吧！<br /><br />
+
+	<hr /><a NAME="sendmail_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需要的套件與套件結構</span><br />
+	<div class=block2>
+		既然 CentOS 預設是以 sendmail 為主要的 MTA 軟體，而我們的 Linux 又需要 MTA 來監聽 lo 這個介面，
+		所以 sendmail 當然是已經安裝好了！但是 sendmail 還需要很多額外的套件來輔助處理，
+		所以你至少也需要底下幾個套件才行：<br />
+		<ul>
+		<li><span class=text_import1>sendmail</span>：提供主要的 sendmail 程式與設定檔；
+		<li><span class=text_import1>sendmail-cf</span>：提供 sendmail.cf 這個設定檔的預設整合資料；
+		<li><span class=text_import1>m4</span>：輔助將 sendmail-cf 的資料轉成實際可使用的設定檔。
+		</ul>
+		這三個套件是有相關性的啦，不過如果你在安裝的時候沒有選擇完整安裝所以套件時，sendmail-cf 可能沒有安裝，
+		所以請自行利用 rpm 以及 yum 檢查看看，並自行安裝好他吧！<br /><br />
+
+		幾乎所有的 sendmail 相關設定檔都在 /etc/mail/ 目錄下，主要的設定檔基本上有這些：<br />
+		<ul>
+		<li><span class=text_import1>/etc/mail/sendmail.cf (/usr/sbin/sendmail 的設定檔)</span><br />
+		這就是 sendmail 的設定檔！所有跟 sendmail 有關的設定都是靠他來完成的！不過，這個設定檔的內容真不是給人看的，
+		鳥哥也老是看的『霧煞煞』搞不懂！所以建議您不要隨意手動修改這個檔案啊！咦！設定檔又不給人改，
+		那怎麼處理額外的設定項目啊？
+		就交給程式幫我們修改啊！所以才需要 sendmail-cf 這個套件嘛！看下去就知道了。</li><br />
+
+		<li><span class=text_import1>/usr/share/sendmail-cf/cf/*.mc</span><br />
+		這些檔案是 sendmail.cf 這個設定檔的預設參數資料，上面不是說不要直接手動修改 sendmail.cf 嗎，
+		那如果你想要處理 sendmail.cf 的話，就得要透過這個目錄下的參數檔案來預先準備設定資料囉！
+		當然啦，這些預設參數資料檔案必需要透過 m4 那個程式來轉換才行喔！</li><br />
+
+		<li><span class=text_import1>/etc/mail/sendmail.mc (由 m4 指令轉換)</span><br />
+		是的是的！就是他！我們利用 m4 那個指令並通過指定的預設參數檔案來重建 sendmail.cf ，
+		就是藉由這個檔案來設定處理的！那我們應該要如何透過這個檔案來重建 sendmail.cf 呢？
+		簡單的說，你可以參考底下這張圖：<br /><br />
+
+		<a name="fig_03"></a><center><img src="0380mail/m4_mc_cf.png"
+		title="利用 m4 來轉換重建 sendmail.cf"
+		alt="利用 m4 來轉換重建 sendmail.cf"><br />
+		圖三、利用 m4 來轉換重建 sendmail.cf</center><br />
+
+		透過 m4 來處理即可，我們要作的就是修改 sendmail.mc 就好了，較為簡單。</li><br />
+
+		<li><span class=text_import1>/etc/mail/local-host-names</span><br />
+		你的 MTA 能不能將信收下來與這個設定有關，鳥哥的範例當中主機名稱有三個 (linux.vbird.tsai, 
+		www.vbird.tsai, ftp.vbird.tsai)，<span class=text_import2>這三個主機名稱得都要寫入這個檔案當中才行喔</span>！
+		否則將會造成例如： dmtsai@linux.vbird.tsai 可以收信，但是 dmtsai@www.vbird.tsai 卻不能收信的現象，
+		雖然這兩個 email 位址都是傳送到同一部主機，不過你的 MTA 能不能收下該位址的信件，是需要設定的喔！</li><br />
+
+		<li><span class=text_import1>/etc/mail/access.db (/etc/mail/access, 利用 makemap 處理)</span><br />
+		用來設定是否可以 Relay 或者是能否接收信件的資料庫檔案！由於這個檔案是資料庫，
+		所以我們必需要『修改 /etc/main/access 並使用 makemap 這個指令來建立 access.db 檔案』才行！
+		這個檔案很重要的，我們內部 LAN 可以使用這個設定檔來開放 Relay 的權限呢！</li><br />
+
+		<li><span class=text_import1>/etc/aliases.db (/etc/aliases, 利用 newaliases 處理)</span><br />
+		我們可以建立『信箱別名』喔！假設你有一個使用者帳號為 dmtsai ，他還想要使用 dermintsai 這個帳號來收信，
+		你不需要再建立一個 dermintsai 的帳號，直接在這個檔案裡面設定一個別名，讓寄給 dermintsai 
+		的信件直接丟到 dmtsai 的信箱去即可！由於是資料庫，所以你是需要『修改 /etc/aliases 並透過
+		newaliases 來重建該檔案』才行喔！</li><br />
+
+		<li><span class=text_import1>/var/spool/mqueue/ (可用 mailq 觀察)</span><br />
+		這個就是 sendmail 的郵件佇列，當一封信被 MTA 收下後，就會被放置到這裡來等待 MDA 的處理。
+		如果該封信件是本機帳號，那麼就會被挪到 /var/spool/mail/使用者帳號 去，然後移除該封信件。
+		如果該封信件需要 Relay ，那麼當信件傳送到下一部 MTA 後，信件資料就會自佇列中移除。
+		不過當一封信暫時寄不出去時，該信件就會先被儲放在這裡，並等待繼續嘗試送出去。
+		如果你想要知道目前佇列內儲放的信件資料，可以輸入 mailq 來查閱喔！
+		</ul>
+
+		好了，再來讓我們修改 sendmail 這個 MTA ，讓她可以連上 Internet 吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="sendmail_internet"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開放 sendmail 
+	的監聽介面與收信主機名稱設定</span><br />
+	<div class=block2>
+		事實上我們的 CentOS 預設已經啟動了 sendmail 了，只是他只會接受來自本機的 MTA 要求！
+		不相信嗎？做一下底下的練習吧！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />請列出目前你的主機上面，所有在監聽 tcp/udp 當中的埠口與服務的對應資料<br />
+答：<ul>
+直接利用 netstat 就能夠列出來了，鳥哥的主機可以列出這些資料：<pre>netstat -tulnp<font size="-1">
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address  Foreign Address  State   PID/Program name
+tcp        0      0 0.0.0.0:22     0.0.0.0:*        LISTEN  16856/sshd
+<span style="text-decoration: underline;">tcp        0      0 127.0.0.1:25   0.0.0.0:*        LISTEN  8036/sendmail: acce</span></font></pre>
+</ul>
+</td></tr></table><br />
+
+		在上面的例題當中你可以發現到 port 25 是由 sendmail 所啟動的，而且『<span class=text_import2>只監聽 
+		127.0.0.1 這個 lo 介面</span>』喔！
+		所以我們的重點當然就是如何將監聽的介面開啟到整個 Internet 上，否則他是無法接收來自 Internet 的信件的啦！
+		我們知道設定檔在 /etc/mail/sendmail.cf ，但不要手動改他，你應該要修改的是 sendmail.mc 這個檔案啦！
+		這個檔案的設定項目基本語法是這樣的：<br />
+		<ul>設定元件(`設定項目', `參數一', `參數二')</ul>
+		每個設定項目與參數左邊使用的是數字鍵1左邊那個按鈕 (quote) ，右邊則是單引號，別搞錯喔！
+		這個檔案的設定項目你可以參考底下的網頁說明：<br />
+		<ul>
+		<li><a href="http://linux.vbird.org0380sendmail.htm" 
+		target="_blank">http://linux.vbird.org0380sendmail.htm</a></li>
+		<li><a href="http://www.sendmail.org/m4/readme.html"
+		target="_blank">http://www.sendmail.org/m4/readme.html</a></li>
+		</ul>
+		我們這裡只要改一個地方即可，其他的可以使用預設值就好了喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 修改 sendmail.mc 的參數</span>
+[root@linux ~]# <span class=term_command>vi /etc/mail/sendmail.mc</span>
+<span class=term_say># 找到底下這一行：</span>
+DAEMON_OPTIONS(`Port=smtp,Addr=127.0.0.1, Name=MTA')dnl
+<span class=term_say># 將他改成這樣即可：</span>
+DAEMON_OPTIONS(`Port=smtp,Addr=<span class=term_write>0.0.0.0</span>, Name=MTA')dnl
+
+<span class=term_hd>2. 備份舊的設定檔資料</span>
+[root@linux ~]# <span class=term_command>cd /etc/mail</span>
+[root@linux mail]# <span class=term_command>mv sendmail.cf sendmail.cf.back1</span>
+
+<span class=term_hd>3. 開始建立新的 sendmail.cf 設定檔</span>
+[root@linux mail]# <span class=term_command>m4 sendmail.mc > sendmail.cf</span>
+</pre></td></tr></table>
+
+		當你處理完畢之後，重新啟動 sendmail 並檢查一下 smtp 的監聽埠口看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/sendmail restart</span>
+
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address  Foreign Address  State   PID/Program name
+tcp        0      0 0.0.0.0:25     0.0.0.0:*        LISTEN  8517/sendmail: acce
+</pre></td></tr></table>
+
+		瞧！監聽的介面終於對整個 Internet 開放了！這個時候理論上你的 MTA 已經開始運作囉！
+		而我們的 MTA 既然已經針對 Internet 來監聽了，所以自然你的主機名稱得要設定正確才行！
+		否則主機預設只會接受『localhost』這個主機名稱的信件而已吶！我們可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/mail/local-host-names</span>
+<span class=term_write>linux.vbird.tsai
+www.vbird.tsai
+ftp.vbird.tsai</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/sendmail restart</span>
+</pre></td></tr></table>
+
+		改寫完畢後記得要重新啟動 sendmail 才會正式的生效喔！
+		每一行有一個主機名稱！請記住，未來如果您的主機新增了不同的主機名稱，
+		並且你希望該主機名稱可以用來收發信件，那麼要修改 local-host-names 
+		！那麼什麼時候不要將所有的主機名稱都給他寫到這個 local-host-names 裡面去呢？<br /><br />
+
+		由於目前的廣告信件實在是太多了，他們會主動的在 Internet 上面搜尋一些主機名稱，
+		然後隨機四處發送垃圾郵件。如果您的主機有四個名稱，每個主機名稱都寫到 local-host-names 
+		去的話，很可能一封廣告信您會『收到四次』，因為四個主機名稱嘛！所以囉！
+		有的時候還是不要讓全部的主機名稱都可以收信是比較好的吶！<br /><br />
+	</div>
+
+	<hr /><a NAME="sendmail_relay"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開放使用 MTA Relay 
+	權限設定 /etc/mail/access</span><br />
+	<div class=block2>
+		根據<a href="#fig_01">圖一</a>的流程分析當中，我們知道<span class=text_import2>一個 MTA 
+		最主要的功能就是『收信』與『信件轉遞, Relay』</span>，
+		上一個小節提到收信的部分主要與監聽介面以及主機名稱有關，那能否使用 Relay 的能力呢？
+		這就是我們所需要瞭解的啦！<br /><br />
+
+		在 Sendmail 的預設情況下只有 sendmail 伺服器本機 (localhost) 可以進行信件轉遞的功能，
+		其他任何用戶端都無法使用這部 MTA 的！也就是說，除非你在這部 MTA 上面使用 mail 這個指令，
+		或者是使用 X Window 內的 MUA 來發信，其他的非本機用戶都沒有 relay 的能力。
+		哇！那麼這部 MTA 還有啥用途啊？所以啊，
+		我們必須要針對用戶端的 Relay 功能進行開放才行！這個設定得要很小心，
+		免得你的 MTA 變成 <a href="#whatmail_relay">Open Relay</a> 的不良狀態啊！<br /><br />
+
+		sendmail 使用 /etc/mail/access 這個檔案來設定開放 Relay 或者是抵擋 Relay 的功能，
+		這個檔案內的格式基本上是這樣的：<br />
+
+		<ul><span class=text_import2><font face="細明體">
+規範的範圍或規則 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Sendmail的動作<br />
+IP/部分IP/主機名/Email等 &nbsp; &nbsp; RELAY/DISCARD/REJECT</font></span></ul>
+
+		在這兩個欄位之間最好使用&lt;tab&gt;按鍵來作為分隔，假設我要讓內部的 192.168.1.0/24 這個網域，
+		還有 140.116.44.202 這部主機，以及在教育部 (ncku.edu.tw) 所管轄的領域之主機名稱都能使用這部 MTA 的話，
+		你可以這樣設定的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/mail/access</span>
+localhost.localdomain           RELAY
+localhost                       RELAY
+127.0.0.1                       RELAY
+<span class=term_write>192.168.1                       RELAY
+140.116.44.202                  RELAY
+.edu.tw                         RELAY</span>
+
+[root@linux ~]# <span class=term_command>cd /etc/mail</span>
+[root@linux mail]# <span class=term_command>makemap hash access.db &lt; access</span>
+<span class=term_say># 上面這個動作在『製作出 hash 格式的資料庫』，請 man makemap 即可瞭解。</span>
+</pre></td></tr></table>
+
+		做了這個動作後，整個內部網域以及外部的其他固定 IP 主機就能夠使用你的 MTA 來進行 Relay 
+		囉！不過非固定 IP 還是會有點困擾就是了。不過不打緊，我們還可以利用其他認證方式來開放使用權限的。
+		更多的 access 用法我們將在 <a href="#postfix">Postfix</a> 的章節當中進行介紹吶！
+		在這裡你先知道可以這樣玩即可喔！ ^_^<br /><br />
+
+		Sendmail 的設定到此後，你的 MTA 已經可以收受信件，也可以接受內部或特定 IP 的 Relay 信件，
+		其他更多的設定方式則可以參考 sendmail 的官方網站吧！當然啦，由於 postfix 本來就是用於相容 sendmail 的，
+		所以底下繼續介紹的 postfix 的相關設定方法，你也可以用在 sendmail 上頭吶！
+		重複的不再說！趕緊繼續看下去吧！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="postfix"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">用 Postfix 達成 MTA 功能</span><br />
+<div class=block1>
+	Sendmail 真是個很棒的 MTA 伺服器，不過他也有若干的缺點，包括早期的程式漏洞問題導致的主機安全性缺失；
+	還有 sendmail 將所有的功能都統合在 /usr/sbin/sendmail 這個程式當中，導致程式太大可能會有效能方面的疑慮；
+	以及完全不具有親和力的設定檔 sendmail.cf .....，所以後來才會有這個小巧效能又棒的 postfix 出來啊！<br /><br />
+
+	<hr /><a NAME="postfix_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Postfix 的產生</span><br />
+	<div class=block2>
+		Postfix 是由 Wietse Zweitze Venema 先生(<a href="http://www.porcupine.org/wietse/"
+		target="_blank">http://www.porcupine.org/wietse</a>)所發展的。早期的 mail server 都是使用 sendmail 
+		架設的，還真的是『僅此一家，絕無分號！』！不過，Venema 博士覺得 sendmail 
+		雖然很好用，但是畢竟不夠安全，尤其效能上面並不十分的理想，最大的困擾是....sendmail 的設定檔 
+		sendmail.cf 真的是太難懂了！對於網管人員來說，要設定好 sendmail.cf 這個檔案，真不是人作的工作。<br /><br />
+
+		為了改善這些問題， Venema 博士就在 1998 年利用他老大在 IBM 公司的第一個休假年進行一個計畫：『
+		<span class=text_import2>設計一個可以取代 sendmail 的軟體套件，可以提供網站管理員一個更快速、
+		更安全、而且<b>完全相容</b>於 sendmail 的 mail server 軟體！</span>』這個計畫還真的成功了！
+		而且也成功的使用在 IBM 內部，在 IBM 內可以說是完全取代了 sendmail 這個郵件伺服器！在這個計畫成功之後， 
+		Venema 博士也在 1998 年首次釋出這個自行發展的郵件伺服器，並定名為 VMailer。<br /><br />
+
+		不過， IBM 的律師卻發現一件事，那就是 VMailer 這個名字與其他已註冊的商標很類似，
+		這樣可能會引起一些註冊上面的困擾。為了避免這個問題，所以 Venema 博士就將這個郵件軟體名稱改為 
+		Postfix ！『Post 為在什麼什麼之後』的意思，『fix 則是修訂』的意思，所以 postfix 有
+		『在修訂之後』的意思。<br /><br />
+
+		鳥哥個人認為， Venema 先生最早的構想並不是想要『創造一個全新的 
+		Mail server 軟體，而是想要製造一個可以完全相容於 sendmail 的軟體』，所以，
+		Venema 先生認為他自行發展的軟體應該是『改良 sendmail 的缺失』，所以才稱為 Postfix 吧！取其意為：
+		『在 sendmail 之後的改良的郵件伺服器軟體！』<br /><br />
+
+		所以啦， Postfix 設計的理念上面，主要是針對『<span class=text_import2>想要完全相容於 
+		sendmail』所設計出來的一款『內在部分完全新穎』的一個郵件伺服器軟體</span>。就是由於這個理念，因此
+		Postfix 改善了 sendmail 安全性上面的問題，改良了 mail server 的工作效率，
+		且讓設定檔內容更具親和力！因此，你可以輕易的由 sendmail 轉換到 Postfix 上面！這也是當初 
+		Venema 博士的最初構想啊！<br /><br />
+
+		就是基於這個構想，所以， Postfix 在外部設定檔案的支援度，與 sendmail 幾乎沒有兩樣，同樣的支援 
+		aliases 這個檔案，同樣的支援 ~/.forward 這個檔案，也同樣的支援 SASL 的 SMTP 郵件認證功能等等！
+		所以，呵呵！趕緊來學一學怎樣架設 Postfix 這個相當出色的郵件伺服器吧！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需要的套件與套件結構</span><br />
+	<div class=block2>
+		相對於 sendmail 還需要 m4 以及 sendmail-cf ， Postfix 要簡單太多了！你只要安裝 postfix 即可。
+		不過我們的 CentOS 雖然同時提供 sendmail 與 postfix ，不過鳥哥極不建議這兩者並存喔！
+		因此你在安裝完 postfix 之後，記得將 sendmail 給他移除一下比較妥當一些些！
+		所以你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/sendmail stop</span>
+[root@linux ~]# <span class=term_command>yum install postfix</span>
+[root@linux ~]# <span class=term_command>rpm -e sendmail</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix start</span>
+</pre></td></tr></table>
+
+		因為 Linux 系統至少需要一個 MTA 來讓系統內部的帳號可以傳送郵件，所以你必須要先安裝 postfix 
+		後才可以移除 sendmail 喔！順序可不要搞錯了！否則會跑出一堆相依屬性的問題哩！
+		那麼 postfix 有哪些重要的設定檔呢？他主要的設定檔都在 /etc/postfix/ 當中，
+		詳細的檔案內容就讓我們來談談：<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/postfix/main.cf</span><br />
+		這就是主要的 postfix 設定檔囉，幾乎所有的設定參數都是在這個檔案內規範的！
+		這個檔案預設就是一個完整的說明檔了，你可以參考這個檔案的內容就設定好屬於你的 postfix MTA 呢！
+		只要修改過這個檔案，記得要重新啟動 postfix 喔！</li><br />
+
+		<li><span class=text_import1>/etc/postfix/master.cf</span><br />
+		主要規定了 postfix 每個程序的運作參數，也是很重要的一個設定檔。
+		不過這個檔案預設已經很 OK 了，通常不需要更改他。</li><br />
+
+		<li><span class=text_import1>/etc/postfix/access (利用 postmap 處理)</span><br />
+		與 sendmail 的 /etc/mail/access 具有相同的用途，可以設定開放 Relay 或拒絕連線的來源或目標位址等資訊。
+		不過這個檔案要生效還需要在 /etc/postfix/main.cf 啟動這個檔案的用途才行。
+		且設定完畢後需要以 postmap 來處理成為資料庫檔案呢！</li><br />
+
+		<li><span class=text_import1>/etc/aliases (利用 postalias 或 newaliases 均可)</span><br />
+		不同的 distributions 這個檔案放置的目錄可能不太一樣，在 CentOS 當中為了完全相容於 sendmail  與 postfix ，
+		所以這個檔案預設放在 /etc/ 當中，其他版本則可能放置到 /etc/postfix 目錄中喔！
+		這個檔案的用法與 sendmail 完全相同喔！</li>
+		</ul>
+
+		至於常見的執行檔則有底下這些：<br />
+
+		<ul>
+		<li><span class=text_import1>/usr/sbin/postconf (查閱 postfix 的設定資料)</span><br />
+		這個指令可以列出目前你的 postfix 的詳細設定資料，包括系統預設值也會被列出來，
+		所以資料量相當的龐大！如果你在 main.cf 裡面曾經修改過某些預設參數的話，想要僅列出非預設值的設定資料，
+		則可以使用『<span class=text_import2>postconf -n</span>』這個參數即可。</li><br />
+
+		<li><span class=text_import1>/usr/sbin/postfix (主要的 daemon 指令)</span><br />
+		此為 postfix 的主要執行檔，你可以簡單的使用他來啟動或重新讀取設定檔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postfix check </span>  <span class=term_say>&lt;==檢查 postfix 相關的檔案、權限等是否正確！</span>
+[root@linux ~]# <span class=term_command>postfix start </span>  <span class=term_say>&lt;==開始 postfix 的執行</span>
+[root@linux ~]# <span class=term_command>postfix stop  </span>  <span class=term_say>&lt;==關閉 postfix</span>
+[root@linux ~]# <span class=term_command>postfix flush </span>  <span class=term_say>&lt;==強制將目前正在郵件佇列的郵件寄出！</span>
+[root@linux ~]# <span class=term_command>postfix reload</span>  <span class=term_say>&lt;==重新讀入設定檔，也就是 /etc/postfix/main.cf</span>
+</pre></td></tr></table>
+
+		要注意的是，每次更動過 main.cf 後，務必重新啟動 postfix 
+		，可簡單的使用『<span class=text_import2>postfix reload</span>』即可。</li><br />
+
+		<li><span class=text_import1>/usr/sbin/postalias</span><br />
+		設定別名資料庫的指令，因為 MTA 讀取資料庫格式的檔案效能較佳，所以我們都會將 ASCII 格式的檔案重建為資料庫。
+		在 postfix 當中，這個指令主要在轉換 /etc/aliases 成為 /etc/aliases.db 囉！用法為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+<span class=term_say># hash 為一種資料庫的格式，然後那個 /etc/aliases.db 就會自動被更新囉！</span>
+</pre></td></tr></table>
+
+		<li><span class=text_import1>/usr/sbin/postcat</span><br />
+		主要用在檢查放在 queue (佇列) 當中的信件內容。由於佇列當中的信件內容是給 MTA 看的，
+		所以格式並不是一般我們人類看的懂的文字資料。所以這個時候你得要用 postcat 才可以看出該信件的內容。
+		在 /var/spool/postfix 內有相當多的目錄，假設內有一個檔案名為 /deferred/abcfile ，
+		那你可以利用底下的方式來查詢該檔案的內容喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postcat /var/spool/postfix/deferred/abcfile</span>
+</pre></td></tr></table>
+
+		<li><span class=text_import1>/usr/sbin/postmap</span><br />
+		這個指令的用法與 postalias 類似，不過他主要在轉換 access 這個檔案的資料庫啦！用法為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postmap hash:/etc/postfix/access</span>
+</pre></td></tr></table>
+
+		<li><span class=text_import1>/usr/sbin/postqueue</span><br />
+		類似 mailq 的輸出結果，例如你可以輸入『postqueue -p』看看就知道了！</li>
+		</ul>
+
+		整個 postfix 的套件結構大致上是這個樣子的，接下來讓我們先來簡單的處理一下 postfix 的收發信件功能吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_basic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">讓 Postfix 可監聽 
+	Internet 來收發信件</span><br />
+	<div class=block2>
+		同樣的，咱們 CentOS 4.x 的 postfix 依舊預設僅支援本機介面的 smtp 服務而已，
+		所以如果你要對整個 Internet 開放的話，就得要努力的搞定幾個簡單的設定囉！
+		而幾乎所有的設定你都可已經由 /etc/postfix/main.cf 這個檔案搞定！這個檔案的內容你需要注意的是：<br />
+
+		<ul><span class=text_import2>
+		<li>『#』符號是註解的意思；
+		<li>所有設定值以類似『變數』的設定方法來處理，例如 myhostname = linux.vbird.tsai
+		，請注意等號的兩邊要給予空白字元喔，且第一個字元不可以是空白，亦即『my..』要由行首寫起；
+		<li>可以使用『 $ 』來延伸使用變數設定，例如 myorigin = $myhostname，會等於 myorigin = linux.vbird.tsai；
+		<li>如果該變數支援兩個以上的資料，則使用空白字元來分隔，不過建議使用逗號加空白字元『, 』來處理。
+		例如： mydestination = $myhostname,  $mydomain, www.vbird.tsai，意指 mydestination 支援三個資料內容之意。
+		<li>可使用多行來表示同一個設定值，只要在第一行最後有逗號，且第二行開頭為空白字元，
+			即可將資料延伸到第二行繼續書寫；
+		<li><b>若重複設定某一項目，則以較晚出現的設定值為準！</b>
+		</span></ul>
+
+		要讓你的 postfix 可以收發信件時，你必需要啟動的設定資料有底下這些喔：<br /><br />
+
+		<li><span class=text_import1>myhostname：設定主機名稱，需使用 FQDN 喔</span></li>
+		<div class=block2>
+		這個設定項目在於設定你的主機名稱，且這個設定值被後續很多其他的參數所引用，所以必須要設定正確才行。
+		你應該要設定成為完整的主機名稱。在鳥哥的這個練習當中，我們的主機名稱為 linux.vbird.tsai，
+		所以請設定好他吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>myhostname = linux.vbird.tsai</span>
+</pre></td></tr></table>
+
+		除了這個設定值之外，還有一個 mydomain 的設定項目，這個項目預設會取 myhostname 拿掉第一個『.』以前的主機名稱，
+		而設定出 domain name 。舉例來說上頭設定完畢後，預設的 mydomain 就是 vbird.tsai 囉！你也可以自行設定他。
+		基本上這兩個設定值只是被用來引用的，你只要設定正確即可。<br /><br />
+		</div>
+
+		<li><span class=text_import1>myorigin ：發信時所顯示的『發信源主機』項目</span></li>
+		<div class=block2>
+		這個項目在設定『<span class=text_import2>郵件標頭上面的 mail from 的那個位址</span>』，
+		也就是代表本 MTA 傳出去的信件將以此設定值為準喔！如果你在本機寄信時忘記加上 Mail from 字樣的話，
+		那麼就以此值為準了。預設這個項目以 $myhostname 為主的，所以：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>myorigin = $myhostname</span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>inet_interfaces ：設定 postfix 的監聽介面 (極重要)</span></li>
+		<div class=block2>
+		在預設的情況下你的 Postfix 只會監聽本機介面的 lo (127.0.0.1) 而已，如果你想要監聽整個 Internet 的話，
+		請開放成為對外的介面，或者是開放給全部的介面，常見的設定方法為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>inet_interfaces = all</span>
+</pre></td></tr></table>
+
+		由於如果有重複設定項目時，會以最晚出現的設定值為準，所以當你設定為『inet_interfaces = all』時，請將
+		inet_interfaces = localhost 那一行註解掉啊！<br /><br />
+		</div>
+
+		<li><span class=text_import1>mydestination ：設定『能夠收信的主機名稱』 (極重要)</span></li>
+		<div class=block2>
+		這個設定項目很重要喔！他就像 <a href="#sendmail_internet">sendmail 內的 local-host-names</a> 一樣，
+		你的主機能夠收下來的信件中，Mail to 寫的主機名稱必須要在這個設定值當中出現才行。
+		在我們這個練習當中這部主機有三個名字，linux.vbird.tsai, www.vbird.tsai 及 ftp.vbird.tsai
+		都需要寫入喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>mydestination = $myhostname, localhost.$mydomain, localhost,
+     www.vbird.tsai, ftp.vbird.tsai</span>
+</pre></td></tr></table>
+
+		瞧見否？如果想要將同一個設定寫成兩行時，前一行最後最好使用逗號『 , 』來隔開較佳。
+		因為 $myhostname 已經是 linux.vbird.tsai 了，所以不必改寫。另外，如果你對 sendmail
+		的 local-host-names 情有獨鍾而想要繼續使用該檔案時，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>mydestination = /etc/postfix/local-host-names</span>
+</pre></td></tr></table>
+
+		然後在該檔案內加入所有你想要加入的主機名稱即可！一般來說，不建議你額外建立 local-host-names 這個檔案啦，
+		直接寫入 main.cf 即可說！特別留意的是，<span class=text_import2>如果你的 DNS 裡頭的設定有 MX 
+		標誌的話，那麼請將 MX 指向的那個主機名稱一定要寫在這個 mydestination 內</span>，
+		否則很容易出現錯誤訊息喔！特別的給他注意這一點！
+		<span class=text_imort2>一般來說，使用者最常發生錯誤的地方就在這個設定裡頭呢！</span>
+		<br /><br />
+		</div>
+
+		<li><span class=text_import1>mynetworks_style ：設定『信任網域』的一項指標</span></li>
+		<div class=block2>
+		這個設定值在規定『與主機在同一個網域的可信任用戶端』的意思！舉例來說，鳥哥的主機 IP 是
+		192.168.1.254，如果我相信整個區域網路內 (192.168.1.0/24) 的用戶的話，那我可規定此設定值為『 subnet 』吶！
+		不過，一般來說，<span class=text_import2>因為底下的 mynetworks 會取代這個設定值</span>，
+		所以不設定也沒有關係喔！如果要設定的話，
+		最好設定成為 host 即可 (亦即僅信任這部 MTA 主機而已)。<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>mynetworks_style = host</span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>mynetworks ：規定信任的用戶端 (極重要)</span></li>
+		<div class=block2>
+		你的 MTA 能不能幫忙進行 Relay 與這個設定值最有關係！舉例來說，我要開放本機與內部網域的 IP 時，
+		就可以這樣進行設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>mynetworks = 127.0.0.0/8, 192.168.1.0/24</span>
+</pre></td></tr></table>
+
+		還記得我們在 sendmail 內是以 <a href="#sendmail_relay">access</a> 來進行 relay 的設定吧？
+		那如果你想要延續這個檔案的設定呢？那鳥哥可以建議你將上述的資料改寫成這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>mynetworks = 127.0.0.0/8, 192.168.1.0/24, hash:/etc/postfix/access</span>
+</pre></td></tr></table>
+
+		然後你只要再建立 access 之後重整成資料庫後，嘿嘿！就能夠設定 Relay 的用戶囉！<br /><br />
+		</div>
+
+		<li><span class=text_import1>relay_domains ：規範可以幫忙 relay 的下一部 MTA 主機位址</span></li>
+		<div class=block2>
+		相對於 mynetworks 是針對『信任的用戶端』而設定的，這個 <span class=text_import2>relay_domains 
+		則可以視為『針對下游 MTA 主機』而設定的。</span>舉例來說，如果你這部主機是 mail.kiki.vbird.tsai 的 MX 主機時，
+		那你就得要在 relay_domains 設定針對整個 kiki.vbird.tsai 這個領域的目標信件進行轉遞才行。
+		在預設的情況下，這個設定值是 $mydestination 而已啦。<br /><br />
+
+		你必需要注意的『Postfix 預設並不會轉遞 MX 主機的信件』，意思就是說：如果你有兩部主機，一部是上游的
+		MTAup ，一部是下游的 MTAdown ，而 MTAdown 規範的 MX 主機是 MTAup，由
+		<a href="#whatmail_dns">DNS 的 MX 設定值與信件傳遞方向</a>我們知道任何想要寄給 MTAdown 主機的信件，
+		都會先經過 MTAup 來轉遞才行！此時如果那部 MTAup 沒有開啟幫 MTAdown 進行 relay 的權限時，
+		那麼任何傳給 MTAdown 的信件將『全部都被 MTAup 所退回』！從此 MTAdown 就無法收到任何信件了。<br /><br />
+
+		上一段的說明請您特別再想一想，因為如果你在大公司服務而且你的公司上、下游均有 mail server 時，
+		並且也有設定 MX 的狀況下，嘿嘿！這個 relay_domains 就很重要啦！上游的 MTA 主機必需要啟動這個設定。
+		一般來說除非你是某部 MTA 主機的 MX 源頭，否則這個設定項目可以忽略不設定他。
+		而如果你想要幫你的用戶端轉遞信件到某部特定的 MTA 主機時，這個設定項目也是可以設定的啦。
+		預設請您保留預設值即可。<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>relay_domains = $mydestination</span>
+</pre></td></tr></table>
+
+		</div>
+		<li><span class=text_import1>alias_maps ：設定郵件別名</span></li>
+		<div class=block2>
+		只要指定到正確的檔案去即可，這個設定值可以保留預設值啊：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases</span>
+</pre></td></tr></table>
+		</div>
+
+		在瞭解上述的設定後，以鳥哥的範例來看的話，我有更動過的設定值以及相關檔案是這樣處理的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>myhostname = linux.vbird.tsai
+myorigin = $myhostname
+inet_interfaces = all
+mydestination = $myhostname, localhost.$mydomain, localhost,
+     www.vbird.tsai, ftp.vbird.tsai
+mynetworks = 127.0.0.0/8, 192.168.1.0/24, hash:/etc/postfix/access
+relay_domains = $mydestination</span>
+<span class=term_say># 其他的設定值就先保留預設值即可啊！</span>
+
+[root@linux ~]# <span class=term_command>postmap hash:/etc/postfix/access</span>
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+</pre></td></tr></table>
+
+		然後準備來啟動啦！你可以這樣處理喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先檢查設定檔的語法是否有錯誤</span>
+[root@linux ~]# <span class=term_command>postfix check</span>   <span class=term_say>&lt;==如果沒有出現任何訊息，表示沒有問題。</span>
+
+<span class=term_hd>2. 啟動與觀察 port number</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp | grep ':25'</span>
+tcp  0   0 0.0.0.0:25    0.0.0.0:*   LISTEN   20850/master
+</pre></td></tr></table>
+
+		很簡單吧！這樣就設定妥當了，你的 Postfix 已經可以開放用戶端進行轉遞，並且也可以收受信件囉！
+		不過，到底在預設的情況下我們的 postfix 可以收下哪些信件？又可以針對哪些設定值的內容進行轉遞呢？
+		這就得要參考下一小節的說明了。<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_flow"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">信件傳送流程與收信、relay 
+	等重要觀念</span><br />
+	<div class=block2>
+		我想，您對於 MTA 的設定與收發信件應該有一定程度的概念了，不過要妥善設定好你的 MTA 時，
+		尤其是想要瞭解到整部 MTA 是如何收、發信件時，你最好還是要知道『<span class=text_import2>我這部 
+		MTA 如何接受來源主機所傳來的信件，以及將信件轉遞到下一部主機去</span>』的整個流程啊。
+		一般來說一封郵件傳送會經過許多的流程為：<br />
+
+		<ol><span class=text_import2>
+		<li>送信端與收信端兩部主機間會先經過一個握手 (ehlo) 的階段，此時送信端被記錄為發信來源(而不是 mail from)。
+			通過握手後就可以進行信件標頭 (header) 的傳送；</li><br />
+		<li>此時收信端主機會分析標頭的資訊，若信件之 Mail to: 主機名稱為收信端主機，且該名稱符合 
+			mydestination 的設定，則該信件會開始被收下至佇列，並進一步送到 mailbox 當中；
+			若不符合 mydestination 的設定，則終止連線且不會進行信件內容 (body) 的傳送；</li><br />
+		<li>若 Mail to: 主機名稱非為收信端本身，則開始進行轉遞 (relay) 的分析。</li><br />
+		<li>轉遞過程首先分析該信件的來源是否符合信任的用戶端 (這個用戶端為步驟 1 所記錄的發信主機喔)
+			，亦即來源是否符合 mynetworks 的設定值，
+			若符合則開始收下信件至佇列中，並等待 MDA 將信件再轉遞出去，若不符 mynetworks 則繼續下一步；</li><br />
+		<li>分析信件來源或目標是否符合 relay_domains 的設定，若符合則信件將被收下至佇列，並等待 MDA 
+			將信件再轉遞出去；</li><br />
+		<li>若這封信的標頭資料都不合乎上述的規範，則終止連線，並不會接受信件的內容資料的。
+		</span></ol>
+
+		整個流程有點像底下這樣：<br /><br />
+
+		<a name="fig_04"></a><center><img src="0380mail/mail-flow.png"
+		title="郵件傳輸方向"
+		alt="郵件傳輸方向"><br />
+		圖四、郵件傳輸方向</center><br />
+
+		也就是說標頭分析通過後，你的信件內容才會開始上傳到主機的佇列，然後透過 MDA 來處理該信件的流向。
+		而不是將信件完整的傳送到主機後才開始分析的喔！這個得要特別注意吶！而透過上述的流程後，
+		在暫不考慮 access 以及 MDA 的分析機制中，一部 MTA 想要正確的收、發信件時，電子郵件必需要符合：<br />
+
+		<ul>
+		<li>收信方面：必需符合底下需求：
+			<ol>
+			<li>發信端必需符合 $inet_interfaces 的設定；
+			<li>信件標頭之收件者主機名稱必需符合 $mydestination 的設定，
+			或者收件主機名稱需要符合 $virtual_maps (與虛擬主機有關) 的設定；</ol></li><br />
+
+		<li>轉遞方面：必需符合底下需求：
+			<ol>
+			<li>發信端必需符合 $inet_interfaces 的設定；
+			<li>發信端來源必需為 $mynetworks 的設定；發信端來源或信件標頭之收件者主機名稱符合
+			$relay_domains 之設定內容。</ol></li>
+		</ul>
+
+		同樣的原理與想法你可以將他用在 sendmail 的設定當中喔！ ^_^！不過很多垃圾信卻是藉由這個預設的收發管道來發送，
+		怎麼說呢？請看底下的分析：<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />
+在我的主機上面竟然發現這樣的廣告信，那就是『利用我的主機發送廣告信給我自己！』
+為什麼這樣也可以呢？
+<br />
+答：<ul>
+首先，你必需要熟悉一下上述的流程，在第 2 個步驟當中我們知道，當主機收到一封信且這封信的目標是自己，
+並且也符合 mydestination 的設定時，該信件就會被收下來而不必驗證用戶端是否來自於 mynetworks 了。
+所以說，任何人都可以用這個流程來寄信給你啊。不過，你的 MTA 並不是 open relay 啦，
+不會幫人家發送廣告信的，不用擔心。
+</ul>
+</td></tr></table><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />
+我的主機明明沒有 Open relay ，但很多其他的 MTA 管理員發信給我，說我的主機的某個帳號持續發送廣告信，
+但是我的主機明明沒有那個帳號啊！這是怎麼回事？
+<br />
+答：<ul>
+仔細看一下流程的步驟 1 與 2 ，確認該封信能否被收下來與發信端及收信端主機名稱有關。
+而我們知道在郵件的 header 裡面還有一個 mail from 的標頭設定項目，這個標頭設定是我們在查閱郵件時看到的『回郵位址』，
+這個資料是可以偽造的！而且他與收發信件的資料無關！所以，您應該要告知對方 MTA 管理員，
+請他提供詳細的 log 資料，才能夠判斷該封信是否由你的主機所發送出去的。<br /><br />
+一般來說，目前的廣告業者很多都是利用這種欺敵的方式來處理的，所以您必需要請對方提供詳細的 log file 
+資料以供查驗才行喔！
+</ul>
+</td></tr></table><br />
+	</div>
+
+	<hr /><a NAME="postfix_access"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定郵件主機使用權限與過濾機制
+	/etc/postfix/access</span><br />
+	<div class=block2>
+		基本上，指定了 Postfix 的 mynetworks 就能夠讓使用者 relay 了，不過如果你依照鳥哥上述的方式來設定你的 
+		mynetworks 的話，那麼我們還可以利用 access 這個檔案來額外管理我們的信件過濾呢！
+		基本的 access 語法再說明一次：<br />
+
+		<ul><span class=text_import2><font face="細明體">
+規範的範圍或規則 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Postfix 的動作<br />
+IP/部分IP/主機名/Email等 &nbsp; &nbsp; ACCEPT/REJECT</font></span></ul>
+
+		假設你想要讓 140.116.44.202 還有 .edu.tw 可以使用這部 MTA 來轉遞信件，且不許 av.com 以及
+		192.168.100.0/24 這個網域的使用時，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/access</span>
+<span class=term_write>140.116.44.202		ACCEPT
+.edu.tw			ACCEPT
+av.com			REJECT
+192.168.100		REJECT</span>
+<span class=term_say># ACCEPT 表示可接受，而 REJECT 則表示拒絕。</span>
+
+[root@linux ~]# <span class=term_command>postmap hash:/etc/postfix/access</span>
+</pre></td></tr></table>
+
+		用這個檔案設定最大的好處是，你不必重新啟動 postfix ，只要將資料庫建立好，立刻就生效了！
+		不過這個檔案的進階設定還需要 main.cf 內的其他規範有設定才行！如果只是之前 $mynetworks 的設定值時，
+		你只能利用上述的方式來開放 relay 的能力。不過，至少他可以讓我們的設定簡化囉！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_alias"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定郵件別名</span><br />
+	<div class=block2>
+		想一想，你的主機裡面不是有很多系統帳號嗎？例如 named, apache, mysql...，
+		那麼以這些帳號執行的程式若有訊息發生時，他會將該訊息以 email 的方式傳給誰？
+		原則上是傳給 root 這個管理員。不過，為啥會傳給 root 啊？這是因為其他的系統帳號並沒有密碼可登入，
+		自然也沒有接收郵件的必要。所以若有郵件就給系統管理員囉。不過，咱們的 MTA 怎麼知道這些信件要傳給 root ？
+		這就得要 aliases 這個郵件別名設定檔來處理啦！<br /><br />
+
+		在你的 /etc/aliases 檔案內，你會發現類似底下的字樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/aliases</span>
+mailer-daemon:  postmaster
+postmaster:     root
+bin:            root
+daemon:         root
+adm:            root
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table>
+
+		左邊是『別名』右邊是『實際存在的使用者帳號或者是 email address』！就是透過這個設定值，
+		所以讓我們可以將所有系統帳號所屬的信件通通丟給 root 啊！好，我們現在將他擴大化，假如你的 MTA 
+		內有一個實際的帳號名稱為 dmtsai ，這個使用者還想要使用 dermintsai 這個名稱來收他的信件，
+		那麼你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/aliases</span>
+<span class=term_write>dermintsai:     dmtsai</span>
+<span class=term_say># 左邊是你額外所設定的，右邊則是實際接收這封信的帳號！</span>
+
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+</pre></td></tr></table>
+
+		從此之後不論是 dmtsai@linux.vbird.tsai 還是 dermintsai@linux.vbird.tsai 都會將信件丟到
+		/var/spool/mail/dmtsai 這個信箱當中喔！很方便吧！<br /><br />
+
+		<li><span class=text_import1>讓系統管理員的一般帳號可接收 root 的信</span></li>
+		<div class=block2>
+		假設你是系統管理員，而你常用的一般帳號為 dmtsai ，但是系統出錯時的重要信件都是寄給 root 啊，
+		偏偏 root 的信件不能被直接讀取....所以說，如果能夠將『給 root 的信也轉寄一份給 dmtsai 』的話，
+		那就太好了！可以達到嗎？當然可以！你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/aliases</span>
+<span class=term_write>root:		root,dmtsai</span>
+<span class=term_say># 信件會傳給 root 與 dmtsai 這兩個帳號！</span>
+
+<span class=term_write>root:		dmtsai</span>
+<span class=term_say># 從此 root 收不到信了，都由 dmtsai 來接受！</span>
+
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+</pre></td></tr></table>
+
+		上面那兩行你可以擇一使用，看看 root 要不要保留他的信件都可以的！其實這樣一來，
+		你的 dmtsai 可以收到 root 的信，且 root 自己也可以『備份』一份在他的信箱內，比較安全啦！<br /><br />
+		</div>
+
+		<li><span class=text_import1>發送群組寄信功能</span></li>
+		<div class=block2>
+		想像一個情況，如果你是學校的老師，你雖然只帶一班，但是『每年都一班』時，如果有一天你要將信發給所有的學生，
+		那在寫 email 的標頭時，可能就會頭昏昏的了！這個時候你可以這樣做：
+		(假設主機上學生的帳號為 std001, std002... )<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/aliases</span>
+<span class=term_write>student95:	std001,std002,std003,std004...</span>
+
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+</pre></td></tr></table>
+
+		如此一來只要寄信到這部主機的 student95 這個不存在的帳號時，
+		該封信就會被分別存到各個帳號裡頭去，管理上面是否很方便啊！ ^_^<br /><br />
+		</div>
+
+		事實上，郵件別名除了填寫自己主機上面的實體用戶之外，其實你可以填寫外部主機的 email 喔！
+		例如你要將本機的 dermintsai 那個不存在的用戶的信件除了傳給 dmtsai 之外，還要外傳到
+		dmtsai@mail.kiki.vbird.tsai 時，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/aliases</span>
+<span class=term_write>dermintasi:	dmtsai,dmtsai@mail.kiki.vbird.tsai</span>
+
+[root@linux ~]# <span class=term_command>postalias hash:/etc/aliases</span>
+</pre></td></tr></table>
+
+		很方便吧！更多的功能就期待您自行發掘囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_forward"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">郵件轉遞 ~/.forward</span><br />
+	<div class=block2>
+		雖然 /etc/aliases 可以幫我們達到郵件別名設定的好處，不過 /etc/aliases 是只有 root 才能修改的檔案權限，
+		那我們一般使用者如果也想要進行郵件轉遞時，那該如何是好？沒關係，可以透過自己家目錄下的 .forward 這個檔案喔！
+		舉例來說，我的 dmtsai 這個帳號所接收到的信件除了自己要保留一份之外，還要傳給本機上的 vbird 以及
+		dmtsai@mail.kiki.vbird.tsai 時，那你可以這樣做設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@linux ~]$ <span class=term_command>vi .forward</span>
+<span class=term_say># 注意！我的身份現在是 dmtsai 這個一般身份，而且在他的家目錄下！</span>
+<span class=term_write>dmtsai
+vbird
+dmtsai@mail.kiki.vbird.tsai</span>
+
+[dmtsai@linux ~]$ <span class=term_command>chmod 644 .forward</span>
+</pre></td></tr></table>
+
+		記得這個檔案內容是一行一個帳號 (或 email) ，而且權限方面非常重要：<br />
+		<ul><span class=text_import2>
+		<li>該檔案所在使用者家目錄權限，其 group、other 不可以有寫入權限。
+		<li>.forward 檔案權限，其 group、other 不可以有寫入權限。
+		</span></ul>
+		如此一來這封信就會開始轉遞囉！有趣吧！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_mailq"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">察看信件佇列資訊</span><br />
+	<div class=block2>
+		說實話，設定到此為止咱們的 postfix 應該可以應付一般小型企業之 mail server 的用途了！
+		不過，有的時候畢竟因為網路的問題或者是對方主機的問題，可能導致某些信件無法送出而被暫存在佇列中，
+		那我們如何瞭解佇列當中有哪些郵件呢？還有，在佇列當中等待送出的信件是如何送出的呢？<br />
+
+		<ul>
+		<li>如果該封信在五分鐘之內無法寄出，則通常系統會發出一封『警告信』給原發信者，
+			告知該封郵件尚無法被寄送出去，不過，系統仍會持續的嘗試寄出該封郵件；
+		<li>如果在四小時候仍無法寄出，系統會再次的發出警告信給原發信者；
+		<li>如果持續進行五天都無法將信件送出，那麼該封郵件就會退回給原發信者了！
+		</ul>
+		當然啦，某些 MTA 已經取消了警告信的寄發，不過原則上，如果信件無法即時寄出去的話 MTA 還是會努力嘗試 5 
+		天的，如果接下來的 5 天都無法送出時，才會將原信件退回給發信者。
+		一般來說，如果 MTA 設定正確且網路沒有問題時，應該是不可能會有信件被放在佇列當中而傳不出去的，
+		所以如果發現有信件在佇列時，當然得要仔細的瞧一瞧囉！檢查佇列內容的方法可以使用 mailq ，
+		也可以使用 postqueue -p 來檢查的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postqueue -p</span>
+Mail queue is empty
+</pre></td></tr></table>
+
+		若您的郵件如此顯示時，恭喜您，沒有什麼問題郵件在佇列當中。不過如果你將 postfix 關閉，
+		並嘗試發一封信給任何人，那就可能會出現如下的畫面啦：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix stop</span>
+[root@linux ~]# <span class=term_command>echo "test" | mail -s "testing queue" root</span>
+[root@linux ~]# <span class=term_command>postqueue -p</span>
+postqueue: warning: Mail system is down -- accessing queue directly
+-Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
+9C2D1A26AC       71 Thu Nov 23 14:59:31  root
+                                         root
+
+-- 0 Kbytes in 1 Request.
+<span class=term_say># 第一行就說明了無法寄出的原因為 Mail system is down 啦！
+# 然後才出現無法寄出的信件資訊！包括來源與目標喔！</span>
+</pre></td></tr></table>
+
+		輸出的資訊主要為：<br />
+		<ul>
+		<li>Queue ID：表示此封郵件佇列的代表號 (ID)，這個號碼是給 MTA 看的，我們看不懂不要緊；
+		<li>Size ：這封信有多大容量 (bytes) 的意思；
+		<li>Arrival Time：這封信什麼時候進入佇列的，並且可能會說明無法立即傳送出去的原因；
+		<li>Sender/Recipient：送信與收信者的電子郵件囉！ 
+		</ul>
+
+		事實上這封信是放置在 /var/spool/postfix 裡面，由於信件內容已經編碼為給 MTA 看的資料排列，
+		所以你可以使用 postcat 來讀出原信件的內容喔！例如這樣做 (注意看檔名與 Queue ID 的對應！)：
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /var/spool/postfix/maildrop</span>
+[root@linux maildrop]# <span class=term_command>postcat 9C2D1A26AC</span>  <span class=term_say>&lt;==這個檔名就是 Queue ID</span>
+*** ENVELOPE RECORDS 9C2D1A26AC *** <span class=term_say>&lt;==說明佇列的編號啊</span>
+sender_fullname: root               <span class=term_say>&lt;==底下兩個為發信者大名與 email</span>
+sender: root
+recipient: root                     <span class=term_say>&lt;==收信者為誰的意思啊！</span>
+*** MESSAGE CONTENTS 9C2D1A26AC *** <span class=term_say>&lt;==底下則是信件的內容喔！</span>
+To: root
+Subject: testing queue
+
+test
+*** HEADER EXTRACTED 9C2D1A26AC ***
+*** MESSAGE FILE END 9C2D1A26AC ***
+</pre></td></tr></table>
+
+		如此一來你就知道目前我們的 MTA 主機有多少未送出的信件，還有未送出信件的內容你也可以追蹤的到了！
+		很不錯，對吧！不過，如果你想要我們的 postfix 立刻嘗試將這些在佇列當中的信件寄出去，那又該如何是好？
+		你有幾個作法啦，可以重新啟動 postfix ，也可以透過 postfix 的動作來處理，例如：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+[root@linux ~]# <span class=term_command>postfix flush</span>
+</pre></td></tr></table>
+
+		鳥哥個人比較建議使用 postfix flush 囉！自行參考看看先！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="postfix_more"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定 relay 的進階功能
+	smtpd_recipient_restrictions</span><br />
+	<div class=block2>
+		我們在前幾節介紹過一封郵件進入 MTA 時該信件是否會被接受的幾個大原則，
+		還有與 postfix 設定值相關的幾個重要參數。事實上一封郵件在 postfix 裡面能否被轉遞 (relay) 
+		與 /etc/postfix/main.cf 裡面的 smtpd_recipient_restrictions 這個設定值有關啦！
+		這個設定值預設不存在於 main.cf 當中，你可以使用『 man 5 postconf 』找到這個設定值的說明。<br /><br />
+
+		smtpd_recipient_restrictions 就字面上的意思來說是『SMTPD 這個 daemon 的接受者 (就是自己啊) 之限制』，
+		所以這個設定項目可以指定『當要 relay 時，MTA 應該要參考什麼設定值；以及當要接受本機信件時，
+		應該要參考哪些設定項目』的意思，
+		在預設的情況下這個設定值只有兩個項目，分別是『 permit_mynetworks, reject_unauth_destination 』，
+		是有『順序』之分的喔！<br /><br />
+
+		上述的預設參數值最終造成前面提到的<a href="#postfix_flow">信件傳送流程</a>啦！
+		不過有時你可能需要添加幾個新功能，舉例來說，你想要讓 Internet 上面的任何一個 IP 都可以透過你的 MTA 
+		來寄信時，那得要開啟所謂的 SMTP 認證機制，此時你就得要將該認證機制寫入這個設定參數當中才行！
+		另外，如果你想要拒絕黑名單的來源與目標主機，那也是得要在這個參數後面加入額外的資料啊！
+		總之，你需要對這個參數很瞭解就是了！更多相關的功能我們會在後續加以介紹的啦！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="pop"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">讓你的 MTA 接受 MUA 的讀信要求：POP/IMAP等協定</span><br />
+<div class=block1>
+	不管你的 MTA 使用的是 sendmail 還是 postfix ，你還是得要配合 POP3/IMAP 這個提供使用者端來收信的協定才行！
+	在早期的系統當中， POP3 使用的是 imap 這個套件提供的功能，不過近來提供此一協定的套件很多，
+	每種系統都可能不太相同。舉例來說，咱們的 CentOS (Red Hat 系統) 使用的是鴿舍 (dovecot) 軟體套件，
+	至於 SuSE 則提供 qpopper 這個套件說。<br /><br />
+
+	啟動單純的 POP3 是很簡單的啦，你得要先確定已經安裝了 dovecot 這個軟體。
+	而這個軟體的設定檔只有一個，就是 /etc/dovecot.conf 。我們僅要啟動 pop3 而已，
+	所以可以這樣設定即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/dovecot.conf</span>
+<span class=term_say># 找到底下這一行，大約是在第 14 行左右的地方</span>
+#protocols = imap imaps
+<span class=term_say># 將他改成底下這個樣子：</span>
+<span class=term_write>protocols = pop3</span>
+
+<span class=term_say># 找到底下這一行，大約是在第 22 行左右的地方</span>
+pop3_listen = [::]
+<span class=term_say># 如果只想要接受 IPv4 的位址，將他改成底下這個樣子：</span>
+<span class=term_write>pop3_listen = *</span>
+</pre></td></tr></table>
+
+	改完之後你就可以啟動 dovecot 囉！並且檢查看看 port 110 有沒有啟動啊？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/dovecot start</span>
+[root@linux ~]# <span class=term_command>netstat -tlnp | grep ':110'</span>
+tcp 0  0 0.0.0.0:110   0.0.0.0:*  LISTEN   25335/dovecot
+</pre></td></tr></table>
+
+	耶！搞定！這樣就可以提供使用者來收發信件啦！真是不錯啊！不過記得喔，我們只提供基本的明碼 pop3 傳輸而已，
+	如果想要啟動其他如 pop3s (傳輸加密機制) 協定時，就得要額外的設定囉！
+	接下來讓我們看看用戶端如何使用我們的郵件伺服器吧～ ^_^<br /><br />
+</div>
+
+
+<hr /><a NAME="mua"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">用戶端的收發信軟體 (MUA)</span><br />
+<div class=block1>
+	設定 Mail server 不是拿來好看的，當然是要好好的應用他囉！應用 mail server 有兩種主要的方式，
+	你可以直接登入 Linux 主機來操作 MTA ，當然也可以透過用戶端的 MUA 軟體來收發信件，
+	底下我們分別介紹這兩種方式囉！<br /><br />
+
+	<hr /><a NAME="mua_mail"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux mail</span><br />
+	<div class=block2>
+		在 Unix like 的作業系統當中都會存有一支可以進行收發信件的軟體，那就是『 mail 』這個指令。
+		這個指令是由 mailx 這個套件所提供的，所以您得要先安裝這個套件才行。
+		另外，由於 mail 是 Linux 系統的功能，所以即使你的 port 25 (smtp) 沒有啟動，
+		他還是可以使用的，只是該封郵件就只會被放到佇列，而無法寄出去囉！^_^！底下我們來談一談最簡單的 
+		mail 用法吧<br /><br />
+
+		<li><span class=text_import1>用 mail 直接編輯文字郵件與寄信</span><br />
+		<div class=block2>
+		mail 的用法很簡單，就是利用『 mail [email address] 』的方式來將信件寄出去，
+		那個 [email address] 可以是對外的郵件位址，也可以是本機的帳號。如果是本機帳號的話，可以直接加帳號名稱即可。
+		例如：『 mail root 』或『 mail somebody@his.host.name 』。如果是對外寄信的時候，
+		信件預設的『 Mail from 』就會填寫 main.cf 內那個 myorigin 變數的主機名稱囉！
+		先來試看看吧！寄給 dmtsai@linux.vbird.tsai 先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail dmtsai@linux.vbird.tsai</span>
+Subject: <span class=term_write>Just test        <span class=term_say>&lt;==這裡填寫信件標題</span>
+This is a test email.     <span class=term_say>&lt;==底下為信件的內容！</span>
+bye bye !
+.</span>                         <span class=term_say>&lt;==注意，這一行只有小數點！代表結束輸入之意！</span>
+Cc:                       <span class=term_say>&lt;==密件副本啦！</span>
+</pre></td></tr></table>
+
+		這樣就可以將信件寄出去了！另外，早期的 mail server 是可以接受 IP 寄信的，舉例來說：
+		mail dmtsai@[192.168.1.254] ，記得 IP 要用中括號包起來。不過由於受到垃圾郵件的影響，
+		現在這種方式幾乎都無法成功的將信件寄出了。<br /><br />
+		</div>
+
+		<li><span class=text_import1>利用已經處理完畢的『純文字檔』寄出信件</span><br />
+		<div class=block2>
+		這可不是『附件夾帶』的方式！因為在 mail 這個程式裡面編輯信件是個很痛苦的差事，
+		你不能夠按上下左右鍵來回到剛剛邊極有錯誤的地方，很傷腦筋。此時我們可以透過標準輸入來處理！
+		如果你忘記『 &lt; 』代表的意義，請回到<a href="../linux_basic" target="_blank">基礎學習篇</a>書中的
+		<a href="../linux_basic/0320bash.htm">Bash shell</a> 章節好好瞧瞧先。
+		舉例來說你要將家目錄的 .bashrc 寄給別人，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail -s 'My bashrc' dmtsai &lt; ~/.bashrc</span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>開始接收信件</span><br />
+		<div class=block2>
+		寄信還比較簡單，那麼收信呢？同樣的收信還是使用 mail。直接在提示字元之後輸入 mail 時，會主動的捉取使用者在 
+		/var/spool/mail 底下的郵件信箱 (mailbox)，例如我 dmtsai 這個帳號在輸入 mail 後，就會將 
+		/var/spool/mail/dmtsai 這個檔案的內容讀出來並顯示到螢幕上，結果如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail</span>
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/dmtsai": 1 message 1 unread
+>U  1 root@linux.vbird.tsai  Fri Nov 24 11:34  32/764   "My bashrc"
+&  <span class=term_say>&lt;==這個是 mail 軟體的提示字元，可以輸入 ? 來察看可用指令</span>
+</pre></td></tr></table>
+
+		在上面的話面中，顯示 dmtsai 有一封信，且會附上該信件的發信者與標題及收信時間等。
+		你可以用的指令有這些：<br />
+		<ul>
+		<li><span class=text_import2>讀信</span>： (直接按 Enter 或輸入數字後 enter)<br />
+			有看到『>』那個符號吧！那表示目前 mail 
+			所在的郵件欄位，你可以直接輸入 Enter 即可看到該封信件的內容！
+			另外，你也可以在『&』之後的游標位置輸入號碼，就可以看該封信件的內容了！
+			(註：如果持續按 Enter ，則會自『 > 』符號所在的郵件逐次向後讀取每封信件內容！)</li><br />
+
+		<li><span class=text_import2>顯示標題</span>： (直接數入 h 或輸入 h 數字)<br />
+			如果要重新顯示每封信的標題，可以輸入 h 即可；</li><br />
+
+		<li><span class=text_import2>回覆郵件</span>： (直接輸入 R )<br />
+			如果要回覆目前『 > 』符號所在的郵件，
+			直接按下『R』即可進入剛剛前面介紹過的 mail 文字編輯畫面囉！你可以編輯信件後傳回去囉！</li><br />
+
+		<li><span class=text_import2>刪除郵件</span>： (輸入 d 數字)<br />
+			按下『 d## 』即可刪除郵件！例如我要刪除掉第 
+			2 封郵件，可以輸入『d2』如果是要刪除第10-50封郵件，可以輸入『d10-50』來刪除喔！
+			請記得，如果有刪除郵件的話，離開 mail box 時，要使用『q』才行！</li><br />
+
+		<li><span class=text_import2>儲存郵件到檔案</span>： (輸入 s 數字 檔名)<br />
+			如果要將郵件資料存下來，可以輸入『 
+			s ## filename』，例如我要將上面第一封郵件存下來，可以輸入『 s 1 uuencode 
+			』即可將第一封郵件內容存成 uuencode 這個檔案！</li><br />
+
+		<li><span class=text_import2>離開 mail</span>： (輸入 q 或 x )<br />
+			要離開 mail 可以輸入 q 或者是 
+			x ，請注意『<span class=text_import2>輸入 x 可以在不更動 mail box 的情況下離開 mail 
+			程式，不管你剛剛有沒有使用 d 
+			刪除資料；使用 q 才會將刪除的資料移除，並且會將所有已讀過的信件內容轉存到你家目錄下的 
+			mbox 檔案！</span>』也就是說，如果你不想更動 mail box 那就使用 x 或 exit 
+			離開，如果想要使剛剛移除的動作生效，就要使用 q 啦！不過，使用 q 
+			之後，只有未讀的信件才會保留在 /var/spool/mail/accout 裡面，其他已讀的資料都會被存入 
+			~/mbox 當中！例如 /home/dmtsai/mbox 為儲存 dmtsai 已讀過的信件！</li><br />
+
+		<li><span class=text_import2>請求協助</span>：<br />關於 mail 更詳細的用法可以輸入 
+			help 就可以顯現目前的 mail 所有功能！
+		</ul>
+
+		上面是簡易的 mail 收信功能！不過，如果離開 mail 時按下 q ，不是會有信件轉存到 ~/mbox 
+		這個郵件信箱嗎？那麼我要如何讀取這個檔案內的信件資料呢？可以簡單的使用這個方式來讀取：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail -f ~/mbox</span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>以『附件夾帶』的方式寄信</span><br />
+		<div class=block2>
+		前面提到的都是信件的內容，那麼有沒有可能以『附件』的方式來傳遞檔案？
+		是可以的，不過<span class=text_import2>你需要 uuencode 這個指令的幫忙，在 CentOS 當中這個指令屬於 
+		sharutils</span> ，請先利用 yum 來安裝他吧！接下來你可以這樣使用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>[利用 uuencode 編碼 ] | [利用 mail 寄出去]</span>
+[root@linux ~]# <span class=term_command>uuencode [實際檔案] [信件中的檔名] | mail -s '標題' email</span>
+
+<span class=term_hd>範例一：將 ~/.bashrc 以附件夾帶的方式寄給 dmtsai</span>
+[root@linux ~]# <span class=term_command>uuencode ~/.bashrc bashrc | mail -s 'test encode' dmtsai</span>
+</pre></td></tr></table>
+
+		這樣就能寄出去了，不過，如果收下這封信件呢？同樣的我們得要透過解碼器來解碼啊！
+		你得先將該檔案存下來，然後這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail</span>
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/dmtsai": 2 messages 2 unread
+>U  1 root@linux.vbird.tsai  Fri Nov 24 11:34  32/764   "My bashrc"
+ U  2 root@linux.vbird.tsai  Fri Nov 24 11:52  24/904   "test encode"
+& <span class=term_command>s 2 test_encode</span>
+"test_encode" [New file]
+& <span class=term_command>exit</span>
+
+[root@linux ~]# <span class=term_command>uudecode test_encode -o decode</span>
+                             <span class=term_say>加密檔         輸出檔</span>
+</pre></td></tr></table>
+		</div>
+
+		雖然 mail 這個指令不是挺好用的，不過至少他可以提供我們在 Linux 純文字模式下的一個簡單的收發信件功能！
+		我們最好還是熟悉一下吧！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="mua_telnet"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux telnet</span><br />
+	<div class=block2>
+		剛剛的 mail 也算是一支簡單的軟體在進行收發信件，那如果你想要直接透過 smtp 以及 pop3 來收發信件呢？
+		其實你可以透過 telnet 的功能來直接連線到該服務上頭！
+		不過，因為完全得要敲擊指令來處理，所以底下的練習真的僅做為參考用啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>先來練習寄信看看：</span>
+[root@linux ~]# <a name=20070405></a><span class=term_command>telnet localhost 25</span>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 linux.vbird.tsai ESMTP Postfix
+<span class=term_command>ehlo localhost</span>   <span class=term_say>&lt;==進行握手！很重要！</span>
+250-linux.vbird.tsai  <span class=term_say>&lt;==底下為本 SMTP 服務所提供的功能</span>
+250-PIPELINING
+250-SIZE 10240000     <span class=term_say>&lt;==單封信件的最大容量！</span>
+250-VRFY
+250-ETRN
+250 8BITMIME
+<span class=term_command>mail from: "VBird"&lt;dmtsai@linux.vbird.tsai></span> <span class=term_say>&lt;==設定來源位址</span>
+250 Ok
+<span class=term_command>rcpt to: &lt;root@linux.vbird.tsai>           </span> <span class=term_say>&lt;==設定收信位址</span>
+250 Ok
+<span class=term_command>data                                       </span> <span class=term_say>&lt;==確定內容撰寫開始</span>
+354 End data with &lt;CR>&lt;LF>.&lt;CR>&lt;LF>
+<span class=term_write>This is a test mail    <span class=term_say>&lt;==開始寫內容啦！</span>
+Just test ! bye bye!
+.</span>                      <span class=term_say>&lt;==離開不要忘記的一個小數點！</span>
+250 Ok: queued as CC8CFA26AC
+<span class=term_command>quit</span>
+</pre></td></tr></table>
+
+		這樣就能夠將信放置到佇列當中，並且等待寄出啦！比較麻煩的是你必需要手動輸入 header 與 body 的所有項目，
+		包括『mail from:』『rcpt to:』等等，且在這兩個設定值後方的 email 必需要以括號圈起來，例如：<br />
+		<ul>MAIL FROM: usersname&lt;userid@hostname.domainname><br />
+		MAIL FROM: "users  name"&lt;userid@hostname.domainname></ul>
+		另外許多 MTA 目前都會限制再使用 MAIL FROM 時要先使用 HELO或者是 EHLO 先打招呼過，要不然會不允許進行後續溝通。 
+		好了，那麼直接收信呢？可以這樣做！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>telnet localhost 110</span>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
++OK dovecot ready.
+<span class=term_command>user dmtsai       </span>  <span class=term_say>&lt;==輸入你的帳號啊！</span>
++OK
+<span class=term_command>pass your_password</span>  <span class=term_say>&lt;==輸入你的密碼啊！</span>
++OK Logged in.
+<span class=term_command>list              </span>  <span class=term_say>&lt;==列出你有的信件啊！</span>
++OK 3 messages:       <span class=term_say>&lt;==底下為信件的資料，共有三封</span>
+1 912
+2 1016
+3 675
+.
+<span class=term_command>retr 2            </span>  <span class=term_say>&lt;==開始接收第二封信件內容之意</span>
++OK 1016 octets
+<span class=term_say>....信件內容輸出省略....</span>
+<span class=term_command>quit              </span>  <span class=term_say>&lt;==離開 telnet 囉</span>
++OK Logging out.
+</pre></td></tr></table>
+
+		這樣就能夠透過 telnet 連線到本機上頭進行收、發信件的功能了！不過，真是不好用啊！
+		所以我們底下來介紹一個可以跨平台的視窗介面軟體，學這一套就好了，
+		因為他是跨平台，所以您可以在任何作業系統上面使用這套好用的咚咚吶！<br /><br />
+	</div>
+
+	<hr /><a NAME="mua_thun"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Thunderbird 好用的跨平台 
+	(Windows/Linux X) 軟體</span><br />
+	<div class=block2>
+		自由軟體最大的好處之一就是該軟體大多可以進行移植，也就是在任何作業系統上面幾乎都能夠執行該軟體的意思。
+		因此學習自由軟體的好處就是，你不必因為轉換作業系統而學習不同的操作環境！
+		郵件使用者介面軟體 (MUA) 也有自由軟體了！那就是 Mozilla 基金會推出的 ThunderBird (雷鳥) 這個好用的咚咚，
+		你可以在底下的網址上面找到繁體中文的套件：<br />
+
+		<ul><li><a href="http://moztw.org/thunderbird/" target="_blank">http://moztw.org/thunderbird/</a></ul>
+
+		有鑑於目前用戶端還是以 Windows 作業系統為大宗，所以底下的說明主要是在 Windows XP (sp2) 
+		上頭的安裝與設定為主。雖然目前 (2006/12) 最新的 Thunderbird 已經出到 1.5.x 了，
+		不過繁體中文版更新的速度似乎無法跟的上，所以鳥哥底下以可以捉到的最新繁體中文版，
+		亦即 1.0.6 這個版本來作為介紹囉。<br /><br />
+
+		在你下載原始的安裝檔案後，直接雙擊下載的檔案就會進入安裝的畫面了。
+		安裝真是太簡單了！就是一直給他『下一步』而已，最後有個『馬上執行 Thunderbird 』，
+		你可以選擇他，然後就會出現是否要匯入『Outlook Express』或者是『Outlook』等其他郵件代理人程式已經建立的帳號資料，
+		如果您從未建立過帳號資料，那麼這個地方可以略過，如果你要將系統上面已經存在的 OE 資料給他轉移到雷鳥上，
+		就選擇匯入吧！不過鳥哥這裡假設從來沒有使用過 OE，所以選擇不匯入任何資料。<br /><br />
+
+		<a name="fig_05"></a><center><img src="0380mail/thunderbird_01.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖五、Thunderbird 的使用</center><br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上 Outlook Express 這個 Windows 預設的郵件收發軟體在比較大量的郵件收發過程當中，
+		偶而會出現一些錯誤的問題，尤其是檔案大於 2GB 以上以及常常刪除一些無用的信件，
+		卻忘記進行 OE 所謂的『壓縮』時，會造成挺嚴重的錯誤，最嚴重的情況下您所有的信件都可能會遺失。
+		使用上必需要特別小心一些操作行為。您可以玩一玩雷鳥，比較一下兩者的差異喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		由於 Thunderbird 可以提供多種資訊的下載，所以我們必須要自行指定所需要的帳號資料才行。
+		如下圖所示，我們指定的是 Email 的帳號喔！點選他，然後給他下一步吧！<br /><br />
+
+		<a name="fig_06"></a><center><img src="0380mail/thunderbird_02.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖六、Thunderbird 的使用</center><br />
+
+		首先要你填寫的並不是實際的帳號資料，而是你想要『收信者看到的屬於你的資訊』而已。
+		在『大名』的部分可填寫你的暱稱或實際大名；在 Email 位址則請填寫希望對方『回信時的 email 』。
+		其實這裡就是郵件 Header 部分的『 Mail from: "大名"&lt;email&gt; 』啦！
+		你得要注意的是，如果 email 填寫錯誤，收件者直接『回信』時，將無法寄達正確的地方喔！<br /><br />
+
+		<a name="fig_07"></a><center><img src="0380mail/thunderbird_03.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖七、Thunderbird 的使用</center><br />
+
+		再來才是重要的收、發信件的郵件主機所在處，你可以在收件伺服器及伺服器名稱部分填寫主機名稱，
+		當然也可以直接填寫 IP 的啦！一般在 LAN 內的 private IP 鳥哥都使用 IP 來填寫而已說！ ^_^<br /><br />
+
+		<a name="fig_08"></a><center><img src="0380mail/thunderbird_04.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖八、Thunderbird 的使用</center><br />
+
+		你要用什麼帳號來收信啊？這裡真的不能寫錯了喔！<br /><br />
+
+		<a name="fig_09"></a><center><img src="0380mail/thunderbird_05.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖九、Thunderbird 的使用</center><br />
+
+		底下的帳號名稱其實只是一個提醒的名字而已，所以你可以直接使用 email 來作為這個帳號的提示名稱即可。<br /><br />
+
+		<a name="fig_10"></a><center><img src="0380mail/thunderbird_06.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖十、Thunderbird 的使用</center><br />
+
+		如果如下所示，一切都沒有問題時，就按下那個『立即下載郵件』並且按下『完成』吧！<br /><br />
+
+		<a name="fig_11"></a><center><img src="0380mail/thunderbird_07.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖十一、Thunderbird 的使用</center><br />
+
+		最終結果終於出現啦！就是底下的樣子！左邊是一些信匣，右邊上方則是各個信件的標頭，
+		右邊下方則是實際的信件內容啊！<br /><br />
+
+		<a name="fig_12"></a><center><img src="0380mail/thunderbird_08.png"
+		title="Thunderbird 的使用"
+		alt="Thunderbird 的使用"><br />
+		圖十二、Thunderbird 的使用</center><br />
+
+		更多的 Thunderbird 使用就請自行參考線上的說明文件來玩玩吧！
+		不會很難啦！與常用 Outlook express 的朋友來說，你會覺得他根本與 OE 就是一模一樣嘛！
+		操作操作也就熟悉囉！ ^_^<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="adv"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">郵件主機的進階設定：</span><br />
+<div class=block1>
+	Sendmail 常常被傳成『安全性很差的郵件伺服器！』當然， Sendmail 官方網站也很不滿的回應說『
+	<span class=text_import2>其實， Sendmail 的問題來自於一些"該死的"檔案權限設定錯誤的狀況！</span>
+	』也就是說，其實 sendmail 常常會因為『系統管理員』設定檔案或者目錄不良的情況下，導致 Mail Server 
+	發生問題囉！其實不止 sendmail ，絕大部分的網路伺服器都有這個問題啊！
+	所以，底下我們就來說一說與 Mail server 有關的安全性與其他相關的安全方面設定吧！<br /><br />
+
+	<hr /><a NAME="adv_perm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">一些設定檔所需要注意的『權限』問題</span><br />
+	<div class=block2>
+		這部份我們以 Sendmail 官方網站的建議來說明喔！其實也適用於 postfix 的啦！
+		其中，大部分是在於『目錄與檔案權限』的設定要求上面：<br />
+		<ul><span class=text_import2>
+		<li>請確定 /etc/aliases 這個檔案的權限，僅能由系統信任的帳號來修改，通常其權限為 644 ；
+		<li>請確定 Mail server 讀取的資料庫 (多半在 /etc/mail/ 或 /etc/postfix/ 底下的 *.db 檔案)，例如 
+		mailertable, access, virtusertable 等等，僅能由系統信任的使用者讀取，其他一概不能讀取，通常權限為 640 ；
+		<li>系統的佇列目錄 (/var/spool/mqueue 或 /var/spool/postfix) 僅允許系統讀取，通常權限為 700 ；
+		<li>請確定 ~/.forward 這個檔案的權限也不能設定成為任何人均可查閱的權限，否則您的 e-mail 資料可能會被竊取～
+		<li>總之，一般用戶能夠不用 ~/.forward 與 aliases 的功能，就不要使用！
+		</span></ul>
+		不過整體的使用上還是需要身為網站管理員的您多費心啊！<br /><br />
+	</div>
+
+	<hr /><a NAME="adv_postgrey"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">簡單的廣告信抵擋機制： 
+	postgrey 的動作</span><br />
+	<div class=block2>
+		早期的廣告信很多都是藉由僵屍電腦 (已經被當作跳板但管理員卻沒有發現或沒有處理的主機) 來發送的，
+		這些僵屍電腦所發送的信件有個很明顯的特色，就是『<span class=text_import2>他只會嘗試傳送該封電子郵件一次，
+		不論有無成功，該封信就算發出去了，故該信件將被移出佇列中。</span>』
+		不過，合法的 mail server 運作流程就如之前分析的一般，在郵件無法順利寄出時該郵件會暫時放置到佇列中一段時間，
+		並一直嘗試將信件寄出的動作，預設直到五天後若還是無法寄出才會將信件退回。<br /><br />
+
+		根據這個合法與非法的郵件伺服器運作流程而發展出一套所謂的曙光 (postgrey) 軟體，
+		您可以參考底下的幾個說明來處理這個軟體：<br />
+		<ul>
+		<li><a href="http://isg.ee.ethz.ch/tools/postgrey/" target="_blank">http://isg.ee.ethz.ch/tools/postgrey/</a>
+		<li><a href="http://www.postfix.org/SMTPD_POLICY_README.html"
+		target="_blank">http://www.postfix.org/SMTPD_POLICY_README.html</a>
+		</ul>
+		基本上 postgrey 主要的功能是在記錄發信來源而已，若發信來源同一封信第一次寄來時，
+		postgrey 預設會抵擋他，並且將來源位址記錄起來，在約 5 分鐘後，若該信件又傳來一次時，
+		則該信件會被收下來。如此則可以杜絕非發郵件伺服器單次發送的問題喔！ ^_^！
+		但對於你確定合法的主機則可以開放所謂的『白名單 (whitelist) 』來優先通過而不抵擋。
+		所以說，他主要是這樣進行的：(參考<a href="http://projects.puremagic.com/greylisting/whitepaper.html"
+		target="_blank">http://projects.puremagic.com/greylisting/whitepaper.html</a>)<br />
+		<ol>
+		<li>確認發信來源是否在白名單中，若是則予以通過；
+		<li>確認收信者是否在白名單中，若是則予以通過；
+		<li>確定這封信是否已經被記錄起來呢？放行的依據是：<br />
+			<ul>
+			<li>若無此信件的記錄，則將發信位址記錄起來，並將信件退回；
+			<li>若有此信件的記錄，但是記錄的時間尚未超過指定的時間 (預設 5 分鐘) ，則依舊退回信件；
+			<li>若有信件的記錄，且記錄時間已超過指定的時間，則予以通過；
+			</ul>
+		</ol>
+		整個過程簡單的來說就是這樣而已。不過為了要快速的達成 postgrey 的『記錄』能力，所以資料庫系統又是不可避免的東西。
+		且 postgrey 是由 perl 寫成的，你可能也需要加入很多相依的 perl 模組才行。
+		總的來說，你需要的軟體至少要有：<br />
+		<ul>
+		<li>BerkeleyDB： 包括 db4, db4-utils, db4-devel 等套件：
+		<li>Perl： 使用 yum install perl 即可；
+		<li>Perl 模組： perl-Net-DNS 是 CentOS 本身有提供的，其他沒有提供的可以到
+		<a href="http://rpmfind.net/" target="_blank">http://rpmfind.net/</a>去搜尋下載。
+		</ul>
+		除了可以使用 yum 來安裝的套件之外，其他的套件鳥哥底下作了連結，你可以直接下載看看：<br />
+		<ul>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-BerkeleyDB-0.31-1.el4.rf.i386.rpm" 
+		target="_blank"> ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-BerkeleyDB-0.31-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-Multiplex-1.08-3.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-Multiplex-1.08-3.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Net-Server-0.94-1.el4.rf.noarch.rpm" 
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Net-Server-0.94-1.el4.rf.noarch.rpm</a>
+		<li><a href="http://www.lfarkas.org/linux/packages/centos-4/i386/RPMS/postgrey-1.27-0.noarch.rpm" 
+		target="_blank">http://www.lfarkas.org/linux/packages/centos-4/i386/RPMS/postgrey-1.27-0.noarch.rpm</a>
+		</ul>
+		將下載的這四個 RPM 給他使用 rpm -ivh *.rpm 就能夠一口氣的安裝上去了。然後你就可以嘗試啟動 postgrey 
+		看看囉：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/postgrey start</span>
+[root@linux ~]# <span class=term_command>netstat -anlp | grep grey</span>
+unix  2 <span class=term_say>...中間省略...</span>    /var/spool/postfix/postgrey/socket
+</pre></td></tr></table>
+
+		由於 postfix 必需要連結到 postgrey 來進行一些名單的確認，然而兩者連結的方式除了網路 IP 之外，
+		傳統的 Unix socket 也是可以連結上的！由於傳統 socket 不需要額外啟動網路連線的埠口，
+		鳥哥認為這樣也比較符合本機獨自的操作，所以我們使用這一版 postgrey 的預設 unix socket 來連接囉。
+		接下來我們必需要修改 postfix 的 main.cf 了！請你這樣做吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_say># 如果你曾經設定過底下這個設定值，請找到他來修改！否則請自行增加底下的字樣：</span>
+<span class=term_write>smtpd_recipient_restrictions = 
+     permit_mynetworks
+     reject_unauth_destination
+     check_policy_service unix:/var/spool/postfix/postgrey/socket</span>
+<span class=term_say># 重點是最後面那一行！就是指定使用 unix socket 來連接到 postgrey 之意。
+# 後續我們還有一些廣告信的抵擋機制，特別建議您將這個 postgrey 的設定值寫在最後，
+# 因為他可以算是我們最後一個檢驗的機制喔！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+[root@linux ~]# <span class=term_command>chkconfig postgrey on</span>
+</pre></td></tr></table>
+
+		然後你可以自己從外部主機寄一封信給自己這部郵件伺服器看看，記得去登錄檔內查一查 (/var/log/maillog)，
+		應該會出現類似的字眼：<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+Nov 27 15:17:09 linux postfix/smtpd[16132]: NOQUEUE: reject: RCPT from sun.linux.tsai[192.168.1.101]: 450 &lt;dmtsai@linux.vbird.tsai&gt;: Recipient address rejected: Greylisted, see http://isg.ee.ethz.ch/tools/postgrey/help/linux.vbird.tsai.html; from=&lt;dmtsai@sun.vbird.tsai&gt; to=&lt;dmtsai@linux.vbird.tsai&gt; proto=ESMTP helo=&lt;sun.vbird.tsai&gt;
+</td></tr></table><br />
+
+		這表示 postgrey 已經開始順利運作了！並且來源主機的相關記錄也已經記載在 /var/spool/postfix/postgrey/
+		目錄下囉！如此一來您的 postfix 將可以透過 postgrey 來擋掉一些莫名其妙的廣告信囉！<br /><br />
+
+		不過 postgrey 也是有缺點的，怎麼說呢？因為 postgrey 預設會先將信件退回去，
+		所以你的信件就可能會發生延遲的問題，延遲的時間可能是數分鐘到數小時，
+		端看你的 MTA 設定而定。如果你想要讓『某些信任的郵件主機不需要經過 postgrey 的抵擋機制』時，
+		就得要開放白名單囉！<br /><br />
+
+		白名單的開啟也很簡單啊，直接編寫 /etc/postfix/postgrey_whitelist_clients 這個檔案即可。
+		假設你要讓鳥哥的郵件主機可以自由的將信寄到你的 MTA 的話，那麼你可以在這個檔案內加入這一行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/postgrey_whitelist_clients</span>
+<span class=term_write>mail.vbird.idv.tw
+sun.linux.tsai</span>
+<span class=term_say># 將主機名稱寫進去吧！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postgrey restart</span>
+</pre></td></tr></table>
+
+		如果你還有更多信任的主機的話，將他寫入這個檔案當中！那他就可以略過 postgrey 的分析囉！
+		更進階的用法就得要靠您自己去發掘囉！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="adv_ordb"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關於黑名單的抵擋機制</span><br />
+	<div class=block2>
+		還記得前面講到的 <a href="#whatmail_relay">Open Relay</a> 的問題吧？你的主機可千萬不能成為 Open Relay
+		的狀況，否則對你的網路與『信用』影響很大喔！一般來說，只要是 Open Relay 的郵件主機都會被列入黑名單當中，
+		例如台灣地區的學術網路黑名單以及網際網路社會上提供的黑名單資料庫：<br />
+		<ul>
+		<li><a href="http://140.111.1.22/tanet/spam.html" target="_blank">http://140.111.1.22/tanet/spam.html</a>
+		<li><a href="http://cbl.abuseat.org/" target="_blank">http://cbl.abuseat.org/</a>
+		</ul>
+		既然黑名單資料庫裡面的 mail server 本身就是有問題的郵件主機，那麼當黑名單裡面的主機想要跟我的
+		mail server 連線時，我當然可以『合理的懷疑該信件是有問題的！』您說是吧！
+		所以來自黑名單或者是要送至黑名單的信件最好是不要接受啦！<br /><br />
+
+		您當然可以自行前往該網站將有問題的主機列表給他加入自己的郵件主機抵擋機制當中，
+		不過就是不太人性化！既然網際網路社會已經提供了黑名單資料庫了，我們就可以利用這個資料庫來抵擋嘛！
+		在決定是否進行 Relay 之前，先要求我們的 postfix 前往追蹤黑名單的資料庫，
+		若目標的 IP 或主機名稱是黑名單的一員，則我們就將該信件拒絕囉！<br /><br />
+
+		Postfix 設定黑名單檢驗真的很簡單，你只要這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+smtpd_recipient_restrictions =
+     permit_mynetworks
+     reject_unauth_destination
+<span class=term_write>     reject_rbl_client cbl.abuseat.org
+     reject_rbl_client bl.spamcop.net
+     reject_rbl_client cblless.anti-spam.org.cn
+     reject_rbl_client sbl-xbl.spamhaus.org</span>
+     check_policy_service unix:/var/spool/postfix/postgrey/socket
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table>
+
+		上表當中的特殊字體部分『reject_rbl_client』是 postfix 內的一個設定項目，
+		後面可以接網際網路上提供的黑名單！您得要注意的是，這個黑名單資料庫可能會持續的變動，
+		請您先以 dig 的方式檢查每個資料庫是否真的存在，如果存在才加以設定在您的主機上頭啊！
+		(因為網際網路上頭很多文獻所提供的黑名單資料庫似乎已經不再持續服務的樣子！)<br /><br />
+
+		<li><span class=text_import1>檢查你的郵件伺服器是否在黑名單當中？</span></li>
+		<div class=block2>
+		既然黑名單資料庫所記錄的是不受歡迎的來源與目標 MTA ，那麼您的 MTA 當然最好不要在該資料庫中嘛！
+		同時這些資料庫通常也都有提供檢測的功能，所以你也可以用該功能來檢查你的主機是否『記錄有案』呢？
+		你可以這樣處理的：<br />
+		<ol>
+		<li><span class=text_import2>是否已在黑名單資料庫中：</span><br />
+		確認的方法很簡單，直接到『<a href="http://cbl.abuseat.org/lookup.cgi"
+		target="_blank">http://cbl.abuseat.org/lookup.cgi</a> 』輸入您的主機名稱或者是 IP 
+		，就可以檢查是否已經在黑名單當中；</li><br />
+
+		<li><span class=text_import2>是否具有 Open Relay：</span><br />
+		如果要測試你的主機有沒有 Open Relay ，直接到『<a href="http://140.111.1.22/tanet/spam.html"
+		target="_blank">http://140.111.1.22/tanet/spam.html</a> 』這個網頁，
+		在這個網頁的最下方可以輸入你的 IP 來檢查，注意喔，不要使用別人的 email IP 吶！
+		此時該主機會發出一封 mail 的測試信看看你的 mail server 會不會主動的代轉，
+		然後將結果回報給您。要注意的是，回傳的網頁可能有編碼的問題，如果出現亂碼時，請調整為 big5 編碼即可。</li><br />
+
+		<li><span class=text_import2>如何移除：</span><br />
+		如果被檢查出，您的主機已經在黑名單當中，那麼請立刻將 Open Relay 的功能關閉，改善你的 
+		Mail Server 之後，你可能還要到各個主要的 Open Relay 網站進行移除的工作。如果是學術網路的話，
+		請與您單位的管理員聯絡。至於一般常見的黑名單資料庫則通常會主動的幫您移除，只不過需要一些時間的測試就是了。
+		</ol>
+		</div>
+
+		總之您必須要確定你不在黑名單當中，且最好將黑名單的來源給拒絕掉！搞定！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="adv_auth"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開放 SMTP 身份認證之 
+	relay 機制</span><br />
+	<div class=block2>
+		在<a href="#fig_02">圖一</a>的流程當中，由 MUA 透過 MTA 來寄發信件時 (具有 Relay 的動作時) 
+		，理論上 MTA 必需要開放用戶端來源才行，這就是為啥我們必需要在 main.cf 裡頭設定
+		smtpd_recipient_restrictions 那個設定項目的原因了！不過人總有不方便的時候，舉例來說，
+		如果你使用的是撥接制的 ADSL 所以每次取得的 IP 都非固定，那如何使用你的 MTA ？
+		很麻煩，對吧！這個時候 SMTP 認證或許有點幫助。<br /><br />
+
+		關於 <a href="#whatmail_relay">SMTP 認證</a>的使用前面已經稍微提過了，重點在於 MUA 想要使用 MTA 來進行 
+		relay  的時候，MTA 會要求 MUA 來輸入認證用的帳號與密碼，以取得使用的權限就是了。
+		咱們的 CentOS 已經有提供內建的認證模組，那就是 Cyrus SASL 這個套件的幫忙啦！<br /><br />
+
+		Cyrus SASL (<a href="http://cyrusimap.web.cmu.edu/" target="_blank">http://cyrusimap.web.cmu.edu/</a>) 
+		是 Cyrus Simple Authentication and Security Layer 的縮寫，他是一個輔助的套件。
+		在 SMTP 認證方面， Cyrus 主要提供了 saslauthd 這個服務來進行帳號密碼的比對動作！
+		也就是說：<span class=text_import2>當有任何人想要進行郵件轉遞功能時，
+		Postfix 會聯絡 saslauthd 請其代為檢查帳號密碼，若比對通過則允許用戶端開始轉寄信件。</span><br /><br />
+
+		好了，如果你想要使用最簡單的方式來進行 SMTP 認證功能的話，在 CentOS 當中你應該要這樣做：<br />
+		<ol>
+		<li>安裝 cyrus-sasl, cyrus-sasl-devel, cyrus-sasl-plain, cyrus-sasl-md5 等套件；
+		<li>啟動 saslauthd 這個服務；
+		<li>設定 main.cf 讓 postfix 可以與 saslauthd 聯繫；
+		<li>用戶端必需要在寄信時設定『郵件主機認證』功能。
+		</ol>
+		如此一來用戶端才能夠啟動 SMTP AUTH 喔！關於軟體安裝方面，請使用 yum 直接安裝吧！
+		不再多囉唆！底下我們由啟動 saslauthd  這個服務開始吧！<br /><br />
+
+		<hr /><li><span class=text_import1>啟動 saslauthd 服務</span></li>
+		<div class=block2>
+		saslauthd 是 Cyrus-SASL 提供的一個帳號密碼比對管理機制，雖然他只能利用簡單的 PLAIN 機制進行密碼驗證，
+		不過在設定上較為簡單。 saslauthd 可以連結很多帳號密碼管理機制，包括 LDAP, PAM, SASLDB2 
+		以及 SQL 資料庫系統等等。如果我們想要直接使用 Linux 系統上面的使用者資訊，
+		也就是 /etc/passwd, /etc/shadow 所記載的帳號密碼相關資訊時，可以使用『 shadow 』這個機制，
+		當然也能使用『 pam 』啦！更多的 saslauthd 連線至主機的機制請『 man saslauthd 』來查閱吧。<br /><br />
+
+		saslauthd 的啟動真是好簡單，首先你必需要選擇密碼管理機制，這個可以使用底下的方式處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先瞭解你的 saslauthd 有支援哪些密碼管理機制：</span>
+[root@linux ~]# <span class=term_command>saslauthd -v</span>
+saslauthd 2.1.19
+authentication mechanisms: <span class=term_write>getpwent kerberos5 pam rimap shadow ldap</span>
+<span class=term_say># 上列的特殊字體部分就是有支援的！我們要用 Linux 本機的使用者資訊，
+# 所以用 shadow  即可。</span>
+
+<span class=term_hd>2. 設定實際使用的機制</span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/saslauthd</span>
+MECH=shadow
+<span class=term_say># 這也是預設值，有的朋友喜歡 pam 機制，也可以啦！</span>
+
+<span class=term_hd>3. 那就啟動吧！</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/saslauthd start</span>
+[root@linux ~]# <span class=term_command>chkconfig saslauthd on</span>
+</pre></td></tr></table>
+
+		之後我們必需要告知 Cyrus 這個咚咚使用的服務為 saslauthd 才行，設定的方法很簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /usr/lib/sasl2/smtpd.conf</span>
+<span class=term_write>log_level: 3                <span class=term_say>&lt;==登錄檔資訊等級的設定，設定 3 即可</span>
+pwcheck_method: saslauthd   <span class=term_say>&lt;==就是選擇什麼服務來負責密碼的比對啊</span>
+mech_list: PLAIN LOGIN</span>      <span class=term_say>&lt;==那麼支援的機制有哪些之意！</span>
+</pre></td></tr></table>
+
+		因為 saslauthd 預設就僅支援明碼傳輸而已，我們可以使用 mech_list 列出特定支援的機制。
+		而且 saslauthd 是個很簡單的帳號密碼管理服務，你幾乎不需要進行什麼額外的設定，
+		直接啟動他就生效了！真是好方便！ ^_^<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>main.cf 的設定項目：</span></li>
+		<div class=block2>
+		那我們的 postfix 該如何處理呢？其實設定真的很簡單，只要這樣做就好了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_say># 在本檔案最後面增加這些設定資料：</span>
+<span class=term_write>smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+broken_sasl_auth_clients = yes</span>
+<span class=term_say># 然後找到跟 relay 有關的設定項目，增加一段允許 SMTP 認證的字樣：</span>
+smtpd_recipient_restrictions =
+     permit_mynetworks
+     <span class=term_write>permit_sasl_authenticated</span>
+     reject_unauth_destination
+     reject_rbl_client cbl.abuseat.org
+     reject_rbl_client bl.spamcop.net
+     reject_rbl_client cblless.anti-spam.org.cn
+     reject_rbl_client sbl-xbl.spamhaus.org
+     check_policy_service unix:/var/spool/postfix/postgrey/socket
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table>
+
+		各個項目的意義是這樣的：<br />
+		<ul>
+		<li><span class=text_import1>smtpd_sasl_auth_enable</span><br />
+		就是設定是否要啟動 sasl 認證的意思，如果設定啟動後 postfix 會主動去載入 cyrus sasl 的函式庫，
+		而該函式庫會依據 /usr/lib/sasl2/smtpd.conf 的設定來連結到正確的管理帳號與密碼的服務，
+		那就是咱們的 saslauthd 囉！</li><br />
+
+		<li><span class=text_import1>smtpd_sasl_security_options</span><br />
+		這個項目指的是『要取消哪些登入的方式』的意思。我們可以取消匿名登入的可能性，
+		所以設定為 noanonymous 即可。由於 saslauthd 使用的是 plaintext ，所以你可不能設定 noplaintext 喔！
+		留意留意！</li><br />
+
+		<li><span class=text_import1>broken_sasl_auth_clients</span><br />
+		這個是針對早期非正規 MUA 的設定項目，因為早期軟體開發商在開發 MUA 時沒有參考通訊協定標準，
+		所以造成在 SMTP 認證時可能會發生的一些困擾。這些有問題的 MUA 例如 MS 的 outlook express 第四版就是這樣！
+		後來的版本應該沒有這個問題。所以這個設定值你也可以不要設定！</li><br />
+
+		<li><span class=text_import1>smtpd_recipient_restrictions</span><br />
+		最重要的就是這裡啦！我們的 sasl 認證可以放在第二行，在區域網路這個可信任區域的後面加以認證。
+		上表的設定意義是：區域網路內的 MUA 不需要認證也能夠進行 relay ，而非區網內的其他來源才需要進行 SMTP 認證之意。
+		</ul>
+
+		設定完畢也重新啟動 postfix 之後，我們先來測試看看是否真的提供認證了？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>telnet localhost 25</span>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 vbird.vbird.idv.tw ESMTP Postfix
+<span class=term_command>ehlo localhost</span>
+250-linux.vbird.tsai
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-ETRN
+<span class=term_write>250-AUTH LOGIN PLAIN     <span class=term_say>&lt;==你必需要看到底下這兩行才算數啊！</span>
+250-AUTH=LOGIN PLAIN</span>
+250 8BITMIME
+<span class=term_command>quit</span>
+221 Bye
+</pre></td></tr></table><br />
+		</div>
+
+		<hr /><li><span class=text_import1>用戶端的設定</span></li>
+		<div class=block2>
+		用戶端也需要設定向 MTA 主機發送 SMTP 認證的功能才行！作法很簡單啦，我們依舊以 Thunderbird
+		來作為介紹，請打開 thunderbird ，選擇『工具』-->『帳號設定』後會出現如下畫面：<br /><br />
+
+		<a name="fig_13"></a><center><img src="0380mail/smtp_auth_01.png" border="1"
+		title="用戶端認證機制所需要啟動的項目"
+		alt="用戶端認證機制所需要啟動的項目"><br />
+		圖十三、用戶端認證機制所需要啟動的項目</center><br />
+
+		記得在上圖 2 所指的地方，將使用者帳號及密碼項目勾選，並且不使用安全連線 (因為 saslauthd 
+		僅支援明碼認證而已) ，這樣就 OK 啦！然後你嘗試寄出一封信看看，瞧瞧是否有順利的通過認證啊？
+		記得此用戶端不要在區域網路內，否則將不會經過認證的階段，因為我們的設定以信任網域為優先嘛！<br />
+		</div>
+
+		如果一切都順利的話，那麼當用戶端以 SMTP 來驗證時，你的登錄檔應該會出現類似底下的訊息才是：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tail -n 100 /var/log/maillog | grep PLAIN</span>
+Nov 28 15:27:21 linux postfix/smtpd[23060]: EFCC9A26CB: client=unknown
+[192.168.100.25], sasl_method=PLAIN, sasl_username=dmtsai
+</pre></td></tr></table><br />
+	</div>
+
+	<hr /><a NAME="adv_filter"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">基礎的郵件過濾機制</span><br />
+	<div class=block2>
+		在整封信的傳送流程當中，用戶端若通過主機的重重限制後，最終應該可以到達郵件佇列當中。
+		而由佇列當中要送出去或者是直接送到 mailbox 就得要透過 MDA 的處理。MDA 可以加掛很多機制呢！
+		尤其是他可以過濾某些特殊字眼的廣告信件或病毒信件呢！
+		MDA 可以透過分析整封信件的內容 (包括標頭以及內文) 來擷取有問題的關鍵字，然後決定這封信的『命運』說！<br /><br />
+
+		咱們的 postfix 已經有內建可以分析標頭或者是內文的過濾機制了，那就是 /etc/postfix/ 目錄下的
+		header_checks 以及 body_checks 這兩個檔案啊！在預設的情況下這兩個檔案不會被 postfix 使用，
+		你必需要用底下的設定來啟用他：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>header_checks = regexp:/etc/postfix/header_checks
+body_checks = regexp:/etc/postfix/body_checks</span>
+<span class=term_say># 那個 regexp 代表的是『使用正規表示法』的意思啦！</span>
+
+[root@linux ~]# <span class=term_command>touch /etc/postfix/header_checks</span>
+[root@linux ~]# <span class=term_command>touch /etc/postfix/body_checks</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table>
+
+		接下來你必需要自行處理 header_checks 以及 body_checks 的規則設定，在設定前請您確認『
+		<span class=text_import2>你對於<a href="../linux_basic/0330regularex.htm">正規表示法</a></span>是熟悉的
+		』才行！因為很多資訊都必需要透過正規表示法來處理啦！然後開始設定的依據是：<br />
+		<ul>
+		<li>只要是 # 代表該行為註解，系統或直接略過；
+		<li>在預設的規則當中，大小寫是視為相同的；
+		<li>規則的設定方法為：<br />
+			<ul><pre>/規則/   動作   顯示在登錄檔裡面的訊息</pre></ul>
+		請注意，要使用兩個斜線『 / 』將規則包起來喔！舉個例子來說明：例如我想要 
+		(1)抵擋掉標題為 A funny game 的信件，(2)並且在登錄檔裡面顯示 drop header deny，則可以在
+		header_chekcs 檔案中可以這樣寫：<br />
+			<ul><pre>/^Subject:.*A funny game/   DISCARD  drop header deny</pre></ul>
+		<li>關於動作有底下幾個動作：
+		<ul><li>REJECT ：將該封信件退回給原發信者；
+		<li>WARN   ：將信件收下來，但是將該封信的基本資料記錄在登錄檔內；
+		<li>DISCARD：將該封信件丟棄，並不給予原發信者回應！</ul>
+		</ul>
+
+		鳥哥自己有作一些規則的比對，只不過.....效能不好！如果您有興趣的話，可以自行下載來看看，
+		不過，使用的後果請自行評估！因為每個人的環境都不一樣嘛！<br />
+		<ul>
+		<li>header: <a href="0380mail/header_checks"
+			target="_blank">http://linux.vbird.org0380mail/header_checks</a>
+		<li>body: <a href="0380mail/body_checks"
+			target="_blank">http://linux.vbird.org0380mail/body_checks</a>
+		</ul>
+
+		記得，如果你自行修改過這兩個檔案後，務必要檢查一下語法才行！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>postmap -q - regexp:/etc/postfix/body_checks \</span>
+> <span class=term_command> &lt; /etc/postfix/body_checks</span>
+</pre></td></tr></table>
+
+		如果沒有出現任何錯誤，那就表示您的設定值應該沒有問題啦！<br /><br />
+
+		<hr /><li><span class=text_import1>PROCMAIL</span></li>
+		<div class=block2>
+		除了這兩個設定之外，還有沒有基礎過濾分面的 MDA 機制呢？有的！那就是 procmail 囉～
+		Procmail 基本上就與上頭提到的 body_checks 相仿，同樣是用來分析郵件之用的，
+		所以你也需要設定規則啊！首先你得要安裝 procmail ，咱們的 CentOS 已經有內建的套件了，
+		請使用 yum install procmail 自行安裝好他。<br /><br />
+
+		那麼 procmail 的過濾規則在哪裡呢？預設就是 /etc/procmailrc 囉！這個檔案的設定方式是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 一組規則設定至少共含有三行，如下所示：</span>
+:0b                         <span class=term_say>&lt;==設定過濾機制所要檢查的信件部分</span>
+* ^Subject:.*A funny game   <span class=term_say>&lt;==就是檢查的規則部分</span>
+/dev/null                   <span class=term_say>&lt;==如果符合上述規定，則進行的動作</span>
+
+<span class=term_say>參數說明：
+a. 關於檢查郵件的部分(第一行)，flags 包含有：
+　　H : Header 的檢查
+　　B : Body 的檢查
+　　h : 提供 Header 的資料，進入 pipe 、 file 及 mail 等的檢查
+　　b : 提供 Body 的資料進入 pipe, file 及 mail 等的檢查！
+b. 關於檢查內容的部分：
+　　! : 這是反向選擇的意思
+　　&lt; : 檢查 mail 的總長度是否小於設定值 ( bytes )
+　　> : 與 &lt; 相反的選擇囉！
+c. 關於動作的部分
+　　| : 開始啟用後續的 shell 程式工作！
+d. 其他的環境變數部分：
+　　PATH　　　　搜尋執行檔的路徑
+　　SENDMAIL　　那個 /usr/sbin/sendmail 囉！
+　　LOGFILE　　 登錄檔！通常設定在 /var/log/procmail.log
+e. 與 Regular express 相關的部分：
+　　^ : 開始(同一行最左邊)字元
+　　$ : 本行的結束字元(最右邊)的比對
+　　. : 除了新增一行之外的任何字元！
+　　\ : 跳脫字元
+更詳細的內容請務必參考：
+man procmailrc
+man procmailex</span>
+</pre></td></tr></table>
+
+		網路上已經有很多前輩提供了他們自行分析的規則，比如說臥龍大師：<br />
+		<ul><a href="ftp://ftp.tnc.edu.tw/pub/Sysop/MAIL/procmailrc" 
+		target="_blank">ftp://ftp.tnc.edu.tw/pub/Sysop/MAIL/procmailrc</a></ul>
+
+		您可以經上述的網頁資料捉到你的 /etc/procmailrc 當中，然後在 main.cf 裡頭增加這一句：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>mailbox_command = /usr/bin/procmail</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table><br />
+		</div>
+
+		透過這種基礎的郵件分析可以捉取一些有問題的郵件，不過對於目前垃圾郵件的抵擋方面還是很有限！
+		此外，由於這些分析機制都直接讀取信件來處理與分析，這些機制<span class=text_import2>通常都很耗系統資源！</span>
+		如果你的信件越大流量越大，那麼你的系統花費在『分析郵件』上面的時間會花去很多資源，
+		所以你的硬體得要很好，否則當有大型郵件進來時，郵件主機會跑得喘噓噓！
+		所以目前要不要啟動這些過濾機制.....見仁見智囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="adv_relayhost"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">非固定 IP 也可以有春天： 
+	relayhost</span><br />
+	<div class=block2>
+		我們上面提到，如果你要架設一部合法的 MTA 最好還是得要申請固定的 IP 以及正確對應的反解比較恰當。
+		但如果你一定要用浮動 IP 來架設你的 MTA 的話，也不是不可以啦，只不過你就得要透過上層 ISP
+		所提供的 relay  權限囉！這是怎麼回事啊？讓我們來看看一個實際的案例：<br /><br />
+
+		<a name="fig_14"></a><center><img src="0380mail/relayhost.png" border="1"
+		title="利用 ISP 的 MTA 進行郵件轉遞"
+		alt="利用 ISP 的 MTA 進行郵件轉遞"><br />
+		圖十四、利用 ISP 的 MTA 進行郵件轉遞</center><br />
+
+		理論上，由於我們是向 ISP 申請 IP 的，所以我們的 IP 對於 ISP 的 MTA 來說，應該都符合 relay 的要件。
+		那如果我利用這個 IP 來架設一個 mail server ，並且讓這個 mail server 的主機名稱對應為 DDNS
+		的情況，則我的 IP 與主機名稱對應得宜，所以當然可以架設各種網站伺服器。如果沒有設定以 ISP 的 MTA 
+		作為 relay 的情況下，目標 MTA 會反解析我們的 IP ，若得到此 IP 為非合法的主機名稱時，
+		該信件原則上是會被退件的。<br /><br />
+
+		那如果我以 ISP 的 MTA 來作為 relay 主機時，因為我們所在的 IP 本來就能夠使用 ISP MTA 的 relay 功能，
+		所以圖十四的第一步是沒問題的。然後當 ISP 的 MTA 在進行 Relay 而將信件寄出去時，
+		目標 MTA 所看到的來源端是『ISP 的 IP』而不是我們原本的發信源！
+		如此一來當然我們的 MTA 就能夠架設起來囉！<br /><br />
+
+		不過想要以此架構來架設你的 MTA 仍有許多需要注意的地方：<br />
+		<ul><span class=text_import2>
+		<li>你還是得要有一個合法的主機名稱，若要省錢，可以使用 DDNS 來處理；
+		<li>你上層的 ISP 所提供的 MTA 必需要有提供你所在 IP 的 relay 權限；
+		<li>你不能使用自訂的內部 DNS 架構了，因為所有 relay 的信都會被送至 ISP 的 MTA
+		</span></ul>
+		尤其是最後一點，因為所有外送的信件全部都會被送到 ISP 處，所以像我們之前自己玩的 vbird.tsai
+		這種非合法的領域資料就沒用了！為什麼呢？你想想看，如果你要將信件送給 mail.vbird.tsai ，
+		但由於上述的功能，所以這封信會被傳到 ISP 的 MTA 來處理，但 ISP 的 MTA 
+		會不會認識你的 vbird.tsai ？這樣說，可以理解了吧？<br /><br />
+
+		說是挺難的，做起來卻很簡單，只要在 main.cf 裡面加設一段資料即可。
+		假設你的環境是台灣地區的 hinet 所提供的用戶，而 hinet 提供的郵件主機為 ms1.hinet.net ，
+		則你可以直接這樣設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_say># 加入底下這一行就對啦！注意那個中括號！</span>
+<span class=term_write>relayhost = [ms1.hinet.net]</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table>
+
+		之後你只要嘗試寄一封信出去看看，就會瞭解這封信是如何寄送的了。看一下登錄檔的內容會像這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tail -n 20 /var/log/maillog</span>
+Nov 28 18:42:30 linux postfix/smtp[23673]: 515E8A26CE: to=&lt;someone@合法的主機>, 
+relay=<span class=term_write>ms1.hinet.net[168.95.4.10]</span>, delay=1, status=sent (250 SAA09090 Message 
+accepted for delivery)
+</pre></td></tr></table>
+
+		是吧！經由上層 ISP 來轉寄啦！如此一來，你的 MTA 感覺上就似乎是部合法的 MTA 囉！
+		不過，可別利用這個權限來濫發廣告信啊！因為您所透過的那個 ISP 郵件主機可是有記錄你的 IP 來源，
+		如果你亂來的話，後果可是不堪設想喔！切記切記！<br /><br />
+	</div>
+
+	<hr /><a NAME="adv_scan"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">郵件掃瞄器：
+	amavisd-new+f-port+spamassanssin</span><br />
+	<div class=block2>
+		事實上，到目前為止之前的設定應該可以滿足一般 50 人以下的小企業環境了，
+		甚至再多一點人也沒有問題的。不過如果人數多了，各種奇怪的信件也會跟著多起來，
+		這是因為總是會有人不小心將他的 email address 放在網際網路上，如果被郵件位址搜尋機器人捉到的話，
+		你的 email 將會出現在廣告信發送商的名單中....<br /><br />
+
+		為了避免這個問題，很多朋友是<span class=text_import2>將他的信箱分為兩個，一個直接放在 Internet 
+		上，另一個則作為自己日常業務之用。</span>另外有的朋友則使用類似底下所提供的郵件位址表示方式：<br />
+		<ul>dmtsai{at}linux{dot}vbird{dot}tsai</ul>
+		這種格式對於網路機器人 (就是一種可以自動上網搜尋關鍵字的軟體程式囉！) 的搜尋會造成困擾，
+		因為那些機器人程式用以判斷是否為郵件位址是依據『 @ 』來判別的啊！
+		所以說，不要洩漏你個人的 email 是很重要的一件事啊！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		你可以自己測試看看，如果申請了一個免費信箱，但不要將他公布，那個信箱肯定不會收到任何廣告信。
+		但你一旦用那個信箱來申請一些個人資料而公布在 Internet 上面時，呼呼！不超過一個星期，
+		該信箱肯定會收到很多廣告信！使用上要特別留意喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		既然廣告信在短期內不可能有個長足的解決方案，那至少我們可以直接在 mail server 
+		端就將廣告信與病毒信給他捉出來吧？如此就可以避免掉使用者必需要自己分析廣告信與垃圾信等所花費的時間了。
+		底下提供幾個好東西來幫忙處理主機端的信件資料喔：<br />
+		<ul>
+		<li>amavisd-new：<br />
+		官方網站：<a href="http://www.ijs.si/software/amavisd/" 
+		target="_blank">http://www.ijs.si/software/amavisd/</a><br />
+		說明：這個軟體主要是介於 MTA 與郵件分析軟體之間的一個介面，他可以將位於佇列的郵件捉出來給分析軟體分析，
+		通常是需要安裝的，尤其他可以支援 postfix 吶！</li><br />
+
+		<li>f-port：<br />
+		官方網站：<a href="http://www.f-prot.com/" target="_blank">http://www.f-prot.com/</a><br />
+		說明：是一種防毒軟體，具有自動更新病毒碼的能力；</li><br />
+
+		<li>SpamAssassin：<br />
+		官方網站：<a href="http://spamassassin.apache.org/index.html" 
+		target="_blank">http://spamassassin.apache.org/index.html</a><br />
+		說明：具有自動學習的廣告信分析軟體，不過如果自動學習的規定太嚴格，有時會發生誤判。
+		</ul>
+
+		接下來就讓我們的 postfix 支援這三個東西吧！不過你得要注意的是， f-port 與 SapmAssisin 是獨立運作的軟體，
+		那 postfix 為了要使用這兩個軟體的分析功能，就得要透過 amavisd-new 這個介面工具來傳送信件資訊囉！
+		詳細的作法請參考上頭提供的官方網站，或者是參考討論區的幾篇文章也不錯：<br />
+		<ul>
+		<li>TWU2 兄提供的好文章：<a href="http://phorum.study-area.org/viewtopic.htm?t=38649" 
+			target="_blank">http://phorum.study-area.org/viewtopic.htm?t=38649</a>
+		<li>kevin1005 提供的好文章：<a href="http://phorum.vbird.org/viewtopic.htm?t=25760"
+			target="_blank">http://phorum.vbird.org/viewtopic.htm?t=25760</a>
+		<li>johntino 提供的好文章：<a href="http://phorum.vbird.org/viewtopic.htm?t=15862"
+			target="_blank">http://phorum.vbird.org/viewtopic.htm?t=15862</a>
+		</ul>
+		當然網路上還有很多好文章，大家可以多多搜尋一番。<br /><br />
+
+		<hr /><li><span class=text_import1>amavisd-new 的安裝與設定：</span></li>
+		<div class=block2>
+		雖然你可以自行使用 tarball 來安裝，不過我們也可以在 <a href="http://rpmfind.net/" 
+		target="_blank">http://rpmfind.net/</a> 找到給 RHEL 4 使用的版本。既然 CentOS 與 RHEL 使用的套件均相同，
+		沒有道理我們不能安裝！是吧！^_^。所以底下的套件請先由 <a href="http://rpmfind.net/"
+		target="_blank">http://rpmfind.net/</a> 網站捉下來吧！然後再開始安裝去。
+		要注意的是，由於 amavisd-new 用 perl 寫成的，他需要很多 perl 的模組，且由於要分析信件內容，
+		所以也需要很多解壓縮軟體來解析信件內的壓縮檔，因此才會需要這麼多的軟體安裝～ @_@：<br /><br />
+		<font size="-1">
+		與 Perl 模組有關的套件：
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Archive-Tar-1.30-1.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Archive-Tar-1.30-1.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Archive-Zip-1.16-1.2.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Archive-Zip-1.16-1.2.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-BerkeleyDB-0.31-1.el4.rf.i386.rpm" 
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-BerkeleyDB-0.31-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Compress-Zlib-1.42-1.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Compress-Zlib-1.42-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-BinHex-1.119-2.2.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-BinHex-1.119-2.2.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-UUlib-1.051-1.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-UUlib-1.051-1.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-TNEF-0.17-3.2.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Convert-TNEF-0.17-3.2.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-Multiplex-1.08-3.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-Multiplex-1.08-3.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-stringy-2.110-1.2.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-IO-stringy-2.110-1.2.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-MIME-tools-5.420-1.el4.rf.noarch.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-MIME-tools-5.420-1.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Net-Server-0.94-1.el4.rf.noarch.rpm" 
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Net-Server-0.94-1.el4.rf.noarch.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Unix-Syslog-0.100-1.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/perl-Unix-Syslog-0.100-1.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/amavisd-new-2.4.3-1.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/amavisd-new-2.4.3-1.el4.rf.i386.rpm</a>
+		<br /><br />
+		與壓縮及解壓縮軟體有關的套件：
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/arc-5.21j-0.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/arc-5.21j-0.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/cabextract-1.2-1.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/cabextract-1.2-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/freeze-2.5-2.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/freeze-2.5-2.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/lzo-1.08-4.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/lzo-1.08-4.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/lzop-1.01-1.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/lzop-1.01-1.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/nomarch-1.4-1.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/nomarch-1.4-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/ripole-0.2.0-1.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/ripole-0.2.0-1.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/unarj-2.63-0.a.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/unarj-2.63-0.a.2.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/unrar-3.6.8-1.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/unrar-3.6.8-1.el4.rf.i386.rpm</a>
+		<li><a href="ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/zoo-2.10-2.2.el4.rf.i386.rpm"
+		target="_blank">ftp://rpmfind.net/linux/dag/redhat/el4/en/i386/dag/RPMS/zoo-2.10-2.2.el4.rf.i386.rpm</a>
+		</font><br />
+		您可能先要以 yum 的方式來安裝 ncompress, perl-Net-DNS, perl-TimeDate, perl-MailTools, perl-Digest-SHA1,
+		perl-Digest-HMAC, perl-Time-HiRes, spamassassin 這幾套軟體，然後將上列的軟體全部放在同一個目錄下，以 rpm -Uvh *.rpm 
+		來安裝上述的所有套件！但安裝時如果出現如下畫面：<br />
+
+<table class="term"><tr><td class="term"><pre>
+warning: amavisd-new-2.4.3-1.el4.rf.i386.rpm: V3 DSA signature: NOKEY, key ID 6b
+Preparing...                ########################################### [100%]
+        package perl-BerkeleyDB-0.31-1.el4.rf is already installed
+	....
+</pre></td></tr></table>
+
+		這表示某些套件已經被安裝了！你不應該還安裝他！那麼請自行將這些已安裝的套件檔案移出目前目錄，
+		再執行一次 rpm -Uvh *.rpm 就能夠安裝囉！如果還是出現某些相依屬性的問題，要嘛就以 yum 來安裝，
+		要嘛就以 <a href="http://rpmfind.net" target="_blank">http://rpmfind.net</a> 網站搜尋適當的 RPM 檔案來安裝，
+		安裝完畢後就準備來設定一下囉！<br /><br />
+
+		要開始設定 amavisd-new 之前，請務必先查閱一下 /usr/share/doc/amavisd-new-2.4.3/README.postfix 這個檔案的內容，
+		裡面有很詳盡的設定說明喔！然後這個 amavisd-new 的設定檔只有 /etc/amavisd.conf 而已，
+		預設的情況下該檔案內容含有很多的病毒搜尋引擎，不過我們僅有 f-port 這個掃毒軟體而已，
+		所以裡面需要進行很多修改喔！基本內容的修改如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/amavisd.conf</span>
+<span class=term_say># 首先是關於系統設定的部分，包括主機與領域名稱等的設定：</span>
+<span class=term_write>$mydomain = 'vbird.tsai';          <span class=term_say>&lt;==約在第 20 行，填寫你的領域名；</span>
+$MYHOME = '/var/amavis';           <span class=term_say>&lt;==約在第 22 行，這是 amavis 的預設家目錄之意</span>
+$inet_socket_port = 10024;         <span class=term_say>&lt;==約在第 51 行，預設啟動的 port 啦！</span>
+$myhostname = 'linux.vbird.tsai';  <span class=term_say>&lt;==約在第113 行，改成你的主機名稱</span>
+$notify_method  = 'smtp:[127.0.0.1]:10025';  <span class=term_say>&lt;==約在第116 行，設定連接的埠口</span>
+$forward_method = 'smtp:[127.0.0.1]:10025';  <span class=term_say>&lt;==約在第117 行，同上</span>
+
+<span class=term_say># 2. 底下這幾行約在第 118 行之後，用來作為找到病毒或廣告信後的動作！
+# 如果你害怕不小心將重要檔案刪除了，建議你先改成 D_BOUNCE 預先處理</span>
+$final_virus_destiny      = D_BOUNCE;  <span class=term_say>&lt;==找到病毒時的動作</span>
+$final_banned_destiny     = D_BOUNCE;  <span class=term_say>&lt;==找到禁止項目的動作</span>
+$final_spam_destiny       = D_PASS;    <span class=term_say>&lt;==找到廣告信的動作</span>
+$final_bad_header_destiny = D_PASS;    <span class=term_say>&lt;==找到不良信件標頭的動作</span>
+<span class=term_say># 可以處理的動作主要有：
+#   D_PASS    無論郵件的內容是否有問題，該郵件都會傳給收件者
+#   D_DISCARD 郵件被丟棄，而且不會告知收件者與寄件者；
+#   D_BOUNCE  郵件不會傳給收件者，但無法傳遞的訊息會告知寄件者；
+#   D_REJECT  郵件不會傳給收件者，但寄件者會收到拒絕的訊息。
+# 鳥哥在這裡由於擔心誤刪一些資料，所以除了病毒與禁止項目會回傳錯誤給寄件者外，
+# 其他兩個先預設可以通過。等到未來郵件伺服器使用者覺得可以接受後，
+# 某些部分 (如病毒) 就可以改為 D_DISCARD 來直接丟棄了！</span>
+
+<span class=term_say># 3. 再來則是決定病毒掃瞄的引擎，底下分別是主要與次要掃毒程式</span>
+@av_scanners = (                <span class=term_say>&lt;==大約在 309 行，裡面的項目全部註解；</span>
+<span class=term_say>....中間省略....</span>
+);
+<span class=term_say># 因為所有的病毒掃瞄引擎都沒有安裝嘛！</span>
+
+@av_scanners_backup = (         <span class=term_say>&lt;==大約在 626 行，只要剩下底下這些</span>
+  ['FRISK F-Prot Antivirus', ['f-prot','f-prot.sh'],
+    '-dumb -archive -packed {}', [0,8], [3,6],
+    qr/Infection: (.+)|\s+contains\s+(.+)$/ ],
+<span class=term_say>....中間省略....</span>
+);
+</pre></td></tr></table>
+
+		amavisd-new 大致上就解決到這裡，現在還無法啟動他，因為我們要先安裝 f-port 才行吶！
+		趕緊下一動作吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>安裝與設定 f-port ：</span></li>
+		<div class=block2>
+		f-port 是一個掃毒軟體，他的版本非常的多，其中只有一個是免費的個人版本，
+		請到底下的連結去下載，不要下載錯檔案了喔！<br />
+		<ul><a href="http://www.f-prot.com/download/trial_forms/linux-ws-rpm.html"
+		target="_blank">http://www.f-prot.com/download/trial_forms/linux-ws-rpm.html</a></ul>
+		建議你直接下載 RPM 檔案，然後直接安裝他就好了！安裝後 f-port 會立即主動進行線上更新，
+		所以請你在安裝的時候確定你的網路是正常的。而所有 f-port 的資料都會被放置到 /usr/local/f-prot/ 目錄下。
+		該目錄下的 README 以及相關連結可以瞧一瞧。安裝完畢後檢查看看能否工作：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>f-prot -verno</span>
+F-PROT ANTIVIRUS
+Program version: 4.6.6
+Engine version: 3.16.14
+
+VIRUS SIGNATURE FILES
+SIGN.DEF created 29 November 2006
+SIGN2.DEF created 29 November 2006
+MACRO.DEF created 27 November 2006
+<span class=term_say># 若出現如上的版本宣告，這表示 f-prot (注意檔名) 可以順利運作。</span>
+
+[root@linux ~]# <span class=term_command>f-prot /etc/crontab</span>
+<span class=term_say># 如果有出現掃瞄的字樣，就表示這個軟體可以開始進行掃瞄的工作啦！</span>
+</pre></td></tr></table>
+
+		其實這也就是說， f-port 這套軟體的掃瞄程式『 f-prot 』可以在 Linux 上面掃瞄各種檔案的意思！
+		不過，我們的重點是利用他來進行郵件掃瞄就是了。至於線上更新病毒碼部分，你可以手動線上更新，
+		也可以進入工作排程來自動更新喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 手動即時線上更新方式：</span>
+[root@linux ~]# <span class=term_command>/usr/local/f-prot/tools/check-updates.pl</span>
+
+<span class=term_hd>2. 自動更新排程：</span>
+[root@linux ~]# <span class=term_command>vi /etc/crontab</span>
+<span class=term_write>27 4,16 * * * root /usr/local/f-prot/tools/check-updates.pl -cron -quiet</span>
+</pre></td></tr></table>
+
+		如此一來我們的 f-port 每天可以進行兩次線上更新的動作呢！很不錯吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>測試 amavisd-new 與病毒掃瞄程式的搭配：</span></li>
+		<div class=block2>
+		完成上述的設定後，我們可以先來測試看看 amavisd-new 與 f-port 掃毒程式的搭配情況。
+		你可以直接這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>amavisd debug</span>
+<span class=term_say>....前面省略....
+# 底下在說明此軟體所監聽的介面與 port 還有執行者的 UID/GID 等</span>
+Nov 30 14:51:53 linux amavisd[3457]: Net::Server: Binding to TCP port 10024 on 
+host 127.0.0.1
+Nov 30 14:51:53 linux amavisd[3457]: Net::Server: Setting gid to "102 102"
+Nov 30 14:51:53 linux amavisd[3457]: Net::Server: Setting uid to "101"
+Nov 30 14:51:53 linux amavisd[3457]: Net::Server: Setting up serialization via 
+flock
+
+<span class=term_say># 底下在說明各個模組是否有被順利的載入</span>
+Nov 30 14:51:54 linux amavisd[3457]: Module Amavis::Conf   2.072
+Nov 30 14:51:54 linux amavisd[3457]: Module Archive::Tar   1.30
+Nov 30 14:51:54 linux amavisd[3457]: Module Archive::Zip   1.16
+<span class=term_say>....中間省略....</span>
+
+<span class=term_say># 底下則是在說明載入哪些資料</span>
+Nov 30 14:51:54 linux amavisd[3457]: Amavis::DB code      loaded
+Nov 30 14:51:54 linux amavisd[3457]: Amavis::Cache code   loaded
+<span class=term_say>....中間省略....</span>
+Nov 30 14:51:54 linux amavisd[3457]: ANTI-VIRUS code      loaded
+Nov 30 14:51:54 linux amavisd[3457]: ANTI-SPAM code       loaded
+Nov 30 14:51:54 linux amavisd[3457]: ANTI-SPAM-SA code    loaded
+Nov 30 14:51:54 linux amavisd[3457]: Unpackers code       loaded
+
+<span class=term_say># 這裡說明的是一些檔案解壓縮的功能囉！</span>
+Nov 30 14:51:54 linux amavisd[3457]: Found $file   at /usr/bin/file
+Nov 30 14:51:54 linux amavisd[3457]: No $dspam,    not using it
+Nov 30 14:51:54 linux amavisd[3457]: Internal decoder for .mail
+Nov 30 14:51:54 linux amavisd[3457]: Internal decoder for .asc
+<span class=term_say>....中間省略....</span>
+<span class=term_write>Nov 30 14:51:54 linux amavisd[3457]: Found secondary av scanner FRISK 
+F-Prot Antivirus at /usr/local/bin/f-prot</span> <span class=term_say>&lt;==這行重要！說明有找到 f-port</span>
+Nov 30 14:51:54 linux amavisd[3457]: SpamControl: initializing Mail::SpamAssassin
+Nov 30 14:51:56 linux amavisd[3457]: SpamControl: init_pre_fork done
+<span class=term_say>....後面省略....
+# 最後按下 [ctrl]-c 來結束這個 debug 的畫面喔！</span>
+</pre></td></tr></table>
+
+		看起來應該是沒有問題啦！然後趕緊給他啟動這個服務吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/amavisd start</span>
+
+<span class=term_say># 測試一下 amavisd 啟動的 port 10024 是否順利運作中？</span>
+[root@linux ~]# <span class=term_command>telnet 127.0.0.1 10024</span>
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+220 [127.0.0.1] ESMTP amavisd-new service ready
+<span class=term_command>ehlo localhost</span>
+250-[127.0.0.1]
+250-VRFY
+250-PIPELINING
+250-SIZE
+250-ENHANCEDSTATUSCODES
+250-8BITMIME
+250-DSN
+250 XFORWARD NAME ADDR PROTO HELO
+<span class=term_command>quit</span>
+221 2.0.0 [127.0.0.1] amavisd-new closing transmission channel
+Connection closed by foreign host.
+</pre></td></tr></table>
+
+		如果一切都順利的話，你可以將這個服務給他寫入開機自動執行中！『 chkconfig amavisd on 』
+		這樣就好啦！準備設定一下讓 postfix 來支援 amavisd-new 的佇列分析工作吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>設定 Postfix 使支援 amavisd-new 的分析工作：</span></li>
+		<div class=block2>
+		這個設定項目需要的資訊比較多，有兩個檔案要修改，先改 master.cf 吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/master.cf</span>
+<span class=term_say># 這幾行專門為了病毒、廣告信作的連結！
+# ====================================================================
+# service type  private unpriv  chroot  wakeup  maxproc command + args
+#               (yes)   (yes)   (yes)   (never) (100)
+# ====================================================================</span>
+<span class=term_write>smtp-amavis unix -      -       n        -       2    smtp
+    -o smtp_data_done_timeout=1200
+    -o smtp_send_xforward_command=yes
+    -o disable_dns_lookups=yes
+    -o max_use=20
+
+127.0.0.1:10025 inet n  -       n        -       -    smtpd
+    -o content_filter=
+    -o smtpd_restriction_classes=
+    -o smtpd_delay_reject=no
+    -o smtpd_client_restrictions=permit_mynetworks,reject
+    -o smtpd_helo_restrictions=
+    -o smtpd_sender_restrictions=
+    -o smtpd_recipient_restrictions=permit_mynetworks,reject
+    -o smtpd_data_restrictions=reject_unauth_pipelining
+    -o smtpd_end_of_data_restrictions=
+    -o mynetworks=127.0.0.0/8
+    -o smtpd_error_sleep_time=0
+    -o smtpd_soft_error_limit=1001
+    -o smtpd_hard_error_limit=1000
+    -o smtpd_client_connection_count_limit=0
+    -o smtpd_client_connection_rate_limit=0
+    -o smtpd_milters=
+    -o local_header_rewrite_clients=
+    -o local_recipient_maps=
+    -o relay_recipient_maps=</span>
+</pre></td></tr></table>
+
+		這幾行給他設定好，然後再來處理 main.cf 這個檔案囉！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>content_filter = smtp-amavis:[127.0.0.1]:10024</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/postfix restart</span>
+</pre></td></tr></table>
+
+		嘿嘿！然後開始就能夠幫你分析病毒信啦！就是這麼簡單吶！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>廣告信的抵擋：</span></li>
+		<div class=block2>
+		我們有使用 spamassassin 這個自動學習抵擋廣告信的機制，這個玩意兒主要是透過分析信件內容，
+		只要信件內容的某一部份符合 spamassassin (簡稱 SA) 的規範，則該信件可給予一個分數。
+		將該信件的所有分數總和起來，若分數高於我們所規定的預設分數，則該信件可以被視為廣告信。
+		這個分數如果設定太低，則很多合法的信件都會不小心被視為廣告信，如果設定太高，可能又會捉不到廣告信。
+		真是兩難。這個分數的設定值預設是在：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/amavisd.conf</span>
+$sa_tag_level_deflt  = 5.0;    <span class=term_say>&lt;==大約在第 61 行，將 2 改成 5 吧！</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/mail/spamassassin/local.cf</span>
+required_hits 5                <span class=term_say>&lt;==就是他！就是這個分數啦！</span>
+report_safe 0
+rewrite_header Subject [SPAM]  <span class=term_say>&lt;==如果是廣告信，標頭會被改寫！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/amavisd restart</span>
+</pre></td></tr></table>
+
+		每個人的主機都不太一樣，所以這個分數需要你多方的嘗試才能找出最佳的數值。
+		就是因為害怕誤判，所以才希望你在 /etc/amavisd.conf 裡面不要將 spam 的規則設定為 D_DISCARD 的啦！ ^_^！
+		至於這個檔案的處理方式，其實你可以參考底下的網頁來改寫 local.cf 檔案喔！<br />
+		<ul>
+		<li><a href="http://spamassassin.apache.org/full/2.6x/dist/doc/Mail_SpamAssassin_Conf.html"
+		target="_blank">http://spamassassin.apache.org/full/2.6x/dist/doc/Mail_SpamAssassin_Conf.html</a>
+		<li><a href="http://www.yrex.com/spam/spamconfig.htm"
+		target="_blank">http://www.yrex.com/spam/spamconfig.htm</a>
+		</ul>
+		不過你得要注意的是， local.cf 裡面很多的設定值已經被 /etc/amavisd.conf 所取代了，
+		所以你的 local.cf 部分設定可能會失效的！這要特別先說明的。
+		整個病毒、廣告信的安裝與設定就到此為止啦，然後我們可以開始稍微測試一下囉！
+		你可以利用 CentOS 本身的 Spamassassin 提供的一封廣告信來測試看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mail -s 'spam test' dmtsai &lt;  \</span>
+> <span class=term_command>/usr/share/doc/spamassassin-3.0.6/sample-spam.txt</span>
+<span class=term_say># 假設你的系統有個使用者名為 dmtsai ，你寄出廣告信給他，
+# 然後用 dmtsai 收信一下，你會發現到該封信件的內容：</span>
+
+[dmtsai@linux ~]$ <span class=term_command>mail</span>
+>N 1 dmtsai@linux  Thu Nov 30 23:18  54/2065  <span class=term_write>"**SPAM** spam test"</span>
+<span class=term_say># 瞧！標頭多出了一些東西啦！沒錯！信件標頭會被改寫！</span>
+& <span class=term_command>1</span>
+From dmtsai@linux.vbird.tsai  Thu Nov 30 23:18:24 2006
+X-Original-To: dmtsai@linux.vbird.tsai
+Delivered-To: dmtsai@linux.vbird.tsai
+X-Quarantine-ID: &lt;v02TdcMd+Vk4>
+From dmtsai@linux.vbird.tsai Thu Nov 30 23:18:24 2006
+X-Original-To: dmtsai@linux.vbird.tsai
+Delivered-To: dmtsai@linux.vbird.tsai
+X-Quarantine-ID: &lt;v02TdcMd+Vk4>
+<span class=term_write>X-Virus-Scanned: amavisd-new at vbird.tsai
+X-Spam-Flag: YES
+X-Spam-Score: 1001.148
+X-Spam-Level: ***********************************************
+X-Spam-Status: Yes, score=1001.148 tagged_above=5 required=6.31
+        tests=[AWL=-2.025, DNS_FROM_RFC_ABUSE=0.374, GTUBE=1000,
+        NO_RELAYS=-0.001, UNWANTED_LANGUAGE_BODY=2.8]</span>
+<span class=term_say># 上面的特殊字體部分，第一行就是病毒掃瞄的證據！
+# 後面這幾行則是運算廣告信總結分數的結果啊！有趣吧！</span>
+</pre></td></tr></table><br />
+		</div>
+
+		<a name="sa-learn"></a><hr /><li><span class=text_import1>自動學習抵擋廣告信：</span></li>
+		<div class=block2>
+		在 spamassasin 所提供的功能當中，事實上有兩種使用 spamassassin 的方式，一種是透過 spamd 這個 spamassassin 
+		的服務，另一種則是透過 spamc 這個可以讓 MTA 呼叫來批次執行的程式。在鳥哥的這個範例當中，我們是透過
+		amavisd-new 軟體來呼叫 spamc 以處理廣告信的啦！所以<span class=text_import2>你的 spamassassin 
+		的 daemon 功能不用啟動的。</span><br /><br />
+
+		另外，廣告信的變化可是千變萬化的，誰也搞不清楚下一次出現廣告信的情況會是如何，所以說，
+		訂定死的廣告信過濾規則是沒有多大的效果的。所以囉，能夠自動學習廣告信的內容資料，然後自動學習更新資料庫，
+		這才能夠因應網際網路的現實殘酷的狀態。好佳在！咱們的 spamassassin 有提供一支程式與一個稱為 bayes (貝式)
+		的機制來處理自動學習的功能！我們可以透過這個功能來進行分類吶！<br /><br />
+
+		既然有過濾機制的資料庫，那麼資料庫在哪裡啊？其實資料庫主要有兩個，分別是個人的與系統的！
+		我們這個案例的<span class=text_import2>系統資料庫放置在 /var/amavis/.spamassassin/ 裡面，
+		個人資料庫則是在 ~/.spamassassin/ 裡面</span>。基本上，建議直接由系統管理員直接修訂系統資料庫的內容即可。
+		那麼如何處理新的廣告信件呢？你必須這樣做：<br />
+
+		<ol>
+		<li><span class=text_import1>手動處理廣告信資料：</span><br />
+			你得要先手動的將沒有被 spam 的廣告信抽出來，舉例來說，鳥哥將我所收到的廣告信放置到
+			/root/mail/spam 這個檔案當中，他是一個 mbox 的格式，也就是 mailbox 的格式囉。
+			你也可以建立一個使用者名為 spam，那麼將你所收到的廣告信轉寄給這個使用者即可。</li><br />
+
+		<li><span class=text_import1>利用 sa-learn 學習廣告信：</span><br />
+			接下來你得要更新廣告信的資料庫了，這個動作主要是經由 sa-learn 這個指令來處理的。
+			你最好先以『 man sa-learn 』來瞭解一下所有的參數才好。假設你的廣告信放置在 /root/mail/spam 這個 mbox
+			格式的檔案中，那麼你可以這樣做：<br />
+			<span class=text_import2>sa-learn --spam --mbox --dbpath /var/amavis/.spamassassin/ /root/mail/spam</span>
+			<br />如此一來過濾廣告信的內容就會被更新了。</li><br />
+
+		<li><span class=text_import1>正常信件被誤判的處理：</span><br />
+			那如果有正常信件卻被分析為廣告信呢？沒關係，你同樣將這些信件獨立出來成為一個檔案，
+			例如 /root/mail/nospam 好了，然後這樣學習：<br />
+			<span class=text_import2>sa-learn --ham --mbox --dbpath /var/amavis/.spamassassin/ /root/mail/nospam</span>
+		</ol>
+
+		透過這個學習機制，你的廣告信抵擋會越來越精確喔！等到累積了足夠的廣告信學習後，
+		就能夠修改 /etc/amavisd.conf 裡面針對廣告信命運的處理方式了 (由 D_PASS 變成 D_DISCARD 看看！)
+		加油！<br /><br />
+		</div>
+
+
+		<a name="dont_drop_exe"></a><hr /><li><span class=text_import1>不要丟棄 exe 檔名的附件：</span></li>
+		<div class=block2>
+		使用了 amavisd-new 來作為病毒處理與廣告信抵擋真是不錯的方案，不過，預設 amavisd-new 會丟棄附件夾檔檔名為
+		*.exe, .bat, .com... 等等的郵件，而且如果你將某個 .exe 檔案壓縮成為 .rar 或者是 .zip 的壓縮檔時，
+		由於我們的 Linux 有安裝解壓縮軟體 (如 unrar)，結果...該封郵件還是會被丟棄，而不論是否有病毒存在。<br /><br />
+
+		這樣實在不怎麼人性化，因為有些時候我們必須要傳送一些附檔名為 .exe 之類的執行檔，如果預設會被丟棄，
+		那如何傳送出該檔案？除非使用 ftp 了～真麻煩～沒關係，我們可以透過修改 amavisd-new 的設定檔來放行喔！
+		處理的方式很簡單，只要這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/amavisd.conf</span>
+<span class=term_say>找到底下這一行，大約在 166 行左右</span>
+  qr'^\.(exe-ms|dll)$',
+<span class=term_say>將他改成這樣：</span>
+<span class=term_write>  qr'^\.(dll)$',</span>
+
+<span class=term_say>找到底下這兩行，大約在 187 行附近</span>
+  qr'\.[^./]*[A-Za-z][^./]*\.(exe|vbs|pif|scr|bat|cmd|com|cpl|dll)\.?$'i,
+  qr'.\.(exe|vbs|pif|scr|cpl)$'i,
+<span class=term_say>將他改成這樣：</span>
+<span class=term_write>  qr'\.[^./]*[A-Za-z][^./]*\.(vbs|pif|scr|cmd|com|cpl|dll)\.?$'i,
+  qr'.\.(vbs|pif|scr|cpl)$'i,</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/amavisd restart</span>
+</pre></td></tr></table>
+
+		就是將含有 exe 的關鍵字設定給他移除就是了，如此一來，除非你的 .exe 檔案含有病毒，
+		否則就不會被丟棄囉！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="adv_other"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">其他設定小技巧</span><br />
+	<div class=block2>
+		除了之前談到的幾個主要的設定之外， postfix 還有提供一些不錯的設定要給大家使用的喔！
+		我們可以一個一個來來看看：<br /><br />
+
+		<li><span class=text_import1>單封信件與單個郵件信箱的大小限制</span></li>
+		<div class=block2>
+		在預設的情況下， postfix 可接受的單封信件最大容量為 10MBytes ，不過這個數值我們是可以更改的，
+		動作很簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>message_size_limit =   40000000</span>
+[root@linux ~]# <span class=term_command>postfix reload</span>
+</pre></td></tr></table>
+
+		上面的單位是 bytes ，所以我將單封信件可接受大小改為 40MByte 的意思啦！請按照你的環境來規定這個數值。
+		而從前我們要管制 /var/spool/mail/account 大多是使用檔案系統內的 quota 來達成，
+		現在的 postfix 不需要啦！可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>mailbox_size_limit = 1000000000</span>
+[root@linux ~]# <span class=term_command>postfix reload</span>
+</pre></td></tr></table>
+
+		我給每個人 1GB 的空間啊！^_^<br /><br />
+		</div>
+
+		<li><span class=text_import1>寄件備份</span></li>
+		<div class=block2>
+		收件備份我們知道可以使用 /etc/aliases 來處理的，但是如果想要送件也備份呢？
+		利用底下的方式即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/postfix/main.cf</span>
+<span class=term_write>always_bcc = some@host.name</span>
+[root@linux ~]# <span class=term_command>postfix reload</span>
+</pre></td></tr></table>
+
+		如此一來任何人寄出的信件都會複製一份給 some@host.name 那個信箱。
+		不過，除非您的公司很重視一些商業機密，並且已經公告過所有同仁，否則進行這個設定值，
+		鳥哥個人認為侵犯隱私權很嚴重！<br /><br />
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="other"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">其他應用說明</span><br />
+<div class=block1>
+	除了 mail server 自己的設定值之外，我們最好還是針對 mail server 的資料來備份啊來管理啊等等的，
+	所以底下有些咚咚也可以處理處理：<br /><br />
+
+	<hr /><a NAME="other_prob"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">問題檢查</span><br />
+	<div class=block2>
+		雖然 Mail 很方便，但是仍然會有無法將信件寄出的時候！如果您已經設定好 MTA 
+		了，但是總是無法將郵件寄出去，那可能是什麼問題呢？<br />
+		<ul>
+		<li><span class=text_import2>關於硬體配備</span>：<br />
+		無論任何情況之下，如果硬體出問題，那麼所有的服務都將不正常啦！所以，請先檢查您的硬體是否『怪怪的！』這個先確認 OK 吧！
+		</li><br />
+
+		<li><span class=text_import2>關於網路參數的問題</span>：<br />
+		如果連不上 Internet ，那麼哪裡來的 Mail Server 呢？所以請先確認你的網路已經正常的啟用了！
+		關於網路的確認問題，請查閱前幾篇『<a href="0150detect_network.htm">Linux 網路偵錯</a>』的內容介紹；</li><br />
+
+		<li><span class=text_import2>關於服務的問題</span>：<br />
+		請務必確認 port 25 與 port 110 已經正確的啟動了！使用 netstat 指令即可瞭解是否已經啟動該服務！</li><br />
+
+		<li><span class=text_import2>關於防火牆的問題</span>：<br />
+		很多時候，很多朋友使用 Red Hat 或者其他 Linux distribution 提供的防火牆設定軟體，結果忘了啟動 port 25 
+		與 port 110 的設定，導致無法收發信件！請特別留意這個問題喔！可以使用 iptables 來檢查是否已經啟用該 
+		port 呢！其餘請參考<a href="0250simple_firewall.htm">防火牆設定</a>那一章喔！</li><br />
+
+		<li><span class=text_import2>關於 TCP_Wrappers 的問題</span>：<br />
+		如果你的 MTA 還有支援 tcpd 這個程式 (或者說是 libwrap 這個函式庫) 的話，那麼在 /etc/hosts.allow 與 
+		/etc/hosts.deny 的設定也會影響到收發信件的正常與否！如果 /etc/hosts.deny 有設定『ALL: ALL』的話，那麼請務必在 
+		/etc/hosts.allow 裡面加設『 sendmail:  ALL 』喔！</li><br />
+
+		<li><span class=text_import2>關於設定檔的問題</span>：<br />
+		在啟動 postfix 或者是 sendmail 之後，在登錄檔當中仔細看看有無錯誤訊息發生？
+		通常如果設定資料不對，在登錄檔當中都會有記載錯誤的地方。</li><br />
+
+		<li><span class=text_import2>關於檔案權限的問題</span>：<br />
+		如果你曾經手動處理過軟體的 tarball 升級，或者是你曾自己處理過一些設定檔，那麼就得要注意：<br />
+			<ul>
+			<li>/etc/mail/, /etc/postfix/ ：裡面的檔案至少都為 644 或 640 的權限！
+			<li>/var/spool/mqueue ：務必為 700 的權限
+			<li>/var/spool/clientmqueue：這在 sendmail 8.12 才有，所有人與群組務必為 smmsp ，而權限務必為 770 ；
+			<li>每個 ~/.forward 的檔案需要控制其權限喔！
+			</ul></li><br />
+
+		<li><span class=text_import2>其他檔案的設定問題</span>：<br />
+		如果發現只有某個 domain 可以收信，其他的同一主機的 domain 無法收信，需要檢查 local-host-names 這個檔案的設定，
+		或者是 $mydestination 的設定值才行；<br />
+		如果發現郵件被擋下來了！而且老是顯示 reject 的字樣，那麼可能被 access 擋住了；<br />
+		如果發現郵件佇列 (mailq) 存在很多的郵件，可能是 DNS 死掉了，請檢查 /etc/resolv.conf 的設定是否正確！
+		</li><br />
+
+		<li><span class=text_import2>其他可能的問題</span>：<br />
+		最常發生的就是認證的問題了！這是由於使用者沒有在 MUA 上面設定『我的郵件需要認證』的選項啦！
+		請叫你的用戶趕緊勾選吧！</li><br />
+
+		<li><span class=text_import2>還是不知道問題的解決方案</span>：<br />
+		如果還是查不出問題的話，那麼請務必檢查您的 /var/log/maillog (有的時候是 /var/log/mail ，這個要看 
+		/etc/syslog.conf 的設定)，當你寄出一封信的時候，例如 dmtsai 寄給 bird2@linux.vbird.tsai 時，那麼 
+		maillog 檔案裡面會顯示出兩行，一行為 from dmtsai 一行為 to bird2@linux.vbird.tsai，
+		也就是『我由哪裡收到信，而這封信會寄到哪裡去！』的意思，由這兩行就可以瞭解問題了！尤其是 to 
+		的那一行，裡面包含了相當多的有用資訊，包括郵件無法傳送的錯誤原因的紀錄！
+		如果您對於登錄檔不熟，請拿出『基礎學習篇』裡面的『<a href="../linux_basic/0570syslog.htm"
+		target="_blank">認識登錄檔</a>』一文吧！
+		</ul>
+	</div>
+
+	<hr /><a NAME="other_backup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">哪些資料要備份</span><br />
+	<div class=block2>
+		不管什麼時候，備份總是重要的！那麼如果我是單純的 Mail Server 而已，我需要的備份資料有哪些呢？<br />
+		<ul>
+		<li>/etc/passwd, /etc/shadow, /etc/group 等與帳號有關的資料；
+		<li>/etc/mail, /etc/postfix/ 底下的所有檔案資料；
+		<li>/etc/aliases 等等 MTA 相關檔案；
+		<li>/home 底下的所有使用者資料；
+		<li>/var/spool/mail 底下的檔案與 /var/spool/postfix 郵件佇列檔案；
+		<li>如果是 Sendmail 8.12 則可以考慮儲存 /var/spool/clientmqueue。
+		<li>其他如廣告軟體、病毒掃瞄軟體等等的設定與定義檔。
+		</ul>
+	</div>
+
+	<hr /><a NAME="other_quota"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">quota 與目錄移轉</span><br />
+	<div class=block2>
+		網路上有很多『免費的電子郵件信箱』空間，一般而言，使用的就是 <a href="../linux_basic/0420quota.htm"
+		target="_blank">quota</a> 這個磁碟配額工具！因為我們的 Linux 主機硬碟空間就是這麼多！當然囉，
+		使用磁碟配額 (quota) 會是一個對大家比較公平的方法！使用 quota 
+		的技巧已經在『基礎學習篇』裡面介紹過了，這裡不再重複介紹，要介紹的是幾個可能會發生在實際的案例中的一些小技巧：<br /><br />
+
+		<li><span class=text_import1>郵件信箱所在的磁碟空間不足了</span></li>
+		<div class=block2>
+		這是很可能會發生的問題啊！尤其是在用量很大的網站上面！這個時候你的解決方法主要有：<br />
+		<ol>
+		<li>新增加一顆硬碟，格式化好之後將他 mount 到 /var/spool/mail 這個目錄下；
+		<li>如果主機裡面還有其他目錄具有很大的空間，例如 /home 這個地方，那麼就可以：
+		<ul><font face="細明體">cd /var/spool<br />mv mail /home<br />ln -s /home/mail mail</font></ul>
+		</ol>
+		</div>
+
+		<li><span class=text_import1>使用 quota 設定：</span></li>
+		<div class=block2>
+		一般而言，我們通常會將 /home 做為 quota 的 partition ，那麼 /var/spool/mail 其實也可以依附在 
+		/home 這個 partition 之下，來達到 quota 對於使用者的規範喔！達成的方法很簡單啦：<br />
+		<ol>
+		<li>先在主機規劃與安裝的時候，讓 /home 獨立於一個 partition 當中；
+		<li>以『鳥哥的 Linux 私房菜 -- 基礎學習篇』的 quota 內容為範例，建立好 /home 的 quota 限額；
+		<li>將 /var/spool/mail 整個搬到 /home 底下，並做好連結的動作就可以立即生效啦：
+		<ul><font face="細明體">cd /var/spool<br />mv mail /home<br />ln -s /home/mail mail</font></font></ul>
+		</div>
+
+		<li><span class=text_import1>關於使用者郵件的放置地點</span></li>
+		<div class=block2>
+		很多的讀者可能喜歡讓每個使用者去到自己的家目錄讀取 mail box 的咚咚，亦即是將 /var/spool/mail 
+		的內容給他搬到個別的家目錄去！例如 dmtsai 的 mail box 變成的 /home/dmtsai/dmtsai 
+		這個檔案！不過，如此一來的話， MTA 與 pop 都將需要改寫其 source code ！所以『不建議這麼搞喔！』
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>電子郵件伺服器的設定需要特別留意，以免被作為廣告信與垃圾信的跳板；
+	<li>Mail server 使用的主機名稱至少需要 A 的 DNS 標誌，不過最好能夠具有 MX 標誌為宜，且正反解最好成對，
+		比較可以避免大型主機的抵擋；
+	<li>郵件主機主要是指 SMTP (簡單郵件傳送協定) 而已，不過要架設一部可利用類似 Thunderbird 收發的郵件伺服器，
+		最好能夠具有 SMTP 以及 POP3 等通訊協定；
+	<li>電子郵件傳送的元件，主要有 MUA, MTA, MDA 以及最終的 Mailbox 等等；
+	<li>電子郵件伺服器最需要搞定的地方其實是 Relay 的功能，千萬不可 Open Relay 喔！
+	<li>一封電子郵件至少含有 header 以及 body 等資料在內；
+	<li>常見的可以啟動 SMTP 的軟體有 sendmail, postfix 及 qmail 等等。
+	<li>為避免收到大量的廣告信，建議您不要將 email address 放在網際網路上，若需要某些功能必需將郵件位址放在網路上時，
+		最好能夠擁有兩個郵件位址，一個用來公開，一個則用來作為自己的主要聯絡之用。
+	<li>本章與 LPI 認證的關係：在 LPI 網站 <a href="http://www.lpi.org" target="_blank">http://www.lpi.org</a>
+		裡面提到的，關於 Sendmail 的考試題庫的地方，只有在 LPI level 1 的 102 ，裡面的
+		topic 113 Networking Services ，第二點當中，簡易的 Sendmail 
+		設定。強調的是『應試者必須簡單的設定 sendmail (指的應該是 
+		<a href="#sendmail_internet">m4 scripts</a> ，不過會很簡單！不要擔心～)、能夠建立
+		mail aliases 、能夠管理郵件佇列、能夠啟動或者是關閉 sendmail 這個服務、瞭解使用者的郵件轉遞
+		(forward 功能)，以及簡單的 sendmail 除錯！此外，應試者也需要瞭解什麼是
+		Open Relay 與避免 Open Relay 才行！』至於會考的檔案與指令可能有這些：
+		<ul>
+		<li><a href="#sendmail_pkg">/etc/sendmail.cf (或是 /etc/mail/sendmailcd)</a></li>
+		<li><a href="#postfix_alias">/etc/aliases 或是 /etc/mail/aliases</a></li>
+		<li><a href="#sendmail_pkg">/etc/mail/*</a></li>
+		<li><a href="#postfix_forward">~/.forward</a></li>
+		<li><a href="#postfix_mailq">mailq</a></li>
+		<li>sendmail</li>
+		<li><a href="#postfix_alias">newaliases</a></li>
+		</ul>
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>當你利用你的 MTA 發信時，結果竟然被退信，退信的訊息 (/var/log/maillog) 最主要的錯誤是『mail loop to me』，
+		請問可能的發生原因及處理方式為何？</li>
+	<div class=block2><font color=white size=-1>
+		可能發生的原因是由於你的 MTA 設定項目方面的主機名稱錯誤。判斷你的 MTA 主機有多個 IP 存在，
+		不過你並未完全寫入設定檔中，因此造成某些主機名稱無法被 MTA 所接收之故。在 sendmail 方面，
+		你只要將需要的主機名稱寫入 /etc/mail/local-host-names 即可，如果是 postfix ，則在 /etc/postfix/main.cf 
+		當中修改 $mydestination 那個設定項目即可。
+	</font></div>
+
+	<li>我在使用 Sendmail 寄信時，卻發生底下這個問題，請問可能的發生原因為何？</li>
+	<center><img SRC="0380mail/problem.jpg" border=1></center>
+	<div class=block2><font color=white size=-1>
+		可能的問題有兩個：
+		<ul>
+		<li>你的 Client 端電腦的 IP 或者是網域位址被 /etc/mail/access 所擋住，或者是 /etc/mail/access 沒有打開你的 
+		RELAY 權力；</li>
+		<li>你有進行 SMTP 郵件認證的設定，但是忘記在 MUA 當中設定帳號與密碼的項目了！</li>
+		如果不是這兩個原因，那麼可能的問題就多了！請詳細的檢查您的網路設定！
+		</ul>
+	</font></div>
+
+	<li>請列出四個 Mail Server 的相關的元件，以及其功用為何？</li>
+	<div class=block2><font color=white size=-1>
+		<ul>
+		<li>Mail Client ：郵件用戶端，其實就是使用 mail 的那位使用者所在的電腦即可稱為 mail client ；
+		<li>Mail User Agent ：為一個應用軟體，主要的功能就是收受郵件主機的電子郵件，以及提供使用者瀏覽與編寫郵件的功能；
+		<li>Mail Transfer Agent ：為在電腦與本地端 Mail server 或 Internet 上面的 Mail server 傳送訊息與郵件的主機；
+		<li>Mail Dilivery Agent ：主要的功能就是將 MTA 所收受的本機信件，放置到本機帳戶下的郵件檔案中 ( Mailbox )！
+		</ul>
+	</font></div>
+
+	<li>POP3 與 SMTP 的功能為何？</li>
+	<div class=block2><font color=white size=-1>
+		<ul>
+		<li>SMTP 為使用於 MUA 或 MTA 與 MTA 之間的傳輸協定，通常使用 port 25 ，只要主機支援 SMTP ，並且其他 
+		relay 的條件能配合，就可以進行郵件傳遞！
+		<li>POP3 可以提供使用者經由 MUA 到 MTA 下載郵件，同時並可將郵件從主機上面刪除！
+		</ul>
+	</font></div>
+
+	<li>請簡單的說明 DNS 裡面 MX 標誌與 Mail 的關係為何？</li>
+	<div class=block2><font color=white size=-1>
+		MX recode 可以可以讓 mail server 經由 MX 以及 A ( address ) 這個記錄來進行 mail gateway 與 mail route 
+		的功能！能夠達到的作用相當的多！
+	</font></div>
+
+	<li>今天我突然興起，想要修改我的 sendmail ，請問， sendmail 的設定檔在哪裡？而我要以什麼程式修改 sendmail 呢？</li>
+	<div class=block2><font color=white size=-1>
+		Sendmail 的設定檔為 sendmail.cf ，這個檔案通常放置在 /etc/sendmail.cf 或者 /etc/mail/sendmail.cf 
+		您可以手動的編輯這個檔案，不過不建議如此，取得代之的，可以使用 m4 這個程式來進行 macro 
+		的動作，進一步的完成 sendmail.cf 的修改！至於使用 m4 時，需要先建立 m4 scripts ，再以 m4 轉換才能形成 
+		sendmail.cf 喔！ 
+	</font></div>
+
+	<li>什麼是 mailling list ？在 sendmail 底下有什麼方法可以不藉由其他的軟體達到 mailling list 的功能？</li>
+	<div class=block2><font color=white size=-1>
+		Mailling list 就是將使用者寄給一個帳號郵件時，該帳號會主動的將該郵件傳送到所有的用戶去！有點類似目前的電子報！在 sendmail 
+		底下，我們可以透過 aliases (需配合 newaliases) 以及 ~/.forward 來達成喔！
+	</font></div>
+
+	<li>如何察看郵件佇列的內容，以及郵件佇列內容放置在何方？</li>
+	<div class=block2><font color=white size=-1>
+		使用 mailq 即可知道目前郵件佇列的內容，而郵件佇列雖然可以透過 sendmail.cf 來修改，不過，預設情況下，都是以 
+		/var/spool/mqueue 為郵件佇列目錄。 
+	</font></div>
+
+	<li>若我的 sendmail 主機有很多名稱，我想讓這些名稱都可以進行 mail 的接收，應該修改什麼檔案？</li>
+	<div class=block2><font color=white size=-1>
+		可以修改 /etc/mail/local-host-names 來達成！
+	</font></div>
+
+	<li>什麼是 Open Relay？</li>
+	<div class=block2><font color=white size=-1>
+		所謂的 Open Relay 就是，不論發信端來自何處，您的 Open Relay 的主機均可以幫發信端將信件發送出去，這個稱為 
+		Open Relay 。如果您的 mail server 具有 open relay 的情況，那麼很容易遭受到垃圾郵件的填充，
+		不但造成網路頻寬的耗損，也容易讓您的主機被列入黑名單當中！
+	</font></div>
+
+	<li>如果要讓 Postfix 可以收發來自非本機的外部信件，您可以修改 main.cf 裡面的什麼參數？</li>
+	<div class=block2><font color=white size=-1>
+		需要在 main.cf 裡面修改的變數主要有：
+		<ol>
+		<li>當 Client 來自信任的網域，也就是 IP 符合 $mynetworks 的設定值時；
+		<li>當 Client 來自信任的機器，也就是主機名稱符合 $relay_domains 的設定項目時；
+		<li>當 Client 來自不信任的網域，但是去的目的地主機端符合 $relay_domains 的設定時。
+		</ol>
+	</font></div>
+
+	<li>如何察看您目前的 Postfix 伺服器的所有設定參數？(使用什麼指令？)</li>
+	<div class=block2><font color=white size=-1>
+		利用 postconf -n 可以察看『目前 main.cf 裡面設定的參數』，而如果要看所有的參數，則直接使用 postconf 即可！
+	</font></div>
+
+	<li>Mail Server 能否運作與 DNS ( MX 與 A recode )的相關性為何？</li>
+	<div class=block2><font color=white size=-1>
+		目前網際網路社會合法的 Mail server 通常僅會針對具有 MX 標誌的郵件主機發出信件而已。
+		而如果有多重 MX 時，首先會選擇最小 MX 主機寄信，依序處理。而最終依據 MX 主機的 A 標誌來查得最終目標。
+	</font></div>
+
+	<li>什麼是 smtp, pop3 以及 imap 協定，他們的用途分別是什麼？</li>
+	<div class=block2><font color=white size=-1>
+		<li>smtp：用來傳遞郵件的協定，通常我們稱為 MTA 即是此一協定所達成
+		<li>pop3：讓 client 端向主機端要求收信的協定，通常預設收信完成後，主機端的 mail box 會被刪除；
+		<li>imap：與 pop3 類似，不過 imap 允許使用者在主機的家目錄建立郵件資料匣
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>Sendmail 官方網站： <a href="http://www.sendmail.org" target="_blank">http://www.sendmail.org</a></li>
+	<li>Postfix 官方網站： <a href="http://www.postfix.org" target="_blank">http://www.postfix.org</a></li>
+	<li>Cyrus-SASL 官方網站： <a href="http://asg.web.cmu.edu/cyrus/download/sasl/doc/" 
+		target="_blank">http://asg.web.cmu.edu/cyrus/download/sasl/doc/</a></li>
+	<li>Procmail 官方網站： <a href="http://www.procmail.org" target="_blank">http://www.procmail.org</a></li>
+	<li>Open Relay Database： <a href="http://www.ordb.org/" target="_blank">http://www.ordb.org/</a>
+		(很可惜，已於 2006/12/18 關站)</li>
+	<li>Study Area 之郵件架設：<a href="http://www.study-area.org/linux/servers/linux_mail.htm" 
+		target="_blank">http://www.study-area.org/linux/servers/linux_mail.htm</a></li>
+	<li>SMTP 認證系統的建置：<a href="http://beta.wsl.sinica.edu.tw/~ylchang/Email/sendmail-auth/" 
+		target="_blank">http://beta.wsl.sinica.edu.tw/~ylchang/Email/sendmail-auth/</a></li>
+	<li>台灣學術網路黑名單網頁： <a href="http://140.111.1.22/tanet/spam.html" 
+		target="_blank">http://140.111.1.22/tanet/spam.html</a></li>
+	<li>臥龍小三的 Procmailrc 範例：<a href="ftp://ftp.tnc.edu.tw/pub/Sysop/MAIL/procmailrc" 
+		target="_blank">ftp://ftp.tnc.edu.tw/pub/Sysop/MAIL/procmailrc</a></li>
+	<li>林克敏主任文件集之 Procmail 範例：<a href="http://freebsd.lab.mlc.edu.tw/procmail.htm" 
+		target="_blank">http://freebsd.lab.mlc.edu.tw/procmail.htm</a></li>
+	<li>Postgrey 官方網站：<a href="http://isg.ee.ethz.ch/tools/postgrey/" 
+		target="_blank">http://isg.ee.ethz.ch/tools/postgrey/</a>
+	<li>Postfix 針對 Postgrey 的設定： <a href="http://www.postfix.org/SMTPD_POLICY_README.html"
+		target="_blank">http://www.postfix.org/SMTPD_POLICY_README.html</a>
+	<li>一些 postfix 的 relay 機制設定： <a href="http://jimsun.linxnet.com/misc/postfix-anti-UCE.txt"
+		target="_blank">http://jimsun.linxnet.com/misc/postfix-anti-UCE.txt</a>
+	<li>小州的 postfix 設定： <a href="http://phorum.study-area.org/viewtopic.htm?t=30716"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=30716</a>
+	<li>POSTFIX 技術手札，Ralf Hildebrandt/Patrick Koetter 合著，上奇出版，2005年。
+	<li>TWU2 兄在酷學園所發表的自製郵件過濾軟體： <a href="http://phorum.study-area.org/viewtopic.htm?t=38649"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=38649</a>
+	<li>Amavis-new 一個在 MTA 與佇列間的服務：<a href="http://www.ijs.si/software/amavisd/"
+		target="_blank">http://www.ijs.si/software/amavisd/</a>
+	<li>廣告信件分析軟體：<a href="http://spamassassin.apache.org/index.html"
+		target="_blank">http://spamassassin.apache.org/index.html</a>
+	<li>Steven 的垃圾信抵擋機制：<a href="http://www.l-penguin.idv.tw/article/postfix_spam-spamassassin.htm"
+		target="_blank">http://www.l-penguin.idv.tw/article/postfix_spam-spamassassin.htm</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2006/11/13：準備將原本的 sendmail 以及 postfix 整合成為一篇專門介紹 Mail server 的小文章囉！<br />
+2006/11/14：原本的 <a href="0380sendmail.htm" target="_blank">sendmail 請參考這裡</a>，原本的 
+	<a href="0390postfix.htm" target="_blank">Postfix 則請參考這裡</a>。至於人數統計則以 sendmail 原本網頁增加。<br />
+2006/11/30：加上了郵件掃瞄與廣告信抵擋的 spamassassin 機制，呼呼！好累～<br />
+2006/12/05：加上<a href="#sa-learn">自動學習廣告信抵擋機制</a>方面的簡單介紹。<br />
+2007/02/07：新增<a href="#dont_drop_exe">不要丟棄 exe 附檔名</a>的資訊！<br />
+2007/02/27：感謝網友 Cheng-Lin Yang 提供的意見，在黑名單資料庫增加了 <a href="http://www.anti-spam.org.cn/"
+target="_blank">http://www.anti-spam.org.cn/</a>, <a href="http://www.spamhaus.org/" 
+target="_blank">http://www.spamhaus.org/</a><br />
+2007/04/05：感謝 chunkit 兄的來信告知，<a href="#20070405">將原本的 mail localhost 25 改成 telnet localhost 25 ！</a><br />
+</span>
+<hr><span class="text_date">2002/01/01以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0380mail.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

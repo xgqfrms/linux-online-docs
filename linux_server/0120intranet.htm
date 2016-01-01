@@ -1,0 +1,686 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 區域網路架構簡介與 Linux 版本選擇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0120intranet.htm">
+    <span class="text_head0">區域網路架構簡介與<span class="text_head_en"> Linux </span>版本選擇</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0120intranet.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/07/13</span>
+    </div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在前一章『<a href="0110network_basic.htm">網路基礎</a>』當中，
+	我們介紹了比較多理論方面的網路相關資訊，也大略的介紹了一些簡單的網路連線媒體需要注意的事項。
+	在這一章當中，我們將會繼續討論在一個小型企業或家庭裡面的小型區域網路規劃，
+	以讓您的所有電腦主機都可以直接利用乙太網路進行資料的連接啊！
+	一般來說，內部區域網路都希望直接使用私有 IP 來設定溝通環境，
+	直接以簡單的星形連線做為網路施工的主要類型，底下就分別來談一談如何規劃您主機在星形連線所應該要放置的狀態，
+	以及主機應該使用何種版本的 Linux distribution 較佳呢？
+</td></tr></table><br>
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#connect">區域網路的連線</a><br>
+	<span class=text_h2>
+	　　1.1 <a href="#connect_lan">什麼是區域網路？</a><br />
+	　　1.2 <a href="#connect_topo">區域網路的佈線規劃</a><br />
+	　　1.3 <a href="#connect_hw">網路媒體選購建議</a><br />
+	　　1.4 <a href="#connect_soft">內部連線的網路參數與通訊協定</a><br />
+	</span>
+2. <a href="#linux">Linux distributions 的選擇</a><br>
+	<span class=text_h2>
+	　　2.1 <a href="#linux_hw">主機硬體的選擇</a><br />
+	　　2.2 <a href="#linux_dis">distributions</a><br />
+	</span>
+3. <a href="#windows_winxp">Windows 個人電腦網路設定範例</a><br />
+<span class=text_h2>
+4. <a href="http://phorum.vbird.org/viewtopic.htm?p=112104"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=112104</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="connect"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">區域網路的連線</span><br />
+<div class=block1>
+	談完了<a href="0110network_basic.htm">網路基礎</a>後，
+	現在就讓我們實際的來將家裡或者小型企業內部的全部電腦給他連接起來吧！
+	當然啦，我們這裡主要介紹的是小型區域網路的架構，如果是比較大型的企業內部，
+	那麼將『配線盤、線路設計、牆上網路孔』分別拆開施工的結構化佈線會比較妥當，
+	不過，結構化佈線並非本文所想要討論的，如果您的企業有需求的話，可以向專業人士尋求協助，
+	舉例來說，酷學園(<a href="http://phorum.study-area.org" target="_blank"
+	>http://phorum.study-area.org</a>)的 ZMAN 兄就是一位很棒的網路佈線專家。
+	無論如何，先來將所有的網路硬體連線起來吧！<br /><br />
+
+	<hr /><a name="connect_lan"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>什麼是區域網路</span><br />
+	<div class=block2>
+		<span class=text_import2>區域網路 (Local Area Network, LAN)</span> 顧名思義就是在我們所屬區域的所有網路嘛！
+		如果由前一章<a href="0110network_basic.htm">網路基礎</a>提到的相關網域概念來看的話，
+		我們可以說區域網路就是在同一個網域內所有連線主機及網路媒體的統稱。
+		此外，區域網路通常是在同一個物理網段以內的，雖然藉由網路位址的設定可以規範出許多不同的 IP 網段，
+		不過，通常我們還是會稱這樣的環境為區域網路的。<br /><br />
+
+		總之，區域網路就是在您主機附近的網路環境，通常是在同一個物理網段內，IP 網段通常也在同一網域內。
+		比如說大學的學生宿舍內的網路環境，其實都是透過整棟大樓的 switch 集中連線，
+		所以是在同一個物理網段內，就常被稱為區域網路囉。<br /><br />
+
+		相對於區域網路而言，區域網路外的環境就可以被稱為<span class=text_import2>廣域網路
+		(Wide Area Network, WAN)</span>。這也是為什麼在您家裡的數據機上面的網路插孔上，總是有著 
+		LAN 與 WAN 這兩個插孔與燈號的存在啊！ ^_^<br /><br />
+
+		由前一章我們知道 <span class=text_imoprt2>Internet</span> 其實就是由 INTERNIC 所維護的一個架構鬆散的連線介面
+		( 其實也不能說是維護，只是 INTERNIC 有提供一些技術文件以及 Public IP 申請的相關資訊公布而已 )，
+		任何人只要能夠取得 Public IP 就可以連上 Internet 囉，同時 Internet 上頭也是沒有王法的地方，
+		要特別留意您的連線啊！OK，那什麼是 <span class=text_import2>Intranet</span> ？相對於 Internet 
+		是沒有專屬維護者的介面而言， Intranet 則是專屬的私人網域，只是這個網域使用的是類似 Internet 的連線架構，
+		例如使用私有 IP 架設 TCP/IP 區域網路的環境就能夠被稱為是 Intranet 囉。<br /><br />
+
+		如果要定義的更為狹義的話，我們可以說，區域網路就是在同一個物理網段的環境內，
+		使用私有 IP 或者是區域網路適用的通訊協定所串起來的一個網路環境。
+		既然區域網路常常使用私有 IP ，那麼區域網路可否連上 Internet 啊？『當然可以』！
+		簡單的話，可以使用 IP 分享器來取得 Public IP 上網，複雜的話，
+		可以使用 Linux 主機架設 NAT (Network Address Translation) 伺服器來轉址，
+		就能上網啦！由於私有 IP 不會與 public IP 衝突，
+		並且也可以避免直接與 Internet 的資料互通，可以減少很多被主動攻擊的情況。
+		所以啊，您的區域網路最好還是設定私有 IP 比較妥當吶！<br /><br />
+	</div>
+
+	<hr /><a name="connect_topo"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>區域網路的佈線規劃</span><br />
+	<div class=block2>
+		記得以前聽 ZMAN 大哥某場演講的時候提到，網路佈線是『數十年大計』中最重要的一環，
+		因為『<span class=text_import2>伺服器主機能力不夠時換主機就好了，Switch 交換力不足時換 switch 就好了，
+		但如果佈線不良，難道要拆掉房子將管線挖出來重新安裝設定？</span>』所以說，
+		最初規劃的佈線嚴謹度真的會影響到未來網路的分佈情況啊！所以說，
+		如果您的企業『整棟大樓需要重新佈線』時，真的非常建議您務必要找尋專業網路佈線專家幫忙設計規劃，
+		因為連一個小小的機櫃配線箱都有大學問～設計的好的話，每部獨立的主機要改線路、
+		要換插孔都變的很簡單！而且主機到牆上插孔的距離也會變的很短，維護也會很方便！線段也會很美觀！
+		當然啦，如此一來，網路線材的選擇也就不能夠用太差的！而且網路佈線經過折角區時，
+		也需要特別留意施工吶。<br /><br />
+
+		但是本文討論的是一些比較小的區域網路環境，這樣的環境可以是在一間辦公室內而已，
+		所以我們這裡談到的大多是比較單純的佈線狀態，並沒有考慮到辦公室外部的環境，
+		所以參考本文時，請特別留意這種差異性喔！<br /><br />
+
+		在這樣單純的環境中，我們可以利用一個以 switch 為中心來串連所有設備的星形連線 (star topology)
+		架構來設計我們的區域網路啊！在這樣的環境中您需要擔心的是『
+		<span class=text_import2>那我的 Linux 伺服器要放在那個地方</span>？』
+		會考慮 Linux 伺服器是因為鳥哥假設你需要在你的區域網路內架設對 Internet 開放網路的服務！
+		而 Linux 是否具有 Public IP 對於主機的維護與設定的複雜度有很大的影響，所以當然需要考量囉！
+		底下鳥哥以目前在台灣挺流行的 ADSL 利用電話線路上網的環境來說明幾種連線狀態：<br /><br />
+
+		<hr /><span class=text_import1>Linux 主機直接連到 Internet 的環境：</span><br />
+		<div class=block2>
+		在底下的環境當中，鳥哥假設我們僅有一條 ADSL 的對外連線，也就是說，
+		我們的 Linux 與一般 PC (不論何種作業系統) 都是透過同一條線連到 Internet 上面去的。<br /><br />
+
+		<span class=text_import1>讓 Linux 與一般 PC 在同等地位：</span><br /><br />
+		如果您使用的 ADSL 是多 IP 的條件 (例如撥接可以給予 2-8 個 IP 的情況)，
+		那麼最簡單的方式就是如下圖一的連線模式：<br /><br />
+
+		<center><a name=fig_1></a>
+		<img src="0120intranet/connect_01.png"
+		title="Linux 伺服器取得 public IP 的連線方式之一" alt="Linux 伺服器取得 public IP 的連線方式之一">
+		<br />圖一、Linux 伺服器取得 public IP 的連線方式之一(具有多個可用 IP 情況)</center><br />
+
+		在這種連線模式當中， Linux 與一般 PC 或印表機都是同等地位，並沒有誰比較『大尾！』^_^
+		如果不急著連上 Internet 時，那麼<span class=text_import2>每個設備都給予一個同網域的私有 
+		IP 就可以進行網路連線的工作了</span>，
+		您也可以很快樂的使用印表機或者是網路上的芳鄰等等工作。
+		此外， Linux 伺服器也可以作為內部的檔案伺服器或者是印表機伺服器等等。<br /><br />
+
+		當需要連上 Internet 時，每部電腦 (包括 PC 與 Linux 主機) 都可以直接透過撥接連上，
+		而由於撥接是在每部機器上面『<span class=text_import2>額外增加一個實體的 ppp0 介面</span>』，因此，
+		撥接上網之後每部主機還是可以使用原有的區域網路內的各項服務，而無須更動原本設定妥當的私有 IP 。
+		這樣的情況對於一般家庭使用者來說，可以算是最佳的解決方案啦！因為如果您的 Linux 主機掛點時，
+		其他個人的 PC 是不會被影響的！<br /><br />
+
+		不過這樣的環境對於小型企業主來說，卻不好管理。因為無法掌握每個員工實際上網的情況，
+		而且對於防火牆來說，『<span class=text_import2>根本就是一個沒有防火牆的環境</span>』，所以，
+		是沒有辦法對員工進行任何實際網路的掌控的，並且由於網路內外部  (LAN 與外部環境)
+		並沒有明確的分開，網管人員對於進入用戶端的封包是沒有任何管理的能力，
+		所以對於網路安全來說，是很難管控的一種環境啊！因此對於企業來說，不建議這種環境。<br /><br />
+
+		<span class=text_import1>讓 Linux 與一般 PC 分開：</span><br /><br />
+		如果您有多個可用的 public IP ，並且您的 Linux 伺服器主要是提供 Internet 的 WWW 或 mail 服務，
+		而不是作為內部的檔案伺服器之用，那麼將 Linux 伺服器與內部的網域分開也是個可行的方法，
+		而且 Linux 擁有 public IP，在設定與維護上面也不困難，如下所示：<br /><br />
+
+		<center><a name=fig_2></a>
+		<img src="0120intranet/connect_02.png"
+		title="Linux 伺服器取得 public IP 的連線方式之一" alt="Linux 伺服器取得 public IP 的連線方式之一">
+		<br />圖二、Linux 伺服器取得 public IP 的連線方式之二(具有多個可用 IP 情況)</center><br />
+
+		所有的 LAN 內的電腦與相關設備都會在同一個網域內，所以在 LAN 內的傳輸速度是沒有問題的，
+		此外，這些電腦要連出至 Internet 時，必須要透過 IP 分享器，
+		所以您也可以在 IP 分享器上面設定簡單的防火牆規則，
+		如果 IP 分享器可以換更高階的設備時，那麼您就可以在該設備上面架設規則較為完整的防火牆，
+		對於內部主機有相當程度的管理，並且好維護啊！<br /><br />
+
+		<span class=text_import1>讓 Linux 直接管理 LAN：</span><br /><br />
+		如果您不想要購買 IP 分享器的話，那麼直接利用 Linux 伺服器來管理就好了啊！
+		沒錯啊！那麼你可以這樣佈線：<br /><br />
+
+		<center><a name=fig_3></a>
+		<img src="0120intranet/connect_03.png"
+		title="讓 Linux 管理 LAN 的佈線情況" alt="讓 Linux 管理 LAN 的佈線情況">
+		<br />圖三、讓 Linux 管理 LAN 的佈線情況</center><br />
+
+		這種情況下，不論你有多少個 IP 都可以適用的，尤其是當你只有一個 public IP 時，就非得使用這種方式不可了。
+		讓 Linux 作為 IP 分享器的功能相當的簡單，同時 Linux 必須具備兩張網路卡，分別是對外與對內，
+		由於 Linux 依舊具有 public IP ，所以在伺服器的設定與維護上相當的簡單，
+		同時 Linux 伺服器可以做為內部網域對外的防火牆之用，由於 Linux 防火牆的效能挺不錯
+		加上設定也很簡單，功能卻也是很不錯的！因此，網路管理人員也較能進行較完善的掌控，
+		並且， Linux 伺服器也要比高階的硬體防火牆便宜多了！ ^_^
+		鳥哥個人是比較喜好這種方式的連線啦！<br /><br />
+
+		不過，我們都知道『<span class=text_import2>伺服器提供的網路服務越單純越好</span>』，
+		因為這樣一來主機的資源可以完全被某個程式所使用，不會互相影響，而且當主機被攻擊時，
+		也比較能夠立即瞭解是那個環節出了問題。但是如同圖三的狀況來說的話，
+		由於內部的 LAN 是需要通過 Linux 才能連線出去，所以 Linux 掛點時，整個對外連線就掛了，
+		此外， Linux 的服務可能就太複雜了點，可能會造成維護上的困難度。
+		但對於小型區網來說，圖三這種架構還是可以應付的來的啦！<br /><br />
+		</div>
+
+		<hr /><span class=text_import1>Linux 主機放在 LAN 裡面：</span><br />
+		<div class=block2>
+		瞎密？我們的 Linux 主機放在 LAN 裡面？有沒有搞錯啊？沒搞錯啊～
+		比較大型的企業通常會將他們的伺服器主機放置在機房內，主要是在 LAN 的環境下，
+		再透過防火牆的封包重新導向的功能，將來自 Internet 的封包先經過防火牆後才進入到伺服器，
+		如此一來可在防火牆端就砍掉一堆莫名其妙的偵測與攻擊，當然會比較安全啊！
+		這種架構還依防火牆的多寡而又可分為非軍事區(DMZ)的配置，不過，太麻煩了～不建議初學者直接使用。
+		底下我們僅介紹較簡單的架構來說明：<br /><br />
+
+		<center><a name=fig_4></a>
+		<img src="0120intranet/connect_04.png"
+		title="Linux 主機放在 LAN 裡面的佈線情況" alt="Linux 主機放在 LAN 裡面的佈線情況">
+		<br />圖四、Linux 主機放在 LAN 裡面的佈線情況</center><br />
+
+		這裡我們以一個較簡單的圖示來說明，所以利用的還是 IP 分享器，可能的話，
+		您可以將 IP 分享器換成 Linux 主機來架設防火牆，也是一個不錯的選擇啊！
+		反正現在電腦天天在升級，升級後的舊配備其實就可以作為 Linux 防火牆之用了！
+		反正防火牆又不需要什麼硬碟與強效的顯示或者 CPU，
+		只要有不錯的網路介面就能夠達到不錯的防火牆效能了。<br /><br />
+
+		不過這裡得再次的強調， Linux 伺服器主機若放在 LAN 裡面，則當你要對 Internet 提供網路服務時，
+		防火牆的規則將變的相當複雜，因為需要進行封包轉遞的任務，在某些比較麻煩的協定當中，
+		可能會造成設定方面的困擾。所以，在您初接觸 Linux 伺服器時，
+		<span class=text_import2>不建議新手使用這種連線架構</span>，避免由於失去信心而沒有動力學習～(@_@)。
+		<br /><br />
+		</div>
+
+		每種連線的方式都有其適用的使用者群，所以沒有那個是比較好的，
+		完全是看您自己的網路環境而定喔！瞭解了簡單的網路佈線方式後，
+		底下我們來談一談幾個常見的網路元件的名詞吧！<br />
+		<ul>
+		<li><span class=text_import1>Node (節點)</span>：<br />連接在網路上的，
+			<span class=text_import2>具有網路卡卡號的設備都可以是節點</span>。
+			包括伺服器、工作站、路由器與網路印表機等等，都是一個節點；
+			如同<a href="0110network_basic.htm">網路基礎</a>內談到的， IP 封包內會有個 TTL 
+			的封包存活時間，該時間與封包經過的節點數有關吶！<br /><br /></li>
+		<li><span class=text_import1>Client (用戶端)</span>：<br />向主機端主動發出連線要求的就稱為 Client 。
+			<br /><br /></li>
+		<li><span class=text_import1>Server (伺服器端)</span>：<br />在網路上面提供網路相關服務的，
+			可以回應用戶端的連線要求者，就可以稱為是伺服器了。不過 client/Server 的架構當中，
+			每部主機的身份可能隨時會改變啊！舉例來說，當 mail server 要傳送資料時，
+			必須要向 DNS 主機詢問目標 email 的 IP 位址，此時 mail server 反而是 client 端吶！<br /><br /></li>
+		<li><span class=text_import1>Interface (網路介面)</span>：<br />網路介面除了實體網路卡之外，
+			透過點對點 (point to point) 連線方式所建立的 PPP0 介面也是一個實際的介面。
+			此外，每張網路卡上面都可以設定多個 IP ，那些多的 IP 則設定在虛擬的網路介面上！<br /><br /></li>
+		<li><span class=text_import1>Network Interface Card, NIC(網路卡)</span>：
+			可以說是最重要的網路元件了！因為所有想要連上乙太網路的主機都需要有乙太網路卡！<br /><br /></li>
+		<li><span class=text_import1>Workstation (工作站)</span>：<br />沒有對 Internet 提供網路服務，
+			但是提供使用者登入進行學術研究，例如數值模式模擬、大型程式編譯與開發等等的高階主機，
+			都可以被稱為工作站。<br /></li>
+		</ul>
+
+		OK！我們現在知道要連上乙太網路組成的區域網路，就得要有網路卡、網路線、網路集中媒體(hub/switch)、
+		連上 Internet 的數據機等等，在這裡鳥哥將防火牆、路由器等等設備歸類為主機，
+		因為基本上，這些元件內部一定會含有一個網路卡，只是作業系統的精簡程度與軟體功能的不同就是了。
+		那麼這些所需要的網路硬體又該如何挑選呢？<br /><br />
+	</div>
+
+	<hr /><a name="connect_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>網路媒體選購建議</span><br />
+	<div class=block2>
+		在開始底下的介紹之前，您必須要對於跳線、平行線、RJ-45 網路線、Hub/Switch 
+		的優劣等等有一定程度的瞭解，請再前往<a href="0110network_basic.htm">網路基礎</a>看一看。
+		此外，不在我們區域網路內的設備，例如數據機，那就得向您的 ISP 詢問了！一般來說，
+		數據機是中華電信提供給用戶的，然而由於『<span class=text_import2>中華電信因為不同批次安裝的數據機模組不同，
+		所以會有不一樣的連接與線材處理方式！</span>』例如早期的數據機 (有的朋友會稱 ADSL 數據機為小烏龜) 
+		連接到電腦的網路卡是使用跳線，但是近期的數據機卻使用的是一般的平行線！所以請特別向您的 ISP 
+		詢問才行。底下主要針對區域網路內的網路媒體來進行介紹與說明。<br /><br />
+
+		<span class=text_import1>網路卡：</span><br />
+		<div class=block2>
+		目前常見的 ADSL 撥接與固定制，以及 Cable Modem 的連線上網方式都需要藉由乙太網路卡的輔助，
+		我們也知道乙太網路卡的規格實在太多了，所以底下我們就簡單的來作個說明吧！<br /><br />
+		一般來說，目前的新主機幾乎都是內建 gigabit 的乙太網路卡了，所以您不需要額外購買網路卡。
+		不過，這種內建的網路卡通常晶片的啟動驅動程式比較麻煩，您必須要先參考他官方網站所提供的驅動程式安裝手冊後，
+		才能夠順利的驅動哪！如果想要額外購買網路卡的話，以現在的網路速度與連線品質來看，
+		一般家庭使用 10/100 Mbps 應該是足夠了，不過如果有特殊需求的話，買個 10/100/1000 Mbps
+		的超高速乙太網路卡也不錯喔！<br /><br />
+		如果是想要作為 Linux 伺服器的話，那麼您的網路卡可能必須要購買好一點的。
+		舉例來說，某些主機板內建便宜的 gigabit 網路介面，但越便宜的網路介面可能會造成損耗較多的 CPU 資源，
+		如果能夠購買類似 Intel/3Com 等知名品牌的 gigabit 介面卡，不但傳輸較為穩定，
+		並且可以降低系統資源的耗費，是有一定程度的幫助的。另外，如果強調高速的話，
+		甚至可以選用 PCI-Express 的網路卡，而不使用傳統的 PCI 介面。因為 PCI-Express 的傳輸頻寬更高。<br /><br />
+		不過，如果是一般家用，或者是準備用來作為學習機之用的主機，那麼萬一網路卡晶片無法驅動時，
+		<span class=text_import2>請先買個螃蟹卡 (晶片是 Real Tek 8139) 來作為練習之用</span>，
+		因為 Linux 本身就支援 Real Tek 8139 的晶片，您不需要額外的驅動程式，這樣會方便學習啊！
+		而且該網路卡也很便宜(大賣場一片不到 300 塊台幣)。<br />
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		如果要玩 Linux 又想比較順暢的玩弄 Linux 時，請不要堅持使用 Linux 捉不到的網路卡！否則那份失望的心情 
+		......會讓您失去很多很多的耐性與信心啊～<br /><br />
+		螃蟹卡最好認的地方在於其晶片上面有個類似螃蟹的 Logo ，以前鳥哥曾經在大賣場上面逛大街時，
+		還『踢飛』過一整排螃蟹卡～便宜到都放在地上而已～ @_@
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<span class=text_import1>Switch/Hub：</span><br />
+		<div class=block2>
+		就如同<a href="0110network_basic.htm">網路基礎</a>裡面曾經談到的， Hub 是共享媒體而
+		Switch 是具有獨立頻寬的非共享媒體。因此以效能以及速度來看，當然是 switch 比較好用啊！
+		不過，如果您是一般家庭用戶，只是要作簡單的上網等工作，是沒有必要購買太好的集線器的，
+		建議使用一般大賣場可以買到的 5 port 的集線器即可 (差不多500塊台幣的就不錯了)。<br /><br />
+		不過如果你常常在區網內傳送大量的資料，例如一次傳輸就得要傳送 GBytes 的資料時，
+		那麼網路的整體速度需要很詳細的考慮喔！包括網路卡最好使用 gigabit ，
+		當然中間的連線設備最好買支援到 gigabit 速度的 switch 啦！因為 10/100/1000Mbps 的 switch 
+		要比 10/100Mbps 的設備快上十倍，速度可是差很多的啊！如果您的設備還需要更快時，
+		例如鳥哥之前服務的實驗室內部的 cluster (叢集式電腦群) ，則購買的 switch 甚至需要支援 Jumbo frame
+		這種支援大訊框的硬體架構才行，否則速度上不來啊！<br /><br />
+		購買 switch/hub 時，<span class=text_import2>注意到該硬體是否具有 
+		<a href="0110network_basic.htm#n-way">N-Way</a> (自動協調速度機制) 
+		以及 <a href="0110network_basic.htm#auto_mdi">Auto MDI/MDI-x</a> (自動跳線機制)</span>，
+		這樣可以不需要考慮手動切換速度以及網路線購置錯誤的問題。不過，以目前的消費水準來說，
+		建議添購時，直接購買 gigabit 的 switch  吧，擴充性會比較好吶！<br /><br />
+		</div>
+
+		<span class=text_import1>網路線：</span><br />
+		<div class=block2>
+		在所有串連網路的設備當中，網路線是最重要，但是卻也最容易被忽略～
+		除了網路線的等級會影響到連線速度外，<span class=text_import2>網路線所在處是否容易被壓折？
+		是否容易有訊號衰減？自己壓製的 RJ-45 接頭是否通過測試？網路線是否纏繞情況嚴重？
+		都會影響到網路的傳輸優劣</span>！
+		所以，雖然我們常常講要確認主機與 Switch 是否有連接成功可以看 switch 上的燈號，
+		但是很多時候雖然燈號是亮的，不過由於網路線折損嚴重的問題，也會導致連線品質不良喔！<br /><br />
+		一般來說，『個體戶』與小型企業通常網路線是直接放在外部的，這種情況您發現網路怪怪的時，
+		可以直接更換線路，不過，如果是如同中大型企業將網路線直接埋在牆內，
+		或者是在管線當中，發現問題時，真的很麻煩～所以才需要專業人才的輔助啊！<br />
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		一般來說，越高等級的網路線，最好不要自行製作，因為一個小小的 RJ-45 接頭的壓製，
+		由於蕊線裸露程度的不同，就會影響到電子屏蔽效應的優劣了。Cat 5 等級的線材還可以自行壓製，
+		比他還高等級的，最好還是買現成的吧！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<span class=text_import1>無線網路相關設備：</span><br />
+		<div class=block2>
+		現在的網路環境除了傳統的乙太網路之外，其實還有一個也是很常見的喔，那就是無線網路啦！
+		無線網路會流行主要的原因除了筆記型電腦能力越來越強，使得很多朋友直接以筆記型電腦取代桌上型電腦之外，
+		無線網路的速度目前已經可以達到 54Mbps 那麼快了，對於一般只是上網看新聞與聊天的上班族來說，
+		這樣的速度實在是非常快了 (一般的 ADSL 僅是 2M/256K bps 而已)，
+		所以要買無線網路設備 (含基地台與在 client 端的無線網卡) 來做成區域網路，
+		其實也是可以啦！而且還可以省去網路線的施工呢！<br /><br />
+		不過，無線網路最大的問題常常在於『無線的安全性』方面，因為是無線的設備，
+		所以『<span class=text_import2>基地台如果沒有做好防備措施的話，常常會導致 LAN 內的主機資料被竊取</span>』，
+		這可是非常大的問題喔！可千萬不要小看這個問題，吃上官司常常是由於忘記網路安全啊！
+		記得購買無線網路基地台時，注意他可否『限制 MAC 』，如此一來，至少可以鎖網卡，
+		只讓指定的網卡可以使用您的無線基地台，比較安全啦！<br /><br />
+		</div>
+
+		<span class=text_import1>關於其他配件：</span><br />
+		<div class=block2>
+		事實上，整個網路環境可不止上頭提到的這些咚咚而已，還包括硬體防火牆、路由器、橋接器等等的，
+		當然，這些設備貴的話也有上百萬的，但您的環境是否需要用到這麼好的設備，那就見仁見智啊～此外，
+		為了環境的美觀與生活的便利，您總不希望走在路上被網路線所絆倒，也不希望因為網路線絆倒你導致網路媒體掉落，
+		結果........損失了一堆 $$ 吧～所以囉，在網路線的轉角處必須特別注意線材的保護，
+		在平面地上則需要特別使用壓條給予固定，在牽線施工的時候盡量讓線材沿著牆角或者是牆面上的既有物品，
+		如此則除了保持工作場所的美觀之外，還能夠增加工作場所的安全性啊！ ^_^<br /><br />
+		此外，『<span class=text_import2>電腦上網的速度並非完全取決於網路頻寬</span>』舉例來說，
+		玩線上遊戲時，大家都以為網路頻寬需要很高規格，其實....根本不需要！因為 3D 
+		連線遊戲最主要的速度瓶頸應該是在於『3D 顯示』而不是網路。這是因為網路僅傳送一些數據給您的主機，
+		而您的主機再在自己的硬碟裡面將圖形取出，並且使用 3D 繪圖卡將畫面繪製到您的螢幕上。
+		所以，顯示速度或者是 CPU 不夠力時，才會發生連線遊戲的頓點。否則就是連線遊戲伺服器本身的負載 (loading)
+		太大，導致主機回應有較多延遲，就產生 lag (頓點) 的問題啦！<br /><br />
+		另外，包括您主機使用的資料是否具有快速的傳輸介面也有關。舉例來說，如果您的主機使用 USB 1.1 
+		(最大傳輸 12Mbps)，但網路速度可達 10/100/1000Mbps ，那當您要在遠端使用這部電腦的 USB 
+		裝置內的資料時，最大速度會是『 12Mbps 』，也就是最慢的那一個元件。所以啊，
+		<span class=text_import2>網路速度慢的時候，
+		不要以為只要增加網路頻寬就好了，要確切的找出問題啊</span>！ ^_^<br /><br />
+		</div>
+		事實上，選購網路媒體所需要考量的參數實在太多了，並且沒有一定的依據，
+		完全與使用者的使用環境與未來功能性有關。不過，如果著眼在單純的硬體速度上面的話，
+		那麼選購時考量『我的網路速度可接受的最低速度為何？』去考慮吧！
+		如果行有餘力的話，再來考慮『我的環境需要多穩定的設備來達成？』
+		其他的，那就得要靠您自己摸索囉！ ^_^<br /><br />
+	</div>
+
+	<hr /><a name="connect_soft"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>內部連線的網路參數與通訊協定</span><br />
+	<div class=block2>
+		除非您已經具有相當熟練的 Linux 系統與伺服器架設維護經驗，
+		否則不建議您使用上面<a href="#fig_4">圖四</a>所介紹的連線模式，
+		對於初接觸 Linux 伺服器架設與維護的朋友來說，
+		將您的連線模式設定成<a href="#fig_3">圖三</a>應該是個不錯的選擇，
+		除了可以讓您簡單的就將伺服器架設成功之外，也可以讓您以 Linux 做為內部 LAN 的防火牆管理中心，
+		對於未來的學習成長方面較有幫助啊！ ^_^<br /><br />
+
+		在圖三的環境下， Linux 必須要具有 router (路由器) 的能力，所以當然必須就要有兩個介面，
+		一個介面與 Internet 溝通，另一個介面則與內部的 LAN 溝通。
+		那麼為什麼鳥哥說的是『<span class=text_import2>兩個網路介面</span>』而不是
+		『<span class=text_import2>兩張網路卡</span>』呢？原因很簡單，
+		<span class=text_import2>因為一張網路卡可以設定多個 IP</span> 啊！因此，在 
+		Linux 當中一張網路卡可以具有一個以上的 IP 呢！由於一個 IP 
+		即為一個網路介面，因此只要兩個網路介面 ( 不論有幾張網路卡 ) 即可進行 NAT 
+		的設定啦！所以自然一個網路卡即可囉！不過，鳥哥個人還是比較喜歡並且建議兩張網路卡的啦，
+		將內外網路環境完整的分開，讓您的內部網路效能較佳一點！<br /><br />
+
+		關於與 Internet 的連線方面，目前在台灣最常見的有電話專線的 ADSL 連線模式、
+		利用電視纜線搭設單向或雙向的 Cable Modem ，以及例如學術網路的固定 IP 的專線等等。
+		這些連線的方式我們將在後續章節繼續介紹的。至於內部的 LAN 我們則建議使用 Private IP 來設定喔！
+		鳥哥通常喜歡使用 192.168.1.0/24 這個 Class C 的網域，沒什麼特殊原因，只是因為....我喜歡！ ^_^
+		在選定了 Private IP 的網段後，您必須要有『<span class=text_import2>IP, Network, Netmask,
+		Broadcast, Default gateway 以及 DNS 伺服器的 IP</span>』等等的設定值。
+		假設我 Linux 主機的對內 IP 為 192.168.1.2 ，則
+		在<a href="#fig_3">圖三</a>內的 LAN 內的 PC 之網路相關設定參數則為：
+		<ul><span class=text_import2>
+		<li>IP:設定為 192.168.1.1~192.168.1.254 ，但 IP 不可重複；
+		<li>Netmask：255.255.255.0
+		<li>Network：192.168.1.0、Broadcast：192.168.1.255
+		<li>Default Gateway：192.168.1.2 (路由器的 IP )
+		<li>DNS：暫時使用 168.95.1.1
+		</span></ul>
+
+		<span class=text_import1>安裝什麼通訊協定</span><br /><br />
+		什麼是通訊協定呢？簡單的說，通訊協定就是一些標準與規則。一個社會要能夠正常的運作，
+		必須要有一套標準與公正的遊戲規則，大家都遵循這個規則，那麼這個社會才能夠沒有問題的營運下去，
+		所以我們才會有警察、司法、檢調單位等等來維護我們的公正性。同樣的，在網路的社會中，
+		要讓資料能夠透過網路媒體傳送，那麼硬體製造商、軟體開發商，就必須要共同遵循同一套標準，
+		這樣整個網路社會才能夠正常無誤的進行資料的傳遞。<br /><br />
+
+		目前網路社會最通用的通訊協定就是 TCP/IP 了！TCP/IP 訂定了 IP 
+		基礎與路由協定等資訊，讓我們的網路世界可以互通有無，此外，在區域網路內部，
+		由於是小型的網域，事實上還可以透過簡單的通訊協定來達到資料傳輸的目的，例如
+		<span class=text_import2>NetBEUI</span> 就是一個常見的簡易通訊協定。
+
+		在 Linux 系統當中，只要將網路參數設定妥當，那麼 TCP/IP 
+		就已經被啟用了，所以您不需要額外的再安裝其他的通訊協定。不過，如果您需要將你的
+		Linux 系統中的硬碟空間分享給同網域的 Windows PC 時，那麼就需要額外的加裝
+		<a href="0370samba.htm">SAMBA</a>
+		這個伺服器軟體才行。相關的 SAMBA 資料我們會在後面的章節提及。反正不管怎麼說，目前
+		Internet 就是經由 TCP/IP 來進行連接的，而 Linux 本身就支援了 
+		TCP/IP ，所以不需要額外的安裝有的沒的說！<br /><br />
+
+		至於在 Windows 部分就比較麻煩一點，因為在較大型的企業當中，還需要額外的考慮到
+		Windows Server 所提供的服務，那麼在 Windows Clients 端就得要相應的啟動某些通訊協定才行。一般來說，在
+		Windows Client 系統裡面，最常見的兩個通訊協定就是 TCP/IP 以及 NetBEUI 這兩個通訊協定了。如果您只想讓
+		Windows 與 Linux 能夠藉由網路上的芳鄰互通有無，那麼啟動 TCP/IP 也就夠了
+		( 因為 SAMBA 是藉由 NetBIOS over TCP/IP 來達成資料傳輸的 ) ，不過，也可以同時啟動
+		NetBEUI 這個通訊協定就是了。相關的說明可以參考 <a href="0110network_basic.htm">網路基礎</a>
+		以及後續的 <a href="0370samba.htm">SAMBA</a> 伺服器等章節。<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="linux"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux distributions 的選擇</span><br />
+<div class=block1>
+	在『<a href="../linux_basic">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』當中我們提到過 Linux distributions 
+	可是多的跟什麼一樣，那麼你該如何選擇你的 Linux distributions ？基本上，哪一套 Linux distribution 
+	鳥哥覺得都差不多，但是每一套 Linux distributions 當初推出的預設使用群與他的理念可能不太相同，
+	就導致不一樣的 distributions 的用途差異了。並且由於您所需要的軟體以及新添購硬體的支援度等等，
+	也會讓您的 distributions 挑選有些難度喔！<br /><br />
+
+	<hr /><a name="linux_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>主機硬體的選擇</span><br />
+	<div class=block2>
+		主機的功能與硬體的選擇可以是息息相關的。怎麼說呢？
+		因為老舊的硬體無法提供高效能的環境，所以對於需要強效的 Proxy, WWW (MySQL) 等伺服器，
+		老舊的主機可能就無法提供有效的環境了。不過，如果是不需要很好性能的防火牆、
+		DHCP 主機與 NAT 伺服器時，那麼目前被淘汰掉的 P-III 等級的主機就非常足夠了！
+		像臥龍小三大師就曾使用賽陽 400 等級的 CPU 做成流量不大的 WWW 主機，
+		所以，舊式主機可不要隨便丟棄啊！<br /><br />
+
+		如果是像防火牆、NAT 主機、DHCP 主機等等，那麼一般的 P-166 等級左右的主機系統，
+		配合一張 10/100 Mbps 的網路卡就很不錯了！不過如果 LAN 與 WAN 的流量太大的話，
+		那麼最好考慮 P-III 等級的主機，並且配合一張更好的網路卡，這樣在效能上應該會比較好。<br /><br />
+
+		如果像是 WWW, Proxy, mail server 等需要常常讀取硬碟資料的伺服器，
+		則除了主機系統最好要到 P-III 以上等級，網路卡不能太爛之外，硬碟的效能最好也必須要好一些。
+		而且 partition 的情況也必須要特別注意，最好將常常被存取的檔案資料獨立到一顆硬碟中，
+		可能的話，甚至可以組成 RAID (磁碟陣列) 來負責資料存取，讓系統效能可以不被某些元件限制。
+		此外，記憶體的容量也需要特別留意，如果太小的話，可能會造成系統的效能不彰。
+		反正如果要架設好一點的主機，那就得要各個元件都加以考慮喔！<br /><br />
+
+		<span class=text_import1>省不省電有所謂</span><br />
+		<div class=block2>
+		前兩年出產的處理器與相關的個人電腦零件，很多都非常的『耗電』，
+		您或許覺得『耗電』又沒有什麼了不起，一部冷氣機的耗電量都要比電腦來的大！
+		是沒錯啦，不過，如果仔細想一想若一部用來作為單純的 IP 分享器的個人電腦主機，
+		偏偏他的耗電量高達 200W 的話，以一度電 2.4 元新台幣來計算，假設這部主機是全年無休的，
+		一年可得花費 4200 左右的新台幣啊！如果以 IP 分享器來說，鳥哥是沒有計算過 IP 分享器的耗電量，
+		不過，應該不會超過 50W 吧？如此計算一下，相差 4 倍！您覺得如何呢？<br /><br />
+
+		對於一般家庭只有一部主機的情況來說，這問題不大啦！一年僅消耗 4200 左右，還可以接受。
+		但對於企業主來說，如果他需要 50-100 部主機呢？這可不是不可能的事吧！所以計算一下，
+		嘩！一年要花 21 至 42 萬新台幣啊！而且這還不包括機房的空調冷卻系統。現在看一看，覺得害怕了吧！
+		所以說，選購硬體時，除了要考慮機器的性能以及功能需求之外，耗電量能省則省吧！ ^_^<br /><br />
+		</div>
+
+		<span class=text_import1>虛擬化技術</span><br />
+		<div class=block2>
+		現在的主機動不動就給他『雙核心』，也就是說在一部主機上面的一顆 CPU 上內建兩個實際的運算單元，
+		簡單的說，雙核心就是表示您的主機上面有兩顆 CPU 啦！那我們知道簡單的服務其實並不會太消耗系統資源的，
+		所以，絕大部分的時間 CPU 都是在休眠的狀態。那我們也知道最好每部主機僅負責一個網路服務，
+		環境與除錯上會比較單純，對吧！綜合這麼多的因素，您會想，如果我要安裝五種網路服務，
+		就得要五部主機，而這五部主機卻偏偏都在『休眠』的狀態，咦！好像很浪費喔！<br /><br />
+
+		這就是後來虛擬化技術發展的因素之一啦！所謂的虛擬化，其實就是在你一部實體主機裡面，
+		安裝多個作業系統，而且這些作業系統都是同時存在，且不互相干擾的。
+		舉例來說， <a href="http://www.vmware.com/" target="_blank">VMWare (http://www.vmware.com/)</a>
+		就是一個很知名的虛擬化主機的軟體，他可以在 Windows 作業系統裡面開啟另一個作業系統，
+		也可在 Linux 裡面開啟另一個作業系統。這可不是『多重作業系統』喔！因為多重作業系統指的是『
+		<span class=text_import2>你的主機同時安裝多個作業系統在不同的 partition ，
+		而開機時可以選擇不同的作業系統操作</span>』的意思，
+		與虛擬化『<span class=text_import2>可以在一部主機上面同時開啟多個可獨立運作的作業系統</span>
+		』是不一樣的！<br /><br />
+
+		既然您的 Linux 主機是多核心系統，表示 CPU 資源比較多，可以負荷的工作比較多，
+		加上目前有的虛擬技術，所以您可以在一部主機上面安裝多個作業系統，
+		這些作業系統可以獨立運作，而且，虛擬主機的每個作業系統與看起來就與單一主機沒有兩樣，
+		呵呵呵呵！這麼一來，不但不需要太多主機就能夠達到您的多網路服務要求，
+		而且管理上也沒有任何的不方便，當然，因為主機少了，電費的節省也是當然的啦！您說是吧！ ^_^<br /><br />
+
+		在 Linux 上面使用的虛擬化技術有很多，不過目前比較受矚目的當屬 Xen 這個玩意兒了，
+		據說很多預計要推出的新版 Linux distributions 已經預設要內建 Xen  的功能了，
+		嘿嘿！看來，以後大家可以用一部主機建立多個可同步運作的系統啦！^_^<br />
+
+		<ul><li>Xen 網站：<a href="http://www.xensource.com/" 
+			target="_blank">http://www.xensource.com/</a></li></ul>
+		</div>
+	</div>
+
+	<hr /><a name="linux_dis"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>distributions</span><br />
+	<div class=block2>
+		需要特別留意的是，舊的 distribution 是不支援很多新的硬體，包括 PCI-Express,
+		SATA 以及很多新的網路晶片。所以，如果您的主機是新的，那麼不要想用舊式的 distribution 來安裝，
+		否則，真麻煩喔～因為您必須要自行加上很多的驅動程式！真麻煩～<br /><br />
+
+		另外，您可以將目前的 distribution 分成兩大類，一類是多功能新鮮貨，例如
+		<a href="http://fedora.redhat.com/" target="_blank">Fedora</a> ，
+		一種是強調性能穩定但軟體功能較舊的企業用途貨，包括
+		<a href="http://www.redhat.com/" target="_blank">RHEL</a>, 
+		<a href="http://www.centos.org/" target="_blank">CentOS</a>, 
+		<a href="http://www.novell.com/linux/" target="_blank">SuSE</a> 及
+		<a href="http://b2d.tnc.edu.tw/" target="_blank">B2D</a> 等！
+		B2D 是台南縣網中心臥龍小三大師所提倡的一個計畫，最初的構想是想建立一個台灣的中文化 
+		Linux distributions，並且不只是中文化而已，還希望能夠提供全國中小學教師快速且安全的建立網路環境的構想下，
+		所發展的一個優秀的計畫！目前這個計畫發展的很不錯的啊！
+		很著重我們台灣使用者的想法喔！^_^。只是 B2D 使用的是 <a href="http://www.debian.org/"
+		target="_blank">Debian</a> 這個 distribution，在軟體安裝上面與一般常見的 RPM 
+		不太相同，好在目前 B2D也有使用 APT 來進行網路安裝與升級，可以解決軟體安裝方面的困擾。<br /><br />
+
+		一般來說，我們會建議您如果想要架設伺服器時，盡量選擇『穩定性較高的企業版』較佳，
+		因為功能新且強的版本例如 Fedora 由於太強調新鮮貨，所以核心與軟體的變動情況較為頻繁，
+		那就很容易造成一些困擾，因為很多使用者自行安裝的軟體可能無法在新的核心上面跑，
+		所以，只要核心一升級，哇！很多需要編譯的軟體就都需要再重新編譯過，
+		那麼對強調『永續服務的網路環境』來說，不就會造成不良的影響了嗎？您說是吧！<br /><br />
+
+		由於鳥哥用慣了 RPM 以及 Red Hat 系統的關係，所以在這裡推薦您使用 RHEL/CentOS/SuSE 
+		這幾個 Linux distributions，因為他夠穩定，而且設定上面不難，
+		而且有新的 distribution 推出，因此適合新硬體架構，
+		不過，裡面的軟體版本可能就不會是最新的，這點您可能就得要自行設法囉！
+		比較特別的是 CentOS，他不但標榜完全相同於 RHEL ，並且可以直接透過 yum 
+		這個軟體進行完整版本的升級，例如由 CentOS 4.2 升級到 CentOS 4.3 只要下達一個指令即可，
+		既不會影響到原有的設定，升級時所花費的時間又短，所以，
+		目前鳥哥都是以這個版本來進行伺服器的架設啊！<br /><br />
+
+		在後面的許多文章說明中，鳥哥將主要以 CentOS 這個版本來進行說明，
+		此外，也會加入 SuSE 的用法，不過，基本上， CentOS 既然是 Red Hat 系統，
+		所以後續的說明在 RHEL/Fedora/CentOS 其實都適用啦！您別擔心啊！ ^_^<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="windows_winxp"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Windows 
+個人電腦網路設定範例</span><br />
+<div class=block1>
+	我們這本書談論的是以 Linux 主機提供的伺服器為主，所以關於 LAN 裡面的
+	Windows 我都將他假設為 Client ，並且不提供網路服務，所以都先以固定的 Private
+	IP 來設定 Windows 作業系統，如果您的 LAN 有其他的考量，那麼底下的設定就看看就好 ^_^。<br /><br />
+
+	我們在 Windows 系統上所需要的網路參數除了 <span class=text_import2>IP,
+	netmask, DNS</span> 之外，還需要『<span class=text_import2>工作群組, workgroup</span>』與
+	『<span class=text_import2>電腦名稱, Netbios name</span>』等等的設定，此外，我們也可以加上 LAN 裡面很常見的
+	NetBIOS ( NetBEUI ) 這個通訊協定吶。因此，除非你確定您的網域內還有其他的工作站，
+	否則『<span class=text_import2>請只要安裝 TCP/IP 以及 NetBEUI 這兩個協定就好了</span>！』
+	安裝太多反而會有問題呢！底下我們假設你的網路卡都安裝好了，並且直接以 Windows XP 這個作業系統來介紹。
+	沒辦法，因為 Windows 2000 與 windows 98 以前的版本都已經不太被 Microsoft 支援了，
+	所以也只好以這個 XP 版本來說明囉。<br /><br />
+
+	<span class=text_import1>與網路有關的設定參數：</span><br />
+	<ul><span class=text_import2>
+	<li>IP: 192.168.1.13
+	<li>Netmask: 255.255.255.0
+	<li>DNS: 168.95.1.1
+	<li>Gateway: 192.168.1.2
+	<li>工作群組： birdhouse
+	<li>電腦名稱： bird3
+	</span></ul>
+
+	<span class=text_import1>詳細的設定流程：</span><br />
+	<ol>
+
+	<li>先到『<span class=text_import2>開始</span>』==>
+		『<span class=text_import2>設定</span>』==>
+		『<span class=text_import2>控制台</span>』==>
+		『<span class=text_import2>網路連線</span>』==>
+		選擇『<span class=text_import2>區域連線</span>』該項後，會出現如下圖示：<br /><br />
+		<img SRC="0120intranet/winxp-01.jpg" title="區域連線狀態" alt="區域連線狀態"><br /><br /></li>
+
+	<li>上面畫面當中選擇『<span class=text_import2>內容</span>』進入設定畫面中：<br /><br />
+		<img SRC="0120intranet/winxp-02.jpg" title="區域網路連線內容" alt="區域網路連線內容"><br /><br /></li>
+
+	<li>接下來，選擇『<span class=text_import2>連線後，將圖示顯示在通知區域內</span>』，
+		並且雙擊『<span class=text_import2>Internet Protocol (TCP/IP)</span>』該項目：<br /><br />
+		<img SRC="0120intranet/winxp-03.jpg" title="TCP/IP" alt="TCP/IP"><br /><br /></li>
+
+	<li>上面的設定不需要再談了吧？！請填入您的網路參數，並且按下確定即可！
+		好了，設定完成之後，再來需要編輯您的網路識別喔！選擇
+		『<span class=text_import2>開始</span>』==>
+		『<span class=text_import2>控制台</span>』==>
+		雙擊『<span class=text_import2>系統</span>』之後出現下圖：<br /><br />
+		<img SRC="0120intranet/winxp-04.jpg" title="網路識別" alt="網路識別"><br /><br /></li>
+
+	<li>在上面的圖示當中，如果網路識別是不對的，那麼就可以按下
+		『<span class=text_import2>變更</span>』來重新輸入，如下所示：<br /><br />
+		<img SRC="0120intranet/winxp-05.jpg" title="網路識別" alt="網路識別"><br /><br />
+		輸入正確之後，只要重新開機，那麼就可以使用區域網路囉！<br /></li></ol>
+
+	基本上， Windows 的網路參數設定是相當的簡單的！鳥哥這裡僅介紹修改 IP 與相關網路參數的方式而已。
+	未來如果還需要搭配 DHCP 主機、NAT 主機等等伺服器的設定時，會再次的提醒使用者 Windows 的設定資訊喔！尤其是
+	SAMBA 主機的設定中， Windows 的網路識別就顯的相當的重要呢！<br /><br />
+</div>
+
+
+<hr><span class="text_history">
+2002/07/22：初次完成了區域網路架設的基本架構<br />
+2003/08/17：將整個文章重新修訂，移除一些已經在 <a href="0110network_basic.htm">網路基礎</a>
+	裡面談過的內容，並且新增了表頭的說明。<br />
+2003/08/20：加入課後練習了。<br />
+2003/09/19：加入<a href="1000results.htm#0120intranet">參考用解答</a>咯！<br />
+2005/05/05：將原本介紹平行線與跳線的 <a href="0110network_basic.htm#n-way">N-Way</a> 錯誤，訂正為 auto MDI/MDI-x<br />
+2006/07/13：將舊的文章移動到 <a href="0120intranet/0120intranet.htm">此處</a>。<br />
+2006/07/14：加入 Linux distribution 的說明，並且重新校稿更新內容，如佈線部分。<br />
+2006/07/15：取消 <a href="0120intranet/0120intranet.htm#windows_win2k">Windows 2000</a>,
+		<a href="0120intranet/0120intranet.htm#windows_win98">98</a>。<br />
+</span>
+<hr><span class="text_date">2002/07/21以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0120intranet.dat"
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

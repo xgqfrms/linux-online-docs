@@ -1,0 +1,910 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718"><!-- 本文的檔頭部分 -->
+    <div style="text-align:center">  <span class="text_head0">第二章、<span class="text_head_en"> Linux </span>如何學習</span><br />
+    </div>
+    <div style="text-align:right"> <span class="text_history">最近更新日期：2009/08/06</span> </div>
+    <!-- 本文的檔頭部分 -->
+    <table class="head1" summary="排版：文章檔頭的說明">
+      <tr>
+        <td class="head1"> 目前Linux上頭有兩種主要的操作模式，分別是圖形介面與文字介面，那麼學習Linux要用X-Window(圖形介面)好還是Command 
+          Line(文字介面)好？這兩種學習心態有什麼優缺點呢？此外，有沒有良好的入門文件可供參考？
+          
+          Linux學習有困擾的時候應該要如何發問？要到哪裡去搜尋網路資源？還有，怎樣進行有智慧的提問？嗯！
+          在這一章裡面，就讓我們好好談一談！ </td>
+      </tr>
+    </table>
+    <br />
+    <!-- 本文的連結區部分 -->
+    <div class="block1"> <span class="text_h1"> 1. <a href="#uselinux">Linux當前的應用角色</a><br />
+      <span class="text_h2"> 　　1.1 <a href="#uselinux_enterprise">企業環境的利用</a><br />
+        1.2 <a href="#uselinux_person">個人環境的使用</a><br />
+        </span> 2. <a href="#linux_vbird">鳥哥的Linux苦難經驗全都錄</a><br />
+      <span class="text_h2"> 　　2.1 <a href="#linux_vbird_me">鳥哥的Linux學習之路</a><br />
+        2.2 <a href="#linux_vbird_learn">學習心態的分別</a><br />
+        2.3 <a href="#linux_vbird_xwin">X window的學習</a><br />
+        </span> 3. <a href="#basic">有心朝Linux作業系統學習者的學習態度</a><br />
+      <span class="text_h2"> 　　3.1 <a href="#basic_follow">從頭學習Linux基礎</a><br />
+        3.2 <a href="#basic_book">選擇一本易讀的工具書</a><br />
+        3.3 <a href="#basic_real">實作再實作</a><br />
+        3.4 <a href="#basic_faq">發生問題怎麼處理啊？建議流程是這樣...</a><br />
+        </span> 4. <a href="#study_vbird">鳥哥的建議(重點在solution的學習)</a><br />
+      5. <a href="#hint">重點回顧</a><br />
+      6. <a href="#ex">本章習題</a><br />
+      7. <a href="#reference">參考資料與延伸閱讀</a><br />
+      <span class="text_h2"> 8. <a href="http://phorum.vbird.org/viewtopic.php?t=23872"
+   target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23872</a> </span> </span> </div>
+    <!-- 本文的正式部分 -->
+    <hr />
+    <a name="uselinux" id="uselinux"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux當前的應用角色</span><br />
+    <div class="block1">
+      <p>在<a href="0110whatislinux.php">第一章Linux是什麼</a>當中，我們談到了Linux相關的歷史，
+        與簡單的介紹了一下Linux這個『Kernel』與Linux distributions等等。
+        而在開始進入Linux的基礎學習之前，我們有必要瞭解一下<span class="text_import2">應該要如何有效的學習Linux</span>！
+        但在談到Linux如何學習之前，我們得就Linux目前的一般應用來說明一下，因為每種應用你所需要的Linux技能都不相同！
+        瞭解Linux的應用後，你才好理解你需要的是什麼樣的學習方式！</p>
+      <p>由於Linux kernel實在是非常的小巧精緻，可以在很多強調省電以及較低硬體資源的環境底下執行；
+        此外，由於Linux distributions整合了非常多非常棒的軟體(不論是專利軟體或自由軟體)，
+        因此也相當適合目前個人電腦的使用呢！當前的Linux常見的應用可約略分為企業應用與個人應用兩方面來說：<br />
+        <br />
+      </p>
+      <hr />
+      <a name="uselinux_enterprise" id="uselinux_enterprise"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">企業環境的利用</span><br />
+      <div class="block2">
+        <p>企業對於數位化的目標在於提供消費者或員工一些產品方面的資訊 (例如網頁介紹)，以及整合整個企業內部的資料統一性
+          (例如統一的帳號管理/文件管理系統等)。另外，某些企業例如金融業等，則強調在資料庫、安全強化等重大關鍵應用。
+          學術單位則很需要強大的運算能力等。所以企業環境運用Linux作些什麼呢？<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">網路伺服器：</span></li>
+        </ul>
+        <p><span class="text_import2">這是Linux當前最熱門的應用了！</span> 承襲了Unix高穩定性的良好傳統，Linux上面的網路功能特別的穩定與強大！
+          此外，由於GNU計畫與Linux的GPL授權模式，讓很多優秀的軟體都在Linux上面發展，
+          且這些在Linux上面的伺服器軟體幾乎都是自由軟體！因此，做為一部網路伺服器，例如WWW, Mail Server, File 
+          Server等等，Linux絕對是上上之選！當然，這也是Linux的強項！
+          目前很多硬體廠商甚至搭配自家的硬體來銷售Linux呢！例如底下的連結看看先：</p>
+        <ul>
+          <li>HP公司的產品：<a href="http://h18000.www1.hp.com/products/servers/byos/linuxservers.html"
+		target="_blank">http://h18000.www1.hp.com/products/servers/byos/linuxservers.html</a></li>
+          <li>IBM公司的產品：<a href="http://www-07.ibm.com/servers/eserver/tw/openpower/"
+		target="_blank">http://www-07.ibm.com/servers/eserver/tw/openpower/</a></li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">關鍵任務的應用(金融資料庫、大型企業網管環境)：</span></li>
+        </ul>
+        <p>由於個人電腦的效能大幅提昇且價格便宜，所以金融業與大型企業的環境為了要精實自己機房的機器設備，
+          因此很多企業漸漸的走向Intel相容的x86主機環境。而這些企業所使用的軟體大多使用Unix作業系統平台的軟體，
+          總不能連過去發展的軟體都一口氣全部換掉吧！所以囉，
+          這個時候符合Unix作業系統標準並且可以在x86上運作的Linux就漸漸嶄露頭角了！^_^</p>
+        <p>目前很多金融業界都已經使用Linux做為他們的關鍵任務應用。所謂的關鍵任務就是該企業最重要的業務啦！
+          舉例來說，金融業最重要的就是那些投資者、帳戶的資料了，這些資料大多使用資料庫系統來作為存取介面，
+          這些資料很重要吧！很多金融業將這麼重要的任務交給了Linux了！你說Linux厲不厲害啊？(<a href="#ps1">註1</a>)<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">學術機構的高效能運算任務：</span></li>
+        </ul>
+        <p>學術機構的研究常常需要自行開發軟體，所以對於可作為開發環境的作業系統需求非常的迫切！舉例來說，
+          非常多技職體系的科技大學就很需要這方面的環境，好進行一些畢業專題的製作呢！
+          又例如工程界流體力學的數值模式運算、娛樂事業的特效功能處理、軟體開發者的工作平台等等。
+          由於Linux的創造者本身就是個電腦性能癖，所以Linux有強大的運算能力；並且Linux具有支援度相當廣泛的GCC編譯軟體，
+          因此Linux在這方面的優勢可是相當明顯的！</p>
+        <p>舉個鳥哥自己的案例好了，鳥哥之前待的研究室有跑一套空氣品質模式的數值模擬軟體。
+          這套軟體原本只能在Sun的SPARC機器上面跑。後來該軟體轉向Linux作業系統平台發展，
+          鳥哥也將自己實驗室的數值模式程式由Sun的Solaris平台移植到Linux上面呢！
+          據美國環保署內部人員的測試，發現Linux平台的整體硬體費用不但比較便宜(x86系統嘛！)而且速度還比較快呢！</p>
+        <p>另外，為了加強整體系統的效能，叢集電腦系統(Cluster)的平行運算能力在近年來一直被拿出來討論(<a href="#ps2">註2</a>)。
+          所謂的平行運算指的是『將原本的工作分成多份，然後交給多部主機去運算，最終再將結果收集起來』的一種方式。
+          由於透過高速網路使用到多部主機，將能夠讓原本需要很長運算時間的工作，大幅的降低等待的時間！
+          例如中央氣象局的氣象預報就很需要這樣的系統來幫忙！而Linux作業系統則是這種架構下相當重要的一個環境平台呢！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 目前鳥哥所在的崑山科技大學資訊傳播系，我們系上就有一套由12部雙核心個人電腦組成的叢集電腦架構；
+                  這一整組配備組起來差不多30萬左右，不過卻可以讓我們的數值模式大幅降低等待時間！這12部主機裝的就是Linux啦！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="uselinux_person" id="uselinux_person"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">個人環境的使用</span><br />
+      <div class="block2">
+        <p>你知道你平時接觸的電子用品中，哪些咚咚裡面有Linux系統存在呢？其實相當的多呢！我們就來談一談吧！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">桌上型電腦：</span></li>
+        </ul>
+        <p>所謂的桌上型電腦，其實就是你我在辦公室使用的電腦啦。一般我們稱之為Desktop的系統。那麼這個 Desktop
+          的系統平時都在做什麼呢？大概都是這些工作吧：</p>
+        <ul>
+          <li>上網瀏覽+即時通訊(MSN, Skype, Yahoo...)；</li>
+          <li>文書處理；</li>
+          <li>網路介面之公文處理系統；</li>
+          <li>辦公室軟體(Office Software)處理資料；</li>
+          <li>收發電子郵件；</li>
+        </ul>
+        <p>想進行這些電腦工作時，你的Desktop環境需要什麼咚咚？很簡單，『<span class="text_import2">就是需要視窗</span>』！
+          因為上網瀏覽、文書編排的所見即所得介面，以及電子公文系統等等，
+          如果沒有視窗介面的輔助，那麼將對使用者造成很大的困擾。而眾所皆知的，
+          Linux早期都是由工程師所發展的，對於視窗介面並沒有很需要，所以造成Linux不太親和的印象。</p>
+        <p>好在，為了要強化桌上型電腦的使用率，Linux與X Window System結合了！
+          要注意的是，<span class="text_import2">X Window System僅只是Linux上面的一套軟體，
+            而不是核心喔！所以即使X Window掛了，對Linux也可能不會有直接的影響呢</span>！
+          更多關於 X window system 的詳細資訊我們留待<a href="/linux_basic/0590xwindow.php">第二十四章</a>再來介紹。</p>
+        <p>近年來在各大社群的團結合作之下，Linux的視窗系統上面能夠跑的軟體實在是多的嚇人！而且也能夠應付的了企業的辦公環境！
+          例如美觀的KDE與GNOME視窗介面，搭配可相容微軟Office的Open Office軟體，
+          Open Office包含了文書處理、電子試算表、簡報軟體等等，功能齊全啊！然後配合功能強大速度又快的Firefox瀏覽器，
+          以及可下載信件的雷鳥(ThunderBird)軟體(類似微軟的Outlook Express)，還有可連上多種即時通訊的Pidgin！
+          Linux能夠做到企業所需要的各項功能啦！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">手持系統(PDA、手機)：</span></li>
+        </ul>
+        <p>別跟我說在台灣你沒有用過手機！你知道嗎，很多的手機、PDA、導航系統都可能使用的是Linux作業系統喔！
+          而為了加強Linux作業系統在手機上面的統一標準，很多國際廠商合作了一個LiMo的計畫(Linux
+          Mobile phone)，也有Linux的手機論壇，你可以參考一下底下的連結：</p>
+        <ul>
+          <li>LiMo基金會：<a href="http://www.limofoundation.org/" target="_blank">http://www.limofoundation.org/</a></li>
+          <li>Linux手機論壇：<a href="http://www.lipsforum.org/" target="_blank">http://www.lipsforum.org/</a></li>
+        </ul>
+        <p>除此之外，還有社群以及Google這個高超的傢伙也在玩Linux手機喔！例如底下的連結說明：</p>
+        <ul>
+          <li>OpenMoKo網站：<a href="http://www.openmoko.com/" target="_blank">http://www.openmoko.com/</a></li>
+          <li>Google的手機平台：<a href="http://code.google.com/android/"
+		target="_blank">http://code.google.com/android/</a></li>
+        </ul>
+        <p>瞭解了吧？在你天天碰的手機裡頭可能就含有Linux作業系統呢！很有趣的發現吧！ ^_^<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">嵌入式系統：</span></li>
+        </ul>
+        <p>在<a href="/linux_basic/0105computers.php">第零章</a>當中我們談到過硬體系統，
+          而要讓硬體系統順利的運作就得要撰寫合適的作業系統才行。那硬體系統除了我們常看到的電腦之外，
+          其實家電產品、PDA、手機、數位相機以及其他微型的電腦配備也是硬體系統啦！
+          這些電腦配備也都是需要作業系統來控制的！而作業系統是直接嵌入於產品當中的，理論上你不應該會更動到這個作業系統，
+          所以就稱為嵌入式系統啦！</p>
+        <p>包括路由器、防火牆、手機、PDA、IP分享器、交換器、家電用品的微電腦控制器等等，都可以是Linux作業系統喔！ <a href="http://phorum.study-area.org" target="_blank">酷學園</a>內的Hoyo大大就曾經介紹過如何在嵌入式設備上面載入Linux！
+          目前火紅的netbook中，很多也是使用Linux哩！</p>
+        <p>雖然嵌入式設備很多，大家也想要轉而使用Linux作業系統，不過在台灣，這方面的人才還是太少了！
+          要玩嵌入式系統必須要很熟悉Linux Kernel與驅動程式的結合才行！這方面的學習可就不是那麼簡單喔！ ^_^</p>
+      </div>
+      <p style="margin-top:0">總之，網路伺服器、工作站電腦、桌上型電腦等等，就是Linux目前最常被應用的環境了。
+        而您如果想要針對桌上型電腦，或者是網路伺服器主機來學習的話，對於Linux，
+        您應該如何進行學習的課題呢？底下我們就來談一談。</p>
+    </div>
+    <hr />
+    <a name="linux_vbird" id="linux_vbird"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">鳥哥的Linux苦難經驗全都錄</span><br />
+    <div class="block1">
+      <p>為什麼鳥哥要先介紹Linux的應用，並且還要寫這一章『如何學習』呢？原因就是.....鳥哥曾經受過傷害啊！
+        瞎密？什麼傷害呢？是要看外科還是精神科？都不是啦！因為鳥哥玩Linux初期曾經犯了『天下新手都可能容易犯的錯』～@_@
+        所以這裡才先要跟大家耳提面命一番嘛！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="linux_vbird_me" id="linux_vbird_me"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">鳥哥的Linux學習之路</span><br />
+      <div class="block2">
+        <ul class="list1">
+          <li class="text_import1">接觸Linux的原因</li>
+        </ul>
+        <p>大約在1999年左右，鳥哥因為學業上的需要，『被迫』得去學習Unix系統，那個時候我們使用的Unix系統是Sun
+          的SPARC+Solaris作業系統，當時的Sun Unix可不是一般人玩的起的，鳥哥也是一般人，所以當然也就玩不起Sun Unix囉！
+          然而學業上所需要完成的計畫案還是需要進行的，那怎麼辦呢？這個時候就得要想一些替代方案啦！</p>
+        <p>咦！聽說有另外一種可以在PC上頭跑的Unix-Like系統，叫做Linux的，他的介面、功能以及基本的檔案架構都跟Unix差不多，
+          甚至連系統穩定性也可以說是一模一樣，而且對於硬體配備的要求並不高。嗯！既然玩不起幾十萬起跳的Unix系統，
+          那麼使用一些即將淘汰的電腦配備來架設一部Linux主機吧！</p>
+        <p>在經過了一些時候的努力之後，呵呵！竟然真的給鳥哥架起來了(當時的版本是Red Hat 6.1)！哇！好高興！
+          那麼就趕快先來熟悉他，然後等到有了一定的經驗值『升級』成老手級之後， 再來玩Unix吧，
+          以免玩壞了幾十萬的大電腦！嗯！這似乎是不錯的方式，所以就開始了鳥哥的Linux學習之路啦！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">錯誤的學習方針階段</li>
+        </ul>
+        <p>由於鳥哥之前連Unix是啥都沒聽過，當然就更別提Linux這套作業系統，更可怕的是，聽說Linux還需要使用到指令列模式！
+          剛開始碰還真的有點緊張。還好，鳥哥玩電腦的歷史可以追溯之前的DOS年代，所以對於指令列模式多多少少還有點概念，
+          這過去的經驗或許應該可以撐上一陣子吧？但是沒想到Linux的指令真是『博大精深』吶！早期的DOS概念簡直就是不夠用啊～
+          因此，為了偷懶，一開始鳥哥就捨棄指令列模式，直接在X-Window上面玩起來了！</p>
+        <p>在還沒有安裝Linux之前，鳥哥就買了兩三本書，每本都看了N遍，發現到每一本書的前半段，
+          在Linux的基礎方面的介紹談的不多，了不起就是以一些工具教你如何設定一些很重要的參數檔案，
+          但偏偏沒有告訴你這些工具到底做了什麼事情或修改了哪些檔案？不過書的後半段卻放上了很多的架站文件，
+          然而卻都有點『點到為止』，所以當時總覺得Linux很有點朦朦朧朧的感覺，
+          而且在當時最嚴重的現象是『<span class="text_import2">只要一出現問題，身為使用者的鳥哥完全無法解決，
+            所以只好選擇重新安裝，重新設定與書本教的內容完全一模一樣的環境！</span>』不過，即使如此，
+          很多時候仍然解決不了發生問題的窘境！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 那個時候真的很好笑，由於鳥哥並非資訊科系出身，所以身旁並沒有懂電腦/作業系統的朋友，也就不知道怎麼發問！
+                  曾經為了要安裝光碟機裡面的資料，放進光碟機後，利用X Window的自動掛載將光碟掛載起來，
+                  用完之後卻發現無法退出光碟機，最終竟然用迴紋針將光碟強制退片～唔！這樣光碟就無法再使用～@_@只好又重新開機.... </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>在當時，由於知道Linux可以用來做為很多功能的伺服器，而鳥哥的研究室當時又需要一部電子郵件伺服器，
+          所以鳥哥就很高興的藉由書上的說明，配合Red Hat 6.1提供的一些工具程式，例如：Linuxconf, netcfg等等的工具來架設。
+          然而由於工具程式的整合度並不見得很好，所以常常修改一個小地方會搞上一整天！</p>
+        <p>好不容易使用了所有的知道的工具來架設好了鳥哥的電子郵件伺服器，哈哈！真高興，
+          請注意呦！這個時候鳥哥的Linux主機上面開了多少的ports/services其實當時的鳥哥並不清楚，
+          當時認為『<span class="text_import2">俺的機器就只有我認識的一些朋友知道而已，
+            所以反正機器能跑就好了，其他的設定似乎也就不這麼重要</span>』。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">惡夢的開始.....</li>
+        </ul>
+        <p>然而事實上，這種學習心態卻造成了後來鳥哥惡夢的開端！怎麼說呢？雖然Linux號稱需要的硬體等級不高，
+          不過X-Window卻是很耗系統資源的一項軟體，因為只要涉及到圖形介面的話，需要親和力嘛！就需要多一點RAM啦、
+          多一些硬碟空間啦、顯示卡與CPU要好一點啦等等的，且早期的圖形介面整合度不是很高，所以造成X-Window死掉的機會是很高的。</p>
+        <p>在鳥哥當時安裝的Linux主機當中，使用的是舊舊的電腦，系統的配備並不高，在跑了X-Window之後，
+          剩下可以使用的實體記憶體其實已經不多了，再跑其他的服務，例如mail server，實際上很有點吃力！
+          所以當時的一些同仁常常抱怨我們的機器怎麼老是服務不良？怪怪！這個Linux怎麼跟『號稱穩定』的名號不符？
+          而在鳥哥登入系統檢查之後，才發現，哇！X-Window又掛了？當時還不清楚原來可以使用ps及kill等指令將X-Window殺掉即可讓
+          Linux恢復正常，竟然是用reset的方式來重新啟動Linux，現在想起來，當時真糗....</p>
+        <p>後來再重新安裝一次，並選擇了文字介面登入系統，呵呵！果然系統是穩定多了！服務上面似乎也就安定了許多。
+          不過，你以為惡夢這樣就解決了嗎？當然不是！在鳥哥的機器服務了一陣子之後，我老闆竟然接到上層單位的來信，
+          信中說明『<span class="text_import2">貴單位的主機可能有嘗試入侵國外主機之嫌，敬請妥善改善！</span>』
+          哇！這不就是警告信嗎？還好不是律師存證信函～當時至少還知道有所謂的系統登錄檔案可以分析確切日期有誰在線上，
+          沒想到一登入之後才發現，搞了老半天，原來我們的機器被入侵了！而身為管理者的鳥哥竟然還茫然不知～這真是一大敗筆....</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 瞎密？由圖形介面轉到文字介面竟然用『重新安裝』來處理？不要懷疑，當初沒有學好Linux的時候，
+                  就是以為需要重新安裝，尤其Windows的經驗告訴我們，這樣做『才是對的！』@_@ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>在趕快重新安裝，並且重新參考很多文件，架設好了防火牆之後，以為終於從此就可以高枕無憂了！
+          唉～結果還是不盡然的，因為我們的電子郵件伺服器早就被當成垃圾轉信站，造成區域網路內網路流量的大量提高，
+          導致常常會無法連上網際網路....<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">一個貴人的出現</li>
+        </ul>
+        <p>在經過了一年多以及經歷那麼多事件後，鳥哥還是沒有覺悟ㄟ！真糟糕！
+          後來因為某些小事情無法解決而上網搜尋，竟然找到Study Area(酷學園)，
+          並主動發出email給站長網中人(netman)先生，網中人完全沒有就我的問題來回答，竟然是大發雷霆的臭罵鳥哥一頓～
+          唔！怎麼會這樣～鳥哥從小到大唸書幾乎沒有被唸過～竟然讀到這麼大了還被人家罵！真可悲～
+          於是乎痛定思痛，遵循網中人大哥的教誨，從他的網站(<a href="http://www.study-area.org" target="_blank"
+		>http://www.study-area.org</a>)的內容出發，並將鳥哥原本的網站全部砍掉重練！</p>
+        <p>花了兩三個月在網中人的網站上學習到Linux最基礎的檔案架構、指令模式與腳本(Shell and shell scripts)、
+          軟體管理方式和資源與帳號管理等等，而在將這些基礎的架構理解之後，再回頭看一下各式各樣的server啟動服務與相關的技巧，
+          發現『<span class="text_import2">哇！原來如此呀！怎麼這麼簡單的東西當初搞了我幾天幾夜睡不好！</span>』
+          尤其最重要的登錄資訊的追蹤，幫鳥哥避免了很多不必要的系統傷害行為。</p>
+        <p>此外，而為了方便鳥哥本身的管理，於是開始了一些腳本(shell scripts)的編寫，讓日常的管理變的更輕鬆而有效率！
+          當然，這些工作幾乎都是在文字介面底下完成的，圖形介面之下的工作畢竟還是有限的。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">撰寫文件的有趣經驗</li>
+        </ul>
+        <p>後來鳥哥為了想要趕快畢業，但希望能夠讓我在實驗室的努力不被學弟妹所搞爛，所以開始撰寫一些FAQ的文件。
+          但是沒想到越寫越發現自己懂得竟然是那麼少，於是乎就越寫越多，資料也越查閱多，漸漸的就有『鳥哥的Linux私房菜』網站的出現！
+          而在寫了這個網站之後發現到更多的朋友其實與鳥哥有相同的經驗，他們也在討論區上面提供非常多有用的意見，
+          於是網站就越來越熱鬧了！</p>
+        <p>從撰寫文件的經驗裡面也接觸到很多業界的朋友，才發現到一部Linux主機其實是做不了什麼大事的！
+          重點是『我們要讓Linux解決什麼問題』，而不是單純的只是去學習架站而已！
+          尤其酷學園的ZMAN對鳥哥網站關於伺服器方面的資料影響很大！我們不能夠讓Linux死板板的定位在那邊，
+          還有更多可用的功能可以讓我們去思考呢！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">鳥哥的忠言，希望不會逆耳</li>
+        </ul>
+        <p>經過上面鳥哥學習之路的經驗分享之後，我想，您應該也慢慢的瞭解鳥哥想要提出這本經驗談的書籍最主要的目的了，
+          那就是想『讓想要學習Linux的玩家可以快速且以較為正確的心態來進入Linux的世界！』
+          而不要像鳥哥在Linux的環境中打轉了一年多之後才來正確的建立概念。希望我這老傢伙的苦口婆心不要讓您誤會啊！</p>
+        <p>但是玩Linux並不一定要很辛苦的！因為『<span class="text_import2">你玩Linux的目的跟我又不一樣</span>』！
+          鳥哥是為了要學習Linux上面的功能，好應用在未來學術研究領域上，所以才這樣接觸他～
+          那難道你不能只為了要使用Linux的桌上辦公環境嗎？是的！所以鳥哥想來談一談Linux的學習者心態！</p>
+      </div>
+      <hr />
+      <a name="linux_vbird_learn" id="linux_vbird_learn"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">學習心態的分別</span><br />
+      <div class="block2">
+        <ul class="list1">
+          <li class="text_import1">架不架站有所謂：</li>
+        </ul>
+        <p>大家都知道Linux最強項的地方在於網路，而Windows是贏在使用者介面較為親善。
+          然而很多使用者還是常常會比較Linux與Windows這兩套相當流行的作業系統，初次接觸Linux的人比到最後的結果都是
+          『<span class="text_import2">Linux怎麼都要使用文字介面來架站，怎麼這麼麻煩，還是Windows比較好用</span>』，
+          事實上這麼比較實在是有點不公平且沒有意義，
+          為什麼呢？基本上，Windows是很普及的一個作業系統，這點我們都無法否認，但是，一般使用Windows的使用者用Windows來做什麼？</p>
+        <ul>
+          <li>上網、即時通訊、打屁聊天打發時間；</li>
+          <li>做做文書工作，處理電子試算表；</li>
+          <li>玩Game及其他休閒娛樂；</li>
+        </ul>
+        <p>當然啦，Windows的工作環境還有很多可以發展的空間，不過這裡我們主要以一般使用者的角度來看。
+          OK！說了上面這幾個工作，請問一下，『<span class="text_import2">一般使用者誰有在使用Windows玩架站！</span>』？
+          很少對不對！是的！真的是很少人在玩Windows的架站！那麼如何可以說Linux無法普及是文字介面惹的禍呢？
+          鳥哥相信，如果是一般使用者，應該不至於想要使用Linux來架設網站，所以美美的X-Window對於一般使用者已經相當的好用了，
+          實在沒有必要來學習架站的原理與過程，還有防火牆的注意事項等等的。</p>
+        <p>話再說回來，那麼你幹嘛要使用Linux架站呢？『<span class="text_import2">因為Linux的網路功能比較強呀！</span>』
+          說的沒錯，但是，相對的，比較強的項目可能也具有比較『危險』的指數，當你一開始學習Linux就只想滿腦子的玩架站，
+          卻又不好好的弄懂一點Linux與網路基礎的話，Windows底下了不起是被攻擊到您的Windows死掉，
+          但是在Linux底下，卻有可能讓你吃上官司的！像上面提到的鳥哥的慘痛教訓！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">只是圖形介面，可以嗎？</li>
+        </ul>
+        <p>而如果你已經習慣以圖形化介面來管理你的Linux主機時，請特別留意，因為Linux的軟體是由多個團隊研發出來的，
+          圖形介面也僅是一個團隊的研發成果，你認為，一個團隊的東西可以將所有團隊的內容都完整無缺的表現出來嗎？
+          如果你依賴圖形久了，呵呵！那如果你的系統出問題，看來就只能求助於外面的工程師了，如此一來，有學跟沒有學有何不同？</p>
+        <p>曾經有個朋友問我說『唉！Linux怎麼這麼麻煩？架設一個DNS真是不容易呀！不像Windows，簡單的很，
+          按幾個按鈕就搞定了！』這個時候鳥哥就回答了一句話『不會呀！如果你只是想要安裝DNS的話，
+          網路上面一大堆按部就班的設定方式教學，照著做，一樣可以在十分鐘之內就完成一個DNS主機的設定呀！』
+          他想一想，確實有道理！同時鳥哥又反問的一件事：『你以為學Windows就不需要瞭解DNS的概念嗎？
+          你有嘗試過使用Windows架設DNS卻無法讓他實地跑的問題嗎？果真如此的話，這個時候你怎麼解決？』
+          他愣住了！因為在Windows上面他確實也沒有辦法解決！所以說，不論是學哪一套系統，
+          『<span class="text_import2">基礎的理論都是不變的</span>』，也只有瞭解了基礎的咚咚之後，其他的技能才能夠『觸類旁通』呀！</p>
+        <p>網路上一些老手不太喜歡搞圖形介面，是因為覺得圖形介面預設的設定常常不合他們的意，
+          尤其是圖形化介面軟體為了方便使用者，常常自己加入一些設定，但是這些設定卻往往是因地制宜的，
+          所以反而常常會導致架設的網站無法正常工作！這點在網路新聞群組上面討論的已經相當清楚了！
+          與其如此，何不一開始就玩文字介面，去弄懂他呢？<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">學習Linux還是學習Distributions：</li>
+        </ul>
+        <p>此外，很多玩過Linux的朋友大概都會碰到這樣的一個問題，就是Linux distributions事實上是非常多的！
+          而每個distribution所提供的軟體內容雖然大同小異，然而其整合的工具卻都不一樣，同時，
+          每種軟體在不同的distribution上面擺放的目錄位置雖然也是大同小異，然而某些設定檔就是擺在不同的目錄下，
+          這個時候您怎麼找到該資訊？難道非得來一套distribution就學他的主要內容嗎？這麼一來，
+          市面上少說也有數十套Linux distributions，每一套都學？如果您時間多到如此地步，
+          那鳥哥也不知道該說什麼好了！如果是我的話，那麼我會乾脆直接學習一些Linux的基本技巧，
+          可以讓我很輕易的就找到不同版本之間的差異性，而且學習之路也會變的更寬廣呢！</p>
+        <p>鳥哥的觀念不見得一定適合你，不過就只是以一個過來人的身份給個小建議，
+          要麼就不要拿Linux來架站，跟Windows一樣，玩玩X-Window就很開心了，要嘛真的得花一點時間來玩一玩比較深入的東西，
+          中國話不是說過嗎：『要怎麼收穫就怎麼栽』雖然努力不一定有成果，但最起碼，有成果的時候，成果肯定是自己的！</p>
+      </div>
+      <hr />
+      <a name="linux_vbird_xwin" id="linux_vbird_xwin"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X window的學習</span><br />
+      <div class="block2">
+        <p>如果你只是想要拿Linux來取代原本的Windows桌面(Desktop)的話，那麼你幾乎不需要通過『嚴格的學習』啦！
+          目前的Linux distribution絕大部分預設就是以Desktop的角度來安裝所需要的軟體，也就是說，你只要將Linux安裝好，
+          接下來就能夠進入Linux玩弄啦！根本就不需要什麼學習的哩！你只需要購買一本介紹Linux桌面設定的書籍，
+          裡面有說明輸入法、印表機設定、網際網路設定的書籍就很夠用了！鳥哥建議的distributions包括有：</p>
+        <ul>
+          <li><a href="http://www.ubuntu.com/getubuntu/download" 
+		target="_blank">Ubuntu下載: http://www.ubuntu.com/getubuntu/download</a></li>
+          <li><a href="http://software.opensuse.org/" 
+		target="_blank">OpenSuSE下載: http://software.opensuse.org/</a></li>
+          <li><a href="http://fedoraproject.org/en/get-fedora" 
+		target="_blank">Fedora下載： http://fedoraproject.org/en/get-fedora</a>, <a href="http://fedora.tw/" target="_blank">台灣Fedora社群： http://fedora.tw/</a></li>
+          <li><a href="http://www.mandriva.com/en/download/free" 
+		target="_blank">Mandriva下載: http://www.mandriva.com/en/download/free</a></li>
+        </ul>
+        <p>另外還有一些網路上面的桌面調教文章也可以參考的！包括有：</p>
+        <ul>
+          <li><a href="http://apt.nc.hcc.edu.tw/docs/FC3_X/" 
+		target="_blank">楊老師的圖解桌面 http://apt.nc.hcc.edu.tw/docs/FC3_X/</a></li>
+          <li><a href="http://ubuntuguide.org/wiki/Ubuntu:Hardy_tw" 
+		target="_blank">Ubuntu 中文指南 http://ubuntuguide.org/wiki/Ubuntu:Hardy_tw</a></li>
+        </ul>
+        <p>如果想知道更多關於圖形使用者介面能夠使用的軟體資訊，可以參考底下的連結(感謝崑山計中提供的連結資訊)：</p>
+        <ul>
+          <li><a href="http://www.openoffice.org/" 
+		target="_blank">Open Office(http://www.latex-project.org/)</a>：<br />
+            就是辦公室軟體，包含有電子試算表、文書處理與簡報軟體等；</li>
+          <li><a href="http://freemind.sourceforge.net/wiki/index.php/Main_Page"
+		target="_blank">Free Maid(http://freemind.sourceforge.net/wiki/index.php/Main_Page)</a>：<br />
+            可繪製組織圖的軟體，酷學園裡的SAKANA曾用過，鳥哥覺得挺好看；</li>
+          <li><a href="http://www.abisource.com/"
+		target="_blank">AbiWord(http://www.abisource.com/)</a>：<br />
+            非常類似微軟的Word的文書處理軟體；</li>
+          <li><a href="http://www.latex-project.org/"
+		target="_blank">Tex/LaTeX(http://www.latex-project.org/)</a>：<br />
+            可進行文件排版的軟體(很多自由軟體文件使用此編輯器喔！)；</li>
+          <li><a href="http://dia-installer.de/index_en.html"
+		target="_blank">Dia(http://dia-installer.de/index_en.html)</a>：<br />
+            非常類似微軟Visio的軟體，可繪製流程圖；</li>
+          <li><a href="http://www.scribus.net/"
+		target="_blank">Scribus(http://www.scribus.net/)</a>：<br />
+            專業的排版軟體，老實說，鳥哥確實不會用～@_@；</li>
+          <li><a href="http://ganttproject.biz/"
+		target="_blank">GanttProject(http://ganttproject.biz/)</a>：<br />
+            可繪製甘特圖(就是時程表)的軟體；</li>
+          <li><a href="http://www.gimp.org/"
+		target="_blank">GIMP(http://www.gimp.org/)</a>：<br />
+            在業界相當有名的繪圖自由軟體！</li>
+        </ul>
+        <p>更多的可用軟體，可以參考教育部自由軟體諮詢中心網頁的介紹：</p>
+        <ul>
+          <li><a href="http://ossacc.moe.edu.tw/modules/tinyd1/index.php?id=21"
+		target="_blank">http://ossacc.moe.edu.tw/modules/tinyd1/index.php?id=21</a></li>
+        </ul>
+        <p>如果你不需要很特別的專業軟體的支援，那麼一般的辦公環境中，上面的這些軟體通通免費！
+          而且相信已經足以應付你日常所需的工作環境啦！不過，千萬記得，玩X window就好，不要搞架站的東西！ <span class="text_import2">不論是Windows/Linux/Mac/Unix還是什麼的，只要是玩到架站，他就不是這麼安全的東西</span>！
+          所以，很多東西都需要學習啦！底下我們就來談談，如果有心想要朝Linux作業系統學習的話，最好可以具備什麼心態呢？</p>
+      </div>
+    </div>
+    <hr />
+    <a name="basic" id="basic"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">有心朝Linux作業系統學習者的學習態度</span><br />
+    <div class="block1">
+      <p>為什麼大家老是建議學習Linux最好能夠先捨棄X Window的環境呢？
+        這是因為X window了不起也只是Linux內的『一套軟體』而不是『Linux核心』。
+        此外，目前發展出來的X-Window對於系統的管理上還是有無法掌握的地方，舉個例子來說，如果
+        Linux本身捉不到網路卡的時候，請問如何以X Window來捉這個硬體並且驅動他呢？</p>
+      <p>還有，如果需要以Tarball(原始碼)的方式來安裝軟體並加以設定的時候，請以X Window 
+        來架設他！這可能嗎？當然可能，但是這是在考驗『X Window開發商』的技術能力，
+        對於瞭解Linux架構與核心並沒有多大的幫助的！所以說，如果只是想要『會使用Linux』的角度來看，
+        那麼確實使用X Window也就足夠了，反正搞不定的話，花錢請專家來搞定即可；但是如果想要更深入
+        Linux的話，那麼指令列模式才是不二的學習方式！</p>
+      <p>以伺服器或者是嵌入式系統的應用來說，X Window是非必備的軟體，因為伺服器是要提供用戶端來連線的，
+        並不是要讓使用者直接在這部伺服器前面按鍵盤或滑鼠來操作的！所以圖形介面當然就不是這麼重要了！
+        更多的時候甚至大家會希望你不要啟動X window在伺服器主機上，這是因為X Window通常會吃掉很多系統資源的緣故！</p>
+      <p>再舉個例子來說，假如你是個軟體服務的工程師，你的客戶人在台北，而你人在遠方的台南。某一天客戶來電說他的Linux伺服器出了問題，
+        要你馬上解決他，請問：要您親自上台北去修理？還是他搬機器下來讓你修理？或者是直接請他開個帳號給你進去設定即可？
+        想當然爾，就會選擇開帳號給你進入設定即可囉！因為這是最簡單而且迅速的方法！這個方法通常使用文字介面會較為單純，
+        使用圖形介面則非常麻煩啦！所以啦！這時候就得要學學文字介面來操作Linux比較好啦！</p>
+      <p>另外，在伺服器的應用上，檔案的安全性、人員帳號的管理、軟體的安裝/修改/設定、
+        登錄檔的分析以及自動化工作排程與程式的撰寫等等，都是需要學習的，
+        而且這些東西都還未涉及伺服器軟體呢！對吧！這些東西真的很重要，所以，建議你得要這樣學習才好：<br />
+        <br />
+      </p>
+      <hr />
+      <a name="basic_follow" id="basic_follow"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">從頭學習Linux基礎</span><br />
+      <div class="block2">
+        <p>其實，不論學什麼系統，『從頭學起』是很重要的！還記得你剛剛接觸微軟的Windows都在幹什麼？
+          還不就是由檔案總管學起，然後慢慢的玩到控制台、玩到桌面管理，
+          然後還去學辦公室軟體，我想，你總該不會直接就跳過這一段學習的歷程吧？那麼
+          Linux的學習其實也差不多，就是要從頭慢慢的學起啦！不能夠還不會走路之前就想要學飛了吧！^_^！</p>
+        <p>常常有些朋友會寫信來問鳥哥一些問題，不過，信件中大多數的問題都是很基礎的！
+          例如：『為什麼我的使用者個人網頁顯示我沒有權限進入？』、
+          『為什麼我下達一個指令的時候，系統告訴我找不到該指令？』、
+          『我要如何限制使用者的權限』等等的問題，這些問題其實都不是很難的，只要瞭解了
+          Linux的基礎之後，應該就可以很輕易的解決掉這方面的問題呢！
+          所以請耐心的，慢慢的，將後面的所有章節內容都看完。自然你就知道如何解決了！</p>
+        <p>此外，網路基礎與安全也很重要，例如TCP/IP的基礎知識，網路路由的相關概念等等。
+          很多的朋友一開始問的問題就是『<span class="text_import2">為什麼我的郵件伺服器主機無法收到信件</span>？』
+          這種問題相當的困擾，因為發生的原因太多了，而朋友們常常一接觸Linux就是希望
+          『<span class="text_import2">架站！</span>』根本沒有想到要先瞭解一下Linux的基礎！這是相當傷腦筋的！
+          尤其近來電腦怪客(Cracker)相當多，(真奇怪，閒閒沒事幹的朋友還真是不少....) ，一個不小心您的主機就被當成怪客跳板了！
+          甚至發生被警告的事件也層出不窮！這些都是沒能好好的注意一下網路基礎的原因呀！</p>
+        <p>所以，鳥哥希望大家能夠更瞭解Linux，好讓他可以為你做更多的事情喔！
+          而且這些基礎知識是學習更深入的技巧的必備條件呀！因此建議：</p>
+        <ol>
+          <li><span class="text_import2">計算機概論與硬體相關知識：</span><br />
+            因為既然想要走Linux這門路，資訊相關的基礎技能也不能沒有啊！
+            所以先理解一下基礎的硬體知識，不用一定要全懂啦！又不是真的要你去組電腦～^_^，
+            但是至少要『聽過、有概念』即可；<br />
+            <br />
+          </li>
+          <li><span class="text_import2">先從Linux的安裝與指令學起：</span><br />
+            沒有Linux怎麼學習Linux呢？所以好好的安裝起一套你需要的Linux吧！雖然說Linux distributions很多，
+            不過基本上架構都是大同小異的，差別在於介面的親和力與軟體的選擇不同罷了！
+            選擇一套你喜歡的就好了，倒是沒有哪一套特別好說～<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Linux作業系統的基礎技能：</span><br />
+            這些包含了『使用者、群組的概念』、『權限的觀念』，『程序的定義』等等，尤其是權限的概念，
+            由於不同的權限設定會妨礙你的使用者的便利性，但是太過於便利又會導致入侵的可能！
+            所以這裡需要瞭解一下你的系統呦！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">務必學會vi文書編輯器：</span><br />
+            Linux的文書編輯器多到會讓你數到生氣！不過，vi卻是強烈建議要先學習的！
+            這是因為vi會被很多軟體所呼叫，加上所有的Unix like系統上面都有vi，所以你一定要學會才好！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Shell與Shell Script的學習：</span><br />
+            其實鳥哥上面一直談到的『文字介面』說穿了就是一個名為shell的軟體啦！既然要玩文字介面，當然就是要會使用shell的意思。
+            但是shell上面的資料太多了，包括『正規表示法』、『管線命令』與『資料流重導向』等等，真的需要瞭解比較好呦！
+            此外，為了幫助你未來的管理伺服器的便利性，shell scripts也是挺重要的！要學要學！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">一定要會軟體管理員：</span><br />
+            因為玩Linux常常會面臨得要自己安裝驅動程式或者是安裝額外軟體的時候，尤其是嵌入式設備或者是學術研究單位等。
+            這個時候Tarball/RPM/DPKG等軟體管理員的安裝方式的瞭解，對你來說就重要到不行了！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">網路基礎的建立：</span><br />
+            如果上面你都通過了，那麼網路的基礎就是下一階段要接觸的咚咚，這部份包含了『IP概念』『路由概念』等等；<br />
+            <br />
+          </li>
+          <li>如果連網路基礎都通過了，那麼網站的架設對你來說，簡直就是『太簡單啦！』</li>
+        </ol>
+        <p>在一些基礎知識上，可能的話，當然得去書店找書來讀啊！
+          如果您想要由網路上面閱讀的話，那麼這裡推薦一下由Netman大哥主筆的Study-Area裡面的基礎文章，相當的實用！</p>
+        <ul>
+          <li><a href="http://www.study-area.org/compu/compu.htm" 
+			target="_blank">電腦基礎 (http://www.study-area.org/compu/compu.htm)</a></li>
+          <li><a href="http://www.study-area.org/network/network.htm" 
+			target="_blank">網路基礎 (http://www.study-area.org/network/network.htm)</a></li>
+        </ul>
+      </div>
+      <hr />
+      <a name="basic_book" id="basic_book"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">選擇一本易讀的工具書</span><br />
+      <div class="block2">
+        <p>一本好的工具書是需要的，不論是未來作為查詢之用，還是在正確的學習方法上。
+          可惜的是，目前坊間的書大多強調速成的Linux教育，或者是強調Linux的網路功能，
+          卻欠缺了大部分的Linux基礎管理～鳥哥在這裡還是要再次的強調，Linux的學習歷程並不容易，
+          他需要比較長的時間來適應、學習與熟悉，但是只要能夠學會這些簡單的技巧，
+          這些技巧卻可以幫助您在各個不同的OS之間遨遊！</p>
+        <p>您既然看到這裡了，應該是已經取得了<a href="http://findbook.tw/search?q=%E9%B3%A5%E5%93%A5&amp;keyword_type=author"
+		target="_blank">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>了吧！ ^_^ 。
+          希望這本書可以幫助您縮短基礎學習的歷程，也希望能夠帶給您一個有效的學習觀念！
+          而在這本書看完之後，或許還可以參考一下Netman推薦的相關網路書籍：</p>
+        <ul>
+          <li><a href="0120howtolinux/0120howtolinux_1.php"
+		target="_blank">請推薦有關網路的書： http://linux.vbird.org/linux_basic/0120howtolinux/0120howtolinux_1.php</a></li>
+        </ul>
+        <p>不過，要強調的是，每個人的閱讀習慣都不太一樣，所以，除了大家推薦的書籍之外，
+          您必須要親眼看過該本書籍，確定您可以吸收的了書上的內容，再下去購買喔！</p>
+      </div>
+      <hr />
+      <a name="basic_real" id="basic_real"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作再實作</span><br />
+      <div class="block2">
+        <p>要增加自己的體力，就是只有運動；要增加自己的知識，就只有讀書；當然，要增加自己對於Linux的認識，
+          大概就只有實作經驗了！所以，趕快找一部電腦，趕快安裝一個Linux distribution，然後快點進入Linux的世界裡面晃一晃！
+          相信對於你自己的Linux能力必然大有斬獲！除了自己的實作經驗之外，也可以參考網路上一些善心人士整理的實作經驗分享喔！
+          例如最有名的Study-Area(<a href="http://www.study-area.org" target="_blank">http://www.study-area.org</a>)等網站。</p>
+        <p>此外，人腦不像電腦的硬碟一樣，除非硬碟壞掉了或者是資料被你抹掉了，
+          否則儲存的資料將永遠而且立刻的記憶在硬碟中！在人類記憶的曲線中， <span class="text_import2">你必須要『不斷的重複練習』才會將一件事情記得比較熟</span>！同樣的，學習Linux也一樣，
+          如果你無法經常摸索的話，那麼，抱歉的是，學了後面的，
+          前面的忘光光！學了等於沒學，這也是為什麼鳥哥當初要寫『鳥哥的私房菜』這個網站的主要原因，
+          因為，我的忘性似乎比一般人還要好～～呵呵！所以，除了要實作之外，還得要常摸！才會熟悉Linux而且不會怕他呢！</p>
+        <p>好了，底下列出幾個學習網站來提供大家做為參考實作的依據：</p>
+        <ul>
+          <li><a href="http://www.study-area.org" target="_blank">Study-Area http://www.study-area.org</a></li>
+          <li><a href="http://linux.vbird.org">鳥哥的私房菜館 http://linux.vbird.org</a></li>
+          <li><a href="http://linux.tnc.edu.tw/techdoc/" 
+		target="_blank">臥龍大師的網路技術文件 http://linux.tnc.edu.tw/techdoc/</a></li>
+          <li><a href="http://www.linux.org.tw/" 
+		target="_blank">臺灣 Linux 社群 http://www.linux.org.tw/</a></li>
+          <li><a href="http://netlab.kh.edu.tw/index.htm" 
+		target="_blank">狼主的網路實驗室 http://netlab.kh.edu.tw/index.htm</a></li>
+          <li><a href="http://freebsd.lab.mlc.edu.tw/" 
+		target="_blank">大南國小（林克敏主任文件集）http://freebsd.lab.mlc.edu.tw/</a></li>
+          <li><a href="http://www.cses.tcc.edu.tw/~chihwu/" 
+		target="_blank">吳仁智的文件集 http://www.cses.tcc.edu.tw/~chihwu/</a></li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 由於不同的網站當初撰寫的時候所用的Linux軟體或版本與目前的主流並不相同，因此參考他人的實作經驗時，
+                  必須要特別留意對方的版本，否則反而可能造成你的困擾喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="basic_faq" id="basic_faq"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">發生問題怎麼處理啊？建議流程是這樣..</span><br />
+      <div class="block2">
+        <p>我們是『人』不是『神』，所以在學習的過程中發生問題是很常見的啦！重點是，我們該如何處理在自身所發生的Linux問題呢？
+          在這裡鳥哥的建議是這樣的流程：</p>
+        <ol style="padding-left: 20px">
+          <li><span class="text_import1">在自己的主機/網路資料庫上查詢How-To或FAQ</span><br />
+            <br />
+            其實，在Linux主機及網路上面已經有相當多的FAQ整理出來了！所以，當你發生任何問題的時候，除了自己檢查，
+            或者到上述的實作網站上面查詢一下是否有設定錯誤的問題之外，最重要的當然就是到各大FAQ的網站上查詢囉！
+            以下列出一些有用的FAQ與How-To網站給您參考一下：<br />
+            <br />
+            <ul>
+              <li>Linux自己的文件資料： /usr/share/doc (在你的Linux系統中)</li>
+              <li><a href="http://www.linux.org.tw/CLDP/" 
+			target="_blank">CLDP 中文文件計畫 http://www.linux.org.tw/CLDP/</a></li>
+              <li><a href="http://www.tldp.org/" 
+			target="_blnak">The Linux Documentation Project：http://www.tldp.org/</a></li>
+            </ul>
+            <br />
+            上面比較有趣的是那個TLDP(The Linux Documentation Project)，
+            他幾乎列出了所有Linux上面可以看到的文獻資料，各種How-To的作法等等，雖然是英文的，不過，很有參考價值！<br />
+            <br />
+            除了這些基本的FAQ之外，其實，還有更重要的問題查詢方法，那就是利用酷狗(Google)幫您去搜尋答案呢！
+            在鳥哥學習Linux的過程中，如果有什麼奇怪的問題發生時，第一個想到的，
+            就是去<a href="http://www.google.com.tw"
+		target="_blank">http://www.google.com.tw</a>搜尋是否有相關的議題。
+            舉例來說，我想要找出Linux底下的NAT，只要在上述的網站內，輸入Linux跟NAT，
+            立刻就有一堆文獻跑出來了！真的相當的優秀好用喔！您也可以透過酷狗來找鳥哥網站上的資料呢！<br />
+            <br />
+            <ul>
+              <li>Google： <a href="http://www.google.com.tw" target="_blank">http://www.google.com.tw</a></li>
+              <li>鳥哥網站： <a href="http://linux.vbird.org/Searching.php"
+		target="_blank">http://linux.vbird.org/Searching.php</a></li>
+            </ul>
+            <br />
+          </li>
+          <li><span class="text_import1">注意訊息輸出，自行解決疑難雜症：</span><br />
+            <br />
+            一般而言，Linux在下達指令的過程當中，或者是log file裡頭就可以自己查得錯誤資訊了，舉個例子來說，當你下達：
+            <table class="term">
+              <tr>
+                <td class="term"><pre>
+[root@linux ~]# <span class="term_command">ls -l /vbird</span>
+
+</pre></td>
+              </tr>
+            </table>
+            由於系統並沒有 /vbird 這個目錄，所以會在螢幕前面顯示：
+            <table class="term">
+              <tr>
+                <td class="term"><pre>
+ls: /vbird: No such file or directory
+</pre></td>
+              </tr>
+            </table>
+            這個錯誤訊息夠明確了吧！系統很完整的告訴您『查無該資料』！
+            呵呵！所以囉，請注意，發生錯誤的時候，請先自行以螢幕前面的資訊來進行
+            debug(除錯)的動作，然後，如果是網路服務的問題時，請到/var/log/這個目錄裡頭去查閱一下
+            log file(登錄檔)，這樣可以幾乎解決大部分的問題了！<br />
+            <br />
+          </li>
+          <li><span class="text_import1">搜尋過後，注意網路禮節，討論區大膽的發言吧：</span><br />
+            <br />
+            一般來說，如果發生錯誤現象，一定會有一些訊息對吧！那麼當您要請教別人之前，就得要將這些訊息整理整理，
+            否則網路上人家也無法告訴您解決的方法啊！這一點很重要的喔！<br />
+            <br />
+            萬一真的經過了自己的查詢，卻找不到相關的資訊，那麼就發問吧！不過，在發問之前建議您最好先看一下『 <a href="http://phorum.vbird.org/viewtopic.php?t=96" 
+		target="_blank">提問的智慧 http://phorum.vbird.org/viewtopic.php?t=96</a>』
+            這一篇討論！然後，你可以到底下幾個討論區發問看看：<br />
+            <br />
+            <ul>
+              <li><a href="http://phorum.study-area.org" 
+			target="_blank">酷學園討論區 http://phorum.study-area.org</a></li>
+              <li><a href="http://phorum.vbird.org">鳥哥的私房菜館討論區 http://phorum.vbird.org</a></li>
+              <li><a href="telnet://bbs.sayya.org" target="_blank">telnet://bbs.sayya.org</a></li>
+            </ul>
+            <br />
+            不過，基本上去每一個討論區回答問題的熟手，其實都差不多是那幾個，
+            所以，您的問題『<span class="text_import2">不要重複發表在各個主要的討論區！</span>』
+            舉例來說，鳥園與酷學園討論區上的朋友重複性很高，如果您兩邊都發問，
+            可能會得到反效果，因為大家都覺得，另外一邊已經回答您的問題了呢～～<br />
+            <br />
+          </li>
+          <li><span class="text_import1">Netman大大給的建議：</span><br />
+            <br />
+            此外，Netman 兄提供的一些學習的基本方針，提供給大家參考：<br />
+            <br />
+            <ul style="padding-left: 20px">
+              <li>在Windows裡面，程式有問題時，如果可能的話先將所有其它程式保存並結束，然後嘗試按救命三鍵
+                (Ctrl+Alt+Delete)，將有問題的程式(不要選錯了程式哦)『結束工作』，看看能不能恢復系統。<span 
+		class="text_import2">不要動不動就直接關機或reset</span>。</li>
+              <li><span class="text_import2">有系統地設計檔案目錄</span>，不要隨便到處保存檔案以至以後不知道放哪裡了，
+                或找到檔案也不知道為何物。</li>
+              <li><span class="text_import2">養成一個做記錄的習慣</span>。尤其是發現問題的時候，
+                把錯誤信息和引發狀況以及解決方法記錄清楚，同時最後歸類及定期整理。別以為您還年輕，等你再弄多幾年電腦了，
+                您將會非常慶幸您有此一習慣。</li>
+              <li>如果看在網路上看到任何好文章，可以為自己留一份copy，同時定好題目，歸類存檔。(鳥哥註：需要注意智慧財產權！)</li>
+              <li>作為一個使用者，人要遷就機器；做為一個開發者，要機器遷就人。</li>
+              <li>學寫 script 的確沒設定 server 那麼好玩，不過以我自己的感覺是：關鍵是會得『偷』，
+                偷了會得改，改了會得變，變則通矣。</li>
+              <li>在Windows裡面，設定不好設備，您可以罵它；在Linux裡面，如果設定好設備了，您得要感激它﹗</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <hr />
+    <a name="study_vbird" id="study_vbird"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">鳥哥的建議(重點在Solution的學習)：</span><br />
+    <div class="block2">
+      <p>除了上面的學習建議之外，還有其他的建議嗎？確實是有的！其實，
+        無論作什麼事情，對人類而言，兩個重要的因素是造成我們學習的原動力：</p>
+      <ul class="text_import2">
+        <li>成就感</li>
+        <li>興趣</li>
+      </ul>
+      <p>很多人問過我，鳥哥是怎麼學習Linux的？由上面鳥哥的悲慘Linux學習之路你會發現，
+        原來我本人對於電腦就蠻有興趣的，加上工作的需要，而鳥哥又從中得到了相當多的成就感，
+        所以囉，就一發不可收拾的愛上Linux囉！因此，鳥哥個人認為，<span class="text_import2">學習Linux如果玩不出興趣，
+          他對你也不是什麼重要的生財工具，那麼就不要再玩下去了！</span> 因為很累人ㄋㄟ～而如果你真的想要玩這麼一套優良的作業系統，
+        除了前面提到的一些建議之外，說真的，得要培養出興趣與成就感才行！
+        那麼如何培養出興趣與成就感呢？可能有幾個方向可以提供給你參考：</p>
+      <ul>
+        <li><span class="text_import2">建立興趣</span>：<br />
+          Linux上面可以玩的東西真的太多了，你可以選擇一個有趣的課題來深入的玩一玩！不論是Shell還是圖形介面等等，
+          只要能夠玩出興趣，那麼再怎麼苦你都會不覺得喔！<br />
+          <br />
+        </li>
+        <li><span class="text_import2">成就感</span>：<br />
+          成就感是怎麼來的？說實在話，就是『被認同』來的！怎麼被認同呢？寫心得分享啊！當你寫了心得分享，並且公告在
+          BBS 上面，自然有朋友會到你的網頁去瞧一瞧，當大家覺得你的網頁內容很棒的時候，
+          哈哈！你肯定會加油繼續的分享下去而無法自拔的！那就是我啦...... ^_^！<br />
+          <br />
+          就鳥哥的經驗來說，你『<span class="text_import2">學會一樣東西</span>』與
+          『<span class="text_import2">要教人家會一樣東西</span>』思考的紋路是不太一樣的！
+          學會一樣東西可能學一學會了就算了！但是要『教會』別人，那可就不是鬧著玩的！
+          得要思考相當多的理論性與實務性方面的咚咚，這個時候，你所能學到的東西就更深入了！
+          鳥哥常常說，我這個網站對我在Linux的瞭解上面真的的幫助很大！<br />
+          <br />
+        </li>
+        <li><span class="text_import2">協助回答問題</span>：<br />
+          另一個創造成就感與滿足感的方法就是『助人為快樂之本！』當你在
+          BBS 上面告訴一些新手，回答他們的問題，你可以獲得的可能只是一句『謝謝！感恩吶！』
+          但是那句話真的會讓人很有快樂的氣氛！很多的老手都是因為有這樣的滿足感，
+          才會不斷的協助新來的朋友的呢！此外，回答別人問題的時候，就如同上面的說明一般，
+          你會更深入的去瞭解每個項目，哈哈！又多學會了好多東西呢！<br />
+          <br />
+        </li>
+        <li><span class="text_import2">參與討論</span>：<br />
+          參與大家的技術討論一直是一件提昇自己能力的快速道路！因為有這些技術討論，
+          你提出了意見，不論討論的結果你的意見是對是錯，對你而言，都是一次次的知識成長！這很重要喔！
+          目前台灣地區辦活動的能力是數一數二的Linux社群『酷學園(Study Area, SA)』，每個月不定期的在北/中/南舉辦自由軟體相關活動，
+          有興趣的朋友可以看看：<br />
+          <a href="http://phorum.study-area.org/index.php/board,22.0.html"
+		target="_blank">http://phorum.study-area.org/index.php/board,22.0.html</a></li>
+      </ul>
+      <p>此外，除了這些鳥哥的經驗之外，還有在 BBS 上面有一封對於Linux新手相當有幫助的文件資料，大家可以多看一看：</p>
+      <ul>
+        <li><a href="http://info.sayya.org/~edt1023/linux_entry.html" 
+		target="_blank">李果正先生之 GNU/Linux 初學者之旅： 
+          http://info.sayya.org/~edt1023/linux_entry.html</a> <br />
+          鳥哥這裡有也一個備份 <a href="0120howtolinux/0120howtolinux_3.php"
+		target="_blank">http://linux.vbird.org/linux_basic/0120howtolinux/0120howtolinux_3.php</a></li>
+        <li><a href="http://people.ofset.org/~ckhung/a/c013.php" 
+		target="_blank">資訊人的有效學習(洪朝貴教授網頁) 
+          http://people.ofset.org/~ckhung/a/c013.php</a></li>
+      </ul>
+      <p>除了這些基本的初學者建議外，其實，對於未來的學習，這裡建議大家要『眼光看遠！』一般來說，公司行號會發生問題時，
+        他們絕不會只要求各位『單獨解決一部主機的問題』而已，他們需要的是整體環境的總體解決『<span 
+	class="text_import2">Total Solution</span>』。
+        而我們目前學習的Linux其實僅是在一部主機上面進行各項設定而已，
+        還沒有到達解決整體公司所有問題的狀態。當然啦，得要先學會Linux相關技巧後，
+        才有辦法將這些技巧用之於其他的solution上面！</p>
+      <p>所以，大家在學習Linux的時候，千萬不要有『門戶之見』，認為MS的東西就比較不好～
+        否則，未來在職場上，競爭力會比人家弱的！有辦法的話，多接觸，不排斥任何學習的機會！都會帶給自己很多的成長！
+        而且要謹記：『<span class="text_import2">不同的環境下，解決問題的方法有很多種，只要行的通，就是好方法！</span>』</p>
+    </div>
+    <hr />
+    <a name="hint" id="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+    <div class="block1">
+      <ul class="text_import2">
+        <li>Linux在企業應用方面，著重於『網路伺服器』、『關鍵任務的應用(金融資料庫、大型企業網管環境)』及『高效能運算』等任務；</li>
+        <li>Linux在個人環境的使用上，著重於：桌上型電腦、手持系統(PDA、手機)、嵌入式設備(如家電用品等)；</li>
+        <li>Linux distributions有針對桌面電腦所開發的，例如Ubuntu, OpenSuSE及Fedora等等，為學習X Window的好工具；</li>
+        <li>有心朝Linux學習者，應該多接觸文字介面(shell)的環境，包括正規表示法、管線命令與資料流重導向，最好都要學習！
+          最好連shell script都要有能力自行撰寫；</li>
+        <li>『實作』是學習Linux的最佳方案，空讀書，遇到問題也不見得能夠自己處理的！</li>
+        <li>學習Linux時，建立興趣、建立成就感是很重要的，另外，協助回答問題、參與社群活動也是增加熱情的方式！</li>
+        <li>Linux文件計畫的網站在：http://www.tldp.org</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="ex" id="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+    ( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+  <div class="block1"> 實作題部分：
+    <ul>
+      <li>我的 Linux 系統上面老是出現問題，他有一個錯誤訊息為『fatal: SASL per-connection security setup』請幫我找出可能的原因為何？
+        <div class="blockex"> 先跑到 http://www.google.com.tw 裡面去，輸入上列的錯誤訊息，就可以找到很多文件，根據文件去判斷吧！ </div>
+      </li>
+      <li>Windows的作業系統當中，老是自動出現一個名為internet optimizer的軟體，我想要知道他是什麼，可以怎麼找？
+        <div class="blockex"> 利用 http://www.google.com.tw 輸入 inetnet optimizer 後，
+          就可以找到相關的資訊。基本上，這是一個木馬程式啦！趕緊移除吧！ </div>
+      </li>
+      <li>想一想再回答，為何您想要學習Linux？有沒有持續學習的動力？您想要Linux幫您達成什麼樣的工作目標？</li>
+    </ul>
+    問答題部分：
+    <ul>
+      <li>我的Linux發生問題，我老是找不到正確的答案，想要去http://phorum.study-area.org提問，應該要先做哪些動作才發問？
+        <div class="blockex"> 1. 先將您 Linux 上面的問題作一個清楚的描述，例如，做了什麼動作，結果發生了什麼訊息與結果。<br />
+          2. 先到 http://phorum.study-area.org 內的『搜尋』查詢有無相關的問題<br />
+          3. 再到 http://www.google.com.tw 查詢一下有無相關的資訊<br />
+          4. 將您的問題描述寫下，並且寫下您的判斷，以及查詢過資料的結果。<br />
+          5. 等待回覆～ </div>
+      </li>
+      <li>你覺得學習Linux最重要的一環是什麼？
+        <div class="blockex"> 其實是自己的學習心態～最重要的地方在於能夠『刻苦耐勞～』 ^_^ </div>
+      </li>
+      <li>什麼是TLDP？全名為何？網站在哪裡？
+        <div class="blockex"> TLDP是 The Linux Documentation Project 的縮寫，內容提到的是 Linux 作業系統的各個
+          How-To 以及相關的說明文件如 man page 等等。網站在 http://www.tldp.org 喔！ </div>
+      </li>
+    </ul>
+  </div>
+  <hr />
+  <a name="reference" id="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+  <div class="block1">
+    <ul>
+      <li><a name="ps1" id="ps1"></a>註1：例如甲骨文(Oracle)資料庫系統公司就有支援Linux的版本出現。有興趣的朋友可以參考底下數則新聞：<br />
+        <a href="http://www.openfoundry.org/index.php?option=com_content&amp;Itemid=345&amp;id=1501&amp;lang=en&amp;task=view" 
+	target="_blank">http://www.openfoundry.org/index.php?option=com_content&amp;Itemid=345&amp;id=1501&amp;lang=en&amp;task=view</a><br />
+        <a href="http://www.zdnet.com.tw/news/software/0,2000085678,20064784,00.htm" target="_blank"
+	>http://www.zdnet.com.tw/news/software/0,2000085678,20064784,00.htm</a><br />
+        <a href="http://govforge.e-land.gov.tw/modules/news/article.php?storyid=84" target="_blank"
+	>http://govforge.e-land.gov.tw/modules/news/article.php?storyid=84</a><br />
+        <a href="http://www.openfoundry.org/index.php?option=com_content&amp;Itemid=336&amp;id=1283&amp;lang=en&amp;task=view" target="_blank"
+	>http://www.openfoundry.org/index.php?option=com_content&amp;Itemid=336&amp;id=1283&amp;lang=en&amp;task=view</a><br />
+        <a href="http://www.oc.com.tw/readvarticle.asp?id=9539" target="_blank"
+	>http://www.oc.com.tw/readvarticle.asp?id=9539</a><br />
+        <a href="http://searchenterpriselinux.techtarget.com/news/article/0,289142,sid39_gci1309650,00.html" target="_blank"
+	>http://searchenterpriselinux.techtarget.com/news/article/0,289142,sid39_gci1309650,00.html</a></li>
+      <li><a name="ps2" id="ps2"></a>註2：維基百科對於 cluster 的解釋：<a href="http://en.wikipedia.org/wiki/Cluster_%28computing%29"
+		target="_blank">http://en.wikipedia.org/wiki/Cluster_%28computing%29</a></li>
+    </ul>
+  </div>
+  <hr />
+  <span class="text_history"> 2002/07/08：第一次完成或者是上次更新...忘記了～ @_@<br />
+    2003/01/28：重新修訂，加入 X-Window 的簡易說明<br />
+    2005/06/03：將舊的資料移至 <a href="0120howtolinux/0120howtolinux.php">此處</a>。同時更新網頁資料！<br />
+    2005/06/08：加入一些練習題～之前的寫的不好～已經抽換掉了～<br />
+    2008/07/26：將原本舊的FC4的版本移動到<a href="/linux_basic/0120howtolinux/0120howtolinux-fc4.php">此處</a>。<br />
+    2008/07/28：將本章與『<a href="../new_linux.php">新手建議</a>』做個連結，加強Linux應用的說明！<br />
+    2009/08/06：調整一些顯示的方式，調整一下課後練習的部分，將題目分開處理。<br />
+  </span>
+  <hr />
+  <br />  <br /></td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

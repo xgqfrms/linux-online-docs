@@ -1,0 +1,1563 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- vsFTPd 檔案伺服器</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0410vsftpd.htm">
+    <span class="text_head0"><span class="text_head_en">vsFTPd </span>檔案伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0410vsftpd.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/12/20</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在網際網路上面的傳輸協定當中， FTP (File Transfer Protocol) 可說是最古老的協定之一了！
+	早期還沒有這麼多好用的協定之前 (例如 SAMBA)，都是使用 FTP 來進行資料的傳遞的呢！另外，一般來說資料的傳輸以 
+	FTP 這個協定來傳送是相當的快速的，而且某些場合當中其實也相當的方便。不過，值得注意的是，使用 FTP 
+	來傳輸時，其實是具有一定程度的『危險性』，因為資料在網際網路上面是完全沒有受到保護的『明碼』機制！
+	所以鳥哥不太建議大家使用這個伺服器的啦！尤其當你建置好了 FTP 之後，如果經常進行資料的傳遞，
+	對於您的網路頻寬『真的有很大的損害』啊！不過，無論如何， FTP 仍然有其存在的必要！例如義守大學的 FTP 
+	站就作的相當的棒啊！不過， FTP 伺服器的危險性挺高的，因此我們選擇一個強調安全性的 vsftpd 軟體來架設喔！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#theory">FTP 的資料連結原理</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#theory_function">FTP 功能簡介</a><br />
+	　　2.2 <a href="#theory_port">FTP 的運作流程與使用到的埠口</a><br />
+	　　2.3 <a href="#theory_pasv">用戶端選擇被動式連線模式</a><br />
+	　　2.4 <a href="#theory_security">FTP 的安全性問題與替代方案</a><br />
+	　　2.5 <a href="#theory_who">開放什麼身份的使用者登入</a><br />
+	</span>
+3. <a href="#server">vsftpd 伺服器基礎設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#server_before">為何使用 vsftpd ？</a><br />
+	　　3.2 <a href="#server_pkg">所需要的套件以及套件結構</a><br />
+	　　3.3 <a href="#server_vsftpd.conf">vsftpd.conf 設定值說明 </a><br />
+	　　3.4 <a href="#server_start">vsftpd 啟動的模式</a><br />
+	　　3.5 <a href="#server_basic">CentOS 的 vsftpd 預設值</a><br />
+	　　3.6 <a href="#server_real">僅有實體用戶登入的設定</a>：<br />
+	　　　　<a href="#server_real_chroot">chroot 的使用</a>,
+		<a href="#server_real_chroot2">更嚴格的 chroot 環境</a>,<br />
+	　　　　<a href="#server_real_flow">限制下載頻寬</a>,
+		<a href="#server_real_client">限制最大上線人數與同一 IP 的來源數</a>,<br />
+	　　　　<a href="#server_real_userlist">建立嚴格的可使用 FTP 的帳號列表</a>,<br />
+	　　3.7 <a href="#server_anon">僅有匿名登入的相關設定</a>：<br />
+	　　　　<a href="#server_anon_upload">建立上傳/下載目錄</a>,
+		<a href="#server_anon_upload2">建立僅可上傳目錄</a>,<br />
+	　　　　<a href="#server_anon_pasv">被動式連線埠口的限制</a><br />
+	</span>
+4. <a href="#client">用戶端的 FTP 連線軟體</a><br />
+5. <a href="#other">其他 FTP 伺服器相關設定</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#other_iptables">防火牆設定</a><br />
+	　　5.2 <a href="#other_super">Super daemon 的額外管理項目</a><br />
+	　　5.3 <a href="#other_faq">常見問題與解決之道</a><br />
+	</span>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a><br />
+8. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+9. <a href="http://phorum.vbird.org/viewtopic.htm?p=118520"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=118520</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	架設 FTP 是個很難的任務，因為 FTP 服務同時啟用兩個連線通道，分別是命令通道與資料流通道，
+	這兩條通道的連線建立方式不太一樣，結果就造成了防火牆設定方面的困擾。
+	所以在學習 FTP 之前，請先確認您已經具有網路基礎概念，而且對防火牆也需要有一定程度的概念了喔！<br />
+	<ul>
+	<li><a href="0110network_basic.htm">必須要熟悉網路基礎</a>，尤其是網路連線的建立是雙向的這個概念；
+	<li><a href="0250simple_firewall.htm">必須要瞭解防火牆的機制</a>，尤其當防火牆架設在路由器上的網路架構時。
+	<li>必須要瞭解 <a href="../linux_basic/0560daemons.htm">stand alone 與 super daemon</a> 的啟動方式。
+	</ul>
+</div>
+
+
+<hr /><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">FTP 的資料連結原理</span><br />
+<div class=block1>
+	FTP 是相當古老的傳輸協定之一，他最主要的功能是在伺服器與用戶端之間進行檔案的傳輸。
+	FTP 其實是以 TCP 封包的模式進行伺服器與用戶端電腦之間的連線，當連線建立後，使用者可以在用戶端端連上 FTP 
+	伺服器來進行檔案的下載與上傳，此外，也可以直接管理用戶在 FTP 伺服器上面的檔案呢，相當的方便！
+	而這個古老的協定是使用明碼傳輸，且過去有相當多的安全危機歷史。為了更安全的使用 FTP 協定，
+	我們主要介紹較為安全但功能較少的 vsftpd 這個軟體吶。<br /><br />
+
+	<hr /><a NAME="theory_function"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">FTP 功能簡介</span><br />
+	<div class=block2>
+		FTP 伺服器的功能除了單純的進行檔案的傳輸與管理之外，依據伺服器軟體的設定架構，
+		他還可以提供幾個主要的功能，底下我們約略的來談一談：<br /><br />
+
+		<li><span class=text_import1>不同等級的使用者身份：</span></li>
+		<div class=block2>
+		FTP 伺服器在預設的情況下，依據使用者登入的情況而分為三種不同的身份，分別是
+		<span class=text_import2>(1)實體帳號,real user；(2)訪客, guest；(3)匿名登入者, anonymous</span>
+		這三種。這三種身份的使用者在系統上面的使用權限差異很大喔！
+		例如實體用戶取得系統的權限比較完整，所以可以進行比較多的動作；至於匿名登入者，
+		大概我們就僅提供他下載一下資源而已，並不許匿名者使用太多主機的資源啊！
+		當然，這三種人物能夠使用的『線上指令』自然也就不相同囉！ ^_^<br /><br />
+		</div>
+
+		<li><span class=text_import1>命令記錄與登錄檔記錄：</span></li>
+		<div class=block2>
+		FTP 可以利用系統的 <a href="../linux_basic/0570syslog.htm">syslogd 這個 daemon</a> 來進行資料的紀錄，
+		而記錄的資料包括了使用者曾經下達過的命令與使用者傳輸資料(傳輸時間、檔案大小等等)的紀錄呢！
+		所以你可以很輕鬆的在 /var/log/ 裡面找到各項登錄資訊喔！<br /><br />
+		</div>
+
+		<li><span class=text_import1>限制或解除使用者家目錄所在(change root, 簡稱 chroot)：</span></li>
+		<div class=block2>
+		為了避免使用者在您的 Linux 系統當中隨意逛大街 (意指離開使用者自己的家目錄而進入到 Linux 系統的其他目錄去)，
+		所以將使用者的工作範圍『侷限』在使用者的家目錄底下，嗯！實在是個不錯的好主意！FTP 
+		可以限制使用者僅能在自己的家目錄當中活動喔！如此一來，由於使用者無法離開自己的家目錄，而且登入 FTP 
+		後，顯示的『根目錄』就是自己家目錄的內容，這種環境稱之為 change root ，簡稱 chroot ，改變根目錄的意思啦！<br /><br />
+
+		這有什麼好處呢？當一個惡意的使用者以 FTP 登入您的系統當中，如果沒有 chroot 的環境下，他可以到 
+		/etc, /usr/local, /home 等其他重要目錄底下去察看檔案資料，尤其是很重要的 /etc/ 底下的設定檔，如 
+		/etc/passwd 等等。如果您沒有做好一些檔案權限的管理與保護，那他就有辦法取得系統的某些重要資訊，
+		用來『入侵』您的系統呢！所以在 chroot 的環境下，當然就比較安全一些咯！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="theory_port"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">FTP 的運作流程與使用到的埠口</span><br />
+	<div class=block2>
+		FTP 的傳輸使用的是較為可靠的 TCP 封包協定，在前幾章的<a href="0110network_basic.htm">網路基礎</a>當中我們談過，
+		TCP 這種封包格式在建立連線前會先進行三向交握的。不過 FTP 伺服器是比較麻煩一些，因為<span class=text_import2>
+		FTP 伺服器使用了兩個連線，分別是命令通道與資料流通道 (ftp-data) 。</span>這兩個連線都需要經過三向交握，
+		因為是 TCP 封包嘛！那麼這兩個連線通道的關係是如何呢？底下我們先以
+		<span class=text_import2>FTP 預設的主動式 (active) 連線</span>來作個簡略的說明囉：<br /><br />
+
+		<a name="fig_01"></a><center><img src="0410vsftpd/connect_active.png"
+		title="FTP 伺服器的主動式連線示意圖"
+		alt="FTP 伺服器的主動式連線示意圖"><br />
+		圖一、FTP 伺服器的主動式連線示意圖</center><br />
+
+		簡單的連線就如上圖所示，至於連線的步驟是這樣的：<br />
+		<ol>
+		<li><span class=text_import2>建立命令通道的連線</span><br />
+		如上圖一所示，用戶端會隨機取一個大於 1024 以上的埠口 (port AA) 來與 FTP 伺服器端的 port 21 達成連線，
+		這個過程當然需要三向交握了！達成連線後用戶端便可以透過這個連線來對 FTP 伺服器下達指令，
+		包括查詢檔名、下載、上傳等等指令都是利用這個通道來下達的；</li><br />
+
+		<li><span class=text_import2>通知 FTP 伺服器端使用 active 且告知連接的埠號</span><br />
+		FTP 伺服器的 21 埠號主要用在命令的下達，但是當牽涉到資料流時，就不是使用這個連線了。
+		用戶端在需要資料的情況下，會告知伺服器端要用什麼方式來連線，如果是主動式 (active) 連線時，
+		用戶端會先隨機啟用一個埠口 (圖一當中的 port BB) ，且透過命令通道告知 FTP 伺服器這兩個資訊，並等待 FTP 伺服器的連線；
+		</li><br />
+
+		<li><span class=text_import2>FTP 伺服器『主動』向用戶端連線</span><br />
+		FTP 伺服器由命令通道瞭解用戶端的需求後，會主動的由 20 這個埠號向用戶端的 port BB 連線，
+		這個連線當然也會經過三向交握啦！此時 FTP 的用戶端與伺服器端共會建立兩條連線，分別用在命令的下達與資料的傳遞。
+		而預設 FTP 伺服器端使用的主動連線埠號就是 port 20 囉！</li>
+		</ol>
+
+		如此一來則成功的建立起『命令』與『資料傳輸』兩個通道！不過，要注意的是，
+		『資料傳輸通道』是在有資料傳輸的行為時才會建立的通道喔！並不是一開始連接到 FTP 
+		伺服器就立刻建立的通道呢！留意一下囉！<br /><br />
+
+		<hr /><li><span class=text_import1>使用到的埠號</span></li>
+		<div class=block2>
+		利用上述的說明來整理一下 FTP 會使用到的埠號主要有：<br />
+		<ul><span class=text_import2>
+		<li>命令通道的 ftp (預設為 port 21) 與
+		<li>資料傳輸的 ftp-data (預設為port 20)。
+		</span></ul>
+		再強調一次，這兩個埠口的工作是不一樣的，而且，重要的是<span class=text_import2>兩者的連線方向是不一樣的</span>！
+		首先， port 21 主要接受來自用戶端的主動連線，至於 port 20 則為 FTP 伺服器主動連線至用戶端呢！
+		這樣的情況在伺服器與用戶端兩者同時為公共 IP (Public IP) 的網際網路上面通常沒有太大的問題，不過，
+		萬一你的用戶端端是在防火牆後端，或者是 NAT 主機後端呢？會有什麼問題發生呢？底下我們來談一談這個嚴重的問題！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>在 FTP 伺服器與用戶端之間具有防火牆的連線問題：</span></li>
+		<div class=block2>
+		還記得我們的<a href="0250simple_firewall.htm">防火牆</a>章節吧？一般來說，很多的區域網路 (LAN) 
+		都會使用防火牆 (iptables) 的 NAT 功能，那麼在 NAT 主機後端的 FTP 用戶如何連接到 FTP 伺服器呢？
+		我們可以簡單的以下圖來說明：<br /><br />
+
+		<a name="fig_02"></a><center><img src="0410vsftpd/connect_active_nat.png"
+		title="若 FTP 用戶端與伺服器端連線中間具有防火牆的連線狀態"
+		alt="若 FTP 用戶端與伺服器端連線中間具有防火牆的連線狀態"><br />
+		圖二、若 FTP 用戶端與伺服器端連線中間具有防火牆的連線狀態</center>
+
+		<ol>
+		<li><span class=text_import2>命令通道的建立：</span><br />
+		因為 NAT 主機會主動的記錄由內部送往外部的連線資訊，而由於命令通道的建立是由用戶端向伺服器端連線的，
+		因此這一條連線可以順利的建立起來的；</li><br />
+
+		<li><span class=text_import2>資料通道建立時的通知：</span><br />
+		同樣的，用戶端主機會先啟用 port BB ，並透過命令通道告知 FTP 伺服器，且等待主機端的主動連線；</li><br />
+
+		<li><span class=text_import2>主機的主動連線問題：</span><br />
+		但是由於透過 NAT 主機的轉換後，FTP 伺服器只能得知 NAT 主機的 IP 而不是用戶端的 IP ，
+		因此 FTP 伺服器會以 port 20 主動的向 NAT 主機的 port BB 發送主動連線的要求。
+		但你的 NAT 主機並沒有啟動 port BB 來監聽 FTP 伺服器的連線啊！</li>
+		</ol>
+
+		瞭解問題的所在了嗎？在 FTP 的主動式連線當中，NAT 主機將會被視為用戶端，但 NAT 主機其實並非用戶端啊，
+		這就造成問題了。如果你曾經在 IP 分享器後面連接某些 FTP 伺服器時，可能偶爾會發現明明就連接上 FTP 伺服器了
+		(命令通道已建立)，但是就是無法取得檔案名稱的列表，而是在超過一段時間後顯示『<span class=text_import2>
+		Can't build data connection: Connection refused，無法進行資料傳輸</span>』之類的訊息，
+		那肯定就是這個原因所造成的困擾了。<br /><br />
+
+		那有沒有辦法可以克服這個問題呢？難道真的在 Linux NAT 主機後面就一定無法使用 FTP 嗎？當然不是！
+		目前有兩個簡易的方法可以克服這個問題：<br />
+
+		<ul>
+		<li><span class=text_import2>使用 iptables 所提供的 FTP 偵測模組：</span><br />
+		其實 iptables 早就提供了許多好用的模組了，這個 FTP 當然不會被錯過！
+		你可以使用 <a href="../linux_basic/0510osloader.htm#kernel_load">modprobe</a> 這個指令來載入
+		ip_conntrack_ftp 及 ip_nat_ftp 等模組，這幾個模組會主動的分析『目標是 port 21 的連線』資訊，
+		所以可以得到 port BB 的資料，此時若接受到 FTP 伺服器的主動連線，就能夠將該封包導向正確的後端主機了！ ^_^<br /><br />
+
+		不過，如果你連結的目標 FTP 伺服器他的命令通道預設埠號並非標準的 21 埠號時 (例如某些地下 FTP 伺服器)，
+		那麼這兩個模組就無法順利解析出來了，這樣說，理解嗎？<br /><br />
+
+		<li><span class=text_import2>用戶端選擇被動式 (Passive) 連線模式：</span><br />
+		除了主動式連線之外，FTP 還提供一種稱為被動式連線的模式，什麼是被動式呢？
+		既然主動式是由伺服器向用戶端連線，反過來講，被動式就是由用戶端向伺服器端發起連線的囉！
+		既然是由用戶端發起連線的，那自然就不需要考慮來自 port 20 的連線啦！關於被動式連線模式將在下一小節介紹喔！
+		</ul>
+		</div>
+	</div>
+
+	<hr /><a NAME="theory_pasv"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">用戶端選擇被動式連線模式</span><br />
+	<div class=block2>
+		那麼什麼是被動式連線呢？我們可以使用底下的圖示來作個簡略的介紹喔：<br /><br />
+
+		<a name="fig_03"></a><center><img src="0410vsftpd/connect_passive.png"
+		title="被動式連線的方向"
+		alt="被動式連線的方向"><br />
+		圖三、被動式連線的方向</center>
+
+		<ol>
+		<li><span class=text_import2>建立命令通道：</span><br />
+		同樣的需要建立命令通道，透過三向交握就可以建立起這個通道了。</li><br />
+
+		<li><span class=text_import2>發出 PASV 的連線要求：</span><br />
+		當有使用資料通道的指令時，用戶端可透過命令通道發出 PASV 的被動式連線要求 (Passive 的縮寫)，
+		並等待伺服器的回應；</li><br />
+
+		<li><span class=text_import2>FTP 伺服器啟動資料埠口，並通知用戶端連線：</span><br />
+		如果你的 FTP 伺服器是能夠處理被動式連線的，此時 FTP 伺服器會先啟動一個埠口在監聽。
+		這個埠口號碼可能是隨機的，也可以自訂某一範圍的埠口，端看你的 FTP 伺服器軟體而定。
+		然後你的 FTP 伺服器會透過命令通道告知用戶端該已經啟動的埠口 (圖中的 port PASV)，
+		並等待用戶端的連線。</li><br />
+
+		<li><span class=text_import2>用戶端隨機取用大於 1024 的埠口進行連接：</span><br />
+		然後你的用戶端會隨機取用一個大於 1024 的埠號來對主機的 port PASV 連線。
+		如果一切都順利的話，那麼你的 FTP 資料就可以透過 port BB 及 port PASV 來傳送了。</li>
+		</ol>
+
+		發現上面的不同點了嗎？被動式 FTP 資料通道的連線方向是由用戶端向主機端連線的喔！
+		如此一來，在 NAT 主機內部的用戶端主機就可以順利的連接上 FTP Server 了！但是，萬一 FTP 
+		主機也是在 NAT 後端那怎麼辦.....呵呵！那可就糗了吧～ @_@這裡就牽涉到更深入的 DMZ 
+		技巧了，我們這裡暫不介紹這些深入的技巧，先理解一下這些特殊的連線方向，
+		這將有助於您未來伺服器架設時候的考慮因素喔！<br /><br />
+
+		此外，不曉得您有無發現，透過 PASV 模式，伺服器在沒有特別設定的情況下，會隨機選取大於 1024 
+		的埠口來提供用戶端連接之用。那麼萬一主機啟用的埠口被搞鬼怎麼辦？而且，
+		如此一來也很難追蹤來自入侵者攻擊的登錄資訊啊！所以，這個時候我們可以透過 
+		passive ports 的功能來『限定』主機啟用的 port number 喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_security"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">FTP 的安全性問題與替代方案</span><br />
+	<div class=block2>
+		事實上，FTP 是一個不太安全的傳輸協定呢！怎麼說呢？因為 FTP 與 <a href="0310telnetssh.htm">Telnet</a> 相似的，
+		他是以『明碼』的狀態在網際網路上面傳輸的，所以當然就容易被有心人士將你的資料給他抓下來，
+		並且加以利用啦！因此，他當然不是很安全啊！所以，在網路上大家才會常常告誡說，不要隨意架設 FTP 
+		網站啊！否則主機怎麼被破解的都不曉得哩！此外，由於 FTP 軟體常常會有漏洞的問題，因此也要常常更新套件喔！<br /><br />
+
+		另外，其實拜 <a href="0310telnetssh.htm">SSH</a> 所賜，目前我們已經有較為安全的 FTP 了，那就是 ssh 提供的 
+		sftp 這個 server 啊！這個 sftp-server 最大的優點就是：『他是經過加密的資料！』所以在網際網路上面流竄的時候，
+		嘿嘿！畢竟是比較安全一些啦！所以建議您，除非必要，否則的話使用 SSH 提供的 sftp-server 
+		功能即可～<br /><br />
+
+		然而這個功能對於一些習慣了圖形介面，或者是有中文檔名的使用者來說，實在是不怎麼方便，
+		雖說目前有個圖形介面的 filezilla 用戶端軟體，不過很多時候還是會發生一些莫名的問題說！
+		所以，有的時候 FTP 網站還是有其存在的需要的。如果真的要架設 FTP 網站，那麼還是得需要注意幾個事項喔：<br />
+
+		<ol><span class=text_import2>
+		<li>隨時更新到最新版本的 FTP 軟體，並隨時注意漏洞訊息；
+		<li>善用 iptables 來規定可以使用 FTP 的網域；
+		<li>善用 TCP_Wrappers 來規範可以登入的網域；
+		<li>善用 FTP 軟體的設定來限制使用您 FTP 主機的使用者的不同權限啊；
+		<li>使用 Super daemon 來進階管理您的 FTP 主機；
+		<li>隨時注意使用者的家目錄、以及匿名使用者登入的目錄的『檔案權限』；
+		<li>若不對外公開的話，或許也可以修改 FTP 的 port 。
+		</span></ol>
+
+		無論如何，在網路上聽過太多人都是由於開放 FTP 這個伺服器而導致整個主機被入侵的事件，所以，
+		這裡真的要給他一直不斷的強調，要注意安全啊！<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_who"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開放什麼身份的使用者登入</span><br />
+	<div class=block2>
+		既然 FTP 是以明碼傳輸，並且某些早期的 FTP 伺服器軟體也有不少的安全性漏洞，那又為何需要架設 FTP 伺服器啊？
+		沒辦法啊，總是有人有需要這個玩意兒的，譬如說各大專院校不就有提供 FTP 網站的服務嗎？
+		這樣可以讓校內的同學共同分享校內的網路資源嘛！不過，由於 FTP 登入者的身份可以分為三種，
+		你到底要開放哪一種身份登入呢？這個時候你可以這樣簡單的思考一下囉：<br /><br />
+
+		<li><span class=text_import1>開放實體用戶的情況 (Real user)：</span><br />
+		<div class=block2>
+		很多的 FTP 伺服器預設就已經允許實體用戶的登入了。不過，需要瞭解的是，以實體用戶做為 FTP 登入者身份時，
+		系統預設並沒有針對實體用戶來進行『限制』的，所以他可以針對整個檔案系統進行任何他所具有權限的工作。
+		因此，如果您的 FTP 使用者沒能好好的保護自己的密碼而導致被入侵，那麼你的整個 Linux 系統將很有可能被毀滅啊！
+		開放實體用戶時的建議如下：<br />
+		<ul>
+		<li>由於實體用戶本來就可以透過網路連接到主機來進行工作 (例如 SSH)，因此實在沒有需要特別的開放 FTP 的服務啊！
+		因為例如 sftp 本來就能達到傳輸檔案的功能囉！</li><br />
+		<li>如果確定要讓實體用戶利用 FTP 伺服器的話，那麼你可能需要讓某些系統帳號無法登入才行，例如 bin, apache 等等。
+		最簡單常用的作法是透過 PAM 模組來處理，譬如 vsftpd 這個軟體預設可以透過 /etc/vsftpd.ftpusers
+		這個檔案來設定不想讓他具有登入權限的帳號。</li>
+		</ul>
+		</div>
+
+		<li><span class=text_import1>訪客身份 (Guest)</span><br />
+		<div class=block2>
+		通常會建立 guest 身份的案例當中，多半是由於主機提供了類似『個人 Web 首頁』的功能給一般身份使用者，
+		那麼這些使用者總是需要管理自己的網頁空間吧？這個時候將使用者的身份壓縮成為 guest 
+		，並且將他的可用目錄設定好，即可提供使用者一個方便的使用環境了！且不需要提供他 real user 的權限喔！
+		常見的建議如下：<br />
+		<ul>
+		<li>僅提供需要登入的帳號即可，不需要提供系統上面所有人均可登入的環境啊！</li><br />
+		<li>當然，我們在主機的設定當中，需要針對不同的訪客給他們不一樣的『家目錄』，
+		而這個家目錄與使用者的權限設定需要相符合喔！例如要提供 dmtsai 這個人管理他的網頁空間，而他的網頁空間放置在 
+		/home/dmtsai/www 底下，那我就將 dmtsai 在 FTP 提供的目錄僅有 /home/dmtsai/www 
+		而已，比較安全啦！而且也方便使用者啊！</li><br />
+		<li>針對這樣的身份者，需要設定較多的限制，包括：上下傳檔案數目與硬碟容量的限制、
+		連線登入的時間限制、許可使用的指令要減少很多很多，例如 chmod 就不要允許他使用等等！</li>
+		</ul>
+		</div>
+
+		<li><span class=text_import1>匿名登入使用者 (anonymous)</span><br />
+		<div class=block2>
+		雖然提供匿名登入給網際網路的使用者進入實在不是個好主意，因為每個人都可以去下載你的資料，
+		萬一頻寬被吃光光怎麼辦？但如同前面講過的，學校單位需要分享全校同學一些軟體資源時，
+		FTP 伺服器也是一個很不錯的解決方案啊！您說是吧。如果要開放匿名使用者的話，要注意：<br />
+		<ul>
+		<li>無論如何，提供匿名登入都是一件相當危險的事情，因為只要您一不小心，
+		將重要的資料放置到匿名者可以讀取的目錄中時，那麼就很有可能會洩密！與其戰戰兢兢，不如就不要設定啊～</li><br />
+		<li>果真要開放匿名登入時，很多限制都要進行的，這包括：(1)允許的工作指令要減低很多，
+		幾乎就不許匿名者使用指令啦、(2)限制檔案傳輸的數量，盡量不要允許『上傳』資料的設定、
+		(3)限制匿名者同時登入的最大連線數量，可以控制盜連喔！</li>
+		</ul>
+		</div>
+
+		一般來說，如果你是要放置一些公開的、沒有版權糾紛的資料在網路上供人下載的話，
+		那麼一個僅提供匿名登入的 FTP 伺服器，並且對整個網際網路開放是 OK 的啦！
+		不過，如果你預計要提供的的軟體或資料是具有版權的，但是該版權允許你在貴單位內傳輸的情況下，
+		那麼架設一個『僅針對內部開放的匿名 FTP 伺服器 (利用防火牆處理) 』也是 OK 的啦！<br /><br />
+
+		如果你還想要讓使用者反饋的話，那是否要架設一個匿名者可上傳的區域呢？鳥哥對這件事情的看法是....
+		『萬萬不可』啊！如果要讓使用者反饋的話，除非該使用者是你信任的，否則不要允許對方上傳！
+		所以此時一個檔案系統權限管理嚴格的 FTP 伺服器，並提供實體用戶的登入就有點需求啦！
+		總之，要依照您的需求來思考是否有需要喔！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">vsftpd 伺服器基礎設定</span><br />
+<div class=block1>
+	終於要來聊一聊這個簡單的 vsftpd 囉！vsftpd 的全名是『<span class=text_import2>Very Secure FTP Daemon</span> 』的意思，
+	換句話說，vsftpd 最初發展的理念就是在於建構一個以安全為重的 FTP 伺服器呢！我們先來聊一聊為什麼 vsftpd
+	號稱『非常安全』呢？然後再來談設定吧！<br /><br />
+
+	<hr /><a NAME="server_before"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">為何使用 vsftpd</span><br />
+	<div class=block2>
+		為了建構一個安全為主的 FTP 伺服器， vsftpd 針對作業系統的『程序的權限 (privilege)』概念來設計，
+		如果你讀過基礎篇的<a href="../linux_basic/0440processcontrol.htm">程序與資源管理</a>章節的話，
+		你應該會曉得系統上面所執行的程式都會引發一個程序，我們稱他為 PID (Process ID)，
+		這個 PID 在系統上面能進行的任務與他擁有的權限有關。也就是說， PID 擁有的權限等級越高，
+		他能夠進行的任務就越多。舉例來說，使用 root 身份所觸發的 PID 通常擁有可以進行任何工作的權限等級。<br /><br />
+
+		不過，萬一觸發這個 PID 的程式 (program) 有漏洞而導致被網路怪客 (cracker) 所攻擊而取得此 PID 使用權時，
+		那麼網路怪客將會取得這個 PID 擁有的權限吶！所以，近來發展的套件都會盡量的將服務取得的 PID 
+		權限降低，使得該服務即使不小心被入侵了，入侵者也無法得到有效的系統管理權限，這樣會讓我們的系統較為安全的啦。
+		vsftpd 就是基於這種想法而設計的。<br /><br />
+
+		除了 PID 方面的權限之外， vsftpd 也支援 chroot 這個函式的功能，<span class=text_import2>chroot 
+		顧名思義就是『 change root directory 』的意思</span>，那個 root 指的是『根目錄』而非系統管理員。
+		他可以將某個特定的目錄變成根目錄，所以與該目錄沒有關係的其他目錄就不會被誤用了。<br /><br />
+
+		舉例來說，如果你以匿名身份登入我們的 ftp 服務的話，通常你會被限定在 /var/ftp 目錄下工作，
+		而你看到的根目錄其實就只是 /var/ftp ，至於系統其他如 /etc, /home, /usr... 等其他目錄你就看不到了！
+		這樣一來即使這個 ftp 服務被攻破了，沒有關係，入侵者還是僅能在 /var/ftp 裡面跑來跑去而已，而無法使用 
+		Linux 的完整功能。自然我們的系統也就會比較安全啦！<br /><br />
+
+		vsftpd 是基於上面的說明來設計的一個較為安全的 FTP 伺服器軟體，他具有底下的特點喔：<br />
+		<ul><span class=text_import2>
+		<li>vsftpd 這個服務的啟動者身份為一般使用者，所以對於 Linux 系統的使用權限較低，對於 
+			Linux 系統的危害就相對的減低了。此外， vsftpd 亦利用 chroot() 
+			這個函式進行改換根目錄的動作，使得系統工具不會被 vsftpd 這支服務所誤用；</li><br />
+
+		<li>任何需要具有較高執行權限的 vsftpd 指令均以一支特殊的上層程序 (parent process) 
+			所控制 ，該上層程序享有的較高執行權限功能已經被限制的相當的低，並以不影響 Linux 本身的系統為準；</li><br />
+
+		<li>絕大部分 ftp 會使用到的額外指令功能 (dir, ls, cd ...) 都已經被整合到 vsftpd 主程式當中了，
+			因此理論上 vsftpd 不需要使用到額外的系統提供的指令，所以在 chroot 的情況下，
+			vsftpd 不但可以順利運作，且不需要額外功能對於系統來說也比較安全。</li><br />
+
+		<li>所有來自用戶端且想要使用這支上層程序所提供的較高執行權限之 vsftpd 指令的需求，
+			均被視為『不可信任的要求』來處理，必需要經過相當程度的身份確認後，方可利用該上層程序的功能。
+			例如 chown(), Login 的要求等等動作；</li><br />
+
+		<li>此外，上面提到的上層程序中，依然使用 chroot() 的功能來限制使用者的執行權限。</li>
+		</span></ul>
+
+		由於具有這樣的特點，所以 vsftpd 會變的比較安全一些咯！底下就開始來談如何設定吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需要的套件以及套件結構</span><br />
+	<div class=block2>
+		vsftpd 所需要的套件只有一個，那就是 vsftpd 啊！^_^！如果你的 CentOS 沒有安裝，
+		請利用 yum install vsftpd 來安裝他吧！套件很小，下載連同安裝不需要幾秒鐘就搞定了！
+		而事實上整個套件提供的設定檔也少的令人高興！簡單易用就是 vsftpd 的特色啊！ ^_^！
+		這些設定資料比較重要的有：<br />
+		<ul>
+		<li><span class=text_import1>/etc/vsftpd/vsftpd.conf</span><br />
+		嚴格來說，整個 vsftpd 的設定檔就只有這個檔案！這個檔案的設定是以 
+		<a href="../linux_basic/0320bash.htm#variable">bash 的變數設定</a>相同的方式來處理的，
+		也就是『<span class=text_import2>參數=設定值</span>』來設定的，注意，
+		<span class=text_import2>等號兩邊不能有空白喔</span>！至於詳細的 vsftpd.conf 可以使用
+		『 man 5 vsftpd.conf 』來詳查。</li><br />
+
+		<li><span class=text_import1>/etc/pam.d/vsftpd</span><br />
+		這個是 vsftpd 使用 PAM 模組時的相關設定檔。主要用來作為身份認證之用，還有一些使用者身份的抵擋功能，
+		也是透過這個檔案來達成的。你可以察看一下該檔案：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/pam.d/vsftpd</span>
+#%PAM-1.0
+<span class=term_write>auth     required  pam_listfile.so item=user sense=deny 
+file=/etc/vsftpd.ftpusers onerr=succeed</span>
+auth     required  pam_stack.so service=system-auth
+auth     required  pam_shells.so
+account  required  pam_stack.so service=system-auth
+session  required  pam_stack.so service=system-auth
+</pre></td></tr></table>
+
+		上面的特殊字體為同一行，那個 file 後面接的檔案是『限制使用者無法使用 vsftpd 』之意，
+		也就是說，其實你的限制檔案不見得要使用系統預設值，也可以在這個檔案裡面進行修改啦！ ^_^</li><br />
+
+		<li><span class=text_import1>/etc/vsftpd.ftpusers</span><br />
+		與上一個檔案有關係，也就是 PAM 模組 (/etc/pam.d/vsftpd_ 所指定的那個無法登入的使用者設定檔啊！
+		這個檔案的設定很簡單，你只要將『不想讓他登入的帳號』寫入這個檔案即可。一行一個帳號，看起來像這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/vsftpd.ftpusers</span>
+# Users that are not allowed to login via ftp
+root
+bin
+daemon
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table>
+
+		瞧見沒有？絕大部分的系統帳號都在這個檔案內喔，也就是說，系統帳號預設是沒有辦法使用 vsftpd 的啦！
+		如果你還想要讓某些使用者無法登入，寫在這裡是最快的！</li><br />
+
+		<li><span class=text_import1>/etc/vsftpd.user_list</span><br />
+		這個檔案是否能夠生效與 vsftpd.conf 內的兩個參數有關，分別是『 userlist_enable, userlist_deny 』。
+		如果說 /etc/vsftpd.ftpusers 是 PAM 模組的抵擋設定項目，那麼這個 /etc/vsftpd.user_list 
+		則是 vsftpd 自訂的抵擋項目。事實上這個檔案與 /etc/vsftpd.ftpusers 幾乎一模一樣，
+		在預設的情況下，你可以將不希望可登入 vsftpd 的帳號寫入這裡。不過這個檔案的功能會依據 vsftpd.conf 設定檔內的
+		userlist_deny={YES/NO} 而不同，這得要特別留意喔！</li><br />
+
+		<li><span class=text_import1>/etc/vsftpd.chroot_list</span><br />
+		這個檔案預設是不存在的，所以你必須要手動自行建立。這個檔案的主要功能是可以將某些帳號的使用者 chroot
+		在他們的家目錄下！但這個檔案要生效與 vsftpd.conf 內的『 chroot_list_enable, chroot_list_file 』兩個參數有關。
+		如果你想要將某些實體用戶限制在他們的家目錄下而不許到其他目錄去，可以啟動這個設定項目喔！</li><br />
+
+		<li><span class=text_import1>/usr/sbin/vsftpd</span><br />
+		這就是 vsftpd 的主要執行檔咯！不要懷疑， vsftpd 只有這一個執行檔而已啊！</li><br />
+
+		<li><span class=text_import1>/var/ftp/</span><br />
+		這個是 vsftpd 的預設匿名者登入的根目錄喔！<br />
+		</ul>
+
+		大致上就只有這幾個檔案需要注意而已，而且每個檔案的設定又都很簡單！真是不錯啊！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_vsftpd.conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">vsftpd.conf 設定值說明</span><br />
+	<div class=block2>
+		事實上，/etc/vsftpd/vsftpd.conf 本身就是一個挺詳細的設定檔，且使用『 man 5 vsftpd.conf 』則可以得到完整的參數說明。
+		不過我們這裡依舊先將 vsftpd.conf 內的常用參數給他寫出來，希望對您有幫助：<br /><br />
+
+		<hr /><li><span class=text_import1>與主機較相關的設定值</span></li>
+		<ul>
+		<li><span class=text_import2>connect_from_port_20=YES (NO)</span><br />
+		記得在前一小節提到的主動式連線使用的 FTP 伺服器的埠號嗎？這就是 ftp-data 的埠號；</li><br />
+		<li><span class=text_import2>listen_port=21</span><br />
+		vsftpd 使用的命令通道之埠號，如果您想要使用非正規的埠號，在這個設定項目修改吧！
+		不過你必須要知道，這個設定值僅適合以 stand alone 的方式來啟動喔！(對於 super daemon 無效)</li><br />
+		<li><span class=text_import2>dirmessage_enable=YES (NO)</span><br />
+		當使用者進入某個目錄時，會顯示該目錄需要注意的內容，顯示的檔案預設是 
+		.message ，你可以使用底下的設定項目來修訂！</li><br />
+		<li><span class=text_import2>message_file=.message</span><br />
+		當 dirmessage_enable=YES 時，可以設定這個項目來讓 vsftpd 尋找該檔案來顯示訊息！</li><br />
+		<li><span class=text_import1>listen=YES (NO)</span><br />
+		若設定為 YES 表示 vsftpd 是以 standalone 的方式來啟動的！</li><br />
+		<li><span class=text_import2>pasv_enable=YES (NO)</span><br />
+		啟動被動式連線模式(passive mode)，一定要設定為 YES 的啦！</li><br />
+		<li><span class=text_import1>use_localtime=YES (NO)</span><br />
+		是否使用本地時間？vsftpd 預設使用 GMT 時間(格林威治)，所以會比台灣晚 8 小時，建議設定為 YES 吧！</li><br />
+		<li><span class=text_import1>write_enable=YES (NO)</span><br />
+		如果你允許使用者上傳資料時，就要啟動這個設定值；</li><br />
+		<li><span class=text_import2>connect_timeout=60</span><br />
+		單位是秒，在資料連接的主動式連線模式下，我們發出的連接訊號在 60 秒內得不到用戶端的回應，則不等待並強制斷線咯。</li><br />
+		<li><span class=text_import2>accept_timeout=60</span><br />
+		當使用者以被動式 PASV 來進行資料傳輸時，如果主機啟用 passive port 並等待 client 超過 60 秒而無回應，
+		那麼就給他強制斷線！這個設定值與 connect_timeout 類似，不過一個是管理主動連線，一個管理被動連線。</li><br />
+		<li><span class=text_import2>data_connection_timeout=300</span><br />
+		如果伺服器與用戶端的資料連線已經成功建立 (不論主動還是被動連線)，但是可能由於線路問題導致
+		300 秒內還是無法順利的完成資料的傳送，那用戶端的連線就會被我們的 vsftpd 強制剔除！</li><br />
+		<li><span class=text_import2>idle_session_timeout=300</span><br />
+		如果使用者在 300 秒內都沒有命令動作，強制離線！</li><br />
+		<li><span class=text_import2>max_clients=0</span><br />
+		如果 vsftpd 是以 stand alone 方式啟動的，那麼這個設定項目可以設定同一時間，最多有多少 
+		client 可以同時連上 vsftpd 哩！？</li><br />
+		<li><span class=text_import2>max_per_ip=0</span><br />
+		與上面 max_clients 類似，這裡是同一個 IP 同一時間可允許多少連線？</li><br />
+		<li><span class=text_import2>pasv_min_port=0, pasv_max_port=0</span><br />
+		上面兩個是與 passive mode 使用的 port number 有關，如果您想要使用 65400 到 
+		65410 這 11 個 port 來進行被動式連線模式的連接，可以這樣設定 pasv_max_port=65410 以及 pasv_min_port=65400。
+		如果是 0 的話，表示隨機取用而不限制。</li><br />
+		<li><span class=text_import2>ftpd_banner=一些文字說明</span><br />
+		當使用者連線進入到 vsftpd 時，在 FTP 用戶端軟體上頭會顯示的說明文字。不過，這個設定值資料比較少啦！
+		建議你可以使用底下的設定值來取代這個項目；</li><br />
+		<li><span class=text_import2>banner_file=/path/file</span><br />
+		這個項目可以指定某個純文字檔作為使用者登入 vsftpd 伺服器時所顯示的歡迎字眼。</li><br />
+		</ul>
+
+		<hr /><li><span class=text_import1>與實體用戶較相關的設定值</span></li>
+		<ul>
+		<li><span class=text_import2>guest_enable=YES (NO)</span><br />
+		若這個值設定為 YES 時，那麼任何非 anonymous 登入的帳號，均會被假設成為 guest (訪客) 喔！
+		至於訪客在 vsftpd 當中，預設會取得 ftp 這個使用者的相關權限。但可以透過 guest_username 來修改。</li><br />
+		<li><span class=text_import2>guest_username=ftp</span><br />
+		在 guest_enable=YES 時才會生效，指定訪客的身份而已。</li><br />
+		<li><span class=text_import2>local_enable=YES (NO)</span><br />
+		這個設定值必須要為 YES 時，在 /etc/passwd 內的帳號才能以實體用戶的方式登入我們的 vsftpd 主機喔！</li><br />
+		<li><span class=text_import2>local_max_rate=0</span><br />
+		實體用戶的傳輸速度限制，單位為 bytes/second， 0 為不限制。</li><br />
+		<li><span class=text_import2>chroot_local_user=YES (NO)</span><br />
+		將使用者限制在自己的家目錄之內(chroot)！這個設定在 vsftpd 當中預設是 NO，因為有底下兩個設定項目的輔助喔！
+		所以不需要啟動他！ 
+		<li><span class=text_import2>chroot_list_enable=YES (NO)</span><br />
+		是否啟用將某些實體用戶限制在他們的家目錄內？預設是 NO ，不過，如果您想要讓某些使用者無法離開他們的家目錄時，
+		可以考慮將這個設定為 YES ，並且規劃下個設定值</li><br />
+		<li><span class=text_import2>chroot_list_file=/etc/vsftpd.chroot_list</span><br />
+		如果 chroot_list_enable=YES 那麼就可以設定這個項目了！
+		他裡面可以規定那一個實體用戶會被限制在自己的家目錄內而無法離開！(chroot)
+		一行一個帳號即可！</li><br />
+		<li><span class=text_import2>userlist_enable=YES (NO)</span><br />
+		是否藉助 vsftpd 的抵擋機制來處理某些不受歡迎的帳號，與底下的設定有關；</li><br />
+		<li><span class=text_import2>userlist_deny=YES (NO)</span><br />
+		當 userlist_enable=YES 時才會生效的設定，若此設定值為 YES 時，則當使用者帳號被列入到某個檔案時，
+		在該檔案內的使用者將無法登入 vsftpd 伺服器！該檔案檔名與下列設定項目有關。
+		<li><span class=text_import2>userlist_file=/etc/vsftpd.user_list</span><br />
+		若上面 userlist_deny=YES 時，則這個檔案就有用處了！在這個檔案內的帳號都無法使用 vsftpd 喔！</li><br />
+		</ul>
+
+		<hr /><li><span class=text_import1>匿名者登入的設定值</span></li>
+		<ul>
+		<li><span class=text_import2>anonymous_enable=YES (NO)</span><br />
+		設定為允許 anonymous 登入我們的 vsftpd 主機！預設是 YES ，底下的所有相關設定都需要將這個設定為 
+		anonymous_enable=YES 之後才會生效！</li><br />
+		<li><span class=text_import2>anon_world_readable_only=YES (NO)</span><br />
+		僅允許 anonymous 具有下載可讀檔案的權限，預設是 YES。</li><br />
+		<li><span class=text_import2>anon_other_write_enable=YES (NO)</span><br />
+		是否允許 anonymous 具有寫入的權限？預設是 NO！如果要設定為 YES，
+		那麼開放給 anonymous 寫入的目錄亦需要調整權限，讓 vsftpd 的 PID 擁有者可以寫入才行！</li><br />
+		<li><span class=text_import2>anon_mkdir_write_enable=YES (NO)</span><br />
+		是否讓 anonymous 具有建立目錄的權限？預設值是 NO！如果要設定為 YES，
+		那麼 anony_other_write_enable 必須設定為 YES ！</li><br />
+		<li><span class=text_import2>anon_upload_enable=YES (NO)</span><br />
+		是否讓 anonymous 具有上傳資料的功能，預設是 NO，如果要設定為 YES ，
+		則 anon_other_write_enable=YES 必須設定。</li><br />
+		<li><span class=text_import2>deny_email_enable=YES (NO)</span><br />
+		將某些特殊的 email address 抵擋住，不讓那些 anonymous 登入！
+		如果以 anonymous 登入主機時，不是會要求輸入密碼嗎？密碼不是要您
+		輸入您的 email address 嗎？如果你很討厭某些 email address ，
+		就可以使用這個設定來將他取消登入的權限！需與下個設定項目配合：</li><br />
+		<li><span class=text_import2>banned_email_file=/etc/vsftpd.banned_emails</span><br />
+		如果 deny_email_enable=YES 時，可以利用這個設定項目來規定哪個 
+		email address 不可登入我們的 vsftpd 喔！在上面設定的檔案內，一行輸入一個 email address 即可！</li><br />
+		<li><span class=text_import2>no_anon_password=YES (NO)</span><br />
+		當設定為 YES 時，表示 anonymous 將會略過密碼檢驗步驟，而直接進入 vsftpd 伺服器內喔！所以一般預設都是 NO 的！</li><br />
+		<li><span class=text_import2>anon_max_rate=0</span><br />
+		這個設定值後面接的數值單位為 bytes/秒 ，限制 anonymous 的傳輸速度，如果是 0 
+		則不限制(由最大頻寬所限制)，如果您想讓 anonymous 僅有
+		30 KB/s 的速度，可以設定『anon_max_rate=30000』</li><br />
+		<li><span class=text_import2>anon_umask=077</span><br />
+		限制 anonymous 的權限！如果是 077 則 anonymous 傳送過來的檔案
+		權限會是 -rw------- 喔！</li><br />
+		</ul>
+
+		<hr /><li><span class=text_import1>關於系統安全方面的一些設定值</span></li>
+		<ul>
+		<li><span class=text_import2>ascii_download_enable=YES (NO)</span><br />
+		如果設定為 YES ，那麼 client 就可以使用 ASCII 格式下載檔案。</li><br />
+		<li><span class=text_import2>ascii_upload_enable=YES (NO)</span><br />
+		與上一個設定類似的，只是這個設定針對上傳而言！預設是 NO</li><br />
+		<li><span class=text_import2>one_process_model=YES (NO)</span><br />
+		這個設定項目比較危險一點～當設定為 YES 時，表示每個建立的連線
+		都會擁有一支 process 在負責，可以增加 vsftpd 的效能。不過，
+		除非您的系統比較安全，而且硬體配備比較高，否則容易耗盡系統資源喔！一般建議設定為 NO 的啦！</li><br />
+		<li><span class=text_import2>tcp_wrappers=YES (NO)</span><br />
+		當然我們都習慣支援 TCP Wrappers 的啦！所以設定為 YES 吧！</li><br />
+		<li><span class=text_import2>xferlog_enable=YES (NO)</span><br />
+		當設定為 YES 時，使用者上傳與下載檔案都會被紀錄起來。記錄的檔案與下一個設定項目有關：</li><br />
+		<li><span class=text_import2>xferlog_file=/var/log/vsftpd.log</span><br />
+		如果上一個 xferlog_enable=YES 的話，這裡就可以設定了！這個是登錄檔的檔名啦！</li><br />
+		<li><span class=text_import2>xferlog_std_format=YES (NO)</span><br />
+		是否設定為 wu ftp 相同的登錄檔格式？！預設為 NO ，因為登錄檔會比較容易讀！
+		不過，如果您有使用 wu ftp 登錄檔的分析軟體，這裡才需要設定為 YES</li><br />
+		<li><span class=text_import2>nopriv_user=nobody</span><br />
+		我們的 vsftpd 預設以 nobody 作為此一服務執行者的權限。因為 nobody 的權限
+		相當的低，因此即使被入侵，入侵者僅能取得 nobody 的權限喔！</li><br />
+		<li><span class=text_import2>pam_service_name=vsftpd</span><br />
+		這個是 pam 模組的名稱，我們放置在 /etc/pam.d/vsftpd 即是這個咚咚！</li><br />
+		</ul>
+
+		上面這些是相當常見的 vsftpd 的設定參數，還有很多參數我沒有列出來，您可以使用 man 5 vsftpd.conf 
+		查閱喔！不過，基本上上面這些參數已經夠我們設定 vsftpd 囉。<br /><br />
+	</div>
+
+	<hr /><a NAME="server_start"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">vsftpd 啟動的模式</span><br />
+	<div class=block2>
+		vsftpd 可以擁有兩種啟動的方式，分別是一直在監聽的 stand alone ，一種則是透過 xinetd 這個 super daemon 
+		來管理的方式，兩種方式所使用的啟動程序不太相同，而我們的 CentOS 則預設是以 stand alone 來啟動的。
+		那什麼時候應該選擇 stand alone 或者是 super daemon 呢？如果你的 ftp 
+		伺服器是提供給整個網際網路來進行大量下載的任務，例如各大專院校的 FTP 伺服器，那建議你使用 stand alone 的方式，
+		服務的速度上會比較好。如果僅是提供給內部人員使用的 FTP 伺服器，那使用 super daemon 來管理即可啊。<br /><br />
+
+		<li><span class=text_import1>利用系統提供的 script 來啟動 vsftpd</span><br />
+		<div class=block2>
+		其實 CentOS 不用作任何設定就能夠啟動 vsftpd 囉！是這樣啟動的啦：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd start</span>
+[root@linux ~]# <span class=term_command>netstat -tulnp| grep 21</span>
+tcp  0  0 0.0.0.0:21  0.0.0.0:*   LISTEN   11689/<span class=term_write>vsftpd</span>
+<span class=term_say># 看到囉，是由 vsftpd 所啟動的呢！</span>
+</pre></td></tr></table>
+		</div>
+
+		<li><span class=text_import1>自行設定以 super daemon 來啟動</span><br />
+		<div class=block2>
+		如果你的 FTP 是很少被使用的，那麼利用 super daemon 來管理不失為一個好主意。
+		不過若你想要使用 super daemon 管理的話，那就得要自行修改一下設定檔了。其實也不難啦，你應該要這樣處理的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 找到底下這一行：大約在 109 行左右啦！</span>
+listen=YES
+<span class=term_say># 將他改成這樣啊：</span>
+listen=<span class=term_write>NO</span>
+</pre></td></tr></table>
+
+		接下來修改一下 super daemon 的設定檔，底下這個檔案你必須要自行建立的，原本是不存在的喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/xinetd.d/vsftpd</span>
+<span class=term_write>service ftp
+{
+        socket_type             = stream
+        wait                    = no
+        user                    = root
+        server                  = /usr/sbin/vsftpd
+        log_on_success          += DURATION USERID
+        log_on_failure          += USERID
+        nice                    = 10
+        disable                 = no
+}</span>
+</pre></td></tr></table>
+
+		然後嘗試啟動看看呢：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd stop</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/xinetd restart</span>
+[root@linux ~]# <span class=term_command>netstat -tulnp| grep 21</span>
+tcp  0  0 0.0.0.0:21  0.0.0.0:*   LISTEN   32274/<span class=term_write>xinetd</span>
+</pre></td></tr></table>
+		</div>
+
+		有趣吧！兩者啟動的方式可不一樣啊！管理的方式就會差很多的呦！
+		不管你要使用哪種啟動的方式，<span class=text_import2>切記不要兩者同時啟動，否則會發生錯誤的！
+		你應該使用 chkconfig --list 檢查一下這兩種啟動的方式</span>，然後依據你的需求來決定用哪一種方式啟動。
+		鳥哥底下的設定都會以 stand alone 這個 CentOS 預設的啟動模式來處理，所以趕緊將剛剛的動作給他改回來喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_basic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">CentOS 的 vsftpd 預設值</span><br />
+	<div class=block2>
+		在 CentOS 的預設值當中，vsftpd 是同時開放實體用戶與匿名使用者的，CentOS 的預設值如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 底下鳥哥僅列出有設定的項目，若無設定時，請以您系統的 man 5 vsftpd.conf 
+# 結果去搜尋預設值即可喔！
+# 1. 與匿名者有關的資訊：</span>
+anonymous_enable=YES
+
+<span class=term_say># 2. 與實體用戶有關的設定</span>
+local_enable=YES
+write_enable=YES
+local_umask=022
+userlist_enable=YES
+
+<span class=term_say># 3. 與主機有關的設定</span>
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+pam_service_name=vsftpd
+listen=YES
+tcp_wrappers=YES
+</pre></td></tr></table>
+
+		上面各項設定值請自行<a href="#server_vsftpd.conf">參考前一小節 vsftpd.conf 設定項目</a>的詳細說明吧。
+		而通過這樣的設定值咱們的 vsftpd 可以達到如下的功能：<br />
+		<ul><span class=text_import2>
+		<li>你可以使用 anonymous 這個匿名帳號或其他實體帳號 (/etc/passwd) 登入；
+		<li>anonymous 的家目錄在 /var/ftp ，且無上傳權限，亦已經被 chroot 了；
+		<li>實體用戶的家目錄參考 /etc/passwd ，並沒有被 chroot ，可前往任何有權限可進入的目錄中；
+		<li>任何於 /etc/vsftpd.ftpusers 內存在的帳號均無法使用 vsftpd ；
+		<li>可利用 /etc/hosts.{allow|deny} 來作為基礎防火牆；
+		<li>當用戶端有任何上傳/下載資訊時，該資訊會被紀錄到 /var/log/vsftpd.log 中；
+		<li>主動式連線的埠口為 port 20；
+		<li>使用格林威治時間 (GMT)。
+		</span></ul>
+
+		所以當你啟動 vsftpd 後，你的實體用戶就能夠直接利用 vsftpd 這個服務來傳輸他自己的資料了。
+		不過比較大的問題是，<span class=text_import2>因為 vsftpd 預設使用 GMT 時間，因為你在用戶端使用 ftp 
+		軟體連接到 FTP 伺服器時，會發現每個檔案的時間都慢了八小時了！</span>真是討厭啊！
+		所以建議你加設一個參數值，就是『 use_localtime=YES 』囉！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 在這個檔案當中加入這一句即可</span>
+<span class=term_write>use_localtime=YES</span>
+<span class=term_say>.....底下省略.....</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		如此一來你的 FTP 伺服器不但可以提供匿名帳號來下載 /var/ftp 的資料，如果使用實體帳號來登入的話，
+		就能夠進入到該使用者的家目錄底下去了！真是很簡單方便的一個設定啊！且使用本地端時間呢！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="server_real"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">僅有實體用戶登入的設定</span><br />
+	<div class=block2>
+		雖然在 CentOS 的預設情況當中實體用戶已經可以使用 FTP 的服務了，不過我們可能還需要一些額外的功能來限制實體用戶，
+		舉例來說，限制使用者無法離開家目錄 (chroot) 、限制下載速率、限制使用者上傳檔案時的權限 (mask)等等。
+		底下我們先列出一些希望達到的功能，然後再繼續進行額外功能的處理：<br />
+		<ul><span class=text_import2>
+		<li>希望使用台灣本地時間取代 GMT 時間；
+		<li>使用者登入時顯示一些歡迎訊息的資訊；
+		<li>系統帳號不可登入主機 (亦即 UID 小於 500 以下的帳號)；
+		<li>一般實體用戶可以進行上傳、下載、建立目錄及修改檔案等動作；
+		<li>使用者新增的檔案、目錄之 umask 希望設定為 002；
+		<li>其他主機設定值保留<a href="#server_basic">預設值</a>即可。
+		</span></ul>
+
+		你可以自行處理 vsftpd.conf 這個檔案，以下則是一個範例。注意，如果你的 vsftpd.conf 沒有相關設定值，
+		請自行補上吧！OK！讓我們開始一步一步來依序處理先：<br />
+
+		<ol>
+		<li><span class=text_import1>先建立設定檔，這個設定檔已經包含了主要設定值：</span><br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 1. 與匿名者相關的資訊，在這個案例中將匿名登入取消：</span>
+<span class=term_write>anonymous_enable=NO
+
+<span class=term_say># 2. 與實體用戶相關的資訊
+# 可寫入，且新增目錄、檔案權限為 775，因為 umask 為 002 嘛！</span>
+local_enable=YES
+write_enable=YES
+local_umask=002
+<span class=term_say># 設定抵擋某些使用者登入的項目設定值！注意，底下的檔案必須存在！</span>
+userlist_enable=YES
+userlist_deny=YES
+userlist_file=/etc/vsftpd.user_list
+
+<span class=term_say># 3. 與主機有關的設定</span>
+use_localtime=YES
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+pam_service_name=vsftpd
+listen=YES
+tcp_wrappers=YES
+banner_file=/etc/vsftpd/welcome.txt</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table><br />
+
+		<li><span class=text_import1>建立歡迎訊息：</span><br /><br />
+		當我們想讓登入者可查閱咱們系統管理員所下達的『公告』事項時，可以使用這個設定！那就是 
+		banner_file=/etc/vsftpd/welcome.txt 這個參數的用途了！我們可以編輯這個檔案即可。
+		好了，開始來建立歡迎畫面吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/welcome.txt</span>
+<span class=term_write>歡迎光臨本小站，本站提供 FTP 的相關服務！
+主要的服務是針對本機實體用戶提供的，
+若有任何問題，請與鳥哥聯絡！</span>
+</pre></td></tr></table><br />
+		
+		<li><span class=text_import1>建立限制系統帳號登入的檔案</span><br /><br />
+		再來是針對系統帳號來給予抵擋的機制，其實有兩個檔案啦，一個是 PAM 模組管的，一個是 vsftpd 主動提供的，
+		在預設的情況下這兩個檔案分別是：<br /><br />
+		<ul><span class=text_import2>
+		<li>/etc/vsftpd.ftpusers：就是 /etc/pam.d/vsftpd 這個檔案的設定所影響的；
+		<li>/etc/vsftpd.user_list：由 vsftpd.conf 的 userlist_file 所設定。
+		</span></ul><br />
+
+		這兩個檔案的內容是一樣的哩～並且這兩個檔案必須要存在才行。請你參考你的 /etc/passwd 設定檔，
+		然後將 UID 小於 500 的帳號名稱給他同時寫到這兩個檔案內吧！一行一個帳號！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd.user_list</span>
+root
+bin
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table><br />
+
+		<li><span class=text_import1>測試結果：</span><br /><br />
+		你可以使用圖形介面的 FTP 用戶端軟體來處理，也可以透過 Linux 本身提供的 ftp 用戶端功能哩！
+		關於 <a href="0140networkcommand.htm#ftp">ftp 指令</a>我們已經在之前的常用網路指令談過了，
+		你可以自行前往參考。這裡直接測試一下吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 測試使用已知使用者登入，例如 dmtsai 這個實體用戶：</span>
+[root@linux ~]# <span class=term_command>ftp localhost</span>
+Connected to localhost (127.0.0.1).
+220-歡迎光臨本小站，本站提供 FTP 的相關服務！  <span class=term_say>&lt;==剛剛建立的歡迎訊息</span>
+220-主要的服務是針對本機實體用戶提供的，
+220-若有任何問題，請與鳥哥聯絡！
+220
+Name (localhost:root): <span class=term_command>dmtsai</span>  <span class=term_say>&lt;==登入者帳號！</span>
+331 Please specify the password.
+Password: <span class=term_say>&lt;==輸入密碼，螢幕不會有任何訊息的顯示</span>
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> <span class=term_command>bye</span>
+221 Goodbye.
+</pre></td></tr></table>
+
+		在以上面的方式測試完畢後，你可以在登入者帳號處分別填寫 (1)root (2)anonymous 來嘗試登入看看！
+		如果不能登入的話，那就是設定 OK 的啦！^_^
+		</ol>
+
+		<a name="server_real_chroot"></a><hr /><li><span class=text_import1>chroot 的使用</span></li>
+		<div class=block2>
+		假設你的系統當中有許多帳號，但是 dmtsai 以及 bird1 這兩個帳號是開放給一般客戶的，
+		你不想讓這兩個帳號可以離開他的家目錄，這個時候就得使用 chroot 的設定了。設定的方式很簡單，
+		你先要修改 vsftpd.conf ，增加這幾個項目：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 增加是否設定針對某些使用者來 chroot 的相關設定呦！</span>
+<span class=term_write>chroot_list_enable=YES
+chroot_list_file=/etc/vsftpd.chroot_list</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		然後建立要被 chroot 的使用者檔案：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd.chroot_list</span>
+<span class=term_write>dmtsai
+bird1</span>
+</pre></td></tr></table>
+
+		不要懷疑！這樣就能夠將這兩個使用者限制在家目錄內了，有夠簡單吧！<br /><br />
+		</div>
+
+		<a name="server_real_chroot2"></a><hr /><li><span class=text_import1>更嚴格的 chroot 環境</span></li>
+		<div class=block2>
+		上面提到的是預設實體用戶沒有 chroot 而特定人士被 chroot 的環境，那如果我想要的是：
+		<span class=text_import2>所有使用者預設為 chroot ，但某些使用者可不受限制</span>的環境呢？
+		那你就得要這樣做了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 預設所有實體用戶被 chroot 而開放某些人可完整存取 (不 chroot) 的情況</span>
+<span class=term_write>chroot_local_user=YES
+chroot_list_enable=YES
+chroot_list_file=/etc/vsftpd.chroot_list</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		由於多了 chroot_list_enable=YES 這個參數，因此寫入 /etc/vsftpd.chroot_list 內的使用者反而是被認為可以不受
+		chroot 的帳號！假設系統中的 nikky 這個使用者為被信任的，所以你要這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd.chroot_list</span>
+<span class=term_write>nikky</span>
+</pre></td></tr></table>
+
+		則未來所有新增的用戶都是預設被 chroot 的，除非該用戶被寫入 /etc/vsftpd.chroot_list
+		才能夠不會被 chroot 呢！這不是比較嚴格嗎？<br /><br />
+		</div>
+
+		<a name="server_real_flow"></a><hr /><li><span class=text_import1>限制下載頻寬</span></li>
+		<div class=block2>
+		有的時候你可能不希望頻寬被使用者上傳/下載所耗盡，而影響咱們伺服器的其他工作之運作，
+		所以限制使用者傳輸頻寬有時也是需要的！假設『我要限制所有使用者的傳輸頻寬最大可達 100KBytes/秒』，
+		你可以這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 增加底下這一個參數即可：</span>
+<span class=term_write>local_max_rate=100000</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		上述的單位是 Bytes/秒，所以你可以依據你自己的網路環境來限制你的頻寬！這樣就給他限制好囉！有夠容易吧！^_^<br /><br />
+		</div>
+
+		<a name="server_real_client"></a><hr /><li><span class=text_import1>限制最大上線人數與同一 IP 的來源數</span></li>
+		<div class=block2>
+		如果你有限制最大使用頻寬的話，那麼你可能還需要限制最大線上人數才行！舉例來說，
+		你希望最多只有 10 個人同時使用你的 FTP 的話，並且每個 IP 來源最多只能建立一條 FTP 的連線時，
+		那你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 增加底下的這兩個參數：</span>
+<span class=term_write>max_clients=10
+max_per_ip=1</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		這樣就搞定了！讓你的 FTP 不會人滿為患吶！<br /><br />
+		</div>
+
+		<a name="server_real_userlist"></a><hr /><li><span class=text_import1>建立嚴格的可使用 FTP 的帳號列表</span></li>
+		<div class=block2>
+		在上述的設定當中，我們將『不許使用 FTP 的帳號寫入 /etc/vsftpd.user_list 檔案中』，所以沒有寫入
+		/etc/vsftpd.user_list 當中的使用者就能夠使用 FTP 了！如此一來，未來新增的使用者預設都能夠使用 FTP 的服務。
+		如果換個角度來思考，若<span class=text_import2>我想只讓某些人可以使用 FTP 而已，亦即是新增的使用者預設不可使用
+		FTP 這個服務</span>的話那麼應該如何作呢？你需要修改設定檔成為這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 這幾個參數必須要修改成這樣：</span>
+userlist_enable=YES
+userlist_deny=<span class=term_write>NO</span>
+userlist_file=/etc/vsftpd.user_list
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		則此時『<span class=text_import2>寫入 /etc/vsftpd.user_list 變成可以使用 FTP 的帳號</span>』了！
+		所以未來新增的使用者如果要能夠使用 FTP 的話，就必須要寫入 /etc/vsftpd.user_list 才行！
+		使用這個機制請特別小心，否則容易搞混掉～<br /><br />
+		</div>
+
+		透過這幾個簡單的設定值，相信 vsftpd 已經可以符合大部分合法 FTP 網站的需求囉！
+		更多詳細的用法則請參考 man 5 vsftpd.conf 吧！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />假設你因為某些特殊需求，所以必須要開放 root 使用 FTP 傳輸檔案，那麼你應該要如何處理？<br />
+答：<ul>
+	由於系統帳號無法使用 FTP 是因為 PAM 模組與 vsftpd 的內建功能所致，亦即是 /etc/vsftpd.ftpusers 及 /etc/vsftpd.user_list 
+	這兩個檔案的影響。所以你只要進入這兩個檔案，並且將 root 那一行註解掉，
+	那 root 就可以使用 vsftpd這個 FTP 服務了。
+	不過，不建議如此作喔！
+</ul>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a NAME="server_anon"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">僅有匿名登入的相關設定</span><br />
+	<div class=block2>
+		雖然你可以同時開啟實體用戶與匿名用戶，不過建議你主機還是依據需求，針對單一種身份來設定吧！
+		底下我們將針對匿名用戶，且不開放實體用戶。一般來說，這種設定是給類似大專院校的 FTP 伺服器來使用的哩！<br />
+		<ul><span class=text_import2>
+		<li>使用台灣本地的時間，而非 GMT 時間；
+		<li>提供歡迎訊息，說明可提供下載的資訊；
+		<li>僅開放 anonymous 的登入，且不需要輸入密碼；
+		<li>檔案傳輸的速限為 30 Kbytes/second；
+		<li>資料連接的過程 (不是命令通道！) 只要超過 60 秒沒有回應，就強制 Client 斷線！
+		<li>只要 anonymous 超過十分鐘沒有動作，就予以斷線；
+		<li>最大同時上線人數限制為 50 人，且同一 IP 來源最大連線數量為 5 人；
+		</span></ul>
+		OK！那如何設定呢？首先我們必須要知道的是<span class=text_import2>匿名使用者的目錄在哪裡？
+		事實上匿名者預設登入的根目錄是以 ftp 這個使用者的家目錄為主</span>，所以你可以使用『 finger ftp 』來查閱。
+		咱們的 CentOS 預設的匿名者根目錄在 /var/ftp/ 中。且匿名登入者在使用 FTP 服務時，他預設可以使用『 ftp 』
+		這個使用者身份的權限喔，只是被 chroot 到 /var/ftp/ 目錄中就是了。<br /><br />
+
+		因為匿名者只會在 /var/ftp/ 當中瀏覽，所以你必須將要提供給使用者下載的資料通通給放置到 /var/ftp/ 去。
+		假設你已經放置了 linux 的相關目錄以及 gnu  的相關軟體到該目錄中了，那我們可以這樣做個假設：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir /var/ftp/linux</span>
+[root@linux ~]# <span class=term_command>mkdir /var/ftp/gnu</span>
+</pre></td></tr></table>
+
+		然後將 vsftpd.conf 的資料清空，重新這樣處理他吧：<br />
+
+		<ol>
+		<li><span class=text_import1>建立 vsftpd.conf 的設定資料</span><br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 將這個檔案改成這樣：
+# 1. 與匿名者相關的資訊：</span>
+<span class=term_write>anonymous_enable=YES
+<span class=term_say># 不必提供密碼啦！可直接登入哩！</span>
+no_anon_password=YES
+<span class=term_say># 限制流速啦！</span>
+anon_max_rate=30000
+<span class=term_say># 與連線時間有關的設定項目</span>
+data_connection_timeout=60
+idle_session_timeout=600
+<span class=term_say># 限制連線人數</span>
+max_clients=50
+max_per_ip=5
+
+<span class=term_say># 2. 與實體用戶相關的資訊，本案例中為關閉他的情況！</span>
+local_enable=NO
+
+<span class=term_say># 3. 與主機有關的設定</span>
+use_localtime=YES
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+pam_service_name=vsftpd
+listen=YES
+tcp_wrappers=YES
+banner_file=/etc/vsftpd/anon_welcome.txt</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table><br />
+
+		<li><span class=text_import1>建立歡迎畫面與下載提示訊息</span><br /><br />
+		各位親愛的觀眾朋友！要注意～在這個案例當中，我們將歡迎訊息設定在 /etc/vsftpd/anon_welcome.txt 這個檔案中，
+		至於這個檔案的內容你可以這樣寫：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/anon_welcome.txt</span>
+<span class=term_write>歡迎光臨本站所提供的 FTP 服務！
+本站主要提供 Linux 作業系統相關檔案以及 GNU 自由軟體喔！
+有問題請與站長聯絡！謝謝大家！
+主要的目錄為：
+
+linux   提供 Linux 作業系統相關軟體
+gnu     提供 GNU 的自由軟體</span>
+</pre></td></tr></table>
+
+		看到囉！主要寫的資料都是針對一些公告事項就是了！<br /><br />
+
+		<li><span class=text_import1>測試</span><br /><br />
+		同樣的，我們使用 ftp 這個軟體來給他測試一下吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ftp localhost</span>
+Connected to localhost (127.0.0.1).
+220-歡迎光臨本站所提供的 FTP 服務！  <span class=term_say>&lt;==同樣的，一些歡迎訊息</span>
+220-本站主要提供 Linux 作業系統相關檔案以及 GNU 自由軟體喔！
+220-有問題請與站長聯絡！謝謝大家！
+220-主要的目錄為：
+220-
+220-linux   提供 Linux 作業系統相關軟體
+220-gnu     提供 GNU 的自由軟體
+220
+Name (localhost:root): <span class=term_command>anonymous</span> <span class=term_say>&lt;==一定得是這個匿名帳號</span>
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> <span class=term_command>dir</span>
+227 Entering Passive Mode (127,0,0,1,94,56)
+150 Here comes the directory listing.
+drwxr-xr-x    2 0    0   4096 Dec 18 17:37 <span class=term_write>gnu</span>
+drwxr-xr-x    2 0    0   4096 Dec 18 17:37 <span class=term_write>linux</span>
+drwxr-xr-x    2 0    0   4096 Aug 13 03:25 pub
+226 Directory send OK.
+ftp> <span class=term_command>bye</span>
+221 Goodbye.
+</pre></td></tr></table>
+
+		看到否？這次可就不需要輸入任何密碼了，因為是匿名登入嘛！而且，如果你輸入任何其他的帳號，
+		那麼 vsftpd 會立刻回應斷線的狀態喔！OK 的啦！<br />
+		</ol>
+
+		<a name="server_anon_upload"></a><hr /><li><span class=text_import1>建立上傳/下載目錄</span></li>
+		<div class=block2>
+		在上列的資料當中，實際上匿名使用者僅可進行下載的動作而已。如果你還想讓匿名者可以上傳檔案或者是建立目錄的話，
+		那你還需要額外增加一些設定才行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 新增底下這幾行啊！</span>
+<span class=term_write>write_enable=YES
+anon_other_write_enable=YES
+anon_mkdir_write_enable=YES
+anon_upload_enable=YES</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		如果你設定上面四項參數，則會允許匿名者擁有完整的建立、刪除、修改檔案與目錄的權限。
+		不過，<span class=text_import2>實際要生效還需要 Linux 的檔案系統權限正確才行！</span>
+		我們知道匿名者取得的身份是 ftp ，所以如果想讓匿名者上傳資料到 /var/ftp/upload 中，
+		則需要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir /var/ftp/upload</span>
+[root@linux ~]# <span class=term_command>chown ftp /var/ftp/upload</span>
+</pre></td></tr></table>
+
+		然後你以匿名者身份登入後，就會發現匿名者的根目錄多了一個 /upload 的目錄存在了，
+		並且你可以在該目錄中上傳檔案/目錄喔！
+		如此一來系統的權限大開！很要命喔！所以，請仔細的控制好你的上傳目錄才行！<br /><br />
+		</div>
+
+		<a name="server_anon_upload2"></a><hr /><li><span class=text_import1>建立僅可上傳目錄</span></li>
+		<div class=block2>
+		一般來說，使用者上傳的資料在管理員尚未查閱過是否合乎版權等相關事宜前，是不應該讓其他人下載的！
+		然而前一小節的設定當中，使用者上傳的資料是可以被其他人所瀏覽與下載的！
+		如此一來實在是很危險！所以如果你要設定 /var/ftp/upload 僅能上傳不能被下載時，
+		那麼被上傳的資料的權限就得要被修改一下才行！請將前一小節所設定的四個參數簡化成為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 將這幾行給他改一改先！</span>
+<span class=term_write>write_enable=YES
+anon_mkdir_write_enable=YES
+anon_upload_enable=YES
+chown_uploads=YES
+chown_username=root</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+
+		當然啦，那個 /var/ftp/upload 還是需要可以被 ftp 這個使用者寫入才行！
+		如此一來被上傳的檔案將會被修改檔案擁有者成為 root 這個使用者，
+		而 ftp (匿名者取得的身份) 是無法讀取 root 的資料的，所以也就無法被下載囉！ ^_^<br /><br />
+		</div>
+
+		<a name="server_anon_pasv"></a><hr /><li><span class=text_import1>被動式連線埠口的限制</span></li>
+		<div class=block2>
+		FTP 的連線分為主動式與被動式，主動式連線比較好處理，因為都是透過伺服器的 port 20 對外主動連線，
+		所以防火牆的處理比較簡單。被動式連線就比較麻煩～因為預設 FTP 
+		伺服器會隨機取幾個沒有在使用當中的埠口來建立被動式連線，那防火牆的設定就麻煩啦！<br /><br />
+
+		沒關係，我們可以透過指定幾個固定範圍內的埠口來作為 FTP 的被動式資料連接之用即可，
+		這樣我們就能夠預先知道 FTP 資料連結的埠口啦！舉例來說，我們假設被動式連接的埠口為 65400 到 65410 
+		這幾個埠口時，可以這樣設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 增加底下這幾行即可啊！</span>
+<span class=term_write>pasv_min_port=65400
+pasv_max_port=65410</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd restart</span>
+</pre></td></tr></table>
+		</div>
+
+		匿名使用者的設定大致上這樣就能符合你的需求囉！自己看著辦吧！ ^_^
+	</div>
+</div>
+
+
+<hr /><a NAME="client"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">用戶端的 FTP 連線軟體</span><br />
+<div class=block1>
+	用戶端的連線軟體主要有文字介面的 <a href="0140networkcommand.htm#ftp">ftp</a> 及 
+	<a href="0140networkcommand.htm#lftp">lftp</a> 這兩支指令，詳細的使用方式請參考<a 
+	href="0140networkcommand.htm">常用網路指令</a>章節的說明。至於 Linux 底下的圖形介面軟體，可以參考 gftp 
+	這支程式喔！圖形介面的啦！很簡單啊！<br /><br />
+
+	上述的軟體都是自由軟體啊，那麼 Windows 作業系統有沒有自由軟體啊？有的，
+	你可以使用 filezilla 這個好東西！這個玩意兒的詳細說明與下載點可以在底下的連結找到：<br />
+
+	<ul><li>說明網站：<a href="http://filezilla.sourceforge.net/" target="_blank">http://filezilla.sourceforge.net/</a>
+	<li>下載網站：<a href="http://sourceforge.net/project/showfiles.htm?group_id=21558"
+		target="_blank">http://sourceforge.net/project/showfiles.htm?group_id=21558</a></ul>
+
+	目前 (2006/12) 最新的穩定版本是 2.2.29 版，所以底下鳥哥就以這個版本來跟大家說明。
+	為什麼要選擇 Filezilla 呢？除了他是自由軟體之外，這傢伙竟然可以連結到 SSH 的 sftp 呢！
+	真是很不錯的一個傢伙啊！^_^！另外要注意的是，底下鳥哥是以 Windows 版本來說明的，
+	不要拿來在 X server 上面安裝喔！ ^_^<br /><br />
+
+	因為這個程式是給 Windows 安裝用的，所以安裝的過程就是.....(下一步)^n 就好了！
+	並且這個程式支援多國語系，所以你可以選擇繁體中文呢！實在是很棒！
+	安裝完畢之後，請你執行他，就會出現如下的畫面了：<br /><br />
+
+	<a name="fig_04"></a><center><img src="0410vsftpd/filezilla_01.png"
+	title="Filezilla 的操作方式"
+	alt="Filezilla 的操作方式"><br />
+	圖四、Filezilla 的操作方式</center><br />
+
+	圖四的 1, 2, 3, 4, 5 分別代表的資料是：<br />
+	<ol>
+	<li>代表 FTP 伺服器的輸出資訊，例如歡迎訊息等資訊；
+	<li>代表本機的檔案，與 3 有關；
+	<li>代表本機的磁碟機所在處，與 2 有關；
+	<li>代表遠端 FTP 伺服器的目錄與檔案；
+	<li>代表傳輸時的佇列資訊
+	</ol>
+	而另外 a, b, c 則代表的是：<br />
+	<ol type="a">
+	<li>站台管理員，你可以將一些常用的 FTP 伺服器的 IP 與使用者資訊記錄在此；
+	<li>更新，如果你的資料有更新，可使用這個按鈕來同步 filezilla 的螢幕顯示；
+	<li>位址、使用者、密碼與連接埠這四個玩意兒可以即時連線，不記錄資訊。
+	</ol>
+
+	好，接下來我們連接到 FTP 伺服器上面去，所以你可按下圖四的 a 部分，會出現如下畫面：<br /><br />
+
+	<a name="fig_05"></a><center><img src="0410vsftpd/filezilla_02.png"
+	title="Filezilla 的操作方式"
+	alt="Filezilla 的操作方式"><br />
+	圖五、Filezilla 的操作方式</center><br />
+
+	上圖五的箭頭與相關的內容是這樣的：<br />
+
+	<ol>
+	<li>先按下『新站台』的按鈕，然後在箭頭 2 的地方就會出現可輸入的方框；
+	<li>在該方框當中填寫一個你容易記錄的名字，隨便填寫也沒有關係的；
+	<li>在這個方框當中填寫主機的 IP 就好了，連接埠如果不是標準的 port 21 ，請填寫其他埠口。
+	<li>這個地方可以挑選不同的連線機制，包括幾個常見的機制為：
+		<ul>
+		<li>標準 FTP <li>FTP + SSL/TLS 加密機制<li>FTP + SSL 加密機制<li>SFTP (透過 SSH)<li>FTP + TLS 加密機制
+		</ul>
+		如果你預計要利用 filezilla 連接到 sftp 的話，這個地方可以挑選 sftp 喔！不然的話就用 FTP 即可；
+	<li>在這裡選擇匿名登入或者是一般登入，所謂一般登入即是利用實體帳號來登入；
+	<li>在這裡如果使用一般登入時，則你可以填寫使用者及密碼欄位，否則就會主動以 anonymous 來匿名登入呢！
+	</ol>
+
+	基本上這樣設定完就能夠連上主機了，不過，如果你還想要更詳細的規範資料連接的方式 (主動式與被動式) 以及其他資料時，
+	可以按下圖五的『進階設定』按鈕，就會出現如下畫面了：<br /><br />
+
+	<a name="fig_06"></a><center><img src="0410vsftpd/filezilla_03.png"
+	title="Filezilla 的操作方式"
+	alt="Filezilla 的操作方式"><br />
+	圖六、Filezilla 的操作方式</center><br />
+
+	在這個畫面當中你可以選擇是否使用被動式傳輸機制，還可以調整時區的顯示呢！
+	如果 FTP 伺服器的時間設定錯誤，導致出現 8 小時的誤差時 (台北時間與 GMT 時間)，就能夠利用這個設定項目來調整了！
+	此外，也能夠進行語系的調整，呵呵！絕大部分的 FTP 連線項目都考慮到了，這樣就 OK 啦！然後按下圖六的確定，
+	並到<a href="#fig_05">圖五</a>畫面當中按下『連線』後，就能夠得到如下的畫面了：<br /><br />
+
+	<a name="fig_07"></a><center><img src="0410vsftpd/filezilla_04.png"
+	title="Filezilla 的操作方式"
+	alt="Filezilla 的操作方式"><br />
+	圖七、Filezilla 的操作方式</center><br />
+
+	更多的用法就請您自行研究囉！<br /><br />
+
+	<hr /><li><span class=text_import1>利用瀏覽器功能</span></li>
+	<div class=block2>
+	我們在 <a href="0360apache.htm">Apache 這個 WWW 伺服器</a>的章節當中曾經談過瀏覽器所支援的協定，其中一個就是 ftp 這個協定囉！
+	這個協定的處理方式可以在網址列的地方這樣輸入的：<br />
+	<ul><li><span class=text_import2>ftp://username@your_ip</span></ul>
+	要記得，如果你沒有輸入那個 username@ 的字樣時，系統預設會以匿名登入來處理這次的連線。因此如果你想要使用實體用戶連線時，
+	就在在 IP 或主機名稱之前填寫你的帳號。舉例來說，鳥哥的主機 (192.168.1.254) 若有 dmtsai 這個使用者，
+	那我啟動瀏覽器後，可以這樣做：<br />
+	<ul><li><span class=text_import2>ftp://dmtsai@192.168.1.254</span></li></ul>
+	然後在出現的對話視窗當中輸入 dmtsai 的密碼，就能夠使用瀏覽器來管理我在 FTP 伺服器內的檔案系統囉！
+	是否很容易啊！ ^_^<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="other"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">其他 FTP 伺服器相關設定</span><br />
+<div class=block1>
+	除了基礎設定之外，我們針對 FTP 還有哪些需要考慮的地方呢？底下就來談一談：<br /><br />
+
+	<hr /><a NAME="other_iptables"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆設定</span><br />
+	<div class=block2>
+		防火牆設定有什麼難的？將<a href="0250simple_firewall.htm">防火牆那一章</a>裡面的 script 拿出來，
+		加入底下這一段在內：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>iptables -A INPUT -p TCP -i $EXTIF --dport 21 -j ACCEPT</span>
+</pre></td></tr></table>
+
+		這樣就好了嗎？當然不是啦！要記得我們還可能會有被動式連線的狀態啊，所以某些特殊情況底下，
+		或許你還需要啟動被動式連線的監聽的埠口哩！以上面我們談過的 port 65400 ~ 65410 這幾個當作範例好了，
+		你應該還需要加入這一段呢：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>iptables -A INPUT -p TCP -i $EXTIF --dport 65400:65410 -j ACCEPT</span>
+</pre></td></tr></table>
+
+		另外，如果你想要使用 <a href="../linux_basic/0560daemons.htm#tcp_wrappers">tcp wrappers</a> 的方式來處理 
+		FTP 的連線時，例如僅允許內部 (192.168.1.0/24) 來連線，那應該可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts.allow</span>
+<span class=term_write>vsftpd: 192.168.1.0/255.255.255.0</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/hosts.deny</span>
+<span class=term_write>vsftpd: ALL</span>
+</pre></td></tr></table>
+	</div>
+
+	<hr /><a NAME="other_super"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Super daemon 的額外管理項目</span><br />
+	<div class=block2>
+		關於使用 xinetd 這個 super daemon 來管理服務的方法還記得吧？
+		要記得基礎篇談到的<a href="../linux_basic/0560daemons.htm#superd">認識系統服務</a>喔！
+		如果忘記的話，也要記得使用『 man xinetd.conf 』這個好用的查詢功能吶！<br /><br />
+
+		我們知道 stand alone 的啟動方法可以透過 max_clients 及 max_per_ip 這兩個參數來處理同時上線的最大人數。
+		但是如果是 super daemon 管理的呢？那麼就得要透過 xinetd 的語法來處理了。
+		如果你是<a href="#server_start">使用 super daemon 來管理 vsftpd</a> 的話，
+		要記得先修改 vsftpd.conf 內的『listen』項目喔。然後這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/xinetd.d/vsftpd</span>
+<span class=term_say># vsftpd is the secure FTP server.</span>
+<span class=term_write>service ftp
+{
+    disable           = no
+    socket_type       = stream
+    wait              = no
+    user              = root
+    server            = /usr/sbin/vsftpd
+    server_args       = /etc/vsftpd/vsftpd.conf 
+<span class=term_say># 上面這個 server 的設定請依照您的主機環境來設定！
+# 至於 server_args 則請寫入您的 vsftpd 的設定檔完整檔名即可！</span>
+    per_source        = 5     <span class=term_say>&lt;==與同一 IP 的連線數目有關</span>
+    instances         = 200   <span class=term_say>&lt;==同一時間最多的連線數目</span>
+    no_access         = 192.168.1.3
+    banner_fail       = /etc/vsftpd/vsftpd.busy_banner
+<span class=term_say># 上面這個檔案就是當主機忙碌中，則在 Client 端顯示的內容！</span>
+    log_on_success    += PID HOST DURATION
+    log_on_failure    += HOST
+}</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.conf</span>
+<span class=term_say># 確定這個檔案內存在這個參數喔！</span>
+<span class=term_write>listen=NO</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/vsftpd/vsftpd.busy_banner</span>
+<span class=term_write>421 很抱歉，伺服器現在上線人數過多，請待會兒再連線！</span>
+<span class=term_say># 那個 421 是錯誤代碼哩！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/vsftpd stop</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/xinetd restart</span>
+</pre></td></tr></table>
+
+		這樣設定就可以啦！很簡單的一個設定動作，就可以讓您的 vsftpd 變的更安全一些喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="other_faq"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">常見問題與解決之道</span><br />
+	<div class=block2>
+		底下說明幾個常見的問題與解決之道吧！<br /><br />
+
+		<li>如果在 Client 端上面發現無法連線成功，請檢查：
+		<ol><li>iptables 防火牆的規則當中，是否開放了 client 端的 port 21 登入？
+		<li>在 /etc/hosts.deny 當中，是否將 client 的登入權限擋住了？
+		<li>在 /etc/xinetd.d/vsftpd 當中，是否設定錯誤，導致 client 的登入權限被取消了？</ol>
+
+		<li>如果 Client 已經連上 vsftpd 伺服器，但是卻顯示『 XXX file can't be opend 』的字樣，請檢查：
+		<ol><li>最主要的原因還是在於在 vsftpd.conf 當中設定了檢查某個檔案，但是您卻沒有將該檔案設定起來，
+		所以，請檢查 vsftpd.conf 裡面所有設定的檔案檔名，使用 touch 這個指令將該檔案建立起來即可！</ol>
+
+		<li>如果 Client 已經連上 vsftpd 伺服器，卻無法使用某個帳號登入，請檢查：
+		<ol><li>在 vsftpd.conf 裡面是否設定了使用 pam 模組來檢驗帳號，以及利用 userlist_file 來管理帳號？
+		<li>請檢查 /etc/vsftpd.ftpusers 以及 /etc/vsftpd.user_list 檔案內是否將該帳號寫入了？</ol>
+
+		<li>如果 Client 無法上傳檔案，該如何是好？
+		<ol><li>最可能發生的原因就是在 vsftpd.conf 裡面忘記加上這個設定『write_enable=YES』這個設定，請加入；
+		<li>是否所要上傳的目錄『權限』不對，請以 chmod 或 chown 來修訂；
+		<li>是否 anonymous 的設定裡面忘記加上了底下三個參數：
+		<ul><li>anon_other_write_enable=YES
+		<li>anon_mkdir_write_enable=YES
+		<li>anon_upload_enable=YES</ul>
+		<li>是否因為設定了 email 抵擋機制，又將 email address 寫入該檔案中了！？請檢查！
+		<li>是否設定了不許 ASCII 格式傳送，但 Client 端卻以 ASCII 傳送呢？請在 client 端以 binary 格式來傳送檔案！</ol>
+
+		上面是蠻常發現的錯誤，如果還是無法解決您的問題，請您務必分析一下這兩個檔案：/var/log/vsftpd.log 與 
+		/var/log/messages ，裡面有相當多的重要資料，可以提供給您進行除錯喔！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>FTP 是檔案傳輸協定 (File Transfer Protocol) 的簡寫，主要的功能是進行伺服器與用戶端的檔案管理、傳輸等事項；
+	<li>FTP 的伺服器軟體非常多，例如 Wu FTP, Proftpd, vsftpd 等等，各種 FTP 伺服器軟體的發展理念並不相同，
+	所以選擇時請依照您的需求來決定所需要的軟體套件；
+	<li>FTP 使用的是明碼傳輸，而過去一些 FTP 伺服器軟體也曾被發現安全漏洞，因此設定前請確定該軟體已是最新版本，避免安全議題的衍生；
+	<li>由於 FTP 是明碼傳輸，其實可以使用 SSH 提供的 sftp 來取代 FTP ；
+	<li>大多數的 FTP 伺服器軟體都提供 chroot 的功能，將實體用戶限制在他的家目錄內；
+	<li>FTP 這個 daemon 比較常以 super daemon 來管理，亦即 xinetd 或者是 inet 來管理；
+	<li>FTP 這個 daemon 所開啟的正規埠口為 20 與 21 ，其中 21 為命令通道， 20 為資料傳輸通道；
+	<li>FTP 的資料傳輸方式主要分為主動與被動(Passive, PASV)，如果是主動的話，則 ftp-data 在伺服器端主動以 port 20 
+	連接到用戶端，否則則開放被動式監聽的埠口等待用戶端來連接；
+	<li>在 NAT 主機內的用戶端 FTP 軟體連線時可能發生困擾，這可以透過 iptables 的 nat 模組或利用被動式連線來克服；
+	<li>一般來說， FTP 上面共有三個群組，分別是實體用戶、訪客與匿名登入者(real, guest, anonymous)；
+	<li>可以藉由修改 /etc/passwd 裡面的 Shell 欄位，來讓使用者僅能使用 FTP 而無法登入主機；
+	<li>FTP 的指令、與使用者活動所造成的登錄檔是放置在 /var/log/xferlog 裡面；
+	<li>在用戶端使用 ftp 這個程式時，可以加上『 ftp -p hostname』來讓連線變成 passive 模式。
+	<li>vsftpd 為專注在安全議題上而發展的一套 FTP 伺服器軟體，他的設定檔在 /etc/vsftpd/vsftpd.conf ；
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>FTP 在建立連線以及資料傳輸時，會建立哪些連線？
+	<div class=block2><font color=white size=-1>
+	需建立兩種連線，分別是命令通道與資料傳輸通道。在主動式連線上為 port 21(ftp) 與 port 20(ftp-data)。
+	</font></div>
+
+	<li>FTP 主動式與被動式連線有何不同？
+	<div class=block2><font color=white size=-1>
+	主動式連線的時候，命令連線是由 client 端主動連接到主機端，但是 ftp-data 則是由主機端主動的連線到 
+	client 端。至於被動式連線的時候，則不論 command 還是 ftp-data 的連線，伺服器端都是監聽客戶端的要求的！
+	</font></div>
+
+	<li>有哪些動作可以讓您的 FTP 主機更為安全 (secure) ？
+	<div class=block2><font color=white size=-1>
+	<ul>
+	<li>隨時更新伺服器軟體到最新版本；
+	<li>讓 guest 與 anonymous 的家目錄限制在固定的目錄中(chroot 或是 restricted)；
+	<li>使用 TCP_Wrappers 啟動 FTP ，並以他來控制可連線的 IP；
+	<li>拒絕 guest 與 anonymous 使用 change, delete, rename 等等指令；
+	<li>拒絕 root 的登入或者其他系統帳號的登入；
+	<li>拒絕大部分的 upload 行為！</ul>
+	</font></div>
+
+	<li>我們知道 ftp 會啟用兩個 ports ，請問這兩個 port 在哪裡規範的 (以 vsftpd 為例)？而且，一般正規的 port 是幾號？
+	<div class=block2><font color=white size=-1>
+	若為 stand alone 時，都是由 vsftpd.conf 規範，命令通道為 listen_port=21 規範，資料連接為 connect_from_port_20=YES
+	及pasv_max_port=0, pasv_max_port=0 所規範。<br />
+	若是 super daemon 所管理時，命令通道則由 /etc/services 所規範了。
+	</font></div>
+	<li>那幾個檔案可以用來抵擋類似 root 這種系統帳號的登入 FTP？
+	<div class=block2><font color=white size=-1>
+	/etc/vsftpd.ftpusers<br />
+	/etc/vsftpd.user_list
+	</font></div>
+
+	<li>在 FTP 的 server 與 client 端進行資料傳輸時，有哪兩種模式？為何這兩種模式影響資料的傳輸很重要？
+	<div class=block2><font color=white size=-1>
+	資料的傳輸有 ASCII 與 Binary 兩種方式，在進行 ascii 傳送方式時，被傳送的檔案將會以文字模式來進行傳送的行為，
+	因此，檔案的屬性會被修改過，可能造成執行檔最後卻無法執行等的問題！一般來說，ASCII 
+	通常僅用在文字檔案與一些原始碼檔案的傳送。 
+	</font></div>
+
+	<li>我的主機明明時區設定沒有問題，但為何登入 vsftpd 這個 FTP 服務時，時間就是少八小時？該如何解決？
+	<div class=block2><font color=white size=-1>
+	肯定是時區方面出了問題，應該就是 vsftpd.conf 裡面少了『 use_localtime=YES 』這個參數了。
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>vsftpd 官方網站：<a href="http://vsftpd.beasts.org/" target="_blank">http://vsftpd.beasts.org/</a></li>
+	<li>man 5 vsftpd.conf</li>
+	<li>Filezilla 官方網站：<a href="http://filezilla.sourceforge.net/" target="_blank">http://filezilla.sourceforge.net/</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2003/09/03：首次完成<br />
+2003/09/04：<a href="#ftp_recommand">加入 FTP 伺服器軟體的選擇建議</a><br />
+2006/12/19：將舊的文章移動到<a href="0410vsftpd/0410vsftpd.htm">此處</a>，並請自行參考
+	<a href="0400wuftp.htm">wu-ftp</a>, <a href="0410proftpd.htm">proftpd</a> 等服務！<br />
+2006/12/20：將分散在各處的 FTP 原則說明完畢，也更新完畢囉～疲勞～<br />
+</span>
+<hr><span class="text_date">2003/09/03以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0410vsftpd.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

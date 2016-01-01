@@ -1,0 +1,990 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 架設 Router</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0230router.htm">
+    <span class="text_head0">路由器<span class="text_head_en"> Router </span>設定</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0230router.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/08/30</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們在 <a href="0110network_basic.htm">網路基礎</a>
+	裡面提到 路由 (route) 是一個重要的概念，他可以控制我們的資料封包的走向！
+	此外，如果同一個網域裡面有太多的電腦數量需要來廣播的話，效能一定不會太好，所以才會有
+	Netmask 對吧！今天我們換個角度來想一想，如果說我的網域內真的有太多的電腦數量了，
+	那麼將整個網域切割成較小的數個子網域 (Subnet) 會是一個比較好的作法，不過，
+	因為網域與網域之間的封包不可以直接互通資料，所以這個時候我們就需要使用
+	Router (路由器) 來幫忙封包的傳送了！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#routing">路由</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#routing_table">路由表</a><br />
+	　　1.2 <a href="#routing_ip_alias">IP Alias 的測試功能</a><br />
+	　　1.3 <a href="#routing_double">重複路由的問題</a><br />
+	</span>
+2. <a href="#route">路由器架設</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#route_what">什麼是路由器</a><br />
+	　　2.2 <a href="#route_when">何時需要路由器？</a><br />
+	　　2.3 <a href="#route_static">靜態路由之路由器</a><br />
+	　　2.4 <a href="#route_dynamic">動態路由之路由器設定：zebra</a><br />
+	</span>
+3. <a href="#arp_proxy">ARP Proxy 讓路由器兩端在同一網域</a><br />
+4. <a href="#review">重點回顧</a><br />
+5. <a href="#ex">課後練習</a><br />
+6. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+7. <a href="http://phorum.vbird.org/viewtopic.htm?t=26428"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=26428</a><br />
+</span>
+
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="routing"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">路由</span><br />
+<div class=block1>
+	我們在<a href="0110network_basic.htm">網路基礎</a>裡面談到過<a href="0110network_basic.htm#route">路由</a>的相關概念，
+	他最大的功能就是在幫我們規劃網路封包的傳遞方式與方向。
+	至於路由的觀察則可以使用 <a href="0140networkcommand.htm#route">route</a> 或者是 
+	<a href="0140networkcommand.htm#netstat">netstat</a> 來查閱與設定。
+	好了，那麼路由的形式有哪些？您又該如何確認路由是否正確呢？<br /><br />
+
+	<hr /><a NAME="routing_table"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">路由表</span><br />
+	<div class=block2>
+		如同前面網路基礎談到的，<span class=text_import2>每一部主機都有自己的路由表</span>，
+		也就是說，您必須要透過你自己的路由表來傳遞你主機的封包到下一個路由器上頭。
+		若傳送出去後，該封包就得要透過下一個路由器的路由表來傳送了，此時與你自己主機的路由表就沒有關係啦！
+		所以說，如果網路上面的某一部路由器設定錯誤，那.....封包的流向就會發生很大的問題。
+		我們就得要透過 <a href="0140networkcommand.htm#traceroute">traceroute</a> 
+		來嘗試瞭解一下每個 router 的封包流向囉。<br /><br />
+
+		OK！那你自己主機的路由表到底有哪些部分呢？我們以底下這個路由表來說明：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination  Gateway     Genmask        Flags Metric Ref  Use Iface
+192.168.1.0  0.0.0.0     255.255.255.0  U     0      0      0 eth0 <span class=term_say>&lt;== 1</span>
+127.0.0.0    0.0.0.0     255.0.0.0      U     0      0      0 lo   <span class=term_say>&lt;== 2</span>
+0.0.0.0      192.168.1.2 0.0.0.0        UG    0      0      0 eth1 <span class=term_say>&lt;== 3</span>
+</pre></td></tr></table>
+
+		首先，我們得知道在 Linux 系統下的路由表<span class=text_import2>是由小網域排列到大網域</span>，
+		例如上面的路由表當中，路由是由『 192.168.1.0/24 --> 127.0.0.0/8 --> 0.0.0.0/0 (預設路由) 』來排列的。
+		而當主機的網路封包需要傳送時，就會查閱上述的三個路由規則來瞭解如何將該封包傳送出去。<br /><br />
+
+		你會不會覺得奇怪，為什麼會有這幾個路由呢？其實路由表主要有這幾種情況來設計的：<br />
+		<ul>
+		<li><span class=text_import1>依據介面而存在的路由</span>：<br />
+		例如 192.168.1.0/24 這個路由的存在是由於鳥哥的這部主機上面擁有 192.168.1.11 這個 IP 的關係！
+		也就是說，你主機上面有幾個網路介面的存在時，該網路介面就會存在一個路由才對。
+		所以說，萬一你的主機有兩個網路介面時，例如 192.168.1.11, 192.168.2.11 時，那路由至少就會有：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination  Gateway     Genmask        Flags Metric Ref  Use Iface
+192.168.1.0  0.0.0.0     255.255.255.0  U     0      0      0 eth0 
+192.168.2.0  0.0.0.0     255.255.255.0  U     0      0      0 eth1
+<span class=term_say>.....以下省略.....</span>
+</pre></td></tr></table><br />
+
+		<li><span class=text_import1>手動或預設路由(default route)</span>：<br />
+		你可以使用 route 這個指令手動的給予額外的路由設定，例如那個預設路由 (0.0.0.0/0) 就是額外的路由。
+		使用 route 這個指令時，最重要的一個概念是：『<span class=text_import2>你所規劃的路由必須要是你的裝置 
+		(如 eth0) 或 IP 可以直接溝通 (broadcast) 的情況</span>』才行。舉例來說，以上述的環境來看，
+		我的環境裡面僅有 192.168.1.11 及 192.168.2.11 ，那我如果想要連接到 192.168.100.254 這個路由器時，
+		下達：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route add -net 192.168.100.0  \</span>
+> <span class=term_command>netmask 255.255.255.0 gw 192.168.100.254</span>
+SIOCADDRT: Network is unreachable
+</pre></td></tr></table>
+
+		看吧！系統就會回應沒有辦法連接到該網域，因為我們的網路介面與 192.168.100.0/24 根本就沒有關係嘛！
+		那如果 192.168.100.254 真的是在我們的實體網路連接上，那其實你應該是這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route add -net 192.168.100.0  \</span>
+> <span class=term_command>netmask 255.255.255.0 dev eth0</span>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination    Gateway      Genmask        Flags Metric Ref Use Iface
+192.168.100.0  0.0.0.0      255.255.255.0  <span class=term_write>U </span>    0      0     0 eth0
+<span class=term_write>192.168.1.0</span>    0.0.0.0      255.255.255.0  <span class=term_write>U </span>    0      0     0 eth0
+0.0.0.0        <span class=term_write>192.168.1.2</span>  0.0.0.0        <span class=term_write>UG</span>    0      0     0 eth1
+</pre></td></tr></table>
+
+		這樣你的主機就會直接用 eth0 這個裝置去嘗試連接 192.168.100.254 了！
+		另外，上面路由輸出的重點其實是那個『<span class=text_import2>Flags 的 G</span> 』了！因為那個 G 
+		代表使用外部的裝置作為 Gateway 的意思！而那個 Gateway (192.168.1.2) 必須要在我們的已存在的路由環境中。
+		這可是很重要的概念喔！ ^_^<br /><br />
+
+		<li><span class=text_import1>動態路由</span>：<br />
+		除了上面這兩種可以直接使用指令的方法來增加路由規則之外，
+		還有一種透過路由器與路由器之間的協商以達成動態路由的環境，
+		不過，那就需要額外的軟體支援了，例如： <a href="http://www.zebra.org/what.html"
+		target="_blank">zebra (http://www.zebra.org/)</a> 或 CentOS 上面的 
+		<a href="http://www.quagga.net/about.htm"
+		target="_blank">Quagga (http://www.quagga.net/)</a> 這幾個軟體了！<br />
+		</ul>
+
+		事實上，在 Linux 的路由規則都是透過核心來達成的，
+		所以這些路由表的規則都是在核心功能內啊！也就是在記憶體當中喔！ ^_^
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="routing_ip_alias"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">IP Alias 
+	的測試用途</span><br />
+	<div class=block2>
+		我們在 <a href="0140networkcommand.htm">Linux 常用指令</a>裡面談過 eth0:0 這個裝置吧？
+		這個裝置可以在原本的 eth0 上面模擬出一個虛擬介面出來，以讓我們原本的網路卡具有多個 IP ，
+		具有多個 IP 的功能就被稱為 IP Alias 了。而這個 eth0:0 的裝置可以透過
+		<a href="0140networkcommand.htm#ifconfig">ifconfig</a> 或
+		<a href="0140networkcommand.htm#ip_cmd">ip</a> 這兩個指令來達成，
+		關於這兩個指令的用途請翻回去之前的章節閱讀，這裡不再浪費篇幅啊！<br /><br />
+
+		那你或許會問啊：『這個 IP Alias 有啥用途啊？』好問題！這個 IP Alias 最大的用途就是可以讓你用來『應急』！
+		怎麼說呢？我們就來聊一聊他的幾個常見的用途好了：<br />
+		<ul>
+		<li><span class=text_import1>測試用</span>：<br />
+		怎麼說用來測試呢？舉例來說，現在使用 IP 分享器的朋友很多吧，
+		那 IP 分享器通常使用 WWW 介面來提供設定。那這個 IP 分享器通常會給予一個私有 IP 亦即是 
+		192.168.0.1 來讓使用者開啟 WWW 介面的瀏覽。問題來了，那你要如何連接上這部 IP 分享器呢？
+		嘿嘿！在不更動既有的網路環境下，你可以直接利用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig [device] [ IP ] netmask [netmask ip] [up|down]</span>
+[root@linux ~]# <span class=term_command>ifconfig eth0:0 192.168.0.100 netmask 255.255.255.0 up</span>
+</pre></td></tr></table>
+
+		來建立一個虛擬的網路介面，這樣就可以立刻連接上 IP 分享器了。<br /><br />
+
+		<li><span class=text_import1>在一個實體網域中含有多個 IP 網域</span>：<br />
+		另外，如果像是在補習班或者是學校單位的話，
+		由於原本的主機網路設定最好不要隨便修改，那如果要讓同學們大家互通所有的電腦資訊時，
+		就可以讓每個同學都透過 IP Alias 來設定同一網域的 IP ，
+		如此大家就可以在同一個網段內進行各項網路服務的測試了，很不錯吧！<br /><br />
+
+		<li><span class=text_import1>既有設備無法提供更多實體網卡時</span>：<br />
+		如果你的這部主機需要連接多個網域，但該設備卻無法提供安裝更多的網卡時，
+		你只好勉為其難的使用 IP Alias 來提供不同網段的連線服務了！<br />
+		</ul>
+
+		不過，你需要知道的是：<span class=text_import2>所有的 IP Alias 都是由實體網卡模擬來的，
+		所以當要啟動 eth0:0 時，eth0 必須要先被啟動才行。而當 eth0 被關閉後，
+		所以 eth0:n 的模擬網卡將同時也被關閉</span>。這得先要瞭解才行，否則常常會搞錯啟動的裝置啊！
+		在路由規則的設定當中，常常需要進行一些測試，那這個 IP Alias 就派的上用場了。
+		尤其是學校單位的練習環境當中！ ^_^！<br /><br />
+
+		基本上，除非有特殊需求，否則建議你要有多個 IP 時，最好在不同的網卡上面達成，
+		如果你真的要使用 IP Alias 時，那麼如何在<span class=text_import2>開機的時候就啟動 IP alias</span>
+		呢？有兩個簡單的方法可以使用：<br />
+		<ul>
+		<li><span class=text_import1>透過 /etc/rc.d/rc.local</span>：<br />
+			將『ifconfig eth0:n ....』的指令寫入 /etc/rc.d/rc.local 當中，這樣開機的時候就能夠啟動這個虛擬介面，
+			不過這方法有個弱點，就是當使用類似『 /etc/init.d/network restart 
+			』的指令時，該介面可能就會被取消。<br /><br />
+		<li><span class=text_import1>透過 /etc/sysconfig/network-scripts/ifcfg-eth0:0</span>：<br />
+			舉例來說，你可以透過底下這個方法來建立一個虛擬裝置的設定檔案：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/sysconfig/network-scripts</span>
+[root@linux network-scripts]# <span class=term_command>vi ifcfg-eth0:0</span>
+<span class=term_write>DEVICE=eth0:0            <span class=term_say>&lt;==相當重要！一定要與檔名相同的裝置代號！</span>
+ONBOOT=yes
+BOOTPROTO=static
+IPADDR=192.168.0.100
+NETMASK=255.255.255.0
+NETWORK=192.168.0.0
+BROADCAST=192.168.0.255</span>
+
+[root@linux network-scripts]# <span class=term_command>ifup eth0:0</span>
+[root@linux network-scripts]# <span class=term_command>ifdown eth0:0</span>
+</pre></td></tr></table>
+
+		關於裝置的設定檔案內的更多參數說明，請參考<a href="0130internet_connect.htm#connect_fix_IP">連上 Internet</a>
+		一文的相關說明，在此不再敘述！使用這個方法有個好處，就是當你使用『 /etc/init.d/network restart 』時，
+		系統依舊會使用你的 ifcfg-eth0:0 檔案內的設定值來啟動你的虛擬網卡喔！另外，
+		不論 ifcfg-eth0:0 內的 ONBOOT 設定值為何，<span class=text_import2>只要 ifcfg-eth0 這個實體網卡的設定檔中，
+		ONBOOT 為 yes 時，開機就會將全部的 eth0:n 都啟動</span>。<br />
+		</ul>
+
+		透過這兩個簡單的方法，你就可以在開機的時候啟動你的虛擬介面而取得多個 IP 在同一張網卡上了。
+		不過依舊要注意的是，如果你的 eth0 是使用 DHCP 來取得 IP 參數的話，那麼由於 ifup 及 /etc/init.d/network 
+		這兩個 script 內程式碼撰寫的方式，將會導致 ifcfg-eth0:0 這個設定檔不會被使用到喔！
+		所以<span class=text_import2>當你使用 DHCP 來取得 eth0 的 IP 時，你只好使用手動方式 
+		(用 ifconfig) 來設定你的 IP Alias 了</span>。<br /><br />
+	</div>
+
+	<hr /><a NAME="routing_double"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">重複路由的問題</span><br />
+	<div class=block2>
+		很多朋友可能都有一個可愛的想法，那就是：『<span class=text_import2>我可不可以利用兩張網卡，
+		利用兩個相同網域的 IP 來增加我這部主機的網路流量</span>』？事實上這是一個可行的方案，
+		不過必須要透過許多的設定來達成，若您有需求的話，可以參考網中人大哥寫的這一篇：<br />
+		<ul><li><a href="http://www.study-area.org/tips/multipath.htm"
+		target="_blank">頻寬負載平衡 (http://www.study-area.org/tips/multipath.htm)</a></li></ul>
+		如果只是單純的以為設定好兩張網卡的 IP 在同一個網域而已，那您可就大錯特錯了～
+		為什麼呢？還記得我們在路由表規則裡面提過網路封包的傳遞主要是依據主機內的路由表規則吧！
+		那如果你有兩張網路卡時，假設：<br />
+		<ul><li>eth0 : 192.168.0.100<li>eth1 : 192.168.0.200 </ul>
+		那你的路由規則會是如何呢？理論上會變成這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway   Genmask         Flags Metric Ref   Use Iface
+192.168.0.0     0.0.0.0   255.255.255.0   U     0      0       0 <span class=term_write>eth1</span>
+192.168.0.0     0.0.0.0   255.255.255.0   U     0      0       0 <span class=term_write>eth0</span>
+</pre></td></tr></table>
+
+		也就是說，<span class=text_import2>當要傳送到 192.168.0.0/24 的網域時，都只會透過第一條規則
+		，也就是透過 eth1 來傳出去，而不管是由 eth0 還是由 eth1 進來的網路封包都會透過 eth1 
+		來回傳</span>，這可能會造成一些問題，
+		尤其是一些防火牆的規則方面，很可能會發生一些嚴重的錯誤，
+		如此一來，根本沒有辦法達成負載平衡，也不會有增加網路流量的效果！
+		更慘的是，還可能發生封包傳遞錯誤的情況吶！所以說，同一部主機上面設定相同網域的 IP 時，
+		得要特別留意你的路由規則，一般來說，
+		<span class=text_import2>不應該設定同一的網段的不同 IP 在同一部主機上面</span>。
+		例如上面的案例就是一個不好的示範啊！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="route"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">路由器架設</span><br />
+<div class=block1>
+	在同一的區域網路裡面可以透過廣播 (broadcast) 瞭解到 MAC 與 IP 的解析，然後透過 MAC 對 MAC 來傳送資料封包，
+	在不同的網域裡頭就得要透過路由器的幫忙。那麼什麼是路由器？他的主要功能是什麼？
+	底下我們就來聊一聊！<br /><br />
+
+	<hr /><a NAME="route_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是路由器</span><br />
+	<div class=block2>
+		既然主機想要將資料傳送到不同的網域時得透過路由器的幫忙，所以啦，路由器的主要功能就是：
+		『<span class=text_import2>轉遞網路封包</span>』囉！
+		也就是說，路由器會分析來源端封包的 IP 表頭，找出目標的 IP 後，透過路由器本身的路由表
+		(routing table) 將這個封包向下一個目標 (next hop) 傳送。這就是路由器的功能。<br /><br />
+
+		那麼路由器的功能可以如何達成呢？目前有兩種方法可以達成：<br />
+		<ul><span class=text_import2>
+		<li>硬體功能：例如 Cisco, IBM, 3Com 等公司都有生產硬體路由器，這些路由器內有嵌入式的作業系統，
+			可以負責不同網域間的封包轉譯與轉遞等功能；<br /></li>
+		<li>軟體功能：例如 Linux 這個作業系統的核心就有提供封包轉遞的能力。</li>
+		</span></ul>
+
+		高階的路由器可以連結不同的硬體設備，並且可以轉譯很多不同的封包格式，通常....價格也不便宜啊！
+		在這個章節裡面，我們並沒有要探討這麼高階的咚咚，僅討論在乙太網路裡頭最簡單的路由器功能：
+		連接兩個不同的網域。嘿嘿！這個功能 Linux 就可以達成了！
+		就如同路由表是由 Linux 的核心功能所提供的，這個轉遞封包的能力也是 Linux 核心所提供，
+		那如何啟動這個封包轉遞呢？很簡單啊，只要這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>echo "1" > /proc/sys/net/ipv4/ip_forward</span>
+</pre></td></tr></table>
+
+		上面這個動作就在打開 Linux 核心的封包轉遞能力。你可以將上述的指令寫入 /etc/rc.d/rc.local 當中，
+		以使 Linux 可以在開機的時候就啟動封包轉遞的功能，
+		也可以透過修改 /etc/sysctl.conf 來達成開機啟動封包轉遞：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysctl.conf</span>
+<span class=term_say># 將底下這個設定值修改正確即可！</span>
+<span class=term_write>net.ipv4.ip_forward = 1</span>
+
+[root@linux ~]# <span class=term_command>sysctl -p</span>  <span class=term_say>&lt;==立刻讓該設定生效</span>
+</pre></td></tr></table>
+
+		sysctl 這個指令是在核心工作時用來直接修改核心參數的一個指令，更多的功能可以參考 man sysctl 查詢。
+		不要懷疑！只要這個動作，你的 Linux 就具有最簡單的路由器功能了。
+		而由於 Linux 路由器的路由表設定方法的不同，通常路由器規劃其路由的方式就有兩種：<br />
+		<ul>
+		<li>靜態路由：直接以類似 route 這個指令來直接設定路由表到核心功能當中，設定值只要與網域環境相符即可。
+			不過，當你的網域有變化時，路由器就得要重新設定；<br /><br /></li>
+		<li>動態路由：透過類似 zebra 軟體的功能，這些軟體可以安裝在 Linux 路由器上，
+			而這些軟體可以動態的偵測網域的變化，而直接修改 Linux 核心的路由表資訊，
+			你無須手動以 route 來修改你的路由表資訊喔！</ul>
+
+		瞭解了路由器之後，接下來你可能需要瞭解到什麼是 NAT (Network Address Translation, 網路位址轉譯) 主機，
+		NAT 是啥？其實 IP 分享器就是最簡單的 NAT 主機啦！嘿嘿，瞭解了嗎？沒錯， NAT 可以達成 IP 分享的功能，
+		而 NAT 本身就是一個路由器，但 NAT 比路由器多了一個『 IP 轉換』的功能。怎麼說呢？<br />
+		<ul>
+		<li>一般來說，路由器會有兩個網路介面，透過路由器本身的 IP 轉遞功能讓兩個網域可以互相溝通網路封包。
+			那如果兩個介面一邊是公共 IP (public IP) 但一邊是私有 IP (private IP) 呢？
+			由於私有 IP 不能直接與公共 IP 溝通其路由資訊，此時就得要額外的『 IP 轉譯』功能了；<br /><br />
+		<li>Linux 的 NAT 主機可以透過修改封包的 IP 表頭資料之來源或目標 IP ，讓來自私有 IP 
+			的封包可以轉成 NAT 主機的公共 IP ，就可以連上 Internet ！</ul>
+		所以說， 當路由器兩端的網域分別是 Public 與 Private IP 時，才需要 NAT 的功能！
+		NAT 功能我們會在防火牆時談及，這個章節僅談論一下路由器而已啊！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="route_when"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">何時需要路由器？</span><br />
+	<div class=block2>
+		一般來說，電腦數量小於數十部的小型企業是無須路由器的，只需要利用 hub/switch 串接各部電腦，
+		然後透過單一線路連接到 Internet 上即可。不過，如果是超過數百部電腦的大型企業環境，
+		由於他們的環境通常需要考慮如下的狀況，因此才需要路由器的架設：<br />
+		<ul>
+		<li><span class=text_import1>實體線路之佈線及效能的考量</span>：<br />
+			在一棟大樓的不同樓層要串接所有的電腦可能有點難度，那可以透過每個樓層架設一部路由器，
+			並將每個樓層路由器相連接，就能夠簡單的管理各樓層的網路；
+			此外，如果各樓層不想架設路由器，而是直接以網路線串接各樓層的 hub/switch 時，
+			那由於同一網域的資料是透過廣播來傳遞的，那當整個大樓的某一部電腦在廣播時，
+			所有的電腦將會予以回應，哇！會造成大樓內網路效能的問題；所以架設路由器將實體線路分隔，
+			就有助於這方面的網路效能；<br /><br />
+
+		<li><span class=text_import1>部門獨立與保護資料的考量</span>：<br />
+			在閱讀過<a href="0110network_basic.htm">網路基礎</a>章節後，您就會曉得，
+			只要實體線路是連接在一起的，那麼<span class=text_import2>當資料透過廣播時，你就可以透過類似
+			<a href="0140networkcommand.htm#tcpdump">tcpdump</a> 的指令來監聽封包資料，
+			並且予以竊取</span>～所以，如果你的部門之間的資料可能需要獨立，
+			或者是某些重要的資料必須要在公司內部也予以保護時，可以將那些重要的電腦放到一個獨立的實體網域，
+			並額外加設防火牆、路由器等連接上公司內部的網域。<br />
+		</ul>
+
+		路由器就只是一個設備，要如何使用端看您的網路環境的規劃！上面僅是舉出一些應用案例。
+		底下我們先就架設一個靜態路由的路由器來玩一玩吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="route_static"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">靜態路由之路由器</span><br />
+	<div class=block2>
+		假設在貴公司的網路環境當中，除了一般職員的工作用電腦是直接連接到對外的路由器來連結 Internet，
+		在內部其實還有一個部門需要較安全的獨立環境，因此這部份的網路規劃可能是這樣的情況：<br /><br />
+
+		<a name=fig_1></a><center>
+		<img src="0230router/static_router.png"
+		title="靜態路由之路由器架構示意圖" alt="靜態路由之路由器架構示意圖"><br />
+		圖一、靜態路由之路由器架構示意圖</center><br />
+
+		以上圖的架構來說，這家公司主要有兩個 C class 的網域，分別是 192.168.0.0/24 及 192.168.10.0/24 ，
+		其中 192.168.0.0/24 是用來做為一般員工連接網際網路用的，至於 192.168.10.0/24 
+		則是給特殊的部門用的。PC1 代表的是一般員工的電腦， PC2 及 PC3, PC4 則是特殊部門的工作用電腦，
+		Linux Router 則是這個特殊部門用來連接到公司內部網域的路由器。在這樣的架構下，
+		該特殊部門的封包就能夠具有基礎的保護了。<br /><br />
+
+		由圖一你也不難發現，只要是具有路由器功能的設備 (Router A, Linux Router) 都會具有兩個以上的介面，
+		分別用來溝通不同的網域，同時該路由器也都會具有一個預設路由啊！ ^_^！
+		另外，你還可以加上一些防火牆的軟體在 Linux Router 上，
+		以保護 PC2~PC4 的內部電腦呢！<br /><br />
+
+		在 Router A 的部分，由於他具有 Public 與 Private IP ，所以這部 Router 必須要具有 NAT 的功能，
+		這個未來我們再介紹。今日的重點就在於 Linux Router 那個玩意兒！在該主機下，
+		最好配備兩張網卡，一張給 192.168.0.100，另一張給 192.168.10.254 這個 IP。
+		這部 Linux Router 的設定簡單的要命喔！你可以這樣做的：<br /><br />
+
+		<hr /><li><span class=text_import1>Linux Router</span><br />
+		<div class=block2>
+			在這部主機內需要有兩張網卡，鳥哥在這裡將他定義為：<br />
+			<ul><li>eth0: 192.168.10.254<li>eth1: 192.168.0.100</ul>
+			那如何設定呢？這樣做就對了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先處理 eth0 </span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0
+BOOTPROTO=static
+BROADCAST=192.168.10.255
+IPADDR=192.168.10.254
+NETMASK=255.255.255.0
+NETWORK=192.168.10.0
+ONBOOT=yes</span>
+
+<span class=term_hd>2. 再先處理 eth1 </span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth1</span>
+<span class=term_write>DEVICE=eth1
+BOOTPROTO=static
+BROADCAST=192.168.0.255
+IPADDR=192.168.0.100
+NETMASK=255.255.255.0
+NETWORK=192.168.0.0
+GATEWAY=192.168.0.254    <span class=term_say>&lt;==這個設定值很重要喔！</span>
+ONBOOT=yes</span>
+
+<span class=term_hd>3. 啟動 IP 轉遞</span>
+[root@linux ~]# <span class=term_command>echo "1" > /proc/sys/net/ipv4/ip_forward</span>
+<span class=term_say># 上述指令如果沒有問題，將他加入 /etc/rc.d/rc.local 當中去！</span>
+
+<span class=term_hd>4. 重新啟動網路，並且觀察路由</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/network restart</span>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway        Genmask         Flags Metric Ref Use Iface
+192.168.0.0     0.0.0.0        255.255.255.0   U     0      0     0 eth1
+192.168.10.0    0.0.0.0        255.255.255.0   U     0      0     0 eth0
+127.0.0.0       0.0.0.0        255.0.0.0       U     0      0     0 lo
+0.0.0.0         192.168.0.254  0.0.0.0         UG    0      0     0 eth1
+</pre></td></tr></table>
+
+			有夠簡單吧！這樣你的 Linux Router 就 OK 了吶！接下來則是 PC2 來作為範例。<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>受保護的網域，以 PC2 為例：</span><br />
+		<div class=block2>
+			不論你的 PC2 是哪一種作業系統，你的環境都應該是這樣的：<br />
+			<ul><li>IP: 192.168.10.20<li>netmask: 255.255.255.0<li>network: 192.168.10.0
+			<li>broadcast: 192.168.10.255<li>gateway: 192.168.10.254</ul>
+			以 Linux 作業系統為例，並且 PC2 僅有 eth0 一張網卡時，他的設定是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0
+BOOTPROTO=static
+BROADCAST=192.168.10.255
+IPADDR=192.168.10.20
+NETMASK=255.255.255.0
+NETWORK=192.168.10.0
+GATEWAY=192.168.10.254   <span class=term_say>&lt;==這個設定最重要啦！</span>
+ONBOOT=yes</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/network restart</span>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination   Gateway         Genmask         Flags Metric Ref  Use Iface
+192.168.10.0  0.0.0.0         255.255.255.0   U     0      0      0 eth0
+127.0.0.0     0.0.0.0         255.0.0.0       U     0      0      0 lo
+0.0.0.0       192.168.10.254  0.0.0.0         UG    0      0      0 eth0
+</pre></td></tr></table>
+
+		</div>
+
+		<hr /><li><span class=text_import1>Router A 的新增路由規則：</span><br />
+		<div class=block2>
+			在這樣的架構下，您的 PC2 已經可以連接上 Internet 了！只不過，當封包由 Internet 傳回來時，
+			<span class=text_import2>由於 Router A 並沒有連接到 192.168.10.0/24 
+			網域的路由規則，所以該封包『會遺失』喔</span>！那就麻煩了～
+			所以，你的 Router A 必須要額外增加一條規則，這條規則是『將目標為 192.168.10.0/24
+			的封包傳送給 192.168.0.100 去處理』，假設 Router A 為 Linux 系統時，那他應該要這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route add -net 192.168.10.0 netmask 255.255.255.0 \</span>
+>  <span class=term_command>gw 192.168.0.100</span>
+
+[root@linux ~]# <span class=term_command>route -n</span>
+Destination   Gateway        Genmask         Flags Metric Ref  Use Iface
+192.168.10.0  192.168.0.100  255.255.255.0   UG    0      0      0 eth0
+<span class=term_say># 你應該會發現上頭這一條規則存在才行！</span>
+</pre></td></tr></table>
+
+			如此一來，你的 Router A 及 Linux Router 之間就可以溝通，並且可以傳遞
+			192.168.10.0/24 的網域吶！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>PC1 直接與 PC2 的溝通方式：</span><br />
+		<div class=block2>
+			在圖一當中，你會發現那個 PC1 必須要將預設路由設定為 192.168.0.254 ，
+			所以當 PC1 要與 PC2 溝通時，封包將由：<br /><br />
+			<span class=text_import2>PC1 --> Router A --> Linux Router --> PC2</span><br /><br />
+			不過，在圖一當中我們知道其實 PC1 與 PC2 同時接到 Linux Router 上嘛！
+			所以 PC1 其實可以直接加入一條路由規則，規定當 192.168.10.0/24 的封包目標時，
+			他可以直接傳到 Linux Router 上即可，那可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>route add -net 192.168.10.0 netmask 255.255.255.0 \</span>
+>  <span class=term_command>gw 192.168.0.100</span>
+</pre></td></tr></table>
+
+			最後只要 PC2 使用 ping 可以連到 PC1，同樣的， PC1 也可以 ping 到 PC2 的話，
+			就表示你的設定是 OK 的啦！嘿嘿！搞定！而透過這樣的設定方式，您也可以發現到一件事，
+			那就是：『<span class=text_import2>路由是雙向的，你必須要瞭解出去的路由與回來時的規則</span>』。
+			舉例來說，在預設的情況下 (Router A 與 PC1 都沒有額外的路由設定時)，其實封包是可以由 PC2 
+			連線到 PC1 的，但是 PC1 卻沒有相關的路由可以回應到 PC2 ～所以上頭才會要您在 Router A
+			或者是 PC1 上面設定額外的路由規則啊！這樣說，瞭了吧？ ^_^<br /><br />
+		</div>
+
+		所以說，用 Linux 作一個靜態路由的 Router 很簡單吧！以上面的案例來說，你在 Linux Router 
+		上面幾乎沒有作什麼額外的工作，只要將網路 IP 與網路介面對應好啟動，然後加上 IP Forward 的功能，
+		讓你的 Linux 核心支援封包轉遞，然後其他的工作咱們的 Linux kernel 就主動幫你搞定了！
+		真是好簡單！ ^_^<br /><br />
+
+		不過這裡必須要提醒的是，<span class=text_import2>如果你的 Linux Router 有設定防火牆的話，
+		而且還有設定類似 NAT 主機的 IP 偽裝技術，那可得特別留意，因為還可能會造成路由誤判的問題</span>～
+		上述的 Linux Router 當中『並沒有使用到任何 NAT 的功能』喔！特別給他留意到！<br /><br />
+	</div>
+
+	<hr /><a NAME="route_dynamic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">動態路由之路由器設定：zebra</span><br />
+	<div class=block2>
+		如前所述，系統管理員可以利用 route 這個指令手動的將路由規則加入核心當中，這個方式稱為靜態路由。
+		動態路由同樣是將路由規則加入核心當中，只是這個加入的動作交由軟體服務 (daemon) 自動來執行，
+		在 Linux 上面常見的路由服務就是 zebra 這個套件所提供的。<br /><br />
+
+		動態路由通常是用在路由器與路由器之間的溝通，所以要讓您的路由器具有動態路由的功能，
+		你必須要瞭解到對方路由器上面所提供的動態路由協定才行，這樣兩部路由器才能夠透過該協定來溝通彼此的路由規則。
+		目前常見的動態路由協定有：RIPv1, RIPv2, OSPF, BGP 等等，
+		zebra 都有支援這些路由協定喔！<br /><br />
+
+		在 CentOS 上頭，我們使用 quagga 這個套件來提供 zebra ，因為 quagga 是更新 zebra 而來的，
+		事實上，你可以說， quagga 就是 zebra 啦！趕緊安裝他先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum install quagga</span>
+[root@linux ~]# <span class=term_command>ls -l /etc/quagga</span>
+-rw-r--r--  1 root   root      410 Jun  2 02:38 ripd.conf.sample
+-rw-r-----  1 quagga quagga     30 Aug 29 10:50 zebra.conf
+-rw-r--r--  1 root   root      373 Jun  2 02:38 zebra.conf.sample
+<span class=term_say>.....其他省略.....</span>
+</pre></td></tr></table>
+
+		這個套件所提供的各項動態路由協定都放置到 /etc/quagga/ 目錄內，底下我們以較為簡單的 RIPv2 協定來處理動態路由，
+		不過你得要注意的是，不論你要啟動什麼動態路由協定，那個 zebra 都必須要先啟動才行！
+		這是因為：<br />
+		<ul><span class=text_import2><li>zebra 這個 daemon 的功能在更新核心的路由規則；
+		<li>RIP 這個 daemon 則是在向附近的其他 Router 溝通協調路由規則的傳送與否。</span></ul>
+		而各個路由服務的設定檔都必須要以 /etc/quagga/*.conf 的檔名來儲存才行，如上表我們可以發現 zebra
+		這個服務是有設定好了，不過 ripd 的檔名卻不是 .conf 結尾。所以我們必須要額外作些設定才行。
+		而假設我們的網路連結如下圖二所示：<br /><br />
+
+		<a name=fig_2></a><center>
+		<img src="0230router/dynamic_router.png"
+		title="動態路由的簡易圖示" alt="動態路由的簡易圖示"><br />
+		圖二、動態路由的簡易圖示</center><br />
+
+		這兩部 Linux Router 分別負責不同的網域，且可以透過 192.168.0.0/24 這個網域來溝通。
+		在沒有設定額外路由規則的情況下，那個 PC1 與 PC2 是無法溝通的！另外，
+		<span class=text_import2>zebra 必須要同時安裝在兩部 Linux Router 上頭才行</span>，
+		而且我們只要設定好這兩部主機的網路介面 (eth0, eth1)
+		後，不需要手動輸入額外的路由設定喔！可以透過 RIP 這個路由協定來搞定的！<br /><br />
+
+		<hr /><li><span class=text_import1>設定 zebra </span><br />
+		<div class=block2>
+		我們先設定圖二右手邊那一部 Linux Router，關於 zebra.conf 你可以這樣設定的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先設定 zebra 並且啟動 zebra </span>
+[root@linux ~]# <span class=term_command>vi /etc/quagga/zebra.conf</span>
+<span class=term_write>hostname linux.router1  <span class=term_say>&lt;==給予這個路由器一個主機名稱，隨便取！</span>
+password linux1         <span class=term_say>&lt;==給予一個密碼！</span>
+enable password iinux1  <span class=term_say>&lt;==將這個密碼生效！</span>
+log file zebra.log      <span class=term_say>&lt;==將所有 zebra 產生的資訊存到登錄檔中</span></span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/zebra start</span>
+[root@linux ~]# <span class=term_command>netstat -tunlp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address   Foreign Address   State   PID/Program name
+tcp        0      0 <span class=term_write>127.0.0.1:2601</span>  0.0.0.0:*         LISTEN  6422/zebra
+</pre></td></tr></table>
+
+		仔細看，由於 zebra 這個服務的任務主要是在修改 Linux 系統核心內的路由，
+		所以他僅監聽本機介面而已，並不會監聽外部的介面才對！另外，在 zebra.conf 這個檔案當中，
+		我們所設定的那個密碼是有作用的喔！可以讓我們登入 zebra 這套軟體呢！
+		好了，我們來查一查這個 2601 的 port 是否正確的啟動的呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>telnet localhost 2601</span>
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+
+Hello, this is Quagga (version 0.98.3).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+User Access Verification
+
+Password: <span class=term_say>&lt;==在這裡輸入剛剛你設定的密碼啊！</span>
+linux.router1> <span class=term_say>&lt;==在這邊輸入『 ? 』就能夠知道有多少指令可使用</span>
+  echo      Echo a message back to the vty
+  enable    Turn on privileged mode command
+  exit      Exit current mode and down to previous mode
+  help      Description of the interactive help system
+  list      Print command list
+  quit      Exit current mode and down to previous mode
+  show      Show running system information
+  terminal  Set terminal line parameters
+  who       Display who is on vty
+linux.router1> <span class=term_command>list</span>
+  echo .MESSAGE
+  enable
+  exit
+  help
+  list
+  quit
+  show debugging zebra
+  show history
+  show interface [IFNAME]
+  show ip forwarding
+  show ip route
+<span class=term_say>....其他省略....</span>
+linux.router1> <span class=term_command>show ip route</span>
+Codes: K - kernel route, C - connected, S - static, R - RIP, O - OSPF,
+       I - ISIS, B - BGP, > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 192.168.0.254, eth0
+C>* 127.0.0.0/8 is directly connected, lo
+C>* 192.168.0.0/24 is directly connected, eth0
+C>* 192.168.10.0/24 is directly connected, eth1
+linux.router1> <span class=term_command>exit</span>
+Connection closed by foreign host.
+</pre></td></tr></table>
+
+		仔細看到，我們登入這個 zebra 的軟體之後，可以輸入『help』或問號『?』， zebra 
+		就會顯示出你能夠執行的指令有哪些，比較常用的當然是查詢路由規則囉！
+		以『 show ip route 』來查閱，結果可以發現目前的介面與預設路由都被顯示出來了，
+		顯示的結果當中，<span class=text_import2>K 代表以 router 這個指令直接加入核心的路由規則，C 
+		則代表你的網路介面相關的路由規則</span>。<br /><br />
+
+		事實上，如果你還想要增加額外的靜態路由的話，也可以透過 zebra 而不必使用 route 指令呢！
+		例如想要增加 10.0.0.0/24 給 eth0 來處理的話，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/quagga/zebra.conf</span>
+<span class=term_say># 新增底下這一行喔！</span>
+<span class=term_write>ip route 10.0.0.0/24 eth0</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/zebra restart</span>
+[root@linux ~]# <span class=term_command>telnet localhost 2601</span>
+User Access Verification
+
+Password: <span class=term_say>&lt;==這裡輸入密碼</span>
+linux.router1> <span class=term_command>show ip route</span>
+Codes: K - kernel route, C - connected, S - static, R - RIP, O - OSPF,
+       I - ISIS, B - BGP, > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 192.168.0.254, eth0
+<span class=term_write>S>* 10.0.0.0/24 [1/0] is directly connected, eth0</span>
+C>* 127.0.0.0/8 is directly connected, lo
+C>* 192.168.0.0/24 is directly connected, eth0
+C>* 192.168.10.0/24 is directly connected, eth1
+</pre></td></tr></table>
+
+		嘿嘿！立刻就會多出一筆路由的規則，而且最右邊會顯示 S，亦即是靜態路由 (Static route) 的意思。
+		如此一來，我們系統管理員可就輕鬆多了！
+		設定完 zebra 之後，接下來我們可以開始看看 ripd 這個服務囉！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>設定 ripd 服務</span><br />
+		<div class=block2>
+		ripd 這個服務可以在兩部 Router 之間進行路由規則的交換與溝通，
+		當然啦，如果你的環境裡面有類似 Cisco 或者是其他有提供 RIP 協定的路由器的話，
+		那麼你當然也是可以透過這個 RIP 讓您的 Linux Router 與其他硬體路由器互相溝通的吶！
+		閒話少說，來設定 ripd 吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/quagga/ripd.conf</span>
+<span class=term_write>hostname linux.router1  <span class=term_say>&lt;==這裡是設定 Router 的主機名稱而已</span>
+password linux1         <span class=term_say>&lt;==設定好你自己的密碼喔！</span>
+router rip              <span class=term_say>&lt;==啟動 Router 的 rip 功能</span>
+network 192.168.0.0/24  <span class=term_say>&lt;==針對這個網域來進行監聽的動作！</span>
+network eth0            <span class=term_say>&lt;==針對這個介面來進行監聽的動作</span>
+network 192.168.10.0/24 <span class=term_say>&lt;==針對這個網域來進行監聽的動作！</span>
+network eth1            <span class=term_say>&lt;==針對這個介面來進行監聽的動作</span>
+version 2               <span class=term_say>&lt;==啟動的是 RIPv2 的服務</span>
+log stdout              <span class=term_say>&lt;==直接在螢幕輸出標準輸出的資料</span></span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/ripd start</span>
+
+[root@linux ~]# <span class=term_command>netstat -tulnp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address  Foreign Address State  PID/Program name
+tcp        0      0 <span class=term_write>0.0.0.0:2602</span>   0.0.0.0:*       LISTEN 21373/ripd
+</pre></td></tr></table>
+
+		基本上，這樣就設定完成一部路由器的 RIP 動態路由協定了！在上頭 ripd.conf 的設定當中，
+		他會主動以 eth0 及 192.168.0.0/24 這個網域的功能來進行搜索，如此一來，未來你進行任何路由規則的變動，
+		或者是整個網域的主機 IP 進行更動，你將不需要重新到每部 Router 上更動！
+		因為這些路由器會自動的更新他們自己的規則喔！嘿嘿！接下來，同樣的動作請你到
+		<a href="#fig_2">圖二</a>左邊那部 Linux Router 上面設定一下！
+		因為整個設定的流程都一樣，所以這裡鳥哥就省略啦！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>檢查 RIP 協定的溝通結果</span><br />
+		<div class=block2>
+		在兩部 Linux Router 都設定妥當之後，你可以登入 zebra 去看這兩部主機的路由更新結果喔！
+		舉例來說，鳥哥登入<a href="#fig_2">圖二</a>右邊那部 Linux Router 後，並且登入 zebra ，
+		觀察路由會是這樣的情況：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>telnet localhost 2601</span>
+User Access Verification
+
+Password: <span class=term_say>&lt;==不要忘記了密碼啊！</span>
+linux.router1> <span class=term_command>show ip route</span>
+Codes: K - kernel route, C - connected, S - static, R - RIP, O - OSPF,
+       B - BGP, > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 192.168.0.254, eth0
+C>* 127.0.0.0/8 is directly connected, lo
+C>* 192.168.0.0/24 is directly connected, eth0
+<span class=term_write>R>* 192.168.5.0/24 [120/2] via 192.168.0.200, eth0, 00:06:48</span>
+C>* 192.168.10.0/24 is directly connected, eth1
+</pre></td></tr></table>
+
+		如果你有看到上述的字體，嘿嘿！那就是成功啦！那個最左邊的 R 代表的是透過 RIP 通訊協定所設定的路由規則啦！
+		如此一來，咱們的路由器設定就搞定囉～<br /><br />
+		</div>
+		透過這個 zebra 以及 RIPv2 的路由協定的輔助，我們可以輕鬆的就將路由規則分享到附近區網的其他路由器上頭，
+		比起單純使用 route 去修改 Linux 的核心路由表，這個動作當然要快速很多！
+		不過，如果是很小型的網路環境，那麼不要使用這個 zebra 啊！因為有點多此一舉的感覺。
+		如果您的企業環境真的有夠大，那麼玩一玩這個 zebra 配合一些動態路由協定，嘿嘿！也是可行的啦！
+	</div>
+</div>
+
+
+<hr /><a NAME="arp_proxy"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">ARP Proxy 讓路由器兩端在同一網域</span><br />
+<div class=block1>
+	如果你一開始設計的網路環境就是同一個 C class 的網域，例如 192.168.10.0/24 ，
+	後來因為某些因素必須要將某些主機搬到比較內部的環境中，例如<a href="#fig_1">圖一</a>的 PC2 ~ PC4 。
+	然後又因為某些因素，所以你不能變更 PC2 ~ PC4 的 IP ，也就是說，有點像底下這樣的圖示：<br /><br />
+
+	<center>
+	<img src="0230router/arp_proxy.png"
+	title="路由器兩邊是同一網域的特殊狀況" alt="路由器兩邊是同一網域的特殊狀況"><br />
+	圖三、路由器兩邊是同一網域的特殊狀況</center><br />
+
+	初次見面～看到眼睛快要掉下來哩！怎麼會兩邊的主機都在同一個網域內？而且還被規定不能夠更改原先的 IP 設定，
+	.....真是一個頭兩個大啊～如此一來，在 Linux Router 兩邊要如何製作路由啊？好問題！真是好問題～
+	因為 OSI 第三層網路層的路由是一條一條去設定比對的，所以如果兩塊網卡上面都是同一個網域的 IP 時，
+	就會發生錯誤。那如何處理啊？<br /><br />
+
+	既然 OSI 第三層無法解決，那麼可否以第二層的資料連接層來處理？看倌應該還記得 OSI 第二層最重要的就是那個 ARP 協定，
+	他可以用來進行 IP 與 MAC 的對應。那麼由圖三我們知道 PC1 要與 PC2 等主機溝通時，都需要透過 Linux Router ，
+	那有沒有辦法透過 ARP 告知整個網域內的電腦，要傳送到 PC2~PC4 的封包都需要經過 Linux Router 呢？
+	呵呵！好想法。你可以這樣想：<br /><br />
+
+	<center>
+	<img src="0230router/arp_proxy_2.png"
+	title="路由器兩邊是同一網域的特殊狀況" alt="路由器兩邊是同一網域的特殊狀況"><br />
+	圖四、路由器兩邊是同一網域的特殊狀況</center><br />
+
+	也就是說：<br />
+	<ol><span class=text_import2>
+	<li>當 Linux Router 的 eth1 那個網域主機想要連接到 PC2~PC4 的主機時，由 Linux Router 負責接收；
+	<li>當 Linux Router 要傳送資料到 PC2~PC4 時，務必要由 eth0 來傳送；
+	<li>當 Linux Router 要傳送的資料為 192.168.10.0/24 ，但並非 PC2~PC4 時，需由 eth1 傳送；
+	<li>當 Linux Router 的 eth0 那個網域主機想要連接到 PC1 時，由 Lniux Router 負責接收。</span></ol>
+
+	要達到 (1) 與 (4) 的要求並不難，我們可以透過 ARP Proxy 這玩意兒，啥是 ARP Proxy 呢？就是在 Linux Router 
+	上面預先規定『<span class=text_import2>將 192.168.10.20, 192.168.10.30, 192.168.10.40 這三個 IP 
+	的 MAC 都對應到 Linux Router 上！</span>』由於是區域網路內，因此都是透過廣播的方式達到 ARP 協定所需要的
+	IP 與 MAC 的對應，所以啦，每一部在 eth1 那端的主機都會『誤判』那三個 IP 是 Linux Router 所擁有，
+	這樣就能夠讓封包傳給 Linux Router 啦！<br /><br />
+
+	再接下來，咱們的 Linux Router 必須要額外指定路由，設定：<br />
+	<ul><span class=text_import2>
+	<li>若目標是 PC2 ~ PC4 時，該路由必須要由 eth0 發送出去才行，
+	<li>若目標不為 PC2 ~ PC4 ，且目標在 192.168.10.0/24 的網域時，需由 eth0 發送出去才行。</span></ul>
+	也就是說，你必須要指定路由規則當中，那個 PC2~PC4 具有優先選擇權，然後其他的同網域封包才由 eth1 來傳送。
+	這樣就能夠達成我們所想要的結局啦！^_^！看樣子似乎很難，其實設定方面還挺簡單的，你可以透過 arp  
+	以及 route 這兩個指令來達成喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先設定 ARP Proxy ，告知 eth1 所在網域 IP 與 MAC 的對應</span>
+[root@linux ~]# <span class=term_command>arp -i eth1 -s 192.168.10.20 00:11:12:13:14:15 pub</span>
+[root@linux ~]# <span class=term_command>arp -i eth1 -s 192.168.10.30 00:11:12:13:14:15 pub</span>
+[root@linux ~]# <span class=term_command>arp -i eth1 -s 192.168.10.40 00:11:12:13:14:15 pub</span>
+<span class=term_say># 看圖四的說明，我這裡假設 eth1 的 MAC 是 00:11:12:13:14:15 啦！</span>
+[root@linux ~]# <span class=term_command>arp -i eth0 -s 192.168.10.50 00:01:02:03:04:05 pub</span>
+<span class=term_say># 看圖四的說明，我這裡假設 eth0 的 MAC 是 00:01:02:03:04:05 啦！</span>
+
+[root@linux ~]# <span class=term_command>arp -n</span>
+Address             HWtype  HWaddress      Flags Mask       Iface
+192.168.10.20       *       *              MP               eth1
+192.168.10.30       *       *              MP               eth1
+192.168.10.40       *       *              MP               eth1
+192.168.10.50       *       *              MP               eth0
+<span class=term_say># 瞧！有三個 IP 都變成屬於俺的 eth1 的啦！然後一個屬於 eth0</span>
+
+<span class=term_hd>2. 開始處理路由，需要清除掉 eth0 的路由，並且增加 PC2~PC4 的單機路由</span>
+[root@linux ~]# <span class=term_command>route del -net 192.168.10.0 netmask 255.255.255.0 eth0</span>
+[root@linux ~]# <span class=term_command>route add -host 192.168.10.20 eth0</span>
+[root@linux ~]# <span class=term_command>route add -host 192.168.10.30 eth0</span>
+[root@linux ~]# <span class=term_command>route add -host 192.168.10.40 eth0</span>
+<span class=term_say># 這樣就設定妥當啦！將你的路由規劃好囉！</span>
+
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway  Genmask         Flags Metric Ref    Use Iface
+192.168.10.20   0.0.0.0  255.255.255.255 UH    0      0        0 eth0
+192.168.10.30   0.0.0.0  255.255.255.255 UH    0      0        0 eth0
+192.168.10.40   0.0.0.0  255.255.255.255 UH    0      0        0 eth0
+<span class=term_write>192.168.10.0    0.0.0.0  255.255.255.0   U     0      0        0 eth1</span>
+<span class=term_say># 看到上面這一行，雖然我的兩塊網卡都是在 192.168.10.0/24 ，
+# 不過真正針對整個網域傳送的，僅有 eth1 那一塊的意思！</span>
+</pre></td></tr></table>
+
+		瞧！這樣一來，你的 PC1 就可以 ping 到 PC2~PC4 的主機了！資料的傳輸上面也沒有問題。
+		這個作法是相當有幫助的吶！對於預設架構不想更動的環境來說。 ^_^！
+		不過，由這個案例你也可以清楚的知道，<span class=text_import2>能不能連線其實與路由的關係才大哩！
+		而路由是雙向的，你必須要考量到這個封包如何回來的問題喔！</span>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>網路卡的代號為 eth0, eth1, eth2...，而第一張網路卡的第一個虛擬介面為 eth0:0 ...</li>
+	<li>網路卡的參數可使用 ifconfig 直接設定，亦可使用設定檔如 /etc/sysconfig/network-scripts/ifcfg-ethn 來設定；</li>
+	<li>路由是雙向的，所以由網路封包發送處發送到目標的路由規劃，必須要考慮回程時是否具有相對的路由，
+		否則該封包可能會『遺失』；</li>
+	<li>每部主機都有自己的路由表，此路由表  (routing table) 是作為封包傳送時的路徑依據；</li>
+	<li>每部可對外 Internet 傳送封包的主機，其路由資訊中應有一個預設路由 (default gateway)；</li>
+	<li>要讓 Linux 作為 Router 最重要的是啟動核心的 IP Forward 功能；</li>
+	<li>重複路由可能會讓你的網路封包傳遞到錯誤的方向；</li>
+	<li>動態路由通常是用在兩個 Router 之間溝通彼此的路由規則用的，常見的 Linux 上的動態路由套件為 zebra ；</li>
+	<li>arp proxy 可以透過 arp 與 route 的功能，讓路由器兩端都在同一個網段內；</li>
+	<li>一般來說，路由器上都會有兩個以上的網路介面</li>
+	<li>事實上，Router 除了作為路由轉換之外，在 Router 上面架設防火牆，亦可在企業內部再分隔出多個需要安全
+		(Security) 的單位資料的區隔！</li>
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>請問您如何將您的 eth0 這個介面修改成為 192.168.100.2 在網域 192.168.100.0/25
+	之內的網路參數內容？</li>
+	<div class=block2><font color=white size=-1>
+	因為 192.168.100.0/25 的 netmask 為 255.255.255.128 ，所以可以這樣做：<br />
+	ifconfig eth0 192.168.100.2 netmask 255.255.255.128 up<br />
+	這樣即可！如果尚須其他的參數，則需要以檔案形式來下達，如 vi /etc/sysconfig/network-scripts/ifcfg-eth0，並修改為：<br />
+	DEVICE=eth0<br />
+	ONBOOT=yes<br />
+	BOOTPROTO=static<br />
+	IPADDR=192.168.100.2<br />
+	NETMASK=255.255.255.128<br />
+	NETWORK=192.168.100.0<br />
+	BROADCAST=192.168.100.127
+	</font></div>
+
+	<li>請手動設定 eth0:1 這個虛擬介面，使成為網路參數： 192.168.200.2, 網域在 192.168.200.0/24。</li>
+	<div class=block2><font color=white size=-1>
+	ifconfig eth0:1 192.168.200.2 up 
+	</font></div>
+
+	<li>如何觀察路由表？</li>
+	<div class=block2><font color=white size=-1>
+	route -n 即可查閱！注意到 0.0.0.0 那個目標(default gateway)。 
+	</font></div>
+
+	<li>如何啟動 Linux 的 IP Forward 功能？</li>
+	<div class=block2><font color=white size=-1>
+	直接以『echo "1" > /proc/sys/net/ipv4/ip_forward 』即可！ 
+	</font></div>
+
+	<li>假設您是一個學校單位的資訊管理員，學校內有 200 部電腦，奉上面大頭的旨意，必須要將
+		200 部電腦分為 4 個 Subnet ，請問您應該如何佈線(請畫出示意圖)？而這 4 個
+		Subnet 的網路參數如何選擇(請自行選擇)？而是否需要 Router ？如果需要的話，假設每個
+		Router 僅能有兩個網路實體介面，那麼該如何佈線？(註：不要使用虛擬介面)</li>
+	<div class=block2><font color=white size=-1>
+	</font></div>
+
+	<li>假設你想要連接到 168.95.1.1 ，那麼你該如何判斷你經過『多少個』節點？</li>
+	<div class=block2><font color=white size=-1>
+	可以使用 traceroute 168.95.1.1 來分析每個節點的傳送資訊，也可以透過 ping 168.95.1.1
+	所回傳的那個 ttl 值判斷節點數量。
+	</font></div>
+
+	<li>萬一您的網路有點停頓，發現可能是網路上某個節點出現問題，您應該如何確認是哪一部 Router 出問題？</li>
+	<div class=block2><font color=white size=-1>
+	就利用 traceroute 吧！
+	</font></div>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>動態路由套件 Quagga: <a href="http://www.quagga.net/" 
+		target="_blank">http://www.quagga.net</a>
+	<li>動態路由套件 zebra: <a href="http://www.zebra.org/" 
+		target="_blank">http://www.zebra.org</a>
+	<li>網中人寫的『頻寬負載平衡』：<a href="http://www.study-area.org/tips/multipath.htm"
+		target="_blank">http://www.study-area.org/tips/multipath.htm</a>
+	<li>Ben 哥寫的『實作 Linux 動態路由』：<a href="http://linux.vbird.org/somepaper/20060714-linux_cisco_route.pdf"
+		target="_blank">http://linux.vbird.org/somepaper/20060714-linux_cisco_route.pdf</a>
+	<li>quagga 官方操作文件：<a href="http://www.quagga.net/docs/quagga.pdf"
+		target="_blank">http://www.quagga.net/docs/quagga.pdf</a>
+	<li>酷學園的 ARP Proxy：<a href="http://phorum.study-area.org/viewtopic.htm?t=5619"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=5619</a>
+	<li>酷學園 ericshei 的 ARP Proxy 分享：<a href="http://phorum.study-area.org/viewtopic.htm?t=22943"
+		target="_blank">http://phorum.study-area.org/viewtopic.htm?t=22943</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/09：第一次完成日期！<br />
+2003/08/22：重新編輯文章，並增加重點回顧與課後練習<br />
+2006/08/21：將舊的文章移動到 <a href="0230router/0230router.htm">此處</a>。<br />
+2006/08/30：加入了 zebra 以及 ARP Proxy 等與 Router 比較相關的議題！<br />
+</span>
+<hr><span class="text_date">2002/08/08以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0230router.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

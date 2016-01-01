@@ -1,0 +1,1714 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- DNS server</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  
+
+<center>
+<font face="標楷體"><font color="#3333FF"><font size=+2><a href="1000results.php" target="_self">架站文件習題解答篇</a></font></font></font></center>
+
+<div align=right><font face="新細明體"><font color="#3333FF"><font size=-1>最近更新日期：2003/09/20</font></font></font></div>
+<font color="#000099"><font size=-2>　</font></font>
+<table BORDER COLS=1 WIDTH="100%" BGCOLOR="#FFCCCC" >
+<tr>
+<td><font color="#000099"><font size=-1>在我們的 Linux 架站文件當中，每個章節或多或少都有些課後練習給大家複習一下！呵呵！那麼各個章節的解答會在這裡提供喔！</font></font></td>
+</tr>
+</table>
+
+<font color="#000099"><font size=-2>　</font></font>
+<br>
+<hr WIDTH="100%"><font color="#000099"><font size=+1><font face="細明體">PART
+I </font>、<font face="標楷體">架站前進修篇</font>：</font></font>
+<ul>
+<hr WIDTH="100%"><a NAME="0105beforeserver"></a><font face="標楷體"><font color="#3333FF"><a href="0105beforeserver.php">第一章、架站之前所需的技能分析</a></font></font>
+<br>　
+<li>
+請簡述進行網站架設前，應該具備何種基本技能？</li>
+
+<br><font color="#000066">基本的技能需要有：</font>
+
+<ol>
+<li>
+<font color="#000066">Linux 系統操作上，至少需要瞭解帳號管理、檔案屬性與權限、程序與資源管理、硬體如硬碟之掛載與軟體套件之安裝如RPM套件管理員等等，而
+vi 與 Shell 亦是不可忽略之基本技能，更重要者，日誌的管理以及系統服務的原理(如
+stand alone 與 super deamon 服務啟動的方式差異等)亦需同時釐清，以方便未來架設網站時除錯的技巧；</font></li>
+
+<li>
+<font color="#000066">在網路的基礎知識上，TCP/IP 的觀念以及路由的概念相當的重要，此外，DNS
+的概念也很重要。</font></li>
+
+<li>
+<font color="#000066">在心態的調整上面，系統管理員需要的道德感以及使命感需要較高的標準。</font></li>
+</ol>
+　
+<li>
+如果我有一顆硬碟在 A 主機上面安裝了 Linux 之後，拿到另一台配備相同的 B
+主機上面去進行開機，結果竟然無法順利開機，您認為可能的原因是什麼？</li>
+
+<br><font color="#000066">由於配備相同，所以排除硬體的問題，不過，考慮到
+IDE 排線與 partition 的代號，以及 /etc/fstab 的對應，所以應該是由於 IDE
+插槽放置錯誤所致(Linux 系統下，每個 IDE 插槽對應的 partition 名稱皆不相同喔！)。此外，上次不正常關機也可能造成硬碟損害而無法開機成功！</font>
+<br>　
+<li>
+一般來說，在 Linux 系統上，使用者預設的家目錄在那個目錄下？另外，新增一個使用者時，該使用者預設的家目錄內容來自那個目錄下？</li>
+
+<br><font color="#000066">在 /etc/default/useradd 這個檔案裡面會規範使用者的預設家目錄以及預設家目錄的內容，一般來說，使用者預設家目錄在
+/home ，至於家目錄內的檔案則複製來源在 /etc/skel 裡面。</font>
+<br>　
+<li>
+磁碟配額 ( quota ) 能否針對某個特定的目錄進行限制？Quota 有什麼較為特殊的使用限制？</li>
+
+<br><font color="#000066">Quota 目前僅能針對整個 partition 進行限額配置，如果該特定目錄是一個
+partition 那就可以進行 quota 設定，否則無法針對特定目錄！此外， Quota 除了特定目錄以及需要
+ext2, ext3 等磁碟格式才支援之外，也需要核心的支援喔！</font>
+
+<br>　
+<li>
+在 Linux 系統下，要尋找一個檔名為 vbird.document 的檔案，可以使用什麼指令進行搜尋？又，如果要尋找在一天內更動過的檔案，又該如何進行？</li>
+
+<br><font color="#000066">如果是執行檔可以使用 which command 來搜尋，如果是檔案，就必須要使用
+locate vbird.document 或 whereis vbird.document 或 find / -name vbird.document
+。如果要找到一天內更動過的檔案，可以使用 find 配合參數，如：『 find / -ctime
+1』。</font>
+<br>　
+<li>
+在 Linux 系統中，常見的套件管理員有 RPM 與 Tarball ，請分別說明這兩個套件管理員的優缺點。</li>
+
+<ul>
+<li>
+<font color="#000066">RPM 套件管理員在安裝套件的時候，會將該套件的檔案名稱、套件功能與訊息等等資訊記錄於
+/var/lib/rpm 目錄內，由於有這些套件的資本資訊，因此在系統內很容易進行 RPM
+的升級、安裝、移除等動作。不過，由於 RPM 檔案之間的相依性相當的強，因此常常會有版本不合或者是欠缺某樣前驅套件的問題發生。</font></li>
+
+<li>
+<font color="#000066">至於 Tarball 則是原始碼，使用者可以自行設定套件的編譯參數，以符合自己的
+Linux 平台。此外，由於 Tarball 是原始碼，因此需要在您的系統上面進行編譯，編譯的過程中需要
+gcc, make, 以及 kernel source 等套件，還有您所想要安裝的套件所需要的前驅套件也同時需要先安裝後，才能進行
+Tarball 的安裝。注意，幾乎每個 Tarball 以 tar 程式解開後，在新增的目錄下均會有
+README 以及 INSTALL 檔案，請務必先查閱過後才進行編譯工作。</font></li>
+</ul>
+　
+<li>
+如果我下載了一個檔名為 httpd-2.0.52.tar.gz 的檔案，一般來說，這個檔案代表的意義為何？我該如何讓這個檔案能夠在我的
+Linux 系統上面安裝？</li>
+
+<br><font color="#000066">由於附檔名是 .tar.gz 或者是 .tgz 的檔案，所以可以認定該檔案為一個
+Tarball 的檔案。至於檔名的配置方面，httpd 為套件名稱，2.0.52 則通常為該套件的版本名稱了！那如何安裝？由於該檔案為
+httpd 這個套件，且格式為 Tarball ，所以您必須要：</font>
+<ol>
+<li>
+<font color="#000066">系統上面務必具有 tar, make, gcc 等相關的編譯套件；</font></li>
+
+<li>
+
+<font color="#000066">使用 tar 解開 httpd-2.0.52.tar.gz 之後，務必進入該目錄內讀取
+REAME 或/與 INSTALL 檔案，以瞭解是否還需要其他的相關套件的搭配安裝；</font></li>
+
+<li>
+<font color="#000066">以 ./configure --help 查閱一下是否有相關可以加入或者取消的編譯內容；</font></li>
+
+<li>
+<font color="#000066">使用 make 讀取 Makefile 來編譯程式；</font></li>
+
+<li>
+<font color="#000066">使用 make install 來安裝程式！</font></li>
+</ol>
+　
+<li>
+
+我以原始碼的方式進行一個套件的安裝，但是在分析系統的時候，分析程式一直告訴我找不到
+cc 這個指令，請問這是什麼問題？為何需要 cc ？又，我該如何解決這個問題，好讓套件可以順利的被安裝在我的
+Linux 上面？</li>
+
+<br><font color="#000066">如前面幾個題目所說的，因為是原始碼，所以還需要編譯程式來將該原始碼編譯成為可以在您的
+Linux 系統上面跑的 binary 檔案，在 Linux 上頭預設的編譯程式就是 gcc 這個編譯器(compiler)。如果您在安裝
+Linux 的時候，使用 Linux Installer 預設的套件選擇，那通常會沒有安裝 gcc
+以及 make 等套件，此時，請拿出您的原版光碟，以 mount 指令掛載後，使用 RPM
+將一個一個相關的套件安裝即可(過程會蠻複雜的！)^_^</font>
+<br><font color="#000066">　</font>
+<li>
+我發現我的 Linux 系統怪怪的，似乎有什麼不知名的程序在記憶體當中跑，我該如何將這個不知名的程序捉出來，並且將他移除？</li>
+
+<br><font color="#000066">如果要捉出程序(process)的話，可以使用 ps -aux
+或者是直接輸入 top 來查詢 process 的 ID (PID)，找到 PID 號碼後，再以 kill
+-9 PID 來刪除該程序即可。</font>
+<br>　
+<li>
+我總是無法編輯某個檔案，您認為應該是什麼問題造成的？那又要怎麼解決？</li>
+
+<br><font color="#000066">無法編輯某個檔案，可以先使用 file 這個指令來查詢一下該檔案的格式，例如想察看
+/etc/shadow 的格式，可以下達：『file /etc/shadow』，如果是文字檔，卻還是無法編輯，那麼最可能發生的原因就是『權限』的問題了。可以使用
+ls -l filename 察看檔案權限，再以 chmod 或 chown 來修訂該檔案的權限。此外，該檔案也可能含有隱藏屬性，可以使用
+lsattr filename 查閱，再以 chattr 來修訂隱藏屬性。</font>
+<br>　
+<li>
+什麼是 UID 與 GID ？UID 有哪些等級？</li>
+
+<br><font color="#000066">在 Linux 系統下，使用者與群組其實都是以『ID(數字)』的格式來設定的，所以使用者與群組其實都是
+UID 或 GID (User ID 與 Group ID)，Linux 對於檔案權限也都是使用 UID/GID
+來分辨。不過人類習慣使用文字來記憶，所以才會有 /etc/passwd 與 /etc/group
+來轉譯 ID 與 User 及 Group 之間，這也才會發生為何在 Internet 上面捉下來的
+Tarball 解開之後，往往會有檔案擁有人與群組為數字的型態，因為您 Linux 系統上面的
+/etc/passwd 與 /etc/group 沒有相關的對應文字說。至於 UID 的等級主要有兩種，分別是超級管理員(root)，其
+UID 為 0，其他非為 0 的 UID 基本上身份是相同的！不過 Linux 通常會將小於
+500 的 UID 保留給系統使用。</font>
+<br>　
+<li>
+使用者的家目錄參數、UID、GID以及其他相關參數，還有密碼檔案，放置在哪些檔案裡面？</li>
+
+<br><font color="#000066">放置在 /etc/passwd 與 /etc/shadow 當中。當然還有
+/etc/login.defs 喔！</font>
+
+<br>　
+<li>
+你認為一個稱職的網管人員應該具備什麼能力？</li>
+
+<br><font color="#000066">能力需求相當高，如了(1)作業系統的基礎知識(不論是
+Linux/Unix/MAC/MS)；(2)網路基礎的知識；(3)個別 Internet Services 的運作知識之外，還需要(4)身心保持在備戰狀態，以及(5)具有相當高程度的道德感、責任感與使命感。</font>
+<br>　
+<li>
+我要啟動一個系統預設的 Service，請問我可能可以由執行或修改哪些目錄底下的檔案來啟動？</li>
+
+<br><font color="#000066">如果是 stand alone 的服務，可以經由 /etc/rc.d/init.d/*
+裡面的檔案，如 /etc/rc.d/init.d/syslog start；</font>
+<br><font color="#000066">如果是 Super daemon 的服務，就必須(1)先到 /etc/xinetd.d
+或者是 /etc/inetd.conf 修改相關檔案或參數；(2)以 /etc/rc.d/init.d/xinetd
+restart 來啟動。</font>
+<br>　
+
+<li>
+我要關掉 cron 這個服務，應該怎麼關掉他？如果正常的方法無法關閉這個服務，可以使用什麼方法來關閉？</li>
+
+<br><font color="#000066">因為 cron 是一個 stand alone 的服務，所以可以使用
+/etc/rc.d/init.d/cron stop 來關閉；如果還是無法正常關閉，可以使用 ps -aux
+| grep cron 捉出該程序的 PID ，然後以 kill -9 PID 來關閉。</font>
+<br>　
+<li>
+如果一開機就要執行某個程式，應該要將該程式寫入那個檔案裡面？</li>
+
+<br><font color="#000066">可以直接在 /etc/rc.d/rc[run-level].d 裡面加入
+S 開頭的檔案，不過，更簡單的作法是直接將該程式寫入 /etc/rc.d/rc.local ，不過，請注意該程式必須要具有可執行的權限，且
+rc.local 也必須要是可執行喔！</font>
+<br><font color="#000066">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="0110network_basic"></a><font face="標楷體"><font color="#3333FF"><a href="0110network_basic.php" target="_self">第二章、簡易網路基礎架構</a></font></font>
+
+<br>　
+<li>
+請簡述 OSI 網路七層協定每一層的功能；</li>
+
+<br><font color="#000066">OSI 網路七層協定主要又分為兩大部分，網路層與使用者應用層兩部份。至於每一層的相關功能請參考<a href="0110network_basic.php#Table_1">本章節的表一</a>所示。</font>
+<br>　
+<li>
+在 ISP 提供的網路服務中，他們提到傳輸速度為 1.5M/382K ，請問這個數據的單位為何？</li>
+
+<br><font color="#000066">由於電子訊號的基本單位為 bits ，所以一般 ISP
+提供的傳輸速度單位均為 bits/second ，並非我們常用的檔案計數單位 Bytes ！</font>
+<br>　
+
+<li>
+什麼是 MAC ( Media Access Control ) ，MAC 主要的功能是什麼？</li>
+
+<br><font color="#000066">在網路媒體上面，資料要傳輸時，必須知道下一個節點的位址才能順利傳送，這個節點的位址如網路卡的硬體位址就是
+MAC 了。硬體位址是在網路卡出廠時就已經銲死在上面了(某些筆記型電腦的 MAC
+則可以經由特殊軟體修改)，而軟體位址，則是我們常說的 IP ，這兩個並不相同喔！其中，MAC
+與 IP 互相的對應則是以 ARP Table 來進行轉譯的！</font>
+<br>　
+<li>
+請解釋什麼是物理廣播 ( Physical Broadcast ) ，他與邏輯廣播 ( Logical Broadcast
+) 有什麼不同？</li>
+
+<br><font color="#000066">物理廣播主要與網路媒體有關，在同一個網路媒體上面同一時間僅能有一部主機來使用這個網路共享媒體，而要判斷目前有沒有其他主機在使用這個網路媒體時，就是利用Physical
+Broadcast 咯！</font>
+<br><font color="#000066">至於邏輯廣播呢？呵呵！就是在查詢到底網域上面有沒有我們這部主機想要連接的相關協定或者同一網域內的其他主機了！他則主要與
+MAC, ARP 以及軟體位址(通稱的 IP)有關啦！</font>
+<br>　
+<li>
+
+什麼是封包碰撞？為什麼會發生封包碰撞？</li>
+
+<br><font color="#000066">當兩部主機同時在一個網路媒體上面進行資料傳輸時，兩個資料封包就會發生碰撞的情況，這就是封包碰撞了。在網路媒體流量很高、網路媒體的連線長度過長都會容易發生資料封包碰撞的情況。</font>
+<br>　
+<li>
+ARP Table 的作用為何？如何在我的 Linux 察看我的 ARP 表格？</li>
+
+<br><font color="#000066">ARP Tables 主要在對應 IP 與 MAC ，當主機要將資料封包送出到下個節點時，必須要知道下個節點的
+MAC 才能傳送，而如果不知道 MAC 時，就得需要使用邏輯廣播來查詢 IP 與 MAC
+的對應才行。不過，當您的主機內部的 ARP table 已經記錄了 IP 對應的 MAC 之後，那麼該資料封包則可以立即傳送到下個節點去，而不需要再次的進行邏輯廣播了。要知道目前的
+arp table 內有多少紀錄，可以使用 『&nbsp; arp -a 』來查詢。</font>
+<br>　
+<li>
+簡略說明 Netmask 的作用與優點；</li>
+
+<br><font color="#000066">Netmask 可以有效的增加網路的效率，這是因為 Netmask
+可以定義出一個網域的大小，那麼 broadcast 的時間就可以降低很多！一般來說，我們如果要將一個大網域再細分為小網域，也需要藉由
+Netmask 來進行 subnet 的切割。</font>
+<br>　
+<li>
+我有一組網域為： 192.168.0.0/28 ，請問這個網域的 Network, Netmask, Broadcast
+各為多少？而可以使用的 IP 數量與範圍各是多少？</li>
+
+<br><font color="#000066">因為共有 28 個 bits 是不可動的，所以 Netmask
+位址的最後一個數字為 11110000，也就是 (128+64+32+16=240) ，所以：</font>
+<br><font color="#000066">Network：192.168.0.0</font>
+<br><font color="#000066">Netmask：255.255.255.240</font>
+<br><font color="#000066">Broadcast：192.168.0.15</font>
+<br><font color="#000066">IP：由 192.168.0.1 ~ 192.168.0.14 共 14 個可用
+IP 喔！</font>
+
+<br>　
+<li>
+承上題，如果網域是 192.168.0.128/29 呢？</li>
+
+<br><font color="#000066">因為是 29 個 bits 不可動，所以最後一個 Netmask
+的位址為： 11111000 也就是 (128+64+32+16+8=248)，所以：</font>
+<br><font color="#000066">Network：192.168.0.128</font>
+<br><font color="#000066">Netmask：255.255.255.248</font>
+<br><font color="#000066">Broadcast：192.168.0.135</font>
+<br><font color="#000066">IP：由 192.168.0.129 ~ 192.168.0.134 共 6 個可用的
+IP 喔！</font>
+<br>　
+<li>
+
+我要將 192.168.100.0/24 這個 C Class 的網域分為 4 個子網域，請問這四個子網域要如何表示？</li>
+
+<br><font color="#000066">既然要分為四個網域，也就是還需要藉助 Netmask
+的兩個 bits (2的2次方為4啊！)，所以 Netmask 會變成 255.255.255.192 ，每個子網域會有
+256/4=64 個 IP ，而必須要扣除 Network 與 Broadcast ，所以每個子網域會有
+62 個可用 IP 喔！因此，四個子網域的表示方法為：</font>
+<br><font color="#000066">192.168.100.0/26, 192.168.100.64/26, 192.168.100.128/26,
+192.168.100.192/26。</font>
+<br>　
+<li>
+如何觀察 Linux 主機上面的路由資訊 ( route table )？</li>
+
+<br><font color="#000066">路由資訊的觀察可以下達 route 來直接察看！或者是下達
+route -n 亦可！</font>
+<br>　
+<li>
+TCP 封包上面的 SYN 與 ACK 標誌代表的意義為何？</li>
+
+<br><font color="#000066">SYN 代表該封包為該系列連線的第一個封包，亦即是主動連線的意思；</font>
+<br><font color="#000066">ACK 則代表該封包為確認封包，亦即是回應封包！</font>
+<br>　
+<li>
+什麼是三向交握？在哪一種封包格式上面才會有三向交握？</li>
+
+<br><font color="#000066">使用 TCP 封包才會有三向交握。TCP 封包的三向交握是一個確認封包正確性的重要步驟，通過
+SYN, SYN/ACK, ACK 三個封包的確認無誤後，才能夠建立連線。至於 UDP 封包則沒有三向交握喔！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0120intranet"></a><font face="標楷體"><font color="#3333FF"><a href="0120intranet.php" target="_self">第三章、區域網路架構簡介</a></font></font>
+<br>　
+
+<li>
+幻想自己是一個私人公司的老闆，員工有 20 人，如果我想要讓公司的員工都可以連上
+Internet ，並且控管每個員工的對外連線，請問我的硬體連線應該怎麼配置比較好？另外，應該申請的線路頻寬應該多大較佳？而我的內部網域
+( IP, Netmask, ....) 又該如何設定比較好？</li>
+
+<br><font color="#000066">因為只有 20 個員工，事實上，人員並不多，所以並不需要在內部加設
+router 來隔開不同的網域。不過，由於想要管理員工的上網功能，因此最好以第三章<a href="0120intranet.php#fig_3">圖三</a>的架構，以一部主機內含兩塊網路卡隔開
+Intranet 與 Internet 兩個網段，便於管理；至於對外連線的頻寬方面，如果 Linux
+主機需要進行網路服務的功能，那麼最好能夠有 512/512 的頻寬，因為可能會有
+Client 端下載的問題，至於如果單純的僅下載時(公司沒有額外的網路服務)，可以考慮使用
+T1/384 之類的頻寬，比較省錢；而在內部網域設定上，如同本章節使用的網域 192.168.0.0/24
+來設定即可，如果公司內部尚有移動裝置(NoteBook)，則可以在 Linux 上加裝 DHCP
+(參考十六章)伺服器。</font>
+<br><font color="#000066">　</font>
+<li>
+承上題，假如我的私有網域內有較大的網路流量，那麼我的網路媒體應該怎麼選擇較佳？</li>
+
+<br><font color="#000066">如果私有網域內的流量較大，那麼網路媒體需要選擇
+Switch 而不要使用 Hub ！另外，整體包括網路線也都需要使用能夠負載 10/100
+Mbps 的流量才好。</font>
+<br>　
+
+<br>
+<hr WIDTH="100%"><a NAME="0130internet_connect"></a><font color="#3333FF"><a href="0130internet_connect.php" target="_self"><font face="標楷體">第四章、連上</font><font face="Times New Roman,Times">
+Internet</font></a></font>
+<br>　
+<li>
+<font color="#000000">我要如何確定我在 Linux 系統上面的網路卡已經被 Linux
+捉到並且驅動了？</font></li>
+
+<br><font color="#000066">網路卡能不能被捉到可以使用『 <b><font face="細明體">dmesg|grep
+eth </font></b>』來判斷，有沒有驅動則可以使用 lsmod 看看模組有沒有載入核心！最後，以
+ifconfig eth0 192.168.0.10 測試看看！</font>
+<br><font color="#000066">　</font>
+<li>
+
+<font color="#000000">假設我的網路參數為：IP 192.168.100.100, Netmask 255.255.255.0,
+請問我要如何在 Linux 上面設定好這些網路參數 (未提及的網路參數請自行定義！)？請使用手動與檔案設定方法分別說明。</font></li>
+
+<ul>
+<li>
+<font color="#000066">手動設定為：『<b><font face="細明體"> ifconfig eth0
+192.168.100.100 netmask 255.255.255.0 up </font></b>』</font></li>
+
+<li>
+<font color="#000066">檔案設定為：vi /etc/sysconfig/network-scripts/ifcfg-eth0
+，內容為：</font></li>
+
+<ul><font face="細明體"><font color="#000066">DEVICE=eth0</font></font>
+
+<br><font face="細明體"><font color="#000066">ONBOOT=yes</font></font>
+<br><font face="細明體"><font color="#000066">BOOTPROTO=static</font></font>
+<br><font face="細明體"><font color="#000066">IPADDR=192.168.100.100</font></font>
+<br><font face="細明體"><font color="#000066">NETMASK=255.255.255.0</font></font>
+<br><font face="細明體"><font color="#000066">NETWORK=192.168.100.0</font></font>
+<br><font face="細明體"><font color="#000066">BROADCAST=192.168.100.255</font></font></ul>
+<font face="細明體"><font color="#000066">要啟動則使用 ifup eth0 即可！</font></font></ul>
+<font face="細明體"><font color="#000066">　</font></font>
+<li>
+
+<font color="#000000">我要將我的 Linux 主機名稱改名字，步驟應該如何(更改那個檔案？如何啟用？)？</font></li>
+
+<br><font color="#000066">Linux 主機名稱在 /etc/sysconfig/network 這個檔案裡面的『HOSTNAME=主機名稱』來設定，先以
+vi 來修改，改完後可以使用 /etc/rc.d/init.d/network restart 或者直接 reboot
+啟動主機名稱！</font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">/etc/resolv.conf 與 /etc/hosts 的功能為何？</font></li>
+
+<br><font color="#000066">以主機名稱尋找 IP 的方法， /etc/resolv.conf 內填寫
+DNS 主機名稱，至於 /etc/hosts 則直接填寫主機名稱對應的 IP 即可！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">我使用 ADSL 撥接連上 Internet ，請問撥接成功之後，我的
+Linux 上面會有幾個網路介面 (假設我只有一個網路卡)？</font></li>
+
+<br><font color="#000066">因為撥接是使用 PPP (點對點)協定，所以撥接成功後會多出一個
+ppp0 的介面，此外，系統原本即有 eth0 及 lo 這兩個介面，所以共有三個介面。</font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">在 Linux 上面進行 ADSL 撥接應該使用什麼軟體？</font></li>
+
+<br><font color="#000066">請愛用 rp-pppoe ，官方網站：<a href="http://www.roaringpenguin.com/pppoe/" target="_blank">
+http://www.roaringpenguin.com/pppoe/</a></font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">一般來說，如果我撥接成功，也取得了 ppp0 這個介面，但是卻無法對外連線成功，您認為應該是哪裡出了問題？該如何解決？</font></li>
+
+<br><font color="#000066">因為撥接成功了，表示物理對外連線沒有問題，那麼可能的問題應該是發生在
+Gateway 上面了！確認的方法請使用 route -n 查閱路由資訊，然後修訂 /etc/sysconfig/network-scripts/ifcfg-eth0
+吧！</font>
+<p>
+<hr WIDTH="100%"><a NAME="0140networkcommand"></a><font color="#3333FF"><a href="0140networkcommand.php" target="_self"><font face="標楷體">第五章、</font>Lin<font face="Times New Roman,Times">ux
+</font><font face="標楷體">常用網路指令介紹</font></a></font>
+<br>　
+<li>
+我要增加一個路由規則，以 eth0 連接 192.168.100.0/24 這個網域，應該如何下達指令？</li>
+
+<br><font color="#000066">以手動的方法為：『<b><font face="細明體">route
+add -net 192.l68.100.0 netmask 255.255.255.0 dev eth0</font></b>』即可！</font>
+
+<br>　
+<li>
+我的網路停頓的很厲害，尤其是連接到 tw.yahoo.com 的時候，那麼我應該如何檢查那個環節出了問題？</li>
+
+<br><font color="#000066">使用 traceroute 尋找到底那個環節出問題：『<b><font face="細明體">traceroute
+
+tw.yahoo.com</font></b>』即可！</font>
+<br>　
+<li>
+我發現我的 Linux 主機上面有個連線很怪異，想要將他斷線，應該如何進行？</li>
+
+<br><font color="#000066">以 root 的身份進行『<b><font face="細明體">netstat
+-anp |more</font></b>』查出該連線的 PID，然後以『 <b><font face="細明體">kill
+-9 PID</font></b> 』踢掉該連線。</font>
+
+<br>　
+<li>
+您如何知道 green.ev.ncku.edu.tw 這部主機的 IP ？</li>
+
+<br><font color="#000066">方法很多，可以利用 <font face="細明體">host green.ev.ncku.edu.tw</font>
+或 <font face="細明體">dig green.ev.ncku.edu.tw</font> 或<font face="細明體">
+nslookup green.ev.ncku.edu.tw </font>等方法找出！</font>
+<br><font color="#000066">　</font>
+
+<li>
+請找出您的機器上面最適當的 MTU 應該是多少？</li>
+
+<br><font color="#000066">請利用『<b><font face="細明體">ping -c 3 -M do
+-s MTU yourIP </font></b>』找出您的 IP 的 MTU 數值。</font>
+<br><font color="#000066">　</font>
+<li>
+如何在終端機介面上面進行 WWW 瀏覽？又該如何下載 WWW 上面提供的檔案？</li>
+
+<br><font color="#000066">要瀏覽可以使用 lynx ，至於要下載則使用 wget 這個軟體。如果想要在終端機上面看到中文，還可以安裝
+JCMME 。</font>
+<br>　
+
+<li>
+在終端機介面中，如何連接 bbs.sayya.org 這個 BBS ？</li>
+
+<br><font color="#000066">利用 telnet bbs.sayya.org 即可連接上，同樣的，要看到中文，還是得安裝
+JCMME 。</font></ul>
+
+<hr WIDTH="100%"><font color="#000099"><font size=+1><font face="細明體">PART
+II、</font><font face="標楷體">主機的簡易防火措施篇</font></font></font>
+<ul>
+<hr WIDTH="100%"><a NAME="0210port_limit"></a><font color="#3333FF"><a href="0210port_limit.php" target="_self"><font face="標楷體">第七章、限制</font><font face="Times New Roman,Times">
+Linux </font><font face="標楷體">對外連線的埠口</font></a></font>
+<br>　
+
+<li>
+如何觀察您 Linux 主機上面已經有多少 port 被打開了？</li>
+
+<br><font color="#000066">如果僅想單純瞭解正在 LISTEN 當中的埠口，可以使用『<font face="細明體">netstat
+-tul</font>』，如果還想知道有多少連線已經建立，可以使用『<font face="細明體">netstat
+-an</font>』來察看。</font>
+<br>　
+<li>
+如何觀察程序？</li>
+
+<br><font color="#000066">利用『ps -aux』，或者是 top 來察看均可。</font>
+
+<br>　
+<li>
+請問 LISTEN 的 port 與 daemon 的關係為何？</li>
+
+<br><font color="#000066">正在 LISTEN 當中的埠口均是由某些服務(daemons)所啟動的，所以要啟動埠口就得啟用某個服務，要瞭解某個埠口是由那個
+daemon 所啟動的，就利用 netstat -tulp 來查閱。</font>
+<br>　
+<li>
+請解釋三向交握的原理與封包傳輸的方向。</li>
+
+<br><font color="#000066">三向交握為較為可靠的封包傳輸的一種確認方式，因此只有
+TCP 封包才能具有三向交握。他利用(1) client 對 Server 主動連線時帶有的 SYN
+標誌，(2)Server 回應時的 SYN/ACK 及(3)最終 Client 確認的 ACK 標誌來確認封包的可靠性。更詳細說明請參考第<a href="0110network_basic.php#packet_tcp_handshake">二章
+TCP 與三向交握</a>。</font>
+<br>　
+
+<li>
+請問 stand alone 與 super daemon 各是什麼？</li>
+
+<br><font color="#000066">Linux 系統的服務有獨立啟動(stand alone)及超級服務員(super
+daemon)兩種啟動的方式。掛在 super daemon 底下的服務可以經由 super daemon
+的控管，以加強一些安全功能，不過由於還要經過 super daemon 的管理，所以服務的連接速度上會比
+stand alone 慢一點。詳細的說明請參考『<a href="http://linux.vbird.org/linux_basic">鳥哥的
+Linux 私房菜 -- 基礎學習篇</a>』第二十一章『<a href="../linux_basic/0560daemons.php">認識系統服務</a>』內的相關說明吧！</font>
+<br>　
+<li>
+請問您的 Linux 主機 (不論是那個 distributions ) 有關 daemon 啟動與關閉的
+scripts 與檔案放置在那個目錄下？</li>
+
+<br><font color="#000066">各個 daemons 的啟動與關閉的 scripts 是放置在
+/etc/rc.d/init.d 裡面，至於 super daemon 的控管參數檔案則在 /etc/xinetd.d
+裡面！</font>
+
+<br>　
+<li>
+請將您的 linux 主機對外的連線埠口全部關閉！</li>
+
+<br><font color="#000066">請參考本章節的作法！利用 ntsysv 或者 chkconfig
+等功能加上 reboot ，或者 netstat 配合 kill 的方式！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0220upgrade"></a><font color="#3333FF"><a href="0220upgrade.php" target="_self"><font face="標楷體">第八章、</font><font face="Times New Roman,Times">Linux
+</font><font face="標楷體">網路套件升級</font></a></font>
+<br>　
+<li>
+請依照您的 Linux 系統進行適合的網路套件升級程序(一個步驟一個步驟寫下來)，並說明為何您需要選擇這樣的網路升級程序？</li>
+
+<br><font color="#000066">這題請參考本章節的內容，選擇 APT 或者是其他 Linux
+distributions 網站提供的線上升級方式來進行您的套件升級。</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0230router"></a><font color="#3333FF"><a href="0230router.php" target="_self"><font face="標楷體">第九章、多</font><font face="Times New Roman,Times">
+IP </font><font face="標楷體">與</font><font face="Times New Roman,Times">
+Router </font><font face="標楷體">的架設</font></a></font>
+<br>　
+<li>
+請問您如何將您的 eth0 這個介面修改成為 192.168.100.2 在網域 192.168.100.0/25
+之內的網路參數內容？</li>
+
+<br><font color="#000066">因為 192.168.100.0/25 的 netmask 為 255.255.255.128
+，所以可以這樣做：『<b><font face="細明體">ifconfig eth0 192.168.100.2
+netmask 255.255.255.128 up </font></b>』這樣即可！如果尚須其他的參數，則需要以檔案形式來下達，如
+vi /etc/sysconfig/network-scripts/ifcfg-eth0，並修改為：</font>
+<ul><font face="細明體"><font color="#000066">DEVICE=eth0</font></font>
+<br><font face="細明體"><font color="#000066">ONBOOT=yes</font></font>
+<br><font face="細明體"><font color="#000066">BOOTPROTO=static</font></font>
+<br><font face="細明體"><font color="#000066">IPADDR=192.168.100.2</font></font>
+<br><font face="細明體"><font color="#000066">NETMASK=255.255.255.128</font></font>
+<br><font face="細明體"><font color="#000066">NETWORK=192.168.100.0</font></font>
+
+<br><font face="細明體"><font color="#000066">BROADCAST=192.168.100.127</font></font></ul>
+　
+<li>
+請手動設定 eth0:1 這個虛擬介面，使成為網路參數： 192.168.200.2, 網域在
+192.168.200.0/24。</li>
+
+<br><b><font face="細明體"><font color="#000066">ifconfig eth0:1 192.168.200.2
+up</font></font></b>
+<br>　
+<li>
+如何觀察路由表？</li>
+
+<br><font color="#000066">route -n 即可查閱！注意到 0.0.0.0 那個目標(default
+gateway)。</font>
+<br>　
+
+<li>
+如何啟動 Linux 的 IP Forward 功能？</li>
+
+<br>直接以『<b><font face="細明體"><font color="#000066">echo "1" > /proc/sys/net/ipv4/ip_forward</font></font></b>
+』即可！
+<br>　
+<li>
+假設您是一個學校單位的資訊管理員，學校內有 200 部電腦，奉上面大頭的旨意，必須要將
+200 部電腦分為 4 個 Subnet ，請問您應該如何佈線(請畫出示意圖)？而這 4 個
+Subnet 的網路參數如何選擇(請自行選擇)？而是否需要 Router ？如果需要的話，假設每個
+Router 僅能有兩個網路實體介面，那麼該如何佈線？(註：不要使用虛擬介面)</li>
+
+<br><font color="#000066">我的佈線如同下圖所示：</font>
+<br><img SRC="1000results/ch09-01.jpg" NOSAVE BORDER=1 height=484 width=494>
+<br><font color="#000066">每個 Router 都具有兩個介面，且四個 Router 的右邊介面都在同一個網段內！那麼
+Router 1 怎麼跟 Router 2 的內部網域進行溝通？利用：『route add -net 192.168.2.0
+netmask 255.255.255.0 gw 192.168.5.2』即可！</font>
+
+<br>　
+<li>
+萬一您的網路有點停頓，發現可能是網路上某個節點出現問題，您應該如何確認是哪一部
+Router 出問題？</li>
+
+<br><font color="#000066">使用第五章Linux 常用網路指令當中提到的 traceroute
+來查詢！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0240network-secure-1"></a><font face="標楷體"><font color="#3333FF"><a href="0240network-secure-1.php" target="_self">第十章、認識網路安全</a></font></font>
+<br>　
+<li>
+我老是發現我的系統怪怪的，似乎有點停頓的模樣，懷疑可能是 CPU 負荷太大，所以要去檢查一下系統相關的資訊。請問，我該以什麼指令去檢查我的系統相關的資訊？</li>
+
+<br><font color="#000066">可以使用 top, sar, free, ps -aux, uptime, last
+等功能去查詢系統的相關資訊喔！</font>
+
+<br>　
+<li>
+我懷疑我的系統上面有過多的具有 SUID 的檔案存在，導致一般使用者可以隨意的取得
+root 的權限，請問，我要如何找出這些具有 SUID 權限的檔案？</li>
+
+<br><font color="#000066">因為 SUID 是 4000 這個權限的模樣，所以我可以這樣做：</font>
+<br><b><font face="細明體"><font color="#000066">find / -perm +4000</font></font></b>
+<br>　
+<li>
+我由國內一些 ftp 網站上下載了 Red Hat 公司釋出的套件，我想安裝他，但又不知道該套件檔案是否被修改過！請問我該如何確定這個套件的可用性？</li>
+
+<br><font color="#000066">利用最簡易的 MD5 編碼來測試一下，例如『 md5sum
+套件名稱』，再比對與原始套件釋出的 MD5 數據是否相同！？</font>
+<br>　
+
+<li>
+良好的密碼規劃是防備主機的第一要務，請問 Linux 系統當中，關於密碼相關的檔案與規則設定在哪些檔案裡面？</li>
+
+<br><font color="#000066">密碼的設定規則在 /etc/login.defs 裡面！至於密碼檔案在
+/etc/shadow 內！</font>
+<br>　
+<li>
+簡易說明，當一部主機被入侵之後，應該如何處理？</li>
+
+<br>找出問題、重新安裝、漏洞修補、資料還原！請參考本章最後面的『修補工
+<a href="0240network-secure-1.php#repaire">0240network-secure-1.php#repaire</a>
+作』內容！
+<br>　
+<br>
+
+<hr WIDTH="100%"><a NAME="0250simple_firewall"></a><font color="#3333FF"><a href="0250simple_firewall.php" target="_self"><font face="標楷體">第十一章、簡易</font><font face="Times New Roman,Times">
+Firewall </font><font face="標楷體">架設</font></a></font>
+<br>　
+<li>
+為什麼我架設了防火牆，我的主機還是可能中毒？</li>
+
+<br><font color="#000066">防火牆不是萬靈丹，他還是可能被病毒或者是木馬程式所入侵的！此外，如果您的主機本身就已經提供了多個網路服務，則當該網路服務的套件有漏洞時，防火牆仍然無法克服該服務的漏洞的！因此仍然需要持續的進行主機的監視工作！</font>
+<br>　
+<li>
+請說明為何架設了防火牆，我的主機還是可能被入侵？入侵的依據可能是什麼方法？</li>
+
+<br><font color="#000066">因為防火牆僅是抵擋某些不受歡迎的封包，如果您有開放
+WWW 的服務時，則要求您主機 port 80 的封包將可直接進入您的主機，萬一 WWW
+套件有漏洞時，那麼就可能被入侵了！所以套件的更新很重要！</font>
+<br>　
+<li>
+我們知道核心為 2.4 的 Linux 使用的防火牆機制為 iptables ，請問，如何知道我的
+Linux 核心版本？</li>
+
+<br><font color="#000066">利用 uname -r 可以查得！</font>
+<br>　
+<li>
+請列出 iptables 預設的兩個 table ，以及各個 table 裡面的 chains 與各個
+chains 所代表的意義；</li>
+
+<br><font color="#000066">filter 為預設的 Table，裡頭預設的鏈有：</font>
+<ul>
+
+<li>
+<font color="#000066">INPUT：為來自外部，想要進入主機的封包；</font></li>
+
+<li>
+<font color="#000066">OUTPUT：為來自主機，想要離開主機的封包；</font></li>
+
+<li>
+<font color="#000066">FORWARD：為主機內部網域與外部網域的封包(不論進或者出)，但該封包不會進入主機。</font></li>
+</ul>
+<font color="#000066">還有 nat 這個 table：</font>
+<ul>
+<li>
+<font color="#000066">PREROUTING：進行路由之前的封包傳送過程</font></li>
+
+<li>
+<font color="#000066">OUTPUT：離開主機的封包傳送過程；</font></li>
+
+<li>
+<font color="#000066">POSTROUTING：已經經過路由了，然後才進行的過濾規則。</font></li>
+</ul>
+<font color="#000066">　</font>
+<li>
+什麼是 iptables 的預設政策 (Policy)？</li>
+
+<br><font color="#000066">當封包的所有屬性都不在防火牆的規則當中時，那麼這個封包能否順利的通過防火牆，則以
+Policy 作為這個封包的最終動作了！</font>
+
+<br>　
+<li>
+假設今天我的 Linux 僅是作為 Client 之用，並沒有對 Internet 進行任何服務，那麼您的防火牆規劃應該如何設定比較好？！</li>
+
+<br><font color="#000066">既然沒有對 Internet 提供任何服務，那麼(1)請將所有的對外埠口先關閉吧！(2)防火牆規則當中，最重要的是
+INPUT 的 Policy 一定要 DROP ，然後將『 <b><font face="細明體">iptables
+-A INPUT -m state --state RELATED -j ACCEPT </font></b>』即可！</font>
+<br>　
+<li>
+我要將來自 192.168.1.50 這個 IP 來源的封包，只要是向我的 21~23 埠口要求的封包，就將他抵擋，應該如何下達
+iptables 指令？</li>
+
+<br><font color="#000066">iptables -A INPUT -p tcp -s 192.168.1.50 --dport
+21:23 -j DROP</font>
+<br>　
+
+<li>
+我要將我自己主機 ping 的回應功能取消，應該如何下達 iptables 的指令？</li>
+
+<br><font color="#000066">因為 ping 能否回應用的是 icmp 的 type 8 (請參考第二章
+<a href="0110network_basic.php">網路基礎</a>
+內的 <a href="0110network_basic.php#packet_icmp">ICMP 相關內容</a>)，所以我可以這樣做：</font>
+<br><b><font face="細明體"><font color="#000066">iptables -I INPUT -p icmp
+--icmp-type 8 -j DROP</font></font></b>
+<br>　
+<li>
+請說明為何這個指令是錯誤的？『<font face="細明體"><font color="#000066">iptables
+-A INPUT -p udp --syn -s 192.168.0.20 -j DROP</font></font>』？</li>
+
+<br><font color="#000066">因為只有 TCP 封包才會具有 SYN 的標誌， UDP 並沒有
+SYN 的標誌啊！所以上面的指令是錯誤的！</font>
+<br>　
+<li>
+DNS 的要求是必須的，那麼我該如何設定我的主機可以接受要求 DNS 的回應呢？</li>
+
+<br><font color="#000066">因為 DNS 的來源是 port 53 ，因此要接受來自 port
+53 的封包就成為了：</font>
+<br><b><font face="細明體"><font color="#000066">iptables -A INPUT -p udp
+--sport 53 -j ACCEPT</font></font></b>
+<br><b><font face="細明體"><font color="#000066">iptables -A INPUT -p tcp
+
+--sport 53 -j ACCEPT</font></font></b>
+<br>　
+<li>
+如何取消 iptables 在我的系統上面？</li>
+
+<br><font color="#000066">先要清除規則後，才能夠將 iptables 移除！不過，我們主要將規則清除即可！</font>
+<br><font color="#000066">iptables -F; iptables -X; iptables -Z</font>
+<br><font color="#000066">iptables -t nat -F; iptables -t nat -X; iptables
+-t nat -Z</font>
+<br>　
+<li>
+如何儲存目前的防火牆機制，以及如何將上次儲存下來的機制回復到目前的系統中？</li>
+
+<br><font color="#000066">請利用 iptables-save 以及 iptables-restore 這兩個指令，配合命令重導向即可！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0270dynamic_dns"></a><font face="標楷體"><font color="#3333FF"><a href="0270dynamic_dns.php" target="_self">第十二章、申請合法的主機名稱</a></font></font>
+
+<br>　
+<li>
+請簡易說明 /etc/hosts 的用途；</li>
+
+<br><font color="#000066">這個檔案是早期用在進行主機名稱與 IP 的解析的，目前比較常用在內部網域的名稱解析上，可以加快內部網域的反查喔！</font>
+<br>　
+<li>
+請說明『合法授權』的主機名稱需要做什麼？</li>
+
+<br><font color="#000066">如果想要合法授權，就需要向上層 DNS 主機『註冊』才行！而且還要上層
+DNS 主機管理員願意將領域名稱的解析權限授權給您啊！</font>
+<br>　
+<li>
+什麼是動態 DNS 系統？(僅說明 client 端)</li>
+
+<br><font color="#000066">因為我們的 Client 撥接時，得到的 IP 都不是固定的，所以無法以
+DNS 系統進行固定 IP 對應主機名稱的工作！此時就需要動態 DNS 系統了！以 DNS
+主機提供的動態更新主機名稱對應 IP 的機制，可以讓我們的不同 IP 對應到同一個主機名稱吶！</font>
+<br>　
+<li>
+如果您使用 adsl 撥接來上網設定伺服器，那麼該申請哪一類型的主機名稱？為什麼？</li>
+
+<br><font color="#000066">因為我是以 ADSL 上網撥接，所以 IP 是不固定的，此時需要申請動態
+DNS 主機的主機名稱，例如 adsldns.org 以及 no-ip.org 等等！</font>
+<br>　</ul>
+
+<hr WIDTH="100%"><font color="#000099"><font size=+1><font face="細明體">PART
+III、</font><font face="標楷體">各類伺服器架設篇</font><font face="細明體">：</font></font></font>
+
+<ul>
+<hr WIDTH="100%"><a NAME="0310telnetssh"></a><font color="#3333FF"><a href="0310telnetssh.php" target="_self"><font face="標楷體">第十三章、簡易</font><font face="Times New Roman,Times">
+Telnet </font><font face="標楷體">與</font><font face="Times New Roman,Times">
+SSH </font><font face="標楷體">主機設定</font></a></font>
+<br>　
+<li>
+Telnet 與 SSH 都是遠端連線伺服器，為何我們都會推薦使用 SSH 而避免使用 Telnet
+呢？原因何在？</li>
+
+<br><font color="#000066">因為 Telnet 除了使用『明碼』傳送資料外，本身
+telnet 就是很容易被入侵的一個伺服器，所以當然也就比較危險了。至於 ssh 其實也不是很安全的！由台灣電腦危機處理小組的文件可以明顯的發現
+openssl + openssh 也是常常有漏洞在發佈！不過，比起 telnet 來說，確實是稍微安全一些！</font>
+<br>　
+
+<li>
+請嘗試說明 SSH 在 Server 與 Client 端連線時的封包加密機制；</li>
+
+<br><font color="#000066">利用 key pair 來達到加密的機制：Server 提供 Public
+Key 給 Client 端演算 Private key ，以提供封包傳送時的加密、解密！</font>
+<br>　
+<li>
+請問 SSH 的設定檔是哪一個？如果我要修改讓 root 無法使用 SSH 連線進入我的
+SSH 主機，應該如何設定？又，如果要讓 badbird 這個使用者無法登入 SSH 主機，該如何設定？</li>
+
+<br><font color="#000066">SSH 設定檔檔名為 sshd_config ，通常放置在 /etc/ssh/sshd_config
+內；如果不想讓 root 登入，可以修改 sshd_config 內的參數成為：『<b><font face="細明體">PermitRootLogin
+no</font></b> 』，並重新啟動 ssh 來設定！如果要讓 badbird 使用者無法登入，同樣在
+sshd_config 裡面設定為：『<b><font face="細明體">DenyUsers badbird</font></b>』即可！</font>
+
+<br>　
+<li>
+在 Linux 上，預設的 Telnet 與 SSH 伺服器使用的埠口(port number)各為多少？</li>
+
+<br><font color="#000066">telnet 與 ssh 的埠口分別是：23 與 22！請參考
+/etc/services 喔！</font>
+<br>　
+<li>
+如果發現我無法在 Client 端使用 ssh 程式登入我的 Linux 主機，但是 Linux
+主機卻一切正常，可能的原因為何？(防火牆、known_hosts...)</li>
+
+<br><font color="#000066">無法登入的原因可能有很多，最好先查詢一下 /var/log/messages
+裡面的錯誤訊息來判斷，當然，還有其他可能的原因為：</font>
+<ol>
+<li>
+<font color="#000066">被防火牆擋住了，請以 iptables -L -n 來察看，當然也要察看
+/etc/hosts.deny；</font></li>
+
+<li>
+<font color="#000066">可能由於主機重新開機過， public key 改變了，請修改您的
+~/ssh/known_hosts 裡面的主機 IP ；</font></li>
+
+<li>
+<font color="#000066">可能由於 /etc/ssh/sshd_config 裡面的設定問題，導致您這個使用者無法使用；</font></li>
+
+<li>
+<font color="#000066">在 /etc/passwd 裡面，您的 user 不具有可以登入的 shell
+；</font></li>
+
+<li>
+<font color="#000066">其他因素(如帳號密碼過期等等)</font></li>
+</ol>
+
+　
+<li>
+既然 ssh 是比較安全的資料封包傳送方式，那麼我就可以在 Internet 上面開放我的
+Linux 主機的 SSH 服務了嗎？！請說明您選擇的答案的原因！</li>
+
+<br><font color="#000066">最好不要對 Internet 開放您的 SSH 服務，因為 SSH
+的加密函式庫使用的是 openssl ，一般 Linux distribution 使用的 SSH 則是
+openssh ，這兩個套件事實上仍有不少的漏洞被發佈過，因此，最好不要對 Internet
+開放，畢竟 SSH 對於主機的使用權限是很高的！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0320nat"></a><font color="#3333FF"><a href="0320nat.php" target="_self"><font face="標楷體">第十四章、簡易</font><font face="Times New Roman,Times">
+NAT </font><font face="標楷體">伺服器</font></a></font>
+<br>　
+<li>
+請簡單的說明 NAT 主機的用途與運作原理。</li>
+
+<br><font color="#000066">NAT 主機的最大用途在於『封包偽裝』，可以做為內部
+Client 主機對外的連線之用(類似 IP 分享器)，當然，也可以做為區域內主機 (DMZ)
+的設定！至於其運作原理則主要以 iptables 的過濾機制有關，利用 iptables 來將通過的封包進行
+Source IP 或 destination IP 的偽裝！</font>
+<br>　
+<li>
+假設我是您公司的上層主管，我知道我們單位內共有 100 部電腦 (Windows 作業系統)，其中共分為兩大部門，這兩大部門的資料是互相獨立的，並且兩大部門各自擁有一部
+Linux 主機在負責檔案分享的工作(就是未來會談到的 <a href="0370samba.php">SAMBA</a>
+主機)。不過，我們公司僅有一條對外的 ADSL 雙向 512 的專線而已。現在，我命令您規劃全公司
+100 部電腦都可以連上 Internet ，而且只多給您一部 Linux 主機，並且原有的
+Linux 主機功能 ( 就是 <a href="0370samba.php">SAMBA</a> 啦 ) 還是存在。請問：</li>
+
+<ol>
+<li>
+<font color="#000066">公司的網路規劃的示意圖如下所示：</font></li>
+
+<br><img SRC="1000results/ex-1.jpg" NOSAVE BORDER=2 height=393 width=527>
+<br><font color="#000066">兩邊的 LAN 並沒有互相物理連接，此外，微型電腦為本來的
+Linux 主機，而新增一部 Linux 主機則是『伺服器』那一部！</font>
+<li>
+<font color="#000066">多出來的那一部 Linux 主機用途為 ADSL 連接與內部私有網路的連接，該
+Linux 的網路參數：『IP為192.168.0.254(對內)，對外為撥接所產生的介面！啟動
+NAT 功能』！</font></li>
+
+<li>
+<font color="#000066">兩部 Linux SAMBA 主機的網路參數為：『部門A：IP為192.168.1.254(對內卡)以及192.168.0.1(對外卡)，新增
+route add -net 192.168.2.0 netmask 255.255.255.0 gw 192.168.0.2』，『部門B：IP為192.168.2.254(對內卡)以及192.168.0.2(對外卡)，新增route
+add -net 192.168.1.0 netmask 255.255.255.0 gw 192.168.0.1』，兩部主機的
+Gateway 都是192.168.0.254。</font></li>
+
+<li>
+<font color="#000066">兩個部門的網路參數：『部門A，Network:192.168.1.0/24，Gateway:192.168.1.254』、『部門B，Network:192.168.2.0/24，Gateway:192.168.2.254』。</font></li>
+</ol>
+　
+
+<br>
+<hr WIDTH="100%"><a NAME="0330nfs"></a><font color="#3333FF"><a href="0330nfs.php" target="_self"><font face="標楷體">第十五章、簡易</font><font face="Times New Roman,Times">
+NFS </font><font face="標楷體">伺服器設定</font></a></font>
+<br>　
+<li>
+<font color="#000000">NFS 的主要設定檔為何？而在該檔案內主要設定項目為何？</font></li>
+
+<br><font color="#000066">主要的設定檔為 /etc/exports 而至於其設定的內容項目在每一行當中則為：</font>
+<ol>
+<li>
+<font color="#000066">分享的目錄</font></li>
+
+<li>
+<font color="#000066">針對此分享目錄開放的主機或 IP或網域</font></li>
+
+<li>
+<font color="#000066">針對這部主機所開放的權限參數！</font></li>
+</ol>
+<font color="#000066">　</font>
+<li>
+<font color="#000000">在 NFS 主要的設定檔當中僅有少許的參數說明，至於預設的參數說明則沒有在該檔案當中出現，請問，如果要查閱更詳細的分享出來的檔案的屬性，要看那個檔案？</font></li>
+
+<br><font color="#000066">要查閱 /var/lib/nfs/xtab 這個檔案才行！</font>
+
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">如果已經啟動了 nfs 這個伺服器，但是卻又修改過主要設定檔，請問可以使用那個指令來重新掛載分享出來的目錄與
+client 端權限的設定值？</font></li>
+
+<br><font color="#000066">透過使用 exportfs ，可以加上 -a 或者是 -rv 這兩個參數來重新掛載！如
+exportfs -rv</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">在 client 端如果要掛載 NFS 所提供分享的檔案，可以使用那個指令？</font></li>
+
+<br><font color="#000066">那自然就是 mount 啦！還有卸載是 umount 喔！</font>
+<br><font color="#000066">　</font>
+
+<li>
+<font color="#000000">在 NFS 主要設定檔當中，可以透過那個參數來控制不讓
+client 端以 root 的身份使用您所分享出來的目錄與檔案？</font></li>
+
+<br><font color="#000066">可以在 /etc/exports 當中的參數項目，設定『 root_squash
+』來控制壓縮 root 的身份喔！</font>
+<br><font color="#000066">　</font>
+<li>
+<font face="細明體"><font color="#000000">我在 client 端掛載了 NFS Server
+的某個目錄在我的 /home/data 底下，當我執行其中某個程式時，卻發現我的系統被破壞了？您認為可能的原因為何？該如何克服這樣的問題，尤其是當我的
+Client 端主機其實是多人共用的環境，怕其他的使用者也同樣發生類似的問題呢？！</font></font></li>
+
+<br><font color="#000066">可能由於您掛載進來的 NFS Server 的 partition
+當中具有 SUID 的檔案屬性，而您不小心使用了該執行檔，因此就可能會發生系統被破壞的問題了！</font>
+<br><font color="#000066">可以將掛載進來的 NFS 目錄的 SUID 功能取消！例如：</font>
+<br><b><font face="細明體"><font color="#000066">mount -t nfs -o nosuid,ro
+server:/directory /your/directory</font></font></b>
+
+<br><font color="#000066">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="0340dhcp"></a><font color="#3333FF"><a href="0340dhcp.php" target="_self"><font face="標楷體">第十六章、簡易</font><font face="Times New Roman,Times">
+DHCP </font><font face="標楷體">伺服器設定</font></a></font>
+<br>　
+<li>
+<font face="細明體"><font color="#000000">DHCP 的主要用途為何</font><font color="#000066">？</font></font></li>
+
+<br><font face="細明體"><font color="#000066">DHCP 主機的主要用途就是在於自動分配網路參數給
+Client 端的電腦，以降低網域當中可能發生的 IP 衝突問題，以及減少網管人員到處檢查錯誤的傷腦筋！</font></font>
+<br><font face="細明體"><font color="#000066">　</font></font>
+
+<li>
+<font face="細明體"><font color="#000000">DHCP 主要的兩種 IP 分配模式為何？</font></font></li>
+
+<br><font face="細明體"><font color="#000066">主要的兩種分配模式分別為
+Dynamic IP 與 Static IP ， Static IP 透過 MAC 的比對，至於 Dynamic IP 則是直接取用網域中尚未被使用到的
+IP 來進行 Client 端的分配。</font></font>
+<br><font face="細明體"><font color="#000066">　</font></font>
+<li>
+<font face="細明體"><font color="#000000">在有 DHCP 主機存在的網域當中，且
+client 端亦使用 DHCP 來規劃用戶端的網路參數，那麼請問，在該網域當中，Client
+端是如何取得 IP 的呢？？</font></font></li>
+
+<ol>
+<li>
+<font face="細明體"><font color="#000066">首先， Client 端會發出一個 DHCP
+要求封包；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">Server 端接收到要求後，會主動的回應資訊給
+Client ；</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">Client 若接受該 DHCP 主機所提供的參數，則主機會記錄下租約資訊，至於
+client 端則開始以主機提供的參數設定其網路；</font></font></li>
+</ol>
+<font face="細明體"><font color="#000066">　</font></font>
+<li>
+<font face="細明體"><font color="#000000">DHCP 是如何發送 Static IP 的？可以使用何種指令取得該資訊？</font></font></li>
+
+<br><font face="細明體"><font color="#000066">DHCP 主要利用網路卡的硬體位址，亦即俗稱的『網路卡卡號』，也就是
+MAC 來進行 Client 端的比對的，至於主動取得 Client 端的方式，可以透過 ping
+以及 arp 來獲得。</font></font>
+<br><font face="細明體"><font color="#000066">　</font></font>
+
+<li>
+<font face="細明體"><font color="#000000">在 DHCP 的租約檔，亦即 /var/lib/dhcp/dhcpd.leases
+當中，記錄了什麼資訊？</font></font></li>
+
+<br><font face="細明體"><font color="#000066">這個檔案主要記錄了 Client
+端連上 Server 端的紀錄資料，他會被 DHCP 主機用來判定與 Client 端的租約行為喔！</font></font>
+<ul><font face="細明體"><font color="#000066">　</font></font></ul>
+
+<li>
+<font face="細明體"><font color="#000000">DHCP 的登錄檔放置於何處？</font></font></li>
+
+<br><font face="細明體"><font color="#000066">就是最重要的 /var/log/messages
+這個檔案啦(預設狀況下！)</font></font>
+<br><font face="細明體"><font color="#000000">　</font></font>
+
+<br>
+<hr WIDTH="100%"><a NAME="0350dns"></a><font color="#3333FF"><a href="0350dns.php" target="_self"><font face="標楷體">第十七章、簡易</font><font face="Times New Roman,Times">
+DNS </font><font face="標楷體">伺服器設定</font></a></font>
+<br>　
+<li>
+<font color="#000000">為何要有 DNS 系統：</font></li>
+
+<br><font color="#000066">最主要的功能其實在於 Hostname 對應 IP 的查詢，可以讓我們人類以電腦主機名稱連上
+Internet ，而不必背誦 IP 哩！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">那麼請教 Unix Like 系統當中，主要使用那個套件做為
+DNS 主機的架設，同時，他又是使用那個 daemon 來啟動 DNS 系統？</font></li>
+
+<br><font color="#000066">在 Unix Like 系統當中，使用 BIND 這個套件做為
+DNS 的架設，至於 daemon 則是使用 named 這個 daemon ！</font>
+<ul><font color="#000066">　</font></ul>
+
+<li>
+<font color="#000000">最早的 Internet 其實是為了政府人員可以連上網路以進行資源的分享，另外，則是電子郵件的使用。而在早期使用的重要檔案只有
+/etc/hosts 這個，請教這個 hosts 檔案的內容含有什麼項目？</font></li>
+
+<br><font color="#000066">這個檔案的『格式』為『 &lt;IP> &lt;主機名稱>
+&lt;主機別名(aliase)>』，而，這個檔案裡面放置了至少一行，也就是：</font>
+<br><b><font face="細明體"><font color="#000066">127.0.0.1 localhost localhost.localdomain</font></font></b>
+
+<br><font color="#000066">另外，也可以將經常連接的主機 IP 與 HOSTNAME 的對應給他寫進來！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">請說明 DNS 的三種類型與相關的內容：</font></li>
+
+<br><font color="#000066">DNS 主機主要分為： master, slave 與 cache-only
+三種類型！在 master 當中，master 主機裡面即有設定 DNS 資料檔案，例如在
+/var/named 裡面的正反解檔案。至於 slave 的 DNS 主機則主要在進行 master
+主機的資料備份，同時也提供 Internet 上面的查詢功能。使用 master/slave 的最大優點在於「單點維護」的能力！利用修改
+master 即可讓 slave 的資料同時更新，減少人力的浪費。至於 cache-only 僅進行快取的紀錄，本身並無資料庫檔案！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">正解檔案(forward)反解檔案(reverse)與內部迴圈使用的檔案(loopback)主要的紀錄功能為：</font></li>
+
+<br><font color="#000066">正解檔在設定 hostname 對應到 IP 的紀錄，主要的紀錄有
+A, NS, SOA, MX, CNAME 等等；</font>
+
+<br><font color="#000066">反解檔主要設定 IP 對應到 Hostname 的紀錄，主要的紀錄為
+SOA, NS 與 PTR 等。</font>
+<br><font color="#000066">內部迴圈則是 localhost 與 127.0.0.1 的對應啦！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">在主要的 DNS 設定檔 /etc/named.conf 當中，有一個較為特殊的檔案，他的類型為
+hint ，請問這個檔案的功能為何？</font></li>
+
+<br><font color="#000066">這個檔案主要是由 rs.internic.net 所下載下來的，主要記錄了
+root (.) 這個 zone 的 IP ！可以讓我們的 DNS Server 在找不到資料庫時，可以到這個
+root 去查詢資料！</font>
+<ul><font color="#000066">　</font></ul>
+
+<li>
+<font color="#000000">在 client 端搜尋 HOSTNAME 對應到 IP 的查詢時，最重要的檔案，以及該檔案的主要用途為何？</font></li>
+
+<br><font color="#000066">/etc/nsswitch.conf ：可以用來設定查詢主機名稱的順序！例如先查詢
+/etc/hosts 再查詢 DNS 系統；</font>
+<br><font color="#000066">/etc/hosts ：最早的名稱解析器；</font>
+<br><font color="#000066">/etc/resolv.conf：這就是 DNS 系統的 resolver
+(解析器)了。</font>
+<ul><font color="#000066">　</font></ul>
+
+<li>
+<font color="#000000">一般來說，在 Client 端使用的查詢 HOSTNAME 的指令大多使用什麼？</font></li>
+
+<br><font color="#000066">nslookup ：可以用來收集一部主機的相關資訊；</font>
+<br><font color="#000066">dig：可以用來收集詳細的主機資訊；</font>
+
+<br><font color="#000066">whois ：可以用來收集詳盡的 DNS 主機資訊。</font>
+<br><font color="#000066">host 則較為簡單喔！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">請問 named 重要的資訊登錄在在那個檔案中？</font></li>
+
+<br><font color="#000066">在 /var/log/messages 當中。</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0360apache"></a><font color="#3333FF"><a href="0360apache.php" target="_self"><font face="標楷體">第十八章、簡易</font><font face="Times New Roman,Times">
+WWW </font><font face="標楷體">伺服器設定</font></a></font>
+
+<br>　
+<li>
+請問 LAMP 這個伺服器代表什麼意思？</li>
+
+<br><font color="#000066">這個名詞代表了 Linux + Apache + MySQL + PHP 這個
+WWW 伺服器的組成！</font>
+<br>　
+<li>
+Apache 的設定檔檔名一般為何？</li>
+
+<br><font color="#000066">Apache 的設定檔檔名為 httpd.conf ，不過，由於
+httpd.conf 內容參數可以使用『 include "額外設定檔名"』，所以也可能具有其他的額外設定檔喔！</font>
+<br>　
+<li>
+在 Apache 的設定檔當中，哪一個參數是用來設定『主網頁』的？</li>
+
+<br><font color="#000066">設定主網頁的參數為：DocumentRoot 喔！後面接的是主網頁放置的『目錄』！</font>
+<br>　
+<li>
+哪一個指令用來重新啟動與關閉 Apache ？(請以 Tarball 安裝的方法來說明)</li>
+
+<br><font color="#000066">其實不論是 RPM 還是 Tarball 都是使用 apachectl
+這個檔案來啟動 apache 的，不過 RPM 已經將該檔案整合到 /etc/rc.d/init.d/httpd
+裡面去而已！</font>
+<br>　
+<li>
+當我使用 ps -aux 的時候，發現好多的 httpd... 的程序，這是正常的嗎？！最多可以有幾個程序是在那個檔案的那個參數所設定的？！</li>
+
+<br><font color="#000066">這是正常的，主要由 httpd.conf 裡面設定的底下兩個參數：</font>
+
+<ul>
+<li>
+<font face="細明體"><font color="#000066">MinSpareServers</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">MaxSpareServers</font></font></li>
+</ul>
+<font face="細明體"><font color="#000066">　</font></font>
+<li>
+又，呈上題，這些程序 (process) 的 owner 與 group 是誰？該察看那個設定檔的那個參數？</li>
+
+<br><font color="#000066">同樣察看 httpd.conf 裡面的 User 與 Group 這兩個設定值！</font>
+
+<br>　
+<li>
+如果今天我以 http://your.ip 結果卻發現瀏覽器出現類似 FTP 的畫面(會列出該目錄下的所有檔案)，這是什麼原因造成的？該如何避免？</li>
+
+<br><font color="#000066">這是由於在 httpd.conf 裡面，針對該目錄的設定參數『
+Options 』當中，設定了 Indexes 這個設定值，導致當找不到主頁時(通常是 index.html)，就會將該目錄下的所有檔案秀出來！解決的方法就是拿到
+Options 裡面的 Indexes 設定值即可！</font>
+<br>　
+<li>
+在 Apache 裡面， .htaccess 這個檔案的功能為何？</li>
+
+<br><font color="#000066">可以用來取代 httpd.conf 裡面的設定參數！創造屬於使用者自己的
+Apache 風格！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0370samba"></a><font color="#3333FF"><a href="0370samba.php" target="_self"><font face="標楷體">第十九章、簡易</font><font face="Times New Roman,Times">
+
+SAMBA </font><font face="標楷體">伺服器設定</font></a></font>
+<br>　
+<li>
+一般來說， SAMBA 使用的設定檔放置在哪裡？檔名為何？</li>
+
+<br><font color="#000066">使用的檔名為 smb.conf ，通常會放置在 /etc/samba/smb.conf
+裡面，不過，最好可以使用 rpm -qc packagename 來查詢！</font>
+<br>　
+<li>
+哪一個指令可以用來判斷 smb.conf 這個設定檔的正確性？</li>
+
+<br><font color="#000066">當我們修改完 smb.conf 之後，記得要以 testparm
+來進行 samba 的確認！</font>
+
+<br>　
+<li>
+哪一個指令可以用來察看 SAMBA 主機分享出什麼目錄？</li>
+
+<br><font color="#000066">利用 smbclient 即可：『<b><font face="細明體">smbclient
+-L NetBiosName -U username</font></b> 』！</font>
+<br>　
+<li>
+smbmount 的功能為何？</li>
+
+<br><font color="#000066">在 Linux 系統上面，將 Windows 的網路上的芳鄰，或者是
+Linux 的 SAMBA 所提供分享的資源掛載到自己的系統下！</font>
+
+<br>　
+<li>
+我今天使用 smbpasswd 去新增一位使用者 badbird，讓他可以登入我的 Linux SAMBA
+主機，但是無論如何就是無法新增。您認為原因可能是什麼？</li>
+
+<br><font color="#000066">由於 Samba 使用者的資訊必須要存在於 /etc/passwd
+裡面，既然無法新增，應該先確認 badbird 這個使用者已經存在於 Linux 系統當中了！如果還是無法新增，則需要查閱
+smb.conf 的設定，看看是否 /etc/samba/smbpasswd 這個密碼檔案不存在？！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0380sendmail"></a><font color="#3333FF"><a href="0380sendmail.php" target="_self"><font face="標楷體">第二十章、簡易</font><font face="Times New Roman,Times">
+Mail Server </font><font face="標楷體">架設</font><font face="Times New Roman,Times">
+-- Sendmail </font><font face="標楷體">設定</font></a></font>
+
+<br>　
+<li>
+我在使用 Sendmail 寄信時，卻發生底下這個問題，請問可能的發生原因為何？</li>
+
+<center><img SRC="1000results/0380sendmail-problem-1.jpg" NOSAVE BORDER=1 height=223 width=481></center>
+<font color="#000066">可能的問題有兩個：</font>
+<ul>
+<li>
+<font color="#000066">你的 Client 端電腦的 IP 或者是網域位址被 /etc/mail/access
+所擋住，或者是 /etc/mail/access 沒有打開你的 RELAY 權力；</font></li>
+
+<li>
+<font color="#000066">你有進行 SMTP 郵件認證的設定，但是忘記在 MUA 當中設定帳號與密碼的項目了！</font></li>
+</ul>
+
+<font color="#000066">如果不是這兩個原因，那麼可能的問題就多了！請詳細的檢查您的網路設定！</font>
+<ul><font color="#000066">　</font></ul>
+
+<li>
+<font color="#000000">請列出四個 Mail Server 的相關的元件，以及其功用為何？</font></li>
+
+<ol>
+<li>
+<font color="#000066">Mail Client ：郵件用戶端，其實就是使用 mail 的那位使用者所在的電腦即可稱為
+mail client ；</font></li>
+
+<li>
+<font color="#000066">Mail User Agent ：為一個應用軟體，主要的功能就是收受郵件主機的電子郵件，以及提供使用者瀏覽與編寫郵件的功能；</font></li>
+
+<li>
+<font color="#000066">Mail Transfer Agent ：為在電腦與本地端 Mail server
+或 Internet 上面的 Mail server 傳送訊息與郵件的主機；</font></li>
+
+<li>
+<font color="#000066">Mail Dilivery Agent ：主要的功能就是將 MTA 所收受的本機信件，放置到本機帳戶下的郵件檔案中
+( Mailbox )！</font></li>
+</ol>
+<font color="#000066">　</font>
+<li>
+<font color="#000000">POP3 與 SMTP 的功能為何？</font></li>
+
+<ul>
+<li>
+
+<font color="#000066">SMTP 為使用於 MUA 或 MTA 與 MTA 之間的傳輸協定，通常使用
+port 25 ，只要主機支援 SMTP ，並且其他 relay 的條件能配合，就可以進行郵件傳遞！</font></li>
+
+<li>
+<font color="#000066">POP3 可以提供使用者經由 MUA 到 MTA 下載郵件，同時並可將郵件從主機上面刪除！</font></li>
+</ul>
+<font color="#000066">　</font>
+<li>
+<font color="#000000">請簡單的說明 DNS 裡面 MX 標誌與 Mail 的關係為何？</font></li>
+
+<br><font color="#000066">MX recode 可以可以讓 mail server 經由 MX 以及
+A ( address ) 這個記錄來進行 mail gateway 與 mail route 的功能！能夠達到的作用相當的多！</font>
+<br><font color="#000066">　</font>
+
+<li>
+<font color="#000000">今天我突然興起，想要修改我的 sendmail ，請問， sendmail
+的設定檔在哪裡？而我要以什麼程式修改 sendmail 呢？</font></li>
+
+<br><font color="#000066">Sendmail 的設定檔為 sendmail.cf ，這個檔案通常放置在
+/etc/sendmail.cf 或者 /etc/mail/sendmail.cf ！您可以手動的編輯這個檔案，不過不建議如此，取得代之的，可以使用
+m4 這個程式來進行 macro 的動作，進一步的完成 sendmail.cf 的修改！至於使用
+m4 時，需要先建立 m4 scripts ，再以 m4 轉換才能形成 sendmail.cf 喔！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">什麼是 mailling list ？在 sendmail 底下有什麼方法可以不藉由其他的軟體達到
+mailling list 的功能？</font></li>
+
+<br><font color="#000066">Mailling list 就是將使用者寄給一個帳號郵件時，該帳號會主動的將該郵件傳送到所有的用戶去！有點類似目前的電子報！在
+sendmail 底下，我們可以透過 aliases (需配合 newaliases) 以及 ~/.forward
+來達成喔！</font>
+<br><font color="#000000">　</font>
+<li>
+
+<font color="#000000">如何察看郵件佇列的內容，以及郵件佇列內容放置在何方？</font></li>
+
+<br><font color="#000066">使用 mailq 即可知道目前郵件佇列的內容，而郵件佇列雖然可以透過
+sendmail.cf 來修改，不過，預設情況下，都是以 /var/spool/mqueue 為郵件佇列目錄。</font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">若我的 sendmail 主機有很多名稱，我想讓這些名稱都可以進行
+mail 的接收，應該修改什麼檔案？</font></li>
+
+<br><font color="#000066">可以修改 /etc/mail/local-host-names 來達成！</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">什麼是 Open Relay？</font></li>
+
+<br><font color="#000066">所謂的 Open Relay 就是，不論發信端來自何處，您的
+Open Relay 的主機均可以幫發信端將信件發送出去，這個稱為 Open Relay 。如果您的
+mail server 具有 open relay 的情況，那麼很容易遭受到垃圾郵件的填充，不但造成網路頻寬的耗損，也容易讓您的主機被列入黑名單當中！</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0390postfix"></a><font color="#3333FF"><a href="0390postfix.php" target="_self"><font face="標楷體">第二十一章、簡易</font><font face="Times New Roman,Times">
+Mail Server </font><font face="標楷體">架設</font><font face="Times New Roman,Times">
+-- Postfix </font><font face="標楷體">設定</font></a></font>
+<br>　
+<li>
+請問 Cyrus SASL 在 1.5.xx 以及 2.xx 版本中，用來作為 SMTP 的認證的機制有何不同？並請說明不同的版本與
+Postfix 的搭配情況。</li>
+
+<br><font color="#000066">一般而言， SASL 1.5 適用於 postfix 1.xx 版本，至於
+SASL 2.x 版則適用於 postfix 2.xx 版。由於 SASL 2.x 主要使用 saslauthd 這個
+daemon 來做為身份認證的方式，而 SASL 1.5 則使用的是 pam 與 pwcheck 這兩個機制，兩個版本的認證機制並不相同。所以使用
+Postfix 來設定 SMTP 的身份認證時，請務必記得版本的差異！</font>
+<br>　
+<li>
+如果要讓 Postfix 可以收發來自非本機的外部信件，您可以修改 main.cf 裡面的什麼參數？</li>
+
+<br><font color="#000066">需要在 main.cf 裡面修改的變數主要有：</font>
+<ol>
+<li>
+<font color="#000066">當 Client 來自信任的網域，也就是 IP 符合 $mynetworks
+的設定值時；</font></li>
+
+<li>
+<font color="#000066">當 Client 來自信任的機器，也就是主機名稱符合 $relay_domains
+的設定項目時；</font></li>
+
+<li>
+<font color="#000066">當 Client 來自不信任的網域，但是去的目的地主機端符合
+$relay_domains 的設定時。</font></li>
+</ol>
+　
+<li>
+如何察看您目前的 Postfix 伺服器的所有設定參數？(使用什麼指令？)</li>
+
+<br><font color="#000066">利用 postconf -n 可以察看『目前 main.cf 裡面設定的參數』，而如果要看所有的參數，則直接使用
+postconf 即可！</font>
+<br>　
+<li>
+在 Postfix 當中，由於已經具有過濾郵件的機制，所以不太需要使用 procmail
+了！請問，我該如何啟用信件的 Header 過濾機制？同時，如何設定規則，使得
+192.168.100.100 這個主機的來信，以及只要郵件的標頭為『 Your account 』的信件就予以丟棄？</li>
+
+<br><font color="#000066">啟用的方式可以在 main.cf 裡面啟用這個設定值：</font>
+<br><font color="#000066">header_checks = regexp:/完整路徑/檔名</font>
+<br><font color="#000066">body_checks = regexp:/完整路徑/檔名</font>
+<br><font color="#000066">至於檔案內容可以這樣做：(註：因為要查閱的是標頭，所以需要
+header_checks 後面所接的檔名吶！)</font>
+<br><font face="細明體"><font color="#000066">/^Subject.*your\ account/
+REJECT</font></font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0400wuftp"></a><font color="#3333FF"><a href="0400wuftp.php" target="_self"><font face="標楷體">第二十二章、簡易</font><font face="Times New Roman,Times">
+FTP Server </font><font face="標楷體">架設</font><font face="Times New Roman,Times">
+
+-- Wu FTP </font><font face="標楷體">設定</font></a></font>
+<br>　
+<li>
+FTP 在建立連線以及資料傳輸時，會建立哪些連線？</li>
+
+<br><font color="#000066">需建立兩種連線，分別是 command 與 data transfer
+的連線，就是命令通道與資料傳輸通道。一般來說，就是 port 21(ftp) 與 port
+20(ftp-data)。</font>
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">FTP 主動式與被動式連線有何不同？</font></li>
+
+<br><font color="#000066">主動式連線的時候， command 連線是由 client 端主動連接到主機端，但是
+ftp-data 則是由主機端主動的連線到 client 端。至於被動式連線的時候，則不論
+command 還是 ftp-data 的連線，主機端都是 Listen 客戶端的要求的！</font>
+
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">有哪些動作可以讓您的 FTP 主機更為安全 ( secure )
+？</font></li>
+
+<br><font color="#000066">有很多的方法，在設定上面有這些方法：</font>
+<ul>
+<li>
+<font color="#000066">讓 guest 與 anonymous 的家目錄限制在固定的目錄中(chroot
+或是 restricted)；</font></li>
+
+<li>
+<font color="#000066">使用 TCP_Wrappers 啟動 FTP ，並以他來控制可連線的
+IP；</font></li>
+
+<li>
+<font color="#000066">拒絕 guest 與 anonymous 使用 change, delete, rename
+等等指令；</font></li>
+
+<li>
+<font color="#000066">拒絕 root 的登入或者其他系統帳號的登入；</font></li>
+
+<li>
+<font color="#000066">拒絕大部分的 upload 行為！</font></li>
+</ul>
+<font color="#000066">　</font>
+<li>
+我們知道 ftp 會啟用兩個 ports ，請問這兩個 port 在哪裡規範的？而且，一般正規的
+port 是幾號？</li>
+
+<br><font color="#000066">是在 /etc/services 裡面規範的，此外，正規的 ports
+在 command 是 21 而 data 是 20 。</font>
+<br><font color="#000066">　</font>
+<li>
+Wu FTP 的主要設定檔在哪裡？</li>
+
+<br><font color="#000066">/etc/ftpaccess</font>
+<ul><font color="#000066">　</font></ul>
+
+<li>
+在 Wu FTP 的設定檔當中，那個 log transfer 是幹嘛用的？</li>
+
+<br><font color="#000066">log transfer 可以將使用者進行資料傳輸的時候，將傳輸的檔案大小、內容等等記錄到
+/var/log/xferlog 裡面去！</font>
+<br>　
+<li>
+在 Wu FTP 的設定檔當中，那個 passive ports 是幹嘛用的？</li>
+
+<br><font color="#000066">我們知道 FTP 有主動與被動連線兩種方式，如果 FTP
+主機允許被動連線，那麼 Client 端連線時，主機端將會隨機取大於 1024 的 port
+來進行 data transfer ，為了避免隨機取 port 的問題，所以 passive ports 可以指定固定的幾個小範圍的
+ports ，比較安全。</font>
+<br><font color="#000066">　</font>
+<li>
+那一個檔案可以用來抵擋類似 root 這種系統帳號的登入 FTP？</li>
+
+<br><font color="#000066">/etc/ftpusers！(其實是利用 pam 模組來達成的功能！)</font>
+
+<br>　
+<li>
+在 FTP 的 server 與 client 端進行資料傳輸時，有哪兩種模式？為何這兩種模式影響資料的傳輸很重要？</li>
+
+<br><font color="#000066">資料的傳輸有 ASCII 與 Binary 兩種方式，在進行
+ascii 傳送方式時，被傳送的檔案將會以文字模式來進行傳送的行為，因此，檔案的屬性會被修改過，可能造成執行檔最後卻無法執行等的問題！一般來說，ASCII
+通常僅用在文字檔案與一些原始碼檔案的傳送。</font>
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0410proftpd"></a><font color="#3333FF"><a href="0410proftpd.php" target="_self"><font face="標楷體">第二十三章、簡易</font><font face="Times New Roman,Times">
+FTP Server </font><font face="標楷體">架設</font><font face="Times New Roman,Times">
+-- Pro FTPD</font></a></font>
+<br>　
+
+<li>
+如何建立一個使用者，他可以使用 FTP 的功能，但是無法以 telnet 或 ssh 登入系統？！請使用
+proftpd 的設定項目來設定！</li>
+
+<br><font color="#000066">因為無法使用 telnet/SSH ，這表示他可能不具有正常的
+shell ，因此您可以將該使用者在 /etc/passwd 裡面，最後一個 shell 參數改成
+/bin/false ，然後在 proftpd.conf 裡面設定『<b><font face="細明體">RequireValidShell
+off</font></b>』即可！</font>
+<br>　
+<li>
+我明明在台灣，我的主機時區 (/etc/sysconfig/clock) 明明在台灣，為何登入
+proftpd 之後，顯示的系統時間就是慢了 8 小時？請問為什麼？如何解決？</li>
+
+<br><font color="#000066">這是由於 proftpd 預設使用 GMT 時間，因此，您必須要重新設定
+proftpd ，使得時間使用 localtime 才成！修改 proftpd.conf 裡面的參數成為：『<b><font face="細明體">TimesGMT&nbsp;
+off</font></b>』</font>
+
+<br>　
+<li>
+如果發生了無法登入，或者是與 proftpd 的 FTP 功能相關的錯誤時，要如何 debug
+呢？</li>
+
+<br><font color="#000066">最先應該查詢是否被防火牆擋住了(同時觀察 Server/Client
+端)；</font>
+<br><font color="#000066">克服防火牆問題後，再查詢 FTP port 是否有啟動；</font>
+<br><font color="#000066">再檢閱 /var/log/messages 裡面的錯誤訊息，</font>
+<br><font color="#000066">最後據以修訂 proftpd.conf 的設定參數！</font>
+<br><font color="#000066">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="0420squid"></a><font color="#3333FF"><a href="0420squid.php"><font face="標楷體">第二十五章、簡易</font>
+
+Proxy Server <font face="標楷體">架設</font></a></font>
+<br>　
+<li>
+請說明為何 Proxy 可以提升網路的 WWW 瀏覽速度？</li>
+
+<br><font color="#000066">這不但由於 Proxy 可以透過上層 Proxy 達到分流的功能，使得網路傳輸更具效率之外，還由於
+Proxy 會將資料快取(cache)在自己的硬碟內，以方便下次的查詢，因此對於區域網路的瀏覽速度是有幫助的！</font>
+<br>　
+<li>
+萬一 squid 發生了問題，請問我該如何找出問題點？</li>
+
+<br><font color="#000066">最主要還是在於找出問題，所以需要由 suqid 的登錄檔查詢起，當然，硬碟的優劣以及
+squid 所取得 PID 的 owner 與 group 都是需要注意的！</font>
+
+<br>　
+<li>
+請說明 Proxy 伺服器的功能為何？</li>
+
+<br><font color="#000066">Proxy 伺服器的功能在於代理來自 client 的上網需求，並向目地端主機送出
+client 端的要求，以協助 client 端取得所需要的瀏覽網頁。此外，並可將網頁資料進行
+cache 的功能。</font>
+<br><font color="#000066">　</font>
+<li>
+試說明為何 Proxy 伺服器可以提昇網域之內的網路安全性？</li>
+
+<br><font color="#000066">由於 Proxy 伺服器通常架設之後，會讓網域僅有一個
+Proxy 主機的出口，亦即單點對外的伺服器，可以強化網路的管理！</font>
+<br>　
+<br>
+
+<hr WIDTH="100%"><a NAME="0430nis"></a><font color="#3333FF"><a href="0430nis.php"><font face="標楷體">第二十六章、簡易</font>
+Network Information Service, NIS Server <font face="標楷體">架設</font></a></font>
+<br>　
+<li>
+<font color="#000000">請簡單說明 NIS server 的功能與工作流程</font></li>
+
+<br><font color="#000066">當您有多部具有相同帳號的 Linux 主機時，即可利用
+NIS 所提供的服務，來利用一部 NIS 主機掌控所有的 linux 主機的登入時所需查閱的帳號與密碼驗證。流程如下：</font>
+<ol>
+<li>
+<font color="#000066">NIS Server 將自己系統內的 /etc/passwd, /etc/group,
+/etc/hosts 等製作成為 DBM 的資料庫格式檔案；</font></li>
+
+<li>
+<font color="#000066">NIS Client 若有用戶登入的要求時，會前往 NIS Server
+搜尋資料庫裡面的資料做為驗證之用。</font></li>
+
+<li>
+<font color="#000066">每次更動 NIS Server 上面的用戶資料時，則 NIS Server
+需要重新製作 DBM 資料庫檔案才行！</font></li>
+</ol>
+<font color="#000066">　</font>
+<li>
+<font color="#000000">請簡單說明 NIS Server/client 的架構</font></li>
+
+<br><font color="#000066">NIS master/client 的特色為：</font>
+<ol>
+
+<li>
+<font color="#000066">NIS Server 的 master 先將自己的帳號、密碼相關檔案製作成為資料庫檔案(database
+file)；</font></li>
+
+<li>
+<font color="#000066">NIS Server 的 master 將自己的資料庫檔案傳送到 slave
+上面；</font></li>
+
+<li>
+<font color="#000066">NIS Server 的 slave 接收來自『信任的 NIS Server master
+主機』的資料後，更新自己的資料庫，使自己的資料庫與 master 主機的資料同步；</font></li>
+
+<li>
+<font color="#000066">網域當中的所有 NIS Client 查尋 NIS Server 時，會找尋『最先回應的那一部
+NIS 主機的資料庫內容』。</font></li>
+</ol>
+<font color="#000066">也就是說，架設 slave NIS server 可以分擔區域內 NIS
+的工作！</font>
+
+<br><font color="#000066">　</font>
+<li>
+<font color="#000000">NIS 啟動之前需要先啟動那個服務，否則就無法啟動成功</font></li>
+
+<br><font color="#000066">因為 NIS 是 RPC Server 的一種，所以必須要啟動
+portmap 這個 daemon 才行！</font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">我的 NIS 網域名稱為 bird ，另外，我主機的 IP 與主機名稱為
+192.168.5.1/bird.nis.org ，請問要這些資訊需要設定在 NIS Server 的哪些檔案之內？</font></li>
+
+<br><font color="#000066">網域名稱可以直接手動下達『 nisdomainname bird
+』也可以寫入 /etc/sysconfig/network 裡面『NISDOMAIN=bird』；</font>
+<br><font color="#000066">IP 與 主機名稱 需要寫入在 /etc/hosts 裡面。</font>
+
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">/etc/nsswitch.conf 的功能為何？如果我想要讓密碼查尋先本地的密碼檔，再查尋
+NIS ，需要如何設定？</font></li>
+
+<br><font color="#000066">該檔案的功能很多，在 DNS 方面，可以用來決定正、反解的順序，至於密碼則可以用來判斷何者為先！如果需要先查本機再查
+NIS 的密碼時，需要的參數：</font>
+<br><font face="細明體"><font color="#000066">passwd:&nbsp;&nbsp;&nbsp;&nbsp;
+files nis nisplus</font></font>
+<br><font face="細明體"><font color="#000066">shadow:&nbsp;&nbsp;&nbsp;&nbsp;
+files nis nisplus</font></font>
+<br><font color="#000000">　</font>
+
+<li>
+<font color="#000000">NIS Server 將密碼等檔案做成資料庫以提供 NIS client
+來查尋，那麼請問使用什麼動作後，可以將密碼檔案轉成 NIS 的資料庫格式檔案？</font></li>
+
+<br><font face="細明體"><font color="#000066">/usr/lib/yp/ypinit -m</font></font>
+<br><font face="細明體"><font color="#000066">　</font></font>
+<li>
+<font color="#000000">如果我想要增加網域當中一個新的帳號：newaccount，並且這個
+newaccount 可以讓 NIS Client 查尋到他的帳號與密碼，需要進行哪些步驟？</font></li>
+
+<ol>
+<li>
+<font color="#000066">先登入 NIS Server 以 useradd newaccount 以及 passwd
+newaccount 來新增帳號；</font></li>
+
+<li>
+<font face="細明體"><font color="#000066">製作密碼資料庫：『/usr/lib/yp/ypinit
+-m』</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">重新啟動：『/etc/rc.d/init.d/ypserv
+restart ; /etc/rc.d/init.d/yppasswdd restart』。</font></font></li>
+</ol>
+<font face="細明體"><font color="#000066">　</font></font>
+<li>
+<font color="#000000">實作範例題：底下是我的網域參數特徵：</font></li>
+
+<br><font color="#000000">network/netmask:192.168.1.0/255.255.255.0</font>
+<br><font color="#000000">NIS server : 192.168.1.100 (hostname: server.nis.test
+)</font>
+
+<br><font color="#000000">NIS cient: 192.168.1.200 (hostname: client1.nis.test
+)</font>
+<br><font color="#000000">NIS domain name: nis.test</font>
+<br><font color="#000000">利用上面的參數來設定 NIS 架構，請一步一步的寫下你的設定。</font>
+<br><font color="#000066">請自行參考本章節內容設定！</font>
+<br><font color="#000000">　</font>
+<li>
+<font color="#000000">承上題：如果我的網域太大了，所以有一部 NIS slave
+主機，這部主機的 IP 為 192.168.1.50 ，請問這部主機該如何設定？</font></li>
+
+<br><font color="#000066">請參考：<a href="http://www.linux-nis.org/nis-howto/HOWTO/index.html" target="_blank">http://www.linux-nis.org/nis-howto/HOWTO/index.html</a></font>
+
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="0440ntp"></a><font color="#3333FF"><a href="0440ntp.php" target="_self"><font face="標楷體">第二十七章、簡易</font><font face="Times New Roman,Times">
+NTP </font><font face="標楷體">伺服器設定</font></a></font>
+<br>　
+<li>
+什麼是 GMT (格林威治) 時間與 UTC 時間？</li>
+
+<br><font color="#000066">由於地球是圓的，所以同一時間點上，在地球共可分為
+24 個時區，其中，我們以歐洲的格林威治時間為一個對照的依據，這個即是 GMT
+時間。台灣時間比 GMT 時間快了 8 小時。至於 UTC 時間則是由原子鐘所計算的時間，這個時間是相當的準確的，主要仍以格林威治時間為時區！</font>
+<br>　
+<li>
+Linux 系統的所有時區檔案放置哪一個目錄底下？</li>
+
+<br><font color="#000066">所有的時區檔案放置於：/usr/share/zoneinfo 底下！至於系統時區的設定檔則在
+/etc/sysconfig/clock 與 /etc/localtime 喔！</font>
+<br>　
+<li>
+我的 Linux 主機本來放置在日本東京，現在想將他拿到台灣來運作，不過因為日本與台灣有一個小時的時差，所以我的時間應該需要經過調整才行。不過，因為我的
+BIOS Time 主要是依據 UTC 時間來設定的，所以似乎只要更動時區參數即可。請問我該如何設定時區，好讓我的
+Linux 主機能夠顯示正確的時間？</li>
+
+<br><font color="#000066">將 /usr/share/zoneinfo/Asia/Taipei 這個檔案複製成為
+/etc/localtime 即可！</font>
+<br>　
+<li>
+目前 Linux 系統上面的時間伺服器主要是以 NTP 為主，請問這個 daemon 的主要設定檔放在哪裡，而該設定檔中，針對上層
+time server 的設定參數為何？而那個 driftfile 參數是幹嘛用的？</li>
+
+<br><font color="#000066">在 /etc/ntp.conf 這個檔案當中，至於上層 time
+server 的設定參數為 server 啊！那個 driftfile 則是用來做為『時間差額』的計算的！該參數後面接的是一個完整路徑的檔名，該檔案裡面的數值單位為百萬分之一(ppm)。</font>
+
+<br>　
+<li>
+請問 ntptrace 的功能為何？</li>
+
+<br><font color="#000066">可以用來追蹤上層 time server 的連線時間與目前時間！</font>
+<br>　
+<li>
+我以 date 更新了我 Linux 上面的時間後，該如何將時間數據寫入 BIOS 內？</li>
+
+<br><font color="#000066">必須利用 hwclock 這個程式來寫入，利用 hwclock
+-w 寫入 BIOS 。</font>
+<br>　
+<li>
+在 Linux 上面如何進行網路校時？</li>
+
+<br><font color="#000066">最簡單的方法即是使用『 ntpdate time.servers.ip;
+hwclock -w 』即可！</font></ul>
+
+<center><font face="標楷體"><font color="#3333FF"><font size=+1><a href="1000results.php" target="_self">架站文件習題解答篇</a></font></font></font></center>
+
+<hr WIDTH="100%"><font color="#000066"><font size=-1>2003/0919：完成到
+Part II (簡易主機防火措施篇) 的習題咯！</font></font>
+<br><font color="#000066"><font size=-1>2003/09/20：完成了 Part III 的習題咯！真開心！大家作作看吧！</font></font>
+<br>
+
+  	
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

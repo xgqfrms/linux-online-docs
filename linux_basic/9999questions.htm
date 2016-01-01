@@ -1,0 +1,2220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 一些 Linux 系統的基礎問題</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">一些 Linux 系統的基礎問題<br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2005/05/23</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+
+<!-- 本文的連結區部分 -->
+
+<!-- 本文的正式部分 -->
+
+
+<font color="#000066"><font size=+1>一些基礎的 Linux 問題與討論：</font></font>
+<blockquote><font color="#000000">注意：如果您有更好的試題，或者是有相關的資料要提供給
+VBird 的話，我也會盡快的將他寫到網頁中的！感謝感謝！！ ^_^ ..</font></blockquote>
+
+<blockquote><b><font color="#000099">一、什麼是 Linux 呢？！</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#1-1">試說明 Unix 與 Linux 的歷史？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-2">簡單說明 GNU General Public License
+（GPL）的精神：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-3">什麼是 Linux Distribution？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-4">市面上眾多的 Linux 版本當中，有何異同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-5">Linu Kernel 的功能：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-6">試說明 Linux Kernel 與使用者之間的相關性？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#1-7">試說明什麼是 GUI</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-8">Linux 的優點：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#1-9">Linux 是多人多工的環境，請問何謂多工(Multitask)與多人(Multiuser)：</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;二、Linux 的安裝與認識 Linux
+支援的硬體</font></b>
+<ol>
+<li>
+
+<font color="#000099"><a href="#2-1">一般而言， Linux 需要的配備並不需要太高檔，但
+Open Linux Server 3.1.1 需要？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-2">什麼是 IDE 界面，一般而言，普通 PC
+允許幾個 IDE 界面與裝置？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-3">IDE2 的 master 之第一個 logical 磁碟中，其裝置代號（檔案名稱）為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-4">在硬碟分割 (Partition)時，最多有幾個
+primary + extended ？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-5">若在分割的時候，在 IDE1 的 slave 硬碟中，分割『六個有用』的磁區（具有
+filesystem 的），此外，有兩個 primary 的磁區！請問六個磁區的代號？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-6">一般而言安裝 Linux 至少要有哪兩個
+partition 呢？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-7">一般而言，在 RAM 為 64MB 或 128 MB
+的系統中， swap 要開多大？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-8">光碟機與軟碟機的代號（裝置檔案名稱）？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-9">網路卡（Network Interface Card, NIC）的代號？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-10">預設的 Linux 檔案格式為何？又，目前常用的
+Journalling 檔案格式為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-11">安裝 Linux 的主要流程？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-12">什麼是 GMT 時間？台北時間差幾個鐘頭？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#2-13">Tap, SCSI 硬碟, RAID, printer 的裝置代號？</a></font></li>
+</ol>
+
+<blockquote><b><font color="#000099">其他注意事項：</font></b>
+<ul>
+<li>
+要玩 X-window 時，至少需要具有 4-8 MB 的 VGA RAM 才好！</li>
+
+<li>
+第一次使用與安裝 Linux 時，請盡量的安裝『所有套件！』</li>
+
+<li>
+若具有安裝與使用經驗之後，則安裝的時候，僅選擇您所預計需要開放的服務之套件即可！</li>
+
+<li>
+特別留意硬體對於 Linux distribution 的支援度！可以參考一下如下的網頁：</li>
+
+<br><font color="#3333FF">http://www.linux.org.tw/hardware/index.php3</font>
+<li>
+製作 Install 之軟碟開機片：</li>
+
+<br>將可開機光碟放入 Windows 系統下，並執行光碟機中的檔案(假設光碟代號為
+E:)
+<ul><font color="#3333FF">E:\col\tools\rawrite\rawrite2</font>
+<br><font color="#3333FF">Enter disk image source filename: E:\col\launch\floppy\install.144</font>
+<br><font color="#3333FF">Enter target disketie derive: A:</font></ul>
+
+<li>
+製作軟碟開機片的一般方法：</li>
+
+<br><font color="#3333FF">mkbootdisk --device /dev/fd0 `uname -r`</font></ul>
+</blockquote>
+</blockquote>
+
+<blockquote><b><font color="#000099">三、簡易 KDE 的使用( X-Window)</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#3-1">若以 X-Window 為預設的登入方式，那請問如何進入
+Virtual console 呢？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#3-2">如何修改進入 Linux 時候的 run-level
+？又 run-level 0, 1, 3, 5 各代表什麼意思？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#3-3">XFree86 在 X-Window 中的角色為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#3-4">XFree86 的主要設定檔在哪裡？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#3-5">KDE 預設提供多少個 Virtual desktops
+？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;四、線上求助 ( Help )</font></b>
+<ol>
+
+<li>
+<font color="#000099"><a href="#4-1">在 Linux 系統中，安裝的套件 (RPM安裝)
+預設的文件資料放在那個目錄底下？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#4-2">查看 Linux 系統的線上求助可以使用什麼指令？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#4-3">使用 man 來查詢線上求助的時候，若要查詢類似參數檔(如/etc/passwd)需如何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#4-4">使用 man 查詢 command 的所有相關指令時，需要下什麼參數？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#4-5">man page 的 man path 變數，記錄在那個檔案中呢？！</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">五、vi 的使用</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#5-1">在 linux 底下最常使用的文書編輯器為
+vi ，請問如何進入編輯模式？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-2">如何由編輯模式跳回一般模式？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#5-3">若上下左右鍵無法使用時，請問如何在一般模式移動游標？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-4">若 [pagedown] [ pageup] 在一般模式無法使用時，如何往前或往後翻一頁？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-5">如何到本檔案的最後一行、第一行；本行的第一個字元、最後一個字元？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-6">如何刪除一行、n行；如何刪除一個字元？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-7">如何複製一行、n行並加以貼上？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-8">如何搜尋 string 這個字串？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-9">如何取代 word1 成為 word2，而若需要使用者確認機制，又該如何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-10">如何讀取一個檔案 filename 進來目前這個檔案？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-11">如何另存新檔成為 newfilename？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-12">如何存檔、離開、存檔後離開、強制存檔後離開？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#5-13">如何設定與取消行號？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">六、檔案與目錄管理</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#6-1">請問底下的目錄與主要放置什麼資料？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-2">『舊的』 Unix 系統與 Linux 系統的『檔名』最多可以容許幾個字元？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-3">什麼是絕對路徑與相對路徑，要由 /usr/share/doc
+進入到 /usr/share/man 由相對路徑與絕對路徑的寫法各為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-4">在非為根目錄的任何一個目錄中，下達
+ls –al 時，均會有『.』及『..』這兩個目錄，請問分別代表什麼？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-5">顯示、變換目錄的時候，使用什麼指令？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#6-6">新增目錄、移除目錄移動目錄與拷貝目錄有什麼指令可用？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-7">如何查看一個檔案的『內容』（不要使用
+vi 的情況下）</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-8">什麼是 hard link 與 soft link 的檔案？有何不同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-9">如何在 root 的家目錄下建立一個 /bin
+的連結捷徑</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-10">若有一個連結檔為 testing 連結到 test1.sh
+，請問 copy testing 到 /tmp 底下，『cp testing /tmp』則 /tmp/testing 這個檔案會是：(1)
+連結檔，連結到 test1.sh ；(2) 一般檔案，為內容與 test1.sh 相同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-11">當一個檔案屬性為 –rwxrwxrwt 則表示這個檔案的意義為？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-12">我需要將一個檔案的屬性改為 –rwxr-xr--
+請問該如何下達指令？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-13">在 /usr/bin/passwd 這個檔案的屬性為
+–r-s--x--x 請問代表什麼意思(s)</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-14">如何改出 –rwxr-sr-x 與 –rwxr-xr-t這個屬性？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-15">如何查看一個檔案的類型 (type) 例如純文字檔、執行檔與
+setuid 檔案等？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-16">若一個使用者的 umask 為 033 ，請問他建立一個新的目錄與檔案時的預設屬性為？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-17">若我需要更改一個檔案的擁有者與群組，該用什麼指令？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-18">如何將一個檔案的修改日期改成目前的時間？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#6-19">如何搜尋一個檔案？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-20">Linux 預設的檔案系統為何？此外，常用的
+Journalling 檔案格式有哪些？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-21">less 跟 more 有什麼不同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6-22">在比較兩個檔案的異同時，常使用的是
+diff 與 cmp ，請教兩者有何不同？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;六.1、磁碟掛載與虛擬記憶體問題</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#6.1-1">我要如何查看 Linux 系統當中所有已經掛載的硬碟容量與
+inodes ？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-2">我要如何查看目前所在目錄的所有檔案佔用的硬碟空間，此外，如何僅輸出結果？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-3">如果磁區 /dev/hda3 有問題，偏偏他是被掛載上的，請問我要如何修理此一磁區？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-4">承上題，那麼有問題的檔案將被移動到那個目錄下？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-5">試說明新增一個 partition 在 /dev/hdb
+當中，且為 hdb5時，並掛載上 /disk2 ，需要哪些步驟？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-6">如何新增加 64MB 的虛擬記憶體 swap
+？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-7">如果要設定一個新掛載上的磁區，令他可以在開機的時候被掛載上，應該編輯哪一個檔案？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#6.1-8">簡易說明 quota 的設置流程？</a></font></li>
+</ol>
+
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;七、BASH SHELL</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#7-1">簡單說明 bash shell 的功能特徵：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-2">在設定變數中，主要的規則為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-3">顯示環境變數與所有變數的指令為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-4">在環境變數當中，『使用者家目錄、主機名稱』的變數名稱為：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-5">如何讓一個變數可以持續到下一個程序
+(PID) 去？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-6">在變數的設定當中，雙引號與單引號有何不同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-7">Command1 `command2` 這個指令代表什麼意思？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#7-8">在命令重導向當中， > 與 >> 有什麼不同？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-9">若要將錯誤的輸出導向『不見了』的裝置，該如何是好？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-10">在管線指令中，我要將 last 輸出的結果顯示
+root 的『登入次數』， 如何做？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-11">如何設定一個變數名稱為 name ，使其顯示為『
+VBird’s testing variable. 』？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-12">請問 bash shell 的環境變數與自己的個人變數可以登入便設定的檔案？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-13">如何查詢曾經操作過的指令？如何執行第
+26 個操作過的指令？上一個操作過的指令？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-14">如何設定命令別名？使 lm 與 ls –al|more
+功能相同</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-15">如何將 /bin 的所有資訊輸出到 /home/testing.dat
+這個檔案？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-16">在上一題中，若還要輸出到螢幕上，要如何是好？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-17">執行 find ，並將正確的結果輸出到
+right 而錯誤結果輸出到 error 當中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-18">如何在指令列模式中將 /root/.bashrc
+的資料加在 /home/col/.bashrc 當中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-19">不要顯示執行的結果要如何是好？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7-20">列出這個月曾經登入主機的使用者資訊即可，不需要重複？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#7-21">萬用字元當中， *, ?, [] 各代表什麼意思？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;七.1、SHELL SCRIPTS</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#7.1-1">什麼是 shell scripts ？ scripts
+有何功用？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-2">要撰寫可以經由鍵盤輸入的 scripts
+時，常使用到的指令？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#7.1-3">在 shell script 當中，在控制式中，
+&amp;&amp; 與 || 代表什麼意思？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-4">在使用迴圈的時候，常使用到的控制式為哪三個？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-5">執行 scripts 的方法有哪兩種？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-6">如何宣告一個變數成為整數型態？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-7">為何在 shell script 前面都要宣告
+shell 呢？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-8">在判斷式中，如何判斷一個檔名是否存在？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-9">在執行一個 scripts 時，在 scripts
+內的變數， $0, $1 代表什麼？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-10">若要寫一個既定的 parameter （如
+start ），用哪一個判斷式較簡單？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#7.1-11">如何印出目前系統中的所有帳號，並加以排序且輸出到
+/tmp/account 中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#7.1-12">如何在不執行 scripts 的情況中 debug
+？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;八、基本帳號管理</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#8-1">如何新增一個使用者 username，且該使用者沒有家目錄？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#8-2">Linux 使用者的帳號、密碼與群組的名稱檔案放在哪裡？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-3">建立新使用者的預設家目錄內容在那個目錄中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-4">建立一個新使用者時，其使用到的相關檔案有哪些？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-5">root 的 UID 與 GID 各為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-6">如何讓一個使用者不能登入主機，但是可以收信？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-7">試說明一個使用者登入系統的流程？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-8">在 /etc/shadow 當中的日期設定中，其數字代表的意義為何？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-9">如何變更使用者的一些屬性？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-10">如何視察一個使用者 username 所擁有的群組呢？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-11">試說明如何手動增加一個使用者 username
+與群組 groupname？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-12">試說明 /etc/passwd 這個檔案的內容與格式：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-13">使用 id 這個指令時，可以顯示什麼訊息資料？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#8-14">可以控制使用者使用主機資源的預設檔案在哪裡？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#8-15">基本的壓縮指令有哪些？</a></font></li>
+</ol>
+</blockquote>
+
+<blockquote><b><font color="#000099">&nbsp;九、開機程序</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#9-1">試說明開機流程：</a></font></li>
+
+<li>
+<font color="#000099"><a href="#9-2">開機時後的載入訊息可以看哪裡？</a></font></li>
+
+<li>
+
+<font color="#000099"><a href="#9-3">改變 run-level 或關機的指令</a></font></li>
+
+<li>
+<font color="#000099"><a href="#9-4">改變登入 Linux 時候預設的 run-level
+要改那個檔案？</a></font></li>
+</ol>
+<b><font color="#000099">&nbsp;十、程序與資源管理</font></b>
+<ol>
+<li>
+<font color="#000099"><a href="#10-1">如何查看目前的程序？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-2">如何查看目前的記憶體使用狀況？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-3">目前的工作如何丟到背景中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-4">如何取得目前背景中的工作，且將他拉回前景中？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-5">如何設定一個程序在開始執行時候的優先值？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-6">什麼指令可以修改一個正在執行的程式之
+nice 值？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-7">在例行性命令中，使用的兩支 demane
+是什麼？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-8">使用 crontab 這個『指令』的時候，如何可以查看目前的工作與刪除目前的工作？</a></font></li>
+
+<li>
+<font color="#000099"><a href="#10-9">常用的 kill 指令之 signal 當中，
+1, 9, 15 代表什麼？</a></font></li>
+</ol>
+</blockquote>
+
+<hr WIDTH="100%"><font size=+1><font color="#000066">來看看解答囉</font><font color="#000099">：</font></font>
+
+<blockquote>請注意：這些解答是 VBird 自己查書或者是實際操作所得到的答案，如果您發現這些答案是『錯誤的』請趕快跟
+<a href="mailto:vbird@aerosol.ev.ncku.edu.tw">VBird</a>
+聯絡，好讓我將資料趕快的訂正！感謝大家的熱情支持囉！</blockquote>
+
+<blockquote>
+<center>
+<hr WIDTH="100%"><b><font color="#000099">一、什麼是 Linux 呢？！</font></b></center>
+
+<ul>
+<li>
+<a NAME="1-1"></a><font color="#000099">試說明 Unix 與 Linux 的歷史？</font></li>
+
+<ul>
+
+<li>
+<font face="細明體"><b>Multics 系統</b>：由Bell（貝爾實驗室）、MIT（麻省理工學院）與GE（美國通用電器）合作開發的一個系統；</font></li>
+
+<li>
+<font face="細明體"><b>1969</b>：K. Thompson 替 DEC 公司寫了一個簡單的
+file system 系統，此為 Unix 的前身，但是 Unix 一詞尚未出現</font></li>
+
+<li>
+<font face="細明體"><b>1973</b>：由 Bell 的 D. Richie 以 C 語言改寫了 Thompson
+的小系統，全部以 ASCII 檔案進行改寫，方便於應用！此時為第一次出現 Unix
+這個作業系統的名詞，不過，由於 Unix 乃針對不同的硬體而設定，因此僅出現在大型的
+Server 上面看到！經過數年後，有底下幾種版本：</font></li>
+
+<ul><font face="細明體"><font color="#000066">1. System V&nbsp; 來自於
+ATT 公司；</font></font>
+
+<br><font face="細明體"><font color="#000066">2. BSD&nbsp; 來自於加州理工學院；</font></font>
+<br><font face="細明體"><font color="#000066">3. AIX&nbsp; 來自於 IBM 公司</font></font></ul>
+
+<li>
+<font face="細明體"><b>1979</b>：Richard Stallman 倡導 Open source 精神；</font></li>
+
+<li>
+<font face="細明體"><b>1984</b>：GNU 與 Free Software Foundation (FSF)由
+R. Stallman 倡導；</font></li>
+
+<li>
+<font face="細明體"><b>1986</b>：Xfree86 出現在 Unix 上面，且在 1994 年整合於
+Linux 中！</font></li>
+
+<li>
+<font face="細明體"><b>1991</b>：芬蘭大學生 Linus Torvalds在網路上首次公告
+0.02 版的 Linux Kernel ，稱為 hobby。</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="1-2"></a><font color="#000099">簡單說明 GNU General Public License
+（GPL）的精神：</font></li>
+
+<ul>
+<li>
+<font face="細明體">GPL 的授權之軟體，乃為自由軟體（Freeware），任何人皆可擁有他；</font></li>
+
+<li>
+<font face="細明體">開發 GPL 的團體(或商業企業)可以經由該軟體的服務來取得服務的費用；</font></li>
+
+<li>
+<font face="細明體">經過 GPL 授權的軟體，其屬於 Open source 的情況，所以應該公布其原始碼；</font></li>
+
+<li>
+<font face="細明體">任何人皆可修改經由 GPL 授權過的軟體，使符合自己的需求；</font></li>
+
+<li>
+<font face="細明體">經過修改過後 Open source 應該回饋給 Linux 社群。</font></li>
+
+<br><font face="細明體">(PS. Open source 最大的優點為多人維護， debugs
+的速度較快，程式亦較為安全，但是缺點則是缺乏『專人』維護！)</font></ul>
+</ul>
+</blockquote>
+
+<blockquote>
+<ul>
+<li>
+<a NAME="1-3"></a><font color="#000099">什麼是 Linux Distribution？</font></li>
+
+<br><font face="細明體">基本上 Linux 是在 1991 年由芬蘭大學生 Linus Torvalds
+寫的一個核心作業系統，最早僅只是核心而已，後來由於此一核心不但可以適合於主流
+PC 的 x86 架構，並且穩定，因此有相當多的團隊加入研究開發，後來某些公司將一些套件加入此一核心中，變成為完整的『安裝光碟』，亦即是
+Linux Distribution 了！所以才會有這麼多的 Linux 版本，各版本之間沒有所謂的誰優誰劣，而是個有其優缺點！看你適合哪一款，就用那一款吧！</font>
+
+<br><font face="細明體">開發商針對 Linux Kernel 進行開發，並加入適合該
+Kernel 的套件（如 ftp, apache, mail 等等），及配合開發商本身的支援軟體，而製作出來的可安裝光碟即可稱為
+distribution。</font></ul>
+</blockquote>
+
+<blockquote>
+<ul>
+<li>
+<a NAME="1-4"></a><font color="#000099">市面上眾多的 Linux 版本當中，有何異同？</font></li>
+
+<br><font face="細明體">唯一相同的地方在於 Linux 的『<b>Kernel</b>』，目前
+( 2002/06/29 ) Kernel 發展至 2.4.xx 版本，至於不同點則是 Linux 開發商自行加入或者是研發的軟體。</font></ul>
+
+<ul>
+<li>
+
+<a NAME="1-5"></a><font color="#000099">Linu Kernel 的功能：</font></li>
+
+<ul>
+<li>
+<font face="細明體">System call interface</font></li>
+
+<li>
+<font face="細明體">Process control</font></li>
+
+<li>
+<font face="細明體">Memory management</font></li>
+
+<li>
+
+<font face="細明體">File System management</font></li>
+
+<li>
+<font face="細明體">Device drivers</font></li>
+</ul>
+<font face="細明體">簡單的說，任何跟系統硬體資源有關的都是 Linux Kernel
+管轄的範圍，所以編輯核心的時候，將核心編的越小越好！</font></ul>
+
+<ul>
+<li>
+<a NAME="1-6"></a><font color="#000099">試說明 Linux Kernel 與使用者之間的相關性？</font></li>
+
+<br><font face="細明體">硬體&lt;=>Kernel (Modules Loader)&lt;=>Shell (
+Terminal or GUI )&lt;=>Users</font></ul>
+
+<ul>
+<li>
+<a NAME="1-7"></a><font color="#000099">試說明什麼是 GUI</font></li>
+
+<br><font face="細明體">GUI 為 <b>Graphical User Interface</b> 的簡寫，即為使用者圖形界面，目前我們在
+Linux 上面的 GUI 一般稱為 X-Window ，而其核心為 Xfree86 這個 X-Server ！請注意，這個
+<b>Xfree86</b>
+最大的功能即是在控制『顯示卡、硬體周邊』等跟 Window 有關的界面，所以 X-Window
+無法啟動時，通常是 Xfree86 這個 X-Window 的核心驅動程式設定不完全有關！</font></ul>
+
+<ul>
+<li>
+
+<a NAME="1-8"></a><font color="#000099">Linux 的優點：</font></li>
+
+<br><font face="細明體">最大的優點來自於其良好的資源分配！所以具有：</font>
+<ul>
+<li>
+<font face="細明體">良好的多人多工環境，資源分配平均；</font></li>
+
+<li>
+<font face="細明體">除了免費之外，線上更新速度快，除錯與安全性均較佳；</font></li>
+
+<li>
+<font face="細明體">為 Open source 的授權，故而具有 open source 的所有優缺點；</font></li>
+
+<li>
+<font face="細明體">網路功能強大。</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="1-9"></a><font color="#000099">Linux 是多人多工的環境，請問何謂多工(Multitask)與多人(Multiuser)：</font></li>
+
+<ul>
+<li>
+<font face="細明體"><b>Multitask</b> 指的是多工環境，在 Linux 系統下，
+CPU 與其他例如網路資源可以同時進行多項工作， Linux 最大的特色之一即在於其多工時，資源分配較為平均！</font></li>
+
+<li>
+<font face="細明體"><b>Multiuser</b> 指的是 Linux 允許多人同時連上主機之外，每個使用者皆有其各人的使用環境，並且可以同時使用系統的資源！</font></li>
+</ul>
+</ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">二、Linux 的安裝與認識 Linux
+支援的硬體</font></b></center>
+
+<ul>
+<li>
+<a NAME="2-1"></a><font color="#000099">一般而言， Linux 需要的配備並不需要太高檔，但
+Open Linux Server 3.1.1 需要？</font></li>
+
+<ul>
+<li>
+<font face="細明體">CPU 需要在 PII, PIII, P4 或 K7, K8 以上等級；</font></li>
+
+<li>
+<font face="細明體">RAM 至少需要 64 MB，</font></li>
+
+<li>
+<font face="細明體">硬碟至少 550 MB，全部安裝則需要 1.7GB</font></li>
+</ul>
+</ul>
+</blockquote>
+
+<blockquote>
+<ul>
+<li>
+<a NAME="2-2"></a><font color="#000099">什麼是 IDE 界面，一般而言，普通
+PC 允許幾個 IDE 界面與裝置？</font></li>
+
+<ul>
+<li>
+<font face="細明體">IDE 為用來傳輸硬碟資料的一個彙流界面；</font></li>
+
+<li>
+<font face="細明體">共有 IDE1, IDE2 ，分別有 master 與 slave 所以共四個
+IDE 裝置支援！</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-3"></a><font color="#000099">IDE2 的 master 之第一個 logical
+磁碟中，其裝置代號（檔案名稱）為何？</font></li>
+
+<br><font face="細明體">/dev/hdc5</font></ul>
+
+<ul>
+<li>
+<a NAME="2-4"></a><font color="#000099">在硬碟分割 (Partition)時，最多有幾個
+primary + extended ？</font></li>
+
+<br><font face="細明體">Primary + Extended 共四個，其中 Extended 通常只有一個！
+( 更詳細的硬碟與 MBR 可以參考 <a href="http://aerosol.ev.ncku.edu.tw/~vbird/forums/viewtopic.php?t=182">這裡</a>
+這篇討論 )</font></ul>
+
+<ul>
+<li>
+<a NAME="2-5"></a><font color="#000099">若在分割的時候，在 IDE1 的 slave
+硬碟中，分割『六個有用』的磁區（具有 filesystem 的），此外，有兩個 primary
+的磁區！請問六個磁區的代號</font>？</li>
+
+<ul>
+<li>
+<font face="細明體">/dev/hdb1(primary)</font></li>
+
+<li>
+<font face="細明體">/dev/hdb2(primary)</font></li>
+
+<li>
+
+<font face="細明體">/dev/hdb3(extended)</font></li>
+
+<li>
+<font face="細明體">/dev/hda5(logical 底下皆為 logical)</font></li>
+
+<li>
+<font face="細明體">/dev/hda6</font></li>
+
+<li>
+<font face="細明體">/dev/hda7</font></li>
+
+<li>
+<font face="細明體">/dev/hda8</font></li>
+
+<br><font face="細明體">請注意，5-8 這四個 logical 相加的總和為 3！</font></ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-6"></a><font color="#000099">一般而言安裝 Linux 至少要有哪兩個
+partition 呢？</font></li>
+
+<ul>
+<li>
+<font face="細明體">根目錄 / (root)</font></li>
+
+<li>
+<font face="細明體">虛擬記憶體 Swap</font></li>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-7"></a><font color="#000099">一般而言，在 RAM 為 64MB 或 128
+MB 的系統中， swap 要開多大？</font></li>
+
+<br><font face="細明體">約兩倍的 RAM ，亦即為 128 MB 或 256 MB ，可獲得較佳效能！</font></ul>
+
+<ul>
+<li>
+<a NAME="2-8"></a><font color="#000099">光碟機與軟碟機的代號（裝置檔案名稱）？</font></li>
+
+<ul>
+
+<li>
+<font face="細明體">/dev/cdrom</font></li>
+
+<li>
+<font face="細明體">/dev/fd0</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-9"></a><font color="#000099">網路卡（Network Interface Card,
+NIC）的代號？</font></li>
+
+<ul>
+<li>
+
+<font face="細明體">/dev/eth0</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-10"></a><font color="#000099">預設的 Linux 檔案格式為何？又，目前常用的
+Journalling 檔案格式為何？</font></li>
+
+<ul>
+<li>
+<font face="細明體">Ext2</font></li>
+
+<li>
+<font face="細明體">Ext3, Reseifs</font></li>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-11"></a><font color="#000099">安裝 Linux 的主要流程？</font></li>
+
+<ul>
+<li>
+<font face="細明體">BIOS（決定由 cdrom 或 floppy 開機，並載入PC硬體資訊）</font></li>
+
+<li>
+<font face="細明體">載入 install kernel loader ：</font></li>
+
+<li>
+<font face="細明體">收集硬體資訊</font></li>
+
+<li>
+<font face="細明體">Hard Disk 之 Partition</font></li>
+
+<li>
+<font face="細明體">Formation</font></li>
+
+<li>
+<font face="細明體">Softpackage 的選擇</font></li>
+
+<li>
+
+<font face="細明體">開始安裝！</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="2-12"></a><font color="#000099">什麼是 GMT 時間？台北時間差幾個鐘頭？</font></li>
+
+<br><font face="細明體">GMT 時間指的是格林威治時間，為標準的時間，而台北時間較
+GMT 快了 8 小時！</font></ul>
+
+<ul>
+<li>
+<a NAME="2-13"></a><font color="#000099">Tap, SCSI 硬碟, RAID, printer
+的裝置代號？</font></li>
+
+<ul>
+<li>
+<font face="細明體">Tap&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : /dev/ht0 (IDE),
+/dev/st0 (SCSI);</font></li>
+
+<li>
+<font face="細明體">SCSI H.D.: /dev/sd[a-p],</font></li>
+
+<li>
+<font face="細明體">RAID&nbsp;&nbsp;&nbsp;&nbsp; : /dev/md[0-15];</font></li>
+
+<li>
+<font face="細明體">printer&nbsp; : /dev/lp[0-2]</font></li>
+</ul>
+</ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">三、簡易 KDE 的使用( X-Window)</font></b></center>
+
+<ul>
+<li>
+<a NAME="3-1"></a><font color="#000099">若以 X-Window 為預設的登入方式，那請問如何進入
+Virtual console 呢？</font></li>
+
+<br><font face="細明體">可以按下 [Ctrl] + [Alt] + [F1] ~ [F6] 進入 Virtual
+console ( 共六個 )；</font>
+<br><font face="細明體">而按下 [Ctrl] + [Alt] + [F8] 可回到 X-Window 的
+desktop 中！</font></ul>
+
+<ul>
+<li>
+<a NAME="3-2"></a><font color="#000099">如何修改進入 Linux 時候的 run-level
+？又 run-level 0, 1, 3, 5 各代表什麼意思？</font></li>
+
+<ul>
+<li>
+<font face="細明體">修改 /etc/inittab 裡頭的設定即可；</font></li>
+
+<li>
+
+<font face="細明體">0：關機(如 init 0 )；</font></li>
+
+<br><font face="細明體">1：單人維護模式，沒有網路功能；</font>
+<br><font face="細明體">3：純文字介面登入，多人多工環境；</font>
+<br><font face="細明體">5：X-Window 登入模式，多人多工模式。</font></ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="3-3"></a><font color="#000099">XFree86 在 X-Window 中的角色為何？</font></li>
+
+<br><font face="細明體">基本角色是控制顯示相關硬體的核心角色，也可以說程式
+X-Window 的 Server ，此外， KDE 這個 Window management 則是 X-Window 的
+Client 呦！因此， XFree86 若死掉了，那麼 KDE 就無法被啟動！</font></ul>
+
+<ul>
+<li>
+<a NAME="3-4"></a><font color="#000099">XFree86 的主要設定檔在哪裡？</font></li>
+
+<br><font face="細明體">就是在 /etc/X11/XF86Config-4 這個檔案！</font></ul>
+
+<ul>
+<li>
+<a NAME="3-5"></a><font color="#000099">KDE 預設提供多少個 Virtual desktops
+？</font></li>
+
+<br><font face="細明體">預設是提供四個，就是在進入 KDE 之後，最下方的 bar
+上面有 1,2,3,4 那個字樣的那個咚咚！</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">四、線上求助 ( Help )</font></b></center>
+
+<ul>
+<li>
+<a NAME="4-1"></a><font color="#000099">在 Linux 系統中，安裝的套件 (RPM安裝)
+預設的文件資料放在那個目錄底下？</font></li>
+
+<br><font face="細明體">/usr/share/doc</font></ul>
+
+<ul>
+<li>
+<a NAME="4-2"></a><font color="#000099">查看 Linux 系統的線上求助可以使用什麼指令？</font></li>
+
+<br><font face="細明體">man command</font>
+<br><font face="細明體">info command</font></ul>
+
+<ul>
+<li>
+<a NAME="4-3"></a><font color="#000099">使用 man 來查詢線上求助的時候，若要查詢類似參數檔(如/etc/passwd)需如何？</font></li>
+
+<br><font face="細明體">man 5 passwd 或是例如 syslog.conf 則： man 5 syslog.conf
+那個 5 即是大部分的 config 檔案的查詢。</font></ul>
+
+<ul>
+<li>
+<a NAME="4-4"></a><font color="#000099">使用 man 查詢 command 的所有相關指令時，需要下什麼參數？</font></li>
+
+<br><font face="細明體">man –k command 例如 man –k passwd</font></ul>
+
+<ul>
+<li>
+<a NAME="4-5"></a><font color="#000099">man page 的 man path 變數，記錄在那個檔案中呢？！</font></li>
+
+<br><font face="細明體">/etc/man.conf</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">五、vi 的使用</font></b></center>
+
+<ul>
+
+<li>
+<a NAME="5-1"></a><font face="細明體"><font color="#000099">在 linux 底下最常使用的文書編輯器為
+vi ，請問如何進入編輯模式？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">在一般模式底下輸入： i, I, a, A 為在本行當中輸入新字元；（出現
+–Insert- ）</font></li>
+
+<li>
+<font face="細明體">在一般模式當中輸入： o, O 為在一個新的一行輸入新字元；</font></li>
+
+<li>
+<font face="細明體">在一般模式當中輸入： r, R 為取代字元！（左下角出現
+–Replace-）</font></li>
+</ul>
+
+</ul>
+
+<ul>
+<li>
+<a NAME="5-2"></a><font face="細明體"><font color="#000099">如何由編輯模式跳回一般模式？</font></font></li>
+
+<br><font face="細明體">[Esc]</font></ul>
+
+<ul>
+<li>
+<a NAME="5-3"></a><font face="細明體"><font color="#000099">若上下左右鍵無法使用時，請問如何在一般模式移動游標？</font></font></li>
+
+<br><font face="細明體">h, j, k, l</font></ul>
+
+<ul>
+<li>
+<a NAME="5-4"></a><font face="細明體"><font color="#000099">若 [pagedown]
+[ pageup] 在一般模式無法使用時，如何往前或往後翻一頁？</font></font></li>
+
+<br><font face="細明體">[Ctrl] + [f]</font>
+<br><font face="細明體">[Ctrl] + [b]</font></ul>
+
+<ul>
+<li>
+<a NAME="5-5"></a><font face="細明體"><font color="#000099">如何到本檔案的最後一行、第一行；本行的第一個字元、最後一個字元？</font></font></li>
+
+<br><font face="細明體">G, 1G, 0, $</font></ul>
+
+<ul>
+<li>
+<a NAME="5-6"></a><font face="細明體"><font color="#000099">如何刪除一行、n行；如何刪除一個字元？</font></font></li>
+
+<br><font face="細明體">dd, ndd, x 或 X （dG 及 d1G 分別表示刪除到頁首及頁尾）</font></ul>
+
+<ul>
+<li>
+<a NAME="5-7"></a><font face="細明體"><font color="#000099">如何複製一行、n行並加以貼上？</font></font></li>
+
+<br><font face="細明體">yy, nyy, p 或 P</font></ul>
+
+<ul>
+<li>
+<a NAME="5-8"></a><font face="細明體"><font color="#000099">如何搜尋 string
+這個字串？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">?string (往前搜尋)</font></li>
+
+<li>
+<font face="細明體">/string (往後搜尋)</font></li>
+</ul>
+</ul>
+
+<ul>
+
+<li>
+<a NAME="5-9"></a><font face="細明體"><font color="#000099">如何取代 word1
+成為 word2，而若需要使用者確認機制，又該如何？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">:1,$s/word1/word2/g 或</font></li>
+
+<li>
+<font face="細明體">:1,$s/word1/word2/gc （需要使用者確認）</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+
+<a NAME="5-10"></a><font face="細明體"><font color="#000099">如何讀取一個檔案
+filename 進來目前這個檔案？</font></font></li>
+
+<br><font face="細明體">:r filename</font></ul>
+
+<ul>
+<li>
+<a NAME="5-11"></a><font face="細明體"><font color="#000099">如何另存新檔成為
+newfilename？</font></font></li>
+
+<br><font face="細明體">:w newfilename</font></ul>
+
+<ul>
+<li>
+<a NAME="5-12"></a><font face="細明體"><font color="#000099">如何存檔、離開、存檔後離開、強制存檔後離開？</font></font></li>
+
+<br><font face="細明體">:w； :q： :wq； :wq!</font></ul>
+
+<ul>
+<li>
+<a NAME="5-13"></a><font color="#000099">如何設定與取消行號？</font></li>
+
+<br><font face="細明體">:set nu</font>
+<br><font face="細明體">:set nonu</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">六、檔案與目錄管理</font></b></center>
+
+<ul>
+<li>
+<a NAME="6-1"></a><font face="細明體"><font color="#000099">請問底下的目錄與主要放置什麼資料？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">/etc/：幾乎系統的所有設定檔案均在此，尤其 passwd, shadow</font></li>
+
+<li>
+<font face="細明體">/etc/rc.d/init.d：系統開機的時候載入服務的 scripts
+的擺放地點</font></li>
+
+<li>
+<font face="細明體">/boot：開機設定檔，也是預設擺放核心 vmlinuz 的地方</font></li>
+
+<li>
+<font face="細明體">/usr/bin, /bin：一般執行檔擺放的地方</font></li>
+
+<li>
+<font face="細明體">/usr/sbin, /sbin：系統管理員常用指令集</font></li>
+
+<li>
+<font face="細明體">/dev：擺放所有系統裝置檔案的目錄</font></li>
+
+<li>
+<font face="細明體">/var/log：擺放系統登錄檔案的地方</font></li>
+</ul>
+
+</ul>
+
+<ul>
+<li>
+<a NAME="6-2"></a><font face="細明體"><font color="#000099">『舊的』 Unix
+系統與 Linux 系統的『檔名』最多可以容許幾個字元？</font></font></li>
+
+<br><font face="細明體">14, 255</font></ul>
+
+<ul>
+<li>
+<a NAME="6-3"></a><font face="細明體"><font color="#000099">什麼是絕對路徑與相對路徑，要由
+/usr/share/doc 進入到 /usr/share/man 由相對路徑與絕對路徑的寫法各為何？</font></font></li>
+
+<ul>
+<li>
+
+<font face="細明體">絕對路徑絕對由 / 開始寫起，相對路徑則非由 / 寫起；</font></li>
+
+<li>
+<font face="細明體">cd /usr/share/man ; cd ../man</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6-4"></a><font face="細明體"><font color="#000099">在非為根目錄的任何一個目錄中，下達
+ls –al 時，均會有『.』及『..』這兩個目錄，請問分別代表什麼？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">.&nbsp; ：代表本目錄</font></li>
+
+<li>
+<font face="細明體">.. ：代表上層目錄</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6-5"></a><font face="細明體"><font color="#000099">顯示、變換目錄的時候，使用什麼指令？</font></font></li>
+
+<br><font face="細明體">ls, pwd 為顯示； 變換目錄用 cd</font></ul>
+
+<ul>
+<li>
+
+<a NAME="6-6"></a><font face="細明體"><font color="#000099">新增目錄、移除目錄移動目錄與拷貝目錄有什麼指令可用？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">新增： mkdir 目錄,</font></li>
+
+<li>
+<font face="細明體">移除： rmdir 目錄(但是該目錄內必須要已經清空了), rm
+–rf 目錄,</font></li>
+
+<li>
+<font face="細明體">移動： mv directory1 directory2</font></li>
+
+<li>
+
+<font face="細明體">拷貝： cp –r directory1 directory2</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6-7"></a><font face="細明體"><font color="#000099">如何查看一個檔案的『內容』（不要使用
+vi 的情況下）</font></font></li>
+
+<br><font face="細明體">cat, tac, more, less, head, tail, nl, od(查看二進位制)</font></ul>
+
+<ul>
+<li>
+<a NAME="6-8"></a><font face="細明體"><font color="#000099">什麼是 hard
+link 與 soft link 的檔案？有何不同？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">Hard Links：在做成 hard link 檔案時，系統會佔用掉一個
+inode ，由連結檔案可發現其 link 欄位多使用了一個 inode ，當原始檔案被刪除的時候，該原始檔案的內容將繼續保留在其他的
+Hard Links 檔案中；但所有 Link 佔用的硬碟總量僅佔一個檔案的容量大小！(但
+Hard link 不能連結不同 filesystem 的檔案)</font></li>
+
+<li>
+<font face="細明體">Soft Links：類似捷徑，當原始檔被刪除，soft link 檔案將找不到原始檔了！</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6-9"></a><font face="細明體"><font color="#000099">如何在 root
+的家目錄下建立一個 /bin 的連結捷徑</font></font></li>
+
+<br><font face="細明體">ln –s /bin /root/bin</font></ul>
+
+<ul>
+<li>
+<a NAME="6-10"></a><font face="細明體"><font color="#000099">若有一個連結檔為
+testing 連結到 test1.sh ，請問 copy testing 到 /tmp 底下，『cp testing
+/tmp』則 /tmp/testing 這個檔案會是：(1) 連結檔，連結到 test1.sh ；(2) 一般檔案，為內容與
+test1.sh 相同？</font></font></li>
+
+<br><font face="細明體">答案為 (2)</font></ul>
+
+<ul>
+<li>
+<a NAME="6-11"></a><font face="細明體"><font color="#000099">當一個檔案屬性為
+–rwxrwxrwt 則表示這個檔案的意義為？</font></font></li>
+
+<br><font face="細明體">任何人皆可讀取、可寫入，但是不可刪除該檔案(或目錄)，除了
+root 與檔案或目錄擁有者有權可以刪除。</font></ul>
+
+<ul>
+<li>
+<a NAME="6-12"></a><font face="細明體"><font color="#000099">我需要將一個檔案的屬性改為
+–rwxr-xr-- 請問該如何下達指令？</font></font></li>
+
+<br><font face="細明體">chmod 754 filename, chmod u=rwx,g=rx,o=r filename</font></ul>
+
+<ul>
+<li>
+<a NAME="6-13"></a><font face="細明體"><font color="#000099">在 /usr/bin/passwd
+這個檔案的屬性為 –r-s--x--x 請問代表什麼意思(s)</font></font></li>
+
+<br><font face="細明體">那個 s 代表為 SUID ，當使用者使用這個檔案進行工作的時候，將會具有該檔案擁有者的權限！</font></ul>
+
+<ul>
+<li>
+<a NAME="6-14"></a><font face="細明體"><font color="#000099">如何改出 –rwxr-sr-x
+與 –rwxr-xr-t這個屬性？</font></font></li>
+
+<br><font face="細明體">chmod 2755 filename, chmod 1755 filename</font></ul>
+
+<ul>
+<li>
+<a NAME="6-15"></a><font face="細明體"><font color="#000099">如何查看一個檔案的類型
+(type) 例如純文字檔、執行檔與 setuid 檔案等？</font></font></li>
+
+<br><font face="細明體">file filename</font></ul>
+
+<ul>
+
+<li>
+<a NAME="6-16"></a><font face="細明體"><font color="#000099">若一個使用者的
+umask 為 033 ，請問他建立一個新的目錄與檔案時的預設屬性為？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">目錄：744 ? -rwx-r--r--</font></li>
+
+<li>
+<font face="細明體">檔案：644 ? -rw-r--r--</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+
+<a NAME="6-17"></a><font face="細明體"><font color="#000099">若我需要更改一個檔案的擁有者與群組，該用什麼指令？</font></font></li>
+
+<br><font face="細明體">chown, chgrp</font></ul>
+
+<ul>
+<li>
+<a NAME="6-18"></a><font face="細明體"><font color="#000099">如何將一個檔案的修改日期改成目前的時間？</font></font></li>
+
+<br><font face="細明體">touch filename</font></ul>
+
+<ul>
+<li>
+<a NAME="6-19"></a><font face="細明體"><font color="#000099">如何搜尋一個檔案？</font></font></li>
+
+<br><font face="細明體">which (僅用於指令搜尋), whereis, locate, find</font></ul>
+
+<ul>
+<li>
+<a NAME="6-20"></a><font face="細明體"><font color="#000099">Linux 預設的檔案系統為何？此外，常用的
+Journalling 檔案格式有哪些？</font></font></li>
+
+<br><font face="細明體">Ext2, Journalling 有 ext3 及 Reiserfs 等</font></ul>
+
+<ul>
+<li>
+<a NAME="6-21"></a><font face="細明體"><font color="#000099">less 跟 more
+有什麼不同？</font></font></li>
+
+<br><font face="細明體">less 可以翻頁，但是 more 不行！</font></ul>
+
+<ul>
+<li>
+<a NAME="6-22"></a><font face="細明體"><font color="#000099">在比較兩個檔案的異同時，常使用的是
+diff 與 cmp ，請教兩者有何不同？</font></font></li>
+
+<br><font face="細明體">diff 為一行一行比較， cmp 為一個字元(character)一個字元比較</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;六.1、磁碟掛載與虛擬記憶體問題</font></b></center>
+
+<ul>
+<li>
+
+<a NAME="6.1-1"></a><font face="細明體"><font color="#000099">我要如何查看
+Linux 系統當中所有已經掛載的硬碟容量與 inodes ？</font></font></li>
+
+<br><font face="細明體">df –k, df –i,</font></ul>
+
+<ul>
+<li>
+<a NAME="6.1-2"></a><font face="細明體"><font color="#000099">我要如何查看目前所在目錄的所有檔案佔用的硬碟空間，此外，如何僅輸出結果？</font></font></li>
+
+<br><font face="細明體">du -k, du –i, du -s</font></ul>
+
+<ul>
+<li>
+<a NAME="6.1-3"></a><font face="細明體"><font color="#000099">如果磁區
+/dev/hda3 有問題，偏偏他是被掛載上的，請問我要如何修理此一磁區？</font></font></li>
+
+<br><font face="細明體">umount /dev/hda3</font>
+<br><font face="細明體">fsck /dev/hda3</font></ul>
+
+<ul>
+<li>
+<a NAME="6.1-4"></a><font face="細明體"><font color="#000099">承上題，那麼有問題的檔案將被移動到那個目錄下？</font></font></li>
+
+<br><font face="細明體">lost+found</font></ul>
+
+<ul>
+<li>
+<a NAME="6.1-5"></a><font face="細明體"><font color="#000099">試說明新增一個
+partition 在 /dev/hdb 當中，且為 hdb5時，並掛載上 /disk2 ，需要哪些步驟？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">fdisk /dev/hdb&nbsp;&nbsp; 按 n 新增，按 e 新增 extended
+，再按 n 新增 logical</font></li>
+
+<li>
+<font face="細明體">mke2fs –b 2048 /dev/hdb5</font></li>
+
+<li>
+<font face="細明體">mkdir /disk2</font></li>
+
+<li>
+
+<font face="細明體">mount –t ext2 /dev/hdb5 /disk2</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6.1-6"></a><font face="細明體"><font color="#000099">如何新增加
+64MB 的虛擬記憶體 swap ？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">dd if=/dev/zero of=/tmp/swap bs=4k count=16384</font></li>
+
+<li>
+<font face="細明體">mkswap /tmp/swap</font></li>
+
+<li>
+<font face="細明體">swapon /tmp/swap</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6.1-7"></a><font face="細明體"><font color="#000099">如果要設定一個新掛載上的磁區，令他可以在開機的時候被掛載上，應該編輯哪一個檔案？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">先 /etc/fstab</font></li>
+
+<li>
+<font face="細明體">再 mount –a</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="6.1-8"></a><font face="細明體"><font color="#000099">簡易說明
+quota 的設置流程？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">編輯 /etc/fstab， 加入 usrquota and/or grpquota</font></li>
+
+<li>
+
+<font face="細明體">reboot</font></li>
+
+<li>
+<font face="細明體">quotacheck –avug&nbsp; (會產生 aquota.user(group))</font></li>
+
+<li>
+<font face="細明體">quotaon –aug</font></li>
+
+<li>
+<font face="細明體">edquota –u username</font></li>
+
+<li>
+<font face="細明體">edquota –g groupname</font></li>
+
+<li>
+<font face="細明體">repquota –vu /dev/hd[a-d][1-16]</font></li>
+</ul>
+</ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;七、BASH SHELL</font></b></center>
+
+<ul>
+<li>
+<a NAME="7-1"></a><font face="細明體"><font color="#000099">簡單說明 bash
+shell 的功能特徵：</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">命令記憶功能 ~/.bash_history</font></li>
+
+<li>
+<font face="細明體">命令別名功能 alias</font></li>
+
+<li>
+<font face="細明體">shell scripts 功能</font></li>
+
+<li>
+<font face="細明體">命令與檔案名稱補全功能 &lt;tab></font></li>
+
+<li>
+<font face="細明體">工作控制功能 jobs</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="7-2"></a><font face="細明體"><font color="#000099">在設定變數中，主要的規則為何？</font></font></li>
+
+<ol>
+<li>
+<font face="細明體">變數與變數內容以等號來連結；</font></li>
+
+<li>
+<font face="細明體">等號兩邊不能直接接空白字元；</font></li>
+
+<li>
+<font face="細明體">變數名稱只能是英文字母與數字，但是數字不能是開頭字元；</font></li>
+
+<li>
+<font face="細明體">若有空白字元可以使用雙引號『 " 』或單引號『 ' 』來將變數內容結合起來，但須要特別留意，雙引號內可以保有變數，但是單引號則僅為一般字元；</font></li>
+
+<li>
+<font face="細明體">必要時需要以跳脫字元『 \ 』來將特殊符號（如 Enter,
+$, \, 空白字元, ' 等）變成一般符號；</font></li>
+
+<li>
+
+<font face="細明體">若該變數為擴增變數內容時，則需以雙引號及 $變數名稱如：『
+"$PATH":/home』繼續累加內容；</font></li>
+
+<li>
+<font face="細明體">若該變數需要在其他子程序執行，則需要以 export 來使變數可以動作，如『export
+PATH』；</font></li>
+
+<li>
+<font face="細明體">通常大寫字元為系統預設變數，自行設定變數可以使用小寫字元，方便判斷（純粹依照使用者興趣與嗜好）；</font></li>
+
+<li>
+<font face="細明體">取消變數的方法為：『unset 變數名稱』</font></li>
+</ol>
+</ul>
+
+<ul>
+<li>
+<a NAME="7-3"></a><font face="細明體"><font color="#000099">顯示環境變數與所有變數的指令為何？</font></font></li>
+
+<br><font face="細明體">env, set,</font></ul>
+
+<ul>
+<li>
+<a NAME="7-4"></a><font face="細明體"><font color="#000099">在環境變數當中，『使用者家目錄、主機名稱』的變數名稱為：</font></font></li>
+
+<br><font face="細明體">HOME, HOSTNAME</font></ul>
+
+<ul>
+
+<li>
+<a NAME="7-5"></a><font face="細明體"><font color="#000099">如何讓一個變數可以持續到下一個程序
+(PID) 去？</font></font></li>
+
+<br><font face="細明體">export variable</font></ul>
+
+<ul>
+<li>
+<a NAME="7-6"></a><font face="細明體"><font color="#000099">在變數的設定當中，雙引號與單引號有何不同？</font></font></li>
+
+<br><font face="細明體">雙引號裡面可以包含變數，單引號謹代表一般字元！</font></ul>
+
+<ul>
+<li>
+
+<a NAME="7-7"></a><font face="細明體"><font color="#000099">Command1 `command2`
+這個指令代表什麼意思？</font></font></li>
+
+<br><font face="細明體">在這一行當中， command2 會先執行，而輸出的結果會給
+command1 當作參數。</font>
+<br><font face="細明體">cd /lib/modules/`uname -r`/kernel 是最常使用的一例</font></ul>
+
+<ul>
+<li>
+<a NAME="7-8"></a><font face="細明體"><font color="#000099">在命令重導向當中，
+> 與 >> 有什麼不同？</font></font></li>
+
+<br><font face="細明體">>&nbsp; 會將導向的 file 覆蓋，</font>
+
+<br><font face="細明體">>> 則是增加！</font></ul>
+
+<ul>
+<li>
+<a NAME="7-9"></a><font face="細明體"><font color="#000099">若要將錯誤的輸出導向『不見了』的裝置，該如何是好？</font></font></li>
+
+<br><font face="細明體">command 2> /dev/null</font></ul>
+
+<ul>
+<li>
+<a NAME="7-10"></a><font face="細明體"><font color="#000099">在管線指令中，我要將
+last 輸出的結果顯示 root 的『登入次數』， 如何做？</font></font></li>
+
+<br><font face="細明體">last | grep root | cut –d “ “ –f 1 | wc -l</font></ul>
+
+<ul>
+<li>
+<a NAME="7-11"></a><font face="細明體"><font color="#000099">如何設定一個變數名稱為
+name ，使其顯示為『 VBird’s testing variable. 』？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">name=VBird\’s\ testing\ variable.</font></li>
+
+<li>
+<font face="細明體">name=”VBird’s testing variables.”</font></li>
+
+<li>
+<font face="細明體">echo $name</font></li>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="7-12"></a><font face="細明體"><font color="#000099">請問 bash
+shell 的環境變數與自己的個人變數可以登入便設定的檔案？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">Open Linux：</font></li>
+
+<br><font face="細明體">/etc/profile, /etc/config.d/shells/bashrc, ~/.profile,
+~/.bashrc,</font>
+<li>
+<font face="細明體">Red Hat ：</font></li>
+
+<br><font face="細明體">/etc/profile, ~/.bash_profile, ~/.bashrc,</font></ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="7-13"></a><font face="細明體"><font color="#000099">如何查詢曾經操作過的指令？如何執行第
+26 個操作過的指令？上一個操作過的指令？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">history</font></li>
+
+<li>
+<font face="細明體">!26</font></li>
+
+<li>
+<font face="細明體">!!</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="7-14"></a><font face="細明體"><font color="#000099">如何設定命令別名？使
+lm 與 ls –al|more 功能相同</font></font></li>
+
+<br><font face="細明體">alias lm=’ls –al|more’</font></ul>
+
+<ul>
+<li>
+
+<a NAME="7-15"></a><font face="細明體"><font color="#000099">如何將 /bin
+的所有資訊輸出到 /home/testing.dat 這個檔案？</font></font></li>
+
+<br><font face="細明體">ls –al /bin 1> /home/testing.dat</font></ul>
+
+<ul>
+<li>
+<a NAME="7-16"></a><font face="細明體"><font color="#000099">在上一題中，若還要輸出到螢幕上，要如何是好？</font></font></li>
+
+<br><font face="細明體">ls –al /bin | tee /home/testing.dat</font></ul>
+
+<ul>
+<li>
+<a NAME="7-17"></a><font face="細明體"><font color="#000099">執行 find
+，並將正確的結果輸出到 right 而錯誤結果輸出到 error 當中？</font></font></li>
+
+<br><font face="細明體">find / -name test 1> right 2>error</font></ul>
+
+<ul>
+<li>
+<a NAME="7-18"></a><font face="細明體"><font color="#000099">如何在指令列模式中將
+/root/.bashrc 的資料加在 /home/col/.bashrc 當中？</font></font></li>
+
+<br><font face="細明體">cat /root/.bashrc >> /home/col/.bashrc</font></ul>
+
+<ul>
+<li>
+<a NAME="7-19"></a><font face="細明體"><font color="#000099">不要顯示執行的結果要如何是好？</font></font></li>
+
+<br><font face="細明體">command&nbsp; > /dev/null 2>$1</font></ul>
+
+<ul>
+<li>
+<a NAME="7-20"></a><font face="細明體"><font color="#000099">列出這個月曾經登入主機的使用者資訊即可，不需要重複？</font></font></li>
+
+<br><font face="細明體">last | cut –d” “ –f1 | sort | uniq</font></ul>
+
+<ul>
+<li>
+<a NAME="7-21"></a><font face="細明體"><font color="#000099">萬用字元當中，
+*, ?, [] 各代表什麼意思？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">* 代表 0 到無限多個字元；</font></li>
+
+<li>
+<font face="細明體">? 代表一個任意字元；</font></li>
+
+<li>
+<font face="細明體">[] 代表一個字元，這個字元在某一個限制範圍內。</font></li>
+</ul>
+</ul>
+
+<center>
+
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;七.1、SHELL SCRIPTS</font></b></center>
+
+<ul>
+<li>
+<a NAME="7.1-1"></a><font face="細明體"><font color="#000099">什麼是 shell
+scripts ？ scripts 有何功用？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">簡單的說， scripts 就是一個內部含有多個或複雜的 command
+的純文字檔案；</font></li>
+
+<li>
+<font face="細明體">scripts 可以進行 program 的功能，但速度上較 C 慢了點！</font></li>
+</ul>
+
+</ul>
+
+<ul>
+<li>
+<a NAME="7.1-2"></a><font face="細明體"><font color="#000099">要撰寫可以經由鍵盤輸入的
+scripts 時，常使用到的指令？</font></font></li>
+
+<br><font face="細明體">read&nbsp; variable</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-3"></a><font face="細明體"><font color="#000099">在 shell
+script 當中，在控制式中， &amp;&amp; 與 || 代表什麼意思？</font></font></li>
+
+<br><font face="細明體">分別代表『和(同時成立)』及『或(僅其一成立就成立)』的意思！</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-4"></a><font face="細明體"><font color="#000099">在使用迴圈的時候，常使用到的控制式為哪三個？</font></font></li>
+
+<br><font face="細明體">for, while, until</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-5"></a><font face="細明體"><font color="#000099">執行 scripts
+的方法有哪兩種？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">使用 sh script 或</font></li>
+
+<li>
+<font face="細明體">以 chmod 增加 scripts 的屬性為可執行， chmod 777 script
+並執行 scripts。</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="7.1-6"></a><font face="細明體"><font color="#000099">如何宣告一個變數成為整數型態？</font></font></li>
+
+<br><font face="細明體">declare&nbsp; -i&nbsp; variable</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-7"></a><font face="細明體"><font color="#000099">為何在 shell
+script 前面都要宣告 shell 呢？</font></font></li>
+
+<br><font face="細明體">宣告 shell 方能讓 script 瞭解該內容需要以何種 shell
+來執行！目前 Linux 通常宣告 /bin/bash 這個 shell ，然而若在非 shell 環境中，又沒有宣告
+shell 類型時，可能會造成 script 無法執行的情況。</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-8"></a><font face="細明體"><font color="#000099">在判斷式中，如何判斷一個檔名是否存在？</font></font></li>
+
+<br><font face="細明體">if [ -e filename ] 若存在則回傳值為真！</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-9"></a><font face="細明體"><font color="#000099">在執行一個
+scripts 時，在 scripts 內的變數， $0, $1 代表什麼？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">$0 代表 scripts 的檔名；</font></li>
+
+<li>
+<font face="細明體">$1 代表第一個 parameter，例如 /etc/rc.d/init.d/xinetd
+start 那個 start 的變數即為 $1</font></li>
+</ul>
+</ul>
+
+<ul>
+
+<li>
+<a NAME="7.1-10"></a><font face="細明體"><font color="#000099">若要寫一個既定的
+parameter （如 start ），用哪一個判斷式較簡單？</font></font></li>
+
+<br><font face="細明體">可以使用 case …. Esac 的語法較為簡單。</font></ul>
+
+<ul>
+<li>
+<a NAME="7.1-11"></a><font face="細明體"><font color="#000099">如何印出目前系統中的所有帳號，並加以排序且輸出到
+/tmp/account 中？</font></font></li>
+
+<br><font face="細明體">cut -d ‘:’ -f 1 /etc/passwd | sort > /tmp/account</font></ul>
+
+<ul>
+<li>
+
+<a NAME="7.1-12"></a><font face="細明體"><font color="#000099">如何在不執行
+scripts 的情況中 debug ？</font></font></li>
+
+<br><font face="細明體">sh -n scripts</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;八、基本帳號管理</font></b></center>
+
+<ul>
+<li>
+<a NAME="8-1"></a><font face="細明體"><font color="#000099">如何新增一個使用者
+username，且該使用者沒有家目錄？</font></font></li>
+
+<br><font face="細明體">useradd -M username</font></ul>
+
+<ul>
+<li>
+<a NAME="8-2"></a><font face="細明體"><font color="#000099">Linux 使用者的帳號、密碼與群組的名稱檔案放在哪裡？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">/etc/passwd</font></li>
+
+<li>
+<font face="細明體">/etc/shadow</font></li>
+
+<li>
+<font face="細明體">/etc/group</font></li>
+
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="8-3"></a><font face="細明體"><font color="#000099">建立新使用者的預設家目錄內容在那個目錄中？</font></font></li>
+
+<br><font face="細明體">/etc/skel</font></ul>
+
+<ul>
+<li>
+<a NAME="8-4"></a><font face="細明體"><font color="#000099">建立一個新使用者時，其使用到的相關檔案有哪些？</font></font></li>
+
+<ul>
+
+<li>
+<font face="細明體">/etc/default/useradd,</font></li>
+
+<li>
+<font face="細明體">/etc/login.defs,</font></li>
+
+<li>
+<font face="細明體">/etc/skel/</font></li>
+
+<li>
+<font face="細明體">/etc/passwd,</font></li>
+
+<li>
+
+<font face="細明體">/etc/shadow</font></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<a NAME="8-5"></a><font face="細明體"><font color="#000099">root 的 UID
+與 GID 各為何？</font></font></li>
+
+<br><font face="細明體">皆為 0</font></ul>
+
+<ul>
+<li>
+<a NAME="8-6"></a><font face="細明體"><font color="#000099">如何讓一個使用者不能登入主機，但是可以收信？</font></font></li>
+
+<br><font face="細明體">將 /etc/passwd 最後一欄代表 shell 的名稱改為 /bin/false</font></ul>
+
+<ul>
+<li>
+<a NAME="8-7"></a><font face="細明體"><font color="#000099">試說明一個使用者登入系統的流程？</font></font></li>
+
+<ol>
+<li>
+<font face="細明體">登入：使用 /bin/login 程式，並輸入 ID 與 passwd ；</font></li>
+
+<li>
+<font face="細明體">確認密碼：搜尋 /etc/passwd, /etc/shadow 確認密碼！並取得使用者的相關訊息。</font></li>
+
+<li>
+<font face="細明體">查核 pam 登入模組：這個需要視主機的設定而定！</font></li>
+
+<li>
+<font face="細明體">取得並執行 shell ：由 /etc/passwd 取得 shell 之後，並執行
+shell ，以 bash 為例，將讀入： /ete/profile ? ~/.bash_profile ( 或 .bash_login
+或 .profile ) ? ~/.bashrc ? 登出的時候執行 ~/.bash_logout</font></li>
+</ol>
+</ul>
+
+<ul>
+<li>
+<a NAME="8-8"></a><font face="細明體"><font color="#000099">在 /etc/shadow
+當中的日期設定中，其數字代表的意義為何？</font></font></li>
+
+<br><font face="細明體">由 1970 年開始計算，故 1970 年 一月一日為 1 ，2002
+年 1 月 1 日為11689</font></ul>
+
+<ul>
+<li>
+<a NAME="8-9"></a><font face="細明體"><font color="#000099">如何變更使用者的一些屬性？</font></font></li>
+
+<br><font face="細明體">usermod, chfn, chsh, passwd</font></ul>
+
+<ul>
+<li>
+<a NAME="8-10"></a><font face="細明體"><font color="#000099">如何視察一個使用者
+username 所擁有的群組呢？</font></font></li>
+
+<br><font face="細明體">groups username</font></ul>
+
+<ul>
+<li>
+<a NAME="8-11"></a><font face="細明體"><font color="#000099">試說明如何手動增加一個使用者
+username 與群組 groupname？</font></font></li>
+
+<ol>
+<li>
+<font face="細明體">先看看 /etc/skel 當中，預設要給 user 的家目錄內容；</font></li>
+
+<li>
+<font face="細明體">新增 group ： groupadd groupname</font></li>
+
+<li>
+<font face="細明體">新增 user ：useradd -m -g groupname username</font></li>
+
+<li>
+<font face="細明體">給予密碼： passwd username</font></li>
+</ol>
+</ul>
+
+<ul>
+<li>
+<a NAME="8-12"></a><font face="細明體"><font color="#000099">試說明 /etc/passwd
+這個檔案的內容與格式：</font></font></li>
+
+<br><font face="細明體">帳號; 密碼; UID; GID; 說明的內容; 家目錄; SHELL</font></ul>
+
+<ul>
+<li>
+
+<a NAME="8-13"></a><font face="細明體"><font color="#000099">使用 id 這個指令時，可以顯示什麼訊息資料？</font></font></li>
+
+<br><font face="細明體">UID, GID 跟 GROUP</font></ul>
+
+<ul>
+<li>
+<a NAME="8-14"></a><font face="細明體"><font color="#000099">可以控制使用者使用主機資源的預設檔案在哪裡？</font></font></li>
+
+<br><font face="細明體">/etc/security/limits.conf</font></ul>
+
+<ul>
+<li>
+<a NAME="8-15"></a><font face="細明體"><font color="#000099">基本的壓縮指令有哪些？</font></font></li>
+
+<br><font face="細明體">tar, gzip, compress</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;九、開機程序</font></b></center>
+
+<ul>
+<li>
+<a NAME="9-1"></a><font face="細明體"><font color="#000099">試說明開機流程：</font></font></li>
+
+<ol>
+<li>
+<font face="細明體">BIOS</font></li>
+
+<li>
+<font face="細明體">MBR ( boot loader )</font></li>
+
+<li>
+<font face="細明體">Loader ( lilo or grub, stage 1 and stage 2 )</font></li>
+
+<li>
+<font face="細明體">Kernel loader ( /boot/vmlinuz )</font></li>
+
+<li>
+<font face="細明體">init process ( 讀取 /etc/inittab 取得 run-level )</font></li>
+
+<li>
+<font face="細明體">開始執行 /etc/rc.d 內的 scripts</font></li>
+
+<li>
+<font face="細明體">執行 /etc/modules.conf 內部的額外 kernel 模組</font></li>
+
+<li>
+<font face="細明體">執行 /etc/rc.d/rc[1-6].d 的這些 run-level 內的 scripts
+！</font></li>
+
+<li>
+<font face="細明體">執行 /bin/login 等待使用者登入！</font></li>
+</ol>
+</ul>
+
+<ul>
+<li>
+<a NAME="9-2"></a><font face="細明體"><font color="#000099">開機時後的載入訊息可以看哪裡？</font></font></li>
+
+<br><font face="細明體">dmesg</font>
+<br><font face="細明體">grep “kernel” /var/log/messages</font></ul>
+
+<ul>
+<li>
+<a NAME="9-3"></a><font face="細明體"><font color="#000099">改變 run-level
+或關機的指令</font></font></li>
+
+<br><font face="細明體">shutdown,</font>
+
+<br><font face="細明體">halt,</font>
+<br><font face="細明體">reboot,</font>
+<br><font face="細明體">init or telinit</font></ul>
+
+<ul>
+<li>
+<a NAME="9-4"></a><font face="細明體"><font color="#000099">改變登入 Linux
+時候預設的 run-level 要改那個檔案？</font></font></li>
+
+<br><font face="細明體">/etc/inittab</font></ul>
+
+<center>
+<hr WIDTH="100%"><b><font color="#000099">&nbsp;十、程序與資源管理</font></b></center>
+
+<ul>
+<li>
+<a NAME="10-1"></a><font face="細明體"><font color="#000099">如何查看目前的程序？</font></font></li>
+
+<br><font face="細明體">ps, top,</font></ul>
+
+<ul>
+<li>
+<a NAME="10-2"></a><font face="細明體"><font color="#000099">如何查看目前的記憶體使用狀況？</font></font></li>
+
+<br><font face="細明體">free, top,</font></ul>
+
+<ul>
+<li>
+<a NAME="10-3"></a><font face="細明體"><font color="#000099">目前的工作如何丟到背景中？</font></font></li>
+
+<br><font face="細明體">[Ctrl] + z</font></ul>
+
+<ul>
+<li>
+<a NAME="10-4"></a><font face="細明體"><font color="#000099">如何取得目前背景中的工作，且將他拉回前景中？</font></font></li>
+
+<br><font face="細明體">jobs&nbsp; 及 fg %number</font></ul>
+
+<ul>
+<li>
+<a NAME="10-5"></a><font face="細明體"><font color="#000099">如何設定一個程序在開始執行時候的優先值？</font></font></li>
+
+<br><font face="細明體">nice –n [number] [command]</font></ul>
+
+<ul>
+<li>
+<a NAME="10-6"></a><font face="細明體"><font color="#000099">什麼指令可以修改一個正在執行的程式之
+nice 值？</font></font></li>
+
+<br><font face="細明體">top, renice</font></ul>
+
+<ul>
+<li>
+<a NAME="10-7"></a><font face="細明體"><font color="#000099">在例行性命令中，使用的兩支
+demane 是什麼？</font></font></li>
+
+<br><font face="細明體">atd,</font>
+<br><font face="細明體">crond</font></ul>
+
+<ul>
+<li>
+<a NAME="10-8"></a><font face="細明體"><font color="#000099">使用 crontab
+這個『指令』的時候，如何可以查看目前的工作與刪除目前的工作？</font></font></li>
+
+<br><font face="細明體">編輯： crontab –e,</font>
+
+<br><font face="細明體">查看： crontab –l,</font>
+<br><font face="細明體">刪除： crontab –r</font></ul>
+
+<ul>
+<li>
+<a NAME="10-9"></a><font face="細明體"><font color="#000099">常用的 kill
+指令之 signal 當中， 1, 9, 15 代表什麼？</font></font></li>
+
+<ul>
+<li>
+<font face="細明體">1&nbsp; 重新讀取一次 config file</font></li>
+
+<li>
+<font face="細明體">9&nbsp; 強制刪除此一執行程序</font></li>
+
+<li>
+<font face="細明體">15 terminal結束的意思！</font></li>
+</ul>
+</ul>
+</blockquote>
+<hr>
+2002/06/28：首次將所有的問題獨立出來喔！<br>
+2005/05/23：接到網友來信指正， init 0 為『關機』，並非之前寫的『重新開機』喔！！<br>
+
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

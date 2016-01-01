@@ -1,0 +1,1664 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="關於 Linux 的核心編譯流程介紹，與注意事項說明！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 核心編譯</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第二十六章、<span class="text_head_en">Linux </span>核心編譯與管理</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/18</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們說的 Linux 其實指的就是核心 (kernel) 而已。這個核心控制你主機的所有硬體並提供系統所有的功能，
+	所以說，他重不重要啊！我們開機的時候其實就是利用開機管理程式載入這個核心檔案來偵測硬體，
+	在核心載入適當的驅動程式後，你的系統才能夠順利的運作。現今的系統由於強調線上升級機制，因此非常不建議自訂核心編譯！
+	但是，如果你想要將你的 Linux 安裝到 USB 隨身碟、想要將你的 Eee PC 小筆電安裝自己的 Linux ，
+	想讓你的 Linux 可以驅動你的小家電，此時，核心編譯就是相當重要的一個任務了！
+	這一篇比較進階，如果你對系統移植沒有興趣的話，這一篇可以先略過喔！ ^_^
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#intro">編譯前的任務：認識核心與取得核心原始碼</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#intro_whatiskernel">什麼是核心 (Kernel)</a><br />
+	　　1.2 <a href="#intro_whyrecompile">更新核心的目的</a><br />
+	　　1.3 <a href="#intro_kernel_version">核心的版本</a><br />
+	　　1.4 <a href="#kernel_source">核心原始碼的取得方式</a>：distributions 預設、最新、patch<br />
+	　　1.5 <a href="#kernel_source_install">核心原始碼的解壓縮/安裝/觀察</a><br />
+	</span>
+2. <a href="#config">核心編譯的前處理與核心功能選擇</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#config_hw">硬體環境檢視與核心功能要求</a><br />
+	　　2.2 <a href="#config_mrproper">保持乾淨原始碼： make mrproper</a><br />
+	　　2.3 <a href="#config_config">開始挑選核心功能： make XXconfig</a><br />
+	　　2.4 <a href="#config_kernel">核心功能細項選擇</a><br />
+		<span class="text_import1">
+	　　　　a. <a href="#general">一般設定(General setup)</a>：附加版本名稱、IPC 通訊、程序相關等<br />
+	　　　　b. <a href="#load">核心模組與 block layer 支援</a><br />
+	　　　　c. <a href="#cpu">CPU 的類型與功能選擇(含虛擬化技術)</a><br />
+	　　　　d. <a href="#power">電源管理功能</a><br />
+	　　　　e. <a href="#bus">一些匯流排 (bus) 的選項</a><br />
+	　　　　f. <a href="#execute">編譯後執行檔的格式</a><br />
+	　　　　g. <a href="#networking">核心的網路功能</a><br />
+	　　　　h. <a href="#device">各項裝置的驅動程式</a><br />
+	　　　　i. <a href="#filesystem">檔案系統的支援</a><br />
+	　　　　j. <a href="#security">核心駭客、資訊安全、密碼應用</a><br />
+	　　　　k. <a href="#virt">虛擬化與函式庫</a><br />
+		</span>
+	</span>
+3. <a href="#make">核心的編譯與安裝</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#make_kernel">編譯核心與核心模組</a><br />
+	　　3.2 <a href="#make_module">實際安裝模組</a><br />
+	　　3.3 <a href="#make_install">開始安裝新核心與多重核心選單 (grub)</a><br />
+	</span>
+4. <a href="#module">額外(單一)核心模組編譯</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#module_before">編譯前注意事項</a><br />
+	　　4.2 <a href="#module_compile">單一模組編譯</a><br />
+	　　4.3 <a href="#module_mod">核心模組管理</a><br />
+	</span>
+5. <a href="#hint">重點回顧</a><br />
+6. <a href="#ex">本章習題</a><br />
+7. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+8. <a href="http://phorum.vbird.org/viewtopic.php?t=23899"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23899</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="intro"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">編譯前的任務：認識核心與取得核心原始碼</span><br />
+<div class="block1">
+	<p>我們在<a href="/linux_basic/0110whatislinux.php">第一章</a>裡面就談過 Linux 其實指的是核心！這個『核心 
+	(kernel)』是整個作業系統的最底層，他負責了整個硬體的驅動，以及提供各種系統所需的核心功能，包括防火牆機制、是否支援 
+	LVM 或 Quota 等檔案系統等等，這些都是核心所負責的！所以囉，在<a 
+	href="/linux_basic/0510osloader.php">第二十章</a>的開機流程中，我們也會看到 MBR 內的 loader 載入核心檔案來驅動整個系統的硬體呢！
+	也就是說，如果你的核心不認識某個最新的硬體，那麼該硬體也就無法被驅動，你當然也就無法使用該硬體囉！<br /><br /></p>
+
+	<hr /><a name="intro_whatiskernel"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是核心 (Kernel)</span><br />
+	<div class="block2">
+		<p>這已經是整個 Linux 基礎的最後一篇了，所以，底下這些資料你應該都要『很有概念』才行～
+		不能只是『好像有印象』～好了，那就複習一下核心的相關知識吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Kernel</li></ul>
+
+		<p>還記得我們在<a href="/linux_basic/0320bash.php">第十一章的 BASH shell</a> 
+		提到過：電腦真正在工作的東西其實是『<span class="text_import2">硬體</span>』，
+		例如數值運算要使用到 CPU、資料儲存要使用到硬碟、圖形顯示會用到顯示卡、音樂發聲要有音效晶片、連接 Internet 
+		可能需要網路卡等等。那麼如何控制這些硬體呢？那就是核心的工作了！也就是說，你所希望電腦幫你達成的各項工作，
+		都需要透過『<span class="text_import2">核心</span>』的幫助才行！當然囉，如果你想要達成的工作是核心所沒有提供的，
+		那麼你自然就沒有辦法透過核心來控制電腦使他工作囉！</p>
+
+		<p>舉例來說，如果你想要有某個網路功能 (例如核心防火牆機制) ，但是你的核心偏偏忘記加進去這項功能，
+		那麼不論你如何『賣力』的設定該網路套件，很抱歉！不來電！換句話說，<span 
+		class="text_import2">你想要讓電腦進行的工作，都必須要『核心有支援』才可以</span>！這個標準不論在 Windows 或 
+		Linux 這幾個作業系統上都相同！如果有一個人開發出來一個『全新的硬體』，目前的核心不論
+		Windows 或 Linux 都不支援，那麼不論你用什麼系統，哈哈！這個硬體都是英雄無用武之地啦！
+		那麼是否瞭解了『核心』的重要了呢？所以我們才需要來瞭解一下如何編譯我們的核心啦！</p>
+
+		<p>那麼核心到底是什麼啊？<span class="text_import2">其實核心就是系統上面的一個檔案而已，
+		這個檔案包含了驅動主機各項硬體的偵測程式與驅動模組</span>。在<a 
+		href="/linux_basic/0510osloader.php">第二十章的開機流程分析</a>中，我們也提到這個檔案被讀入主記憶體的時機，
+		當系統讀完 BIOS 並載入 MBR 內的開機管理程式後，就能夠載入核心到記憶體當中。然後核心開始偵測硬體，
+		掛載根目錄並取得核心模組來驅動所有的硬體，之後呼叫 /sbin/init 就能夠依序啟動所有系統所需要的服務了！</p>
+
+		<p>這個核心檔案通常被放置成 /boot/vmlinuz ，不過也不見得，<span class="text_import2">
+		因為一部主機上面可以擁有多個核心檔案，只是開機的時候僅能選擇一個來載入而已</span>。
+		甚至我們也可以在一個 distribution 上面放置多個核心，然後以這些核心來做成多重開機呢！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">核心模組 (kernel module) 的用途</li></ul>
+
+		<p>既然核心檔案都已經包含了硬體偵測與驅動模組，那麼什麼是核心模組啊？要注意的是，
+		現在的硬體更新速度太快了，如果我的核心比較舊，但我換了新的硬體，那麼，這個核心肯定無法支援！
+		怎麼辦？重新拿一個新的核心來處理嗎？開玩笑～核心的編譯過程可是很麻煩的～</p>
+
+		<p>所以囉，為了這個緣故，我們的 Linux  很早之前就已經開始使用所謂的模組化設定了！
+		亦即是將一些不常用的類似驅動程式的咚咚獨立出核心，編譯成為模組，然後，
+		核心可以在系統正常運作的過程當中載入這個模組到核心的支援。如此一來，
+		我在不需要更動核心的前提之下，只要編譯出適當的核心模組，並且載入他，呵呵！我的 Linux 
+		就可以使用這個硬體啦！簡單又方便！</p>
+
+		<p>那我的模組放在哪裡啊？可惡！怎麼會問這個傻問題呢？當然一定要知道的啦！就是 <span class="text_import2"
+		style="font-family: '細明體'">/lib/modules/$(uname -r)/kernel/</span> 當中啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">自製核心 - 核心編譯</li></ul>
+
+		<p>剛剛上面談到的核心其實是一個檔案，那麼這個檔案怎麼來的？當然是透過原始碼 (source code) 
+		編譯而成的啊！因為核心是直接被讀入到主記憶體當中的，所以當然要將他編譯成為系統可以認識的資料才行！也就是說，
+		我們必須要取得核心的原始碼，然後利用<a 
+		href="/linux_basic/0520source_code_and_tarball.php">第二十二章 Tarball</a> 
+		安裝方式提到的編譯概念來達成核心的編譯才行啊！(這也是本章的重點啊！ ^_^)<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">關於驅動程式 - 是廠商的責任還是核心的責任？</li></ul>
+
+		<p>現在我們知道硬體的驅動程式可以編譯成為核心模組，所以可以在不改變核心的前提下驅動你的新硬體。
+		但是，很多朋友還是常常感到困惑，就是 Linux 上面針對最新硬體的驅動程式總是慢了幾個腳步，
+		所以覺得好像 Linux 的支援度不足！其實不可以這麼說的，為什麼呢？因為在 
+		Windows 上面，對於最新硬體的驅動程式需求，基本上，也都是廠商提供的驅動程式才能讓該硬體工作的，
+		因此，<span class="text_import2">在這個『驅動程式開發』的工作上面來說，應該是屬於硬體發展廠商的問題</span>，
+		因為他要我們買他的硬體，自然就要提供消費者能夠使用的驅動程式啦！</p>
+
+		<p>所以，如果大家想要讓某個硬體能夠在 Linux 上面跑的話，那麼似乎可以發起一人一信的方式，強烈要求硬體開發商發展
+		Linux 上面的驅動程式！這樣一來，也可以促進 Linux 的發展呢！</p>
+	</div>
+
+	<hr /><a name="intro_whyrecompile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">更新核心的目的</span><br />
+	<div class="block2">
+		<p>除了 BIOS 之外，核心是作業系統中最早被載入到記憶體的咚咚，
+		他包含了所有可以讓硬體與軟體工作的資訊，所以，如果沒有搞定核心的話，
+		那麼你的系統肯定會有點小問題！好了，那麼是不是將『<span 
+		class="text_import2">所有目前核心有支援的東西都給他編譯進去我的核心中，
+		那就可以支援目前所有的硬體與可執行的工作啦！</span>』！</p>
+
+		<p>這話說的是沒錯啦，但是你是否曾經看過一個為了怕自己今天出門會口渴、會餓、會冷、會熱、會被車撞、
+		會摔跤、會被性騷擾，而在自己的大包包裡面放了大瓶礦泉水、便當、厚外套、短褲、防撞鋼樑、止滑墊、
+		電擊棒....等一大堆東西，結果卻累死在半路上的案例嗎？當然有！但是很少啦！我相信不太有人會這樣做！
+		(會這麼做的人通常都已經在醫院了～) 取而代之的是會看一下天氣，冷了就只帶外套，
+		熱了就只帶短衣、如果穿的漂亮一點又預計晚點回家就多帶個電擊棒、
+		出遠門到沒有便利商店的地方才多帶礦泉水....</p>
+
+		<p>說這個幹什麼！對啦！就是要你瞭解到，核心的編譯重點在於『<span class="text_import2">你要你的
+		Linux 作什麼？</span>』，是啦！如果沒有必要的工作，就乾脆不要加在你的核心當中了！這樣才能讓你的
+		Linux 跑得更穩、更順暢！這也是為什麼我們要編譯核心的最主要原因了！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Linux 核心特色，與預設核心對終端用戶的角色</li></ul>
+
+		<p>Linux 的核心有幾個主要的特色，除了『<span class="text_import2">Kernel 
+		可以隨時、隨各人喜好而更動</span>』之外，<span class="text_import2">Kernel
+		的『版本更動次數太頻繁</span>』也是一個特點！所以囉，除非你有特殊需求，
+		否則一次編譯成功就可以啦！不需要隨時保持最新的核心版本，而且也沒有必要
+		(編譯一次核心要粉久的ㄋㄟ！) 。話說到這裡又突然想到今天看到的一篇文章，大意是說老闆想要雇用的人會希望是
+		Linux 的老手，因為他們比較容易瞭解問題的所在，除此之外，如果有任何問題發生，由於其使用
+		Linux 是可以隨時修補漏洞的！但是如果是 Windows 的話，就得要將機器關閉，直到
+		MS 推出修補套件後才能再啟用～</p>
+
+		<p>那麼<span class="text_import2">是否『我就一定需要在安裝好了 Linux 之後就趕緊給他編譯核心呢？</span>』，
+		老實說，『並不需要的』！這是因為幾乎每一個 distribution 都已經預設編譯好了相當大量的模組了，
+		所以使用者常常或者可能會使用到的資料都已經被編譯成為模組，也因此，呵呵！
+		我們使用者確實不太需要重新來編譯核心！尤其是『<span class="text_import2">一般的使用者，
+		由於系統已經將核心編譯的相當的適合一般使用者使用了，因此一般入門的使用者，基本上，
+		不太需要編譯核心</span>』。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">核心編譯的可能目的</li></ul>
+
+		<p>OK！那麼鳥哥閒閒沒事幹跑來寫個什麼東西？既然都不需要編譯核心還寫編譯核心的分享文章，
+		鳥哥賣弄才學呀？很抱歉，鳥哥雖然是個『不學有術』的混混，卻也不會平白無故的寫東西請您來指教～
+		當然是有需要才會來編譯核心啦！編譯核心的時機可以歸納為幾大類：</p>
+
+		<ul>
+		<li><span class="text_import2">新功能的需求</span>：<br />
+		我需要新的功能，而這個功能只有在新的核心裡面才有，那麼為了獲得這個功能，只好來重新編譯我的核心了。例如 
+		iptables 這個防火牆機制只有在 2.4.xx 以後的版本裡面才有，而新開發的主機板晶片組，
+		很多也需要新的核心推出之後，才能正常而且有效率的工作！<br /><br /></li>
+
+		<li><span class="text_import2">原本核心太過臃腫</span>：<br />
+		如果你是那種對於系統『穩定性』很要求的人，對於核心多編譯了很多莫名其妙的功能而不太喜歡的時候，
+		那麼就可以重新編譯核心來取消掉該功能囉；<br /><br /></li>
+
+		<li><span class="text_import2">與硬體搭配的穩定性</span>：<br />
+		由於原本 Linux 核心大多是針對 Intel 的 CPU 來作開發的，所以如果你的
+		CPU 是 AMD 的系統時，有可能 (注意！只是有可能，不見得一定會如此) 
+		會讓系統跑得『不太穩！』。此外，核心也可能沒有正確的驅動新的硬體，此時就得重新編譯核心來讓系統取得正確的模組才好。
+		<br /><br /></li>
+
+		<li><span class="text_import2">其他需求 (如嵌入式系統)</span>：<br />
+		就是你需要特殊的環境需求時，就得自行設計你的核心囉！( 
+		像是一些商業的套裝軟體系統，由於需要較為小而美的作業系統，
+		那麼他們的核心就需要更簡潔有力了！)</li>
+		</ul>
+
+		<p>另外，需要注意重新編譯核心雖然可以針對你的硬體作最佳化的步驟 (例如剛剛提到的
+		CPU 的問題！) ，不過由於這些最佳化的步驟對於整體效能的影響是很小很小的，
+		因此如果是為了增加效能來編譯核心的話，基本上，效益不大！然而，如果是針對『系統穩定性』來考量的話，
+		那麼就有充分的理由來支持你重新編譯核心囉！</p>
+
+		<p>『<span class="text_import2">如果系統已經運行很久了，而且也沒有什麼大問題，
+		加上我又不增加冷門的硬體設備，那麼建議就不需要重新編譯核心了』</span>，
+		因為重新編譯核心的最主要目的是『想讓系統變的更穩！』既然你的
+		Linux 主機已經達到這個目的了，何必再編譯核心？不過，就如同前面提到的，
+		由於預設的核心不見得適合你的需要，加上預設的核心可能並無法與你的硬體配備相配合，
+		此時才開始考慮重新編譯核心吧！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		早期鳥哥是強調最好重新編譯核心的一群啦！不過，最近這個想法改變了～
+		既然原本的 distribution  都已經幫我們考慮好如何使用核心了，那麼，
+		我們也不需要再重新的編譯核心啦！尤其是 distribution 都會主動的釋出新版的核心 RPM 版本，
+		所以，實在不需要自己重新編譯的！當然啦，如同前面提到的，
+		如果你有特殊需求的話，那就另當別論嚕！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>由於『<span class="text_import2">核心的主要工作是在控制硬體</span>！』所以編譯核心之前，
+		請先瞭解一下你的硬體配備，與你這部主機的未來功能！由於核心是『<span 
+		class="text_import2">越簡單越好</span>！』所以只要將這部主機的未來功能給他編進去就好了！
+		其他的就不用去理他啦！</p>
+	</div>
+
+	<hr /><a name="intro_kernel_version"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">核心的版本</span><br />
+	<div class="block2">
+		<p>核心的版本問題，我們在<a href="/linux_basic/0110whatislinux.php#torvalds_team">第一章</a>已經談論過，
+		主要的版本定義為：『<span class="text_import2">[主].[次].[釋出]-[修改]</span>』的樣式。
+		你只要知道 2.6.x 是穩定版本，2.5.x 是測試用版本即可。
+		我們要使用最新的核心來重新編譯核心時，大多就是使用那種偶數的核心版本啦！不過這裡還是要再提一遍！就是『
+		<span class="text_import2">2.4.x 與 2.6.x 是兩個具有相當大差異的核心版本，
+		兩者之間使用到的函式庫基本上已經不相同了，所以在升級之前，如果你的核心原本是
+		2.4.xx 版，那麼就升級到 2.4.xx 版本的最新版，不要由 2.4.xx
+		直接升級到 2.6.xx 版，否則到時可能會欲哭無淚～～</span>』，
+		這個問題在討論區一再地被提起！這裡再次說明！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		為什麼不能從 2.4 升級到 2.6 呢？其實還是可以啦！只是過程很複雜！
+		我們知道軟體 (packages) 是架構在系統核心上面來進行編譯、安裝與執行的，
+		也就是說，這些 packages 與核心之間，是有相關性的！這些 packages 會用到很多核心提供的功能。
+		但是不同的[主][次]版本之間，他們提供的功能架構差異太大，因此，若你由 2.4 升級到 2.6 的話，
+		那麼絕大部分的軟體『都需要重新再編譯！』這樣瞭解為何不要在不同的版本間升級了吧？
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>此外，2.4.xx 與 2.6.xx 的比較中，<span class="text_import2">並不是
+		2.6.xx 就一定比 2.4.xx 還要新</span>，因為這兩種版本同時在進行維護與升級的工作！如果有興趣的話，可以前往
+		Linux 核心網站 <a href="http://www.kernel.org" target="_blank">http://www.kernel.org</a>
+		一看究竟，你就可以瞭解目前的核心變動情況了！</p>
+
+		<p>基本上，目前最新的 distributions ，包括 CentOS, FC, SuSE, Mandriva 等等，都使用 2.6 的核心，
+		所以，你可以直接由 <a href="http://www.kernel.org" target="_blank">http://www.kernel.org</a>
+		下載最新的 2.6.xx 版本的核心來嘗試編譯啊！目前 (2009/07/27) 鳥哥可以查到的最新版本是 2.6.30 ，
+		底下我們將主要以這個版本來測試。另外，由於較新的核心版本可能會多出一些選項，
+		因此若有不同的項目也沒有關係！稍微查看一下說明內容就可以瞭解啦！</p>
+	</div>
+
+	<hr /><a name="kernel_source"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">核心原始碼的取得方式</span><br />
+	<div class="block2">
+		<p>既然核心是個檔案，要製作這個檔案給系統使用則需要編譯，既然要有編譯，當然就得要有原始碼啊！
+		那麼原始碼怎麼來？基本上，依據你的 distributions 去挑選的核心原始碼來源主要有：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">原本 distribution 提供的核心原始碼檔案</li></ul>
+
+		<p>事實上，各主要 distributions 在推出他們的產品時，其實已經都附上了核心原始碼了！
+		以我們的 CentOS 5.x 為例，你可以在國家高速網路中心網站下載相關的核心 SRPM 的檔案！
+		由於 CentOS 5.x 一直有在進行更新動作，因此你也可以在 update 的目錄底下找到核心原始碼喔！如下連結所示：</p>
+
+		<ul>
+		<li><a href="http://ftp.twaren.net/Linux/CentOS/5/os/SRPMS/"
+			target="_blank">原始推出核心碼：http://ftp.twaren.net/Linux/CentOS/5/os/SRPMS/</a></li>
+		<li><a href="http://ftp.twaren.net/Linux/CentOS/5/updates/SRPMS/"
+			target="_blank">更新碼：http://ftp.twaren.net/Linux/CentOS/5/updates/SRPMS/</a></li>
+		</ul>
+
+		<p>你或許會說：既然要重新編譯，那麼幹嘛還要使用原本 distributions 釋出的原始碼啊？真沒創意～
+		話不是這麼說，因為原本的 distribution 釋出的原始碼當中，含有他們設定好的預設設定值，
+		所以，我們可以輕易的就瞭解到當初他們是如何選擇與核心及模組有關的各項設定項目的參數值，
+		那麼就可以利用這些可以配合我們 Linux 系統的預設參數來加以修改，如此一來，
+		我們就可以『修改核心，調整到自己喜歡的樣子』囉！而且編譯的難度也會比較低一點！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">取得最新的穩定版核心原始碼</li></ul>
+
+		<p>雖然使用 distribution 釋出的核心 source code 來重新編譯比較方便，但是，如此一來，
+		新硬體所需要的新驅動程式，也就無法藉由原本的核心原始碼來編譯啊！
+		所以囉，如果是站在要更新驅動程式的立場來看，當然使用最新的核心可能會比較好啊！</p>
+
+		<p>Linux 的核心目前是由其發明者 Linus Torvalds 所屬團隊在負責維護的，而其網站在底下的站址上，在該網站上可以找到最新的
+		kernel 資訊！不過，美中不足的是目前的核心越來越大了 (linux-2.6.30.3.tar.bz2
+		這一版，這一個檔案大約 57MB 了！)，所以如果你的 ISP 連外很慢的話，那麼使用台灣的映射站台來下載不失為一個好方法：</p>
+		<ul>
+		<li><a href="http://www.kernel.org/pub/linux/kernel/" 
+			target="_blank">核心官網：http://www.kernel.org/</a></li>
+		<li><a href="ftp://linux.cis.nctu.edu.tw/kernel/linux/kernel/" 
+			target="_blank">交大資科：ftp://linux.cis.nctu.edu.tw/kernel/linux/kernel/</a></li>
+		<li><a href="ftp://ftp.twaren.net/pub/Unix/Kernel/linux/kernel/"
+			target="_blank">國高中心：ftp://ftp.twaren.net/pub/Unix/Kernel/linux/kernel/</a></li>
+		</ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">保留原本設定：利用 patch 升級核心原始碼</li></ul>
+
+		<p>如果 (1)你曾經自行編譯過核心，那麼你的系統當中應該已經存在前幾個版本的核心原始碼，
+		以及上次你自行編譯的參數設定值才對； (2)如果你只是想要在原本的核心底下加入某些特殊功能，
+		而該功能已經針對核心原始碼推出 patch 補丁檔案時。那你該如何進行核心原始碼的更新，以便後續的編譯呢？</p>
+
+		<p>其實每一次核心釋出時，除了釋出完整的核心壓縮檔之外，也會釋出『該版本與前一版本的差異性 patch 檔案』，
+		關於 patch 的製作我們已經在<a 
+		href="/linux_basic/0520source_code_and_tarball.php#tarball_patch">第二十二章</a>當中提及，
+		你可以自行前往參考。這裡僅是要提供給你的資訊是，每個核心的 patch 僅有針對前一版的核心來分析而已，
+		所以，萬一你想要由 2.6.27 升級到 2.6.30 的話，那麼你就得要下載
+		patch-2.6.28, patch-2.6.29, patch-2.6.30 等檔案，然後『依序』一個一個的去進行 patch 的動作後，
+		才能夠升級到 2.6.30 喔！這個重要！不要忘記了。</p>
+
+		<p>但是，如果你想要升級 2.6.30 的修改版本到 2.6.30.3 時，由於修改版本是針對 2.6.30 來製作的，
+		因此你只要下載 patch-2.6.30.3 來直接將 2.6.30 升級至 2.6.30.3 即可。但反過來說，如果你要從 2.6.30.2 升級到
+		2.6.30.3 呢？很抱歉的是，並沒有 2.6.30.2 到 2.6.30.3 的補丁檔案，所以你必須要將 2.6.30.2 還原至 2.6.30，
+		然後才能使用 patch-2.6.30.3 來升級 2.6.30 喔！注意這個差異！</p>
+
+		<p>同樣的，如果是某個硬體或某些非官方認定的核心添加功能網站所推出的 patch 檔案時，你也必須要瞭解該 patch 
+		檔案所適用的核心版本，然後才能夠進行 patch ，否則容易出現重大錯誤喔！這個項目對於某些商業公司的工程師來說是很重要的。
+		舉例來說，鳥哥的一個高中同學在業界服務，他主要是進行類似 Eee PC 開發的計畫，然而該計畫的硬體是該公司自行推出的！
+		因此，該公司必須要自行搭配核心版本來設計他們自己的驅動程式，而該驅動程式並非 GPL 
+		授權，因此他們就得要自行將驅動程式整合進核心！如果改天他們要將這個驅動程式釋出，那麼就得要利用 patch 的方式，
+		將硬體驅動程式檔案釋出，我們就得要自行以 patch 來更新核心啦！</p>
+
+		<p>在進行完 patch 之後，你可以直接檢查一下原本的設定值，如果沒有問題，
+		就可以直接編譯，而不需要再重新的選擇核心的參數值，這也是一個省時間的方法啊！
+		至於 patch file 的下載，同樣是在 kernel 的相同目錄下，尋找檔名是 patch 開頭的就是了。</p>
+	</div>
+
+	<hr /><a name="kernel_source_install"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span 
+	class="text_h2">核心原始碼的解壓縮/安裝/觀察</span><br />
+	<div class="block2">
+		<p>由於鳥哥是比較喜歡直接由核心官網取得原始核心的傢伙，所以，底下的動作是使用 2.6.30.3 這個版本的核心來安裝的！
+		如果你想要使用 distributions 提供的 SRPM 來處理的話，得自行找到 SRPM 的相關安裝方法來處理囉！
+		其實看一下<a href="/linux_basic/0520source_code_and_tarball.php">第二十二章</a>就知道該如何處理啦。
+		總之，本章的核心原始碼是由底下的連結取得的：</p>
+
+		<ul><li><a href="ftp://linux.cis.nctu.edu.tw/kernel/linux/kernel/v2.6/linux-2.6.30.3.tar.bz2"
+		target="_blank">ftp://linux.cis.nctu.edu.tw/kernel/linux/kernel/v2.6/linux-2.6.30.3.tar.bz2</a></li></ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">核心原始碼的解壓縮與放置目錄</li></ul>
+
+		<p>鳥哥這裡假設你也是下載上述的連結內的檔案，然後該檔案放置到 /root 底下。由於 2.6.x 核心原始碼一般建議放置於
+		/usr/src/kernels/ 目錄底下，因此你可以這樣處理：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tar -jxvf linux-2.6.30.3.tar.bz2 -C /usr/src/kernels/</span>
+</pre></td></tr></table>
+
+		<p>此時會在 /usr/src/kernels 底下產生一個新的目錄，那就是 linux-2.6.30.3 這個目錄囉！
+		我們在下個小節會談到的各項編譯與設定，都必須要在這個目錄底下進行才行喔！好了，那麼這個目錄底下的相關檔案有啥咚咚？
+		底下就來談談：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">核心原始碼下的次目錄</li></ul>
+
+		<p>在上述核心目錄下含有哪些重要資料呢？基本上有底下這些東西：</p>
+
+		<ul style="font-family: '細明體'">
+		<li>arch ：與硬體平台有關的項目，大部分指的是 CPU 的類別，例如 x86, x86_64, Xen 虛擬支援等；</li>
+		<li>block ：與區塊裝置較相關的設定資料，區塊資料通常指的是大量儲存媒體！還包括類似 ext3 等檔案系統的支援是否允許等。</li>
+		<li>crypto ：核心所支援的加密的技術，例如 md5 或者是 des 等等；</li>
+		<li>Documentation ：與核心有關的一堆說明文件，若對核心有極大的興趣，要瞧瞧這裡！</li>
+		<li>drivers ：一些硬體的驅動程式，例如顯示卡、網路卡、PCI 相關硬體等等；</li>
+		<li>firmware ：一些舊式硬體的微指令碼 (韌體) 資料；</li>
+		<li>fs ：核心所支援的 filesystems ，例如 vfat, reiserfs, nfs 等等；</li>
+		<li>include ：一些可讓其他程序呼叫的標頭 (header) 定義資料；</li>
+		<li>init ：一些核心初始化的定義功能，包括掛載與 init 程式的呼叫等；</li>
+		<li>ipc ：定義 Linux 作業系統內各程序的溝通；</li>
+		<li>kernel ：定義核心的程序、核心狀態、執行緒、程序的排程 (schedule)、程序的訊號 (signle) 等</li>
+		<li>lib ：一些函式庫；</li>
+		<li>mm ：與記憶體單元有關的各項資料，包括 swap 與虛擬記憶體等；</li>
+		<li>net ：與網路有關的各項協定資料，還有防火牆模組 (net/ipv4/netfilter/*) 等等；</li>
+		<li>security ：包括 selinux 等在內的安全性設定；</li>
+		<li>sound ：與音效有關的各項模組；</li>
+		<li>virt ：與虛擬化機器有關的資訊，目前核心支援的是 KVM (Kernel base Virtual Machine)</li>
+		</ul>
+
+		<p>這些資料先大致有個印象即可，至少未來如果你想要使用 patch 的方法加入額外的新功能時，
+		你要將你的原始碼放置於何處？這裡就能夠提供一些指引了。當然，最好還是跑到 Documentation 那個目錄底下去瞧瞧正確的說明，
+		對你的核心編譯會更有幫助喔！</p>
+	</div>
+</div>
+
+
+<hr /><a name="config"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">核心編譯的前處理與核心功能選擇</span><br />
+<div class="block1">
+	<p>什麼？核心編譯還要進行前處理？沒錯啦！事實上，核心的目的在管理硬體與提供系統核心功能，因此你必須要先找到你的系統硬體，
+	並且規劃你的主機未來的任務，這樣才能夠編譯出適合你這部主機的核心！所以，整個核心編譯的重要工作就是在『挑選你想要的功能』。
+	底下鳥哥就以自己的一部主機軟/硬體環境來說明，解釋一下如何處理核心編譯囉！<br /><br /></p>
+
+	<hr /><a name="config_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">硬體環境檢視與核心功能要求</span><br />
+	<div class="block2">
+		<p>鳥哥的一部主機硬體環境如下 (透過 /proc/cpuinfo  及 lspci 觀察)：</p>
+		<ul>
+		<li>CPU：AMD 的 Athlon64 3000+ (舊式，不含虛擬化功能)</li>
+		<li>主機板晶片組： ALi M1689 K8 北橋 及 M5249, M1563 南橋晶片 (較冷門的硬體)</li>
+		<li>顯示卡： AGP 8X 的 NVidia GeForce 6600LE</li>
+		<li>記憶體： 2.0GB 記憶體</li>
+		<li>硬碟： WD 2.5GB 硬碟，使用 ALi, ULi 5289 SATA 介面</li>
+		<li>電源控制器： ALi M7101 Power Management Controller (PMU)</li>
+		<li>網路卡： 3Com 3c905C-TX/TX-M (對外)</li>
+		<li>網路卡： Realtek Semiconductor RTL-8139/8139C/8139C+</li>
+		</ul>
+		<p>硬體大致如上，至於這部主機的需求，是希望做為未來在鳥哥上課時，可以透過虛擬化功能來處理學生的練習用虛擬機器。
+		這部主機也是鳥哥用來放置學校上課教材的機器，因此，這部主機的 I/O 需求須要好一點，未來還需要開啟防火牆、
+		WWW 伺服器功能、FTP 伺服器功能等，基本上，用途就是一部小型的伺服器環境囉。大致上需要這樣的功能啦！</p>
+	</div>
+
+	<hr /><a name="config_mrproper"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">保持乾淨原始碼： make mrproper</span><br />
+	<div class="block2">
+		<p>瞭解了硬體相關的資料後，我們還得要處理一下核心原始碼底下的殘留檔案才行！假設我們是第一次編譯，
+		但是我們不清楚到底下載下來的原始碼當中有沒有保留目標檔案 (*.o) 以及相關的設定檔存在，
+		此時我們可以透過底下的方式來處理掉這些編譯過程的目標檔案以及設定檔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www linux-2.6.30.3]# <span class="term_command">make mrproper</span>
+</pre></td></tr></table>
+
+		<p>請注意，<span class="text_import2">這個動作會將你以前進行過的核心功能選擇檔案也刪除掉</span>，
+		所以幾乎只有第一次執行核心編譯前才進行這個動作，其餘的時刻，你想要刪除前一次編譯過程的殘留資料，
+		只要下達：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www linux-2.6.30.3]# <span class="term_command">make clean</span>
+</pre></td></tr></table>
+
+		<p>因為 make clean 僅會刪除類似目標檔之類的編譯過程產生的中間檔案，而不會刪除設定檔！
+		很重要的！千萬不要搞亂了喔！好了，既然我們是第一次進行編譯，因此，請下達『make mrproper』吧！</p>
+	</div>
+
+	<hr /><a name="config_config"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開始挑選核心功能： make XXconfig</span><br />
+	<div class="block2">
+		<p>不知道你有沒有發現 /boot/ 底下存在一個名為 config-xxx 的檔案？那個檔案其實就是核心功能列表檔！
+		我們底下要進行的動作，其實就是作出該檔案！而我們後續小節所要進行的編譯動作，其實也就是透過這個檔案來處理的！
+		核心功能的挑選，最後會在 /usr/src/kernels/linux-2.6.30.3/ 底下產生一個名為 .config 的隱藏檔，
+		這個檔案就是 /boot/config-xxx 的檔案啦！那麼這個檔案如何建立呢？你可以透過非常多的方法來建立這個檔案！
+		常見的方法有：(<a href="#ps1">註1</a>)</p>
+
+		<ul>
+		<li><span class="text_import2">make menuconfig</span><br />
+		最常使用的，是文字模式底下可以顯示類似圖形介面的方式，不需要啟動 X Window 就能夠挑選核心功能選單！<br /><br /></li>
+		<li><span class="text_import2">make oldconfig</span><br />
+		透過使用已存在的 ./.config 檔案內容，使用該檔案內的設定值為預設值，只將新版本核心內的新功能選項列出讓使用者選擇，
+		可以簡化核心功能的挑選過程！對於作為升級核心原始碼後的功能挑選來說，是非常好用的一個項目！<br /><br /></li>
+		<li><span class="text_import2">make xconfig</span><br />
+		透過以 Qt 為圖形介面基礎功能的圖形化介面顯示，需要具有 X window 的支援。例如 KDE 就是透過 Qt 來設計的 X
+		Window，因此你如果在 KDE 畫面中，可以使用此一項目。<br /><br /></li>
+		<li><span class="text_import2">make gconfig</span><br />
+		透過以 Gtk 為圖形介面基礎功能的圖形化介面顯示，需要具有 X window 的支援。例如 GNOME 就是透過 Gtk 來設計的 X
+		Window，因此你如果在 GNOME 畫面中，可以使用此一項目。<br /><br /></li>
+		<li><span class="text_import2">make config</span><br />
+		最舊式的功能挑選方法，每個項目都以條列式一條一條的列出讓你選擇，如果設定錯誤只能夠再次選擇，很不人性化啊！</li>
+		</ul>
+
+		<p>大致的功能選擇有上述的方法，不過鳥哥個人比較偏好 make menuconfig 這個項目啦！如果你喜歡使用圖形介面，
+		然後使用滑鼠去挑選所需要的功能時，也能使用 make xconfig 或 make gconfig ，不過需要有相關的圖形介面支援！
+		如果你是升級核心原始碼並且需要重新編譯，那麼使用 make oldconfig 會比較適當！好了，那麼如何選擇呢？
+		以 make menuconfig 來說，出現的畫面會有點像這樣：</p>
+
+		<center><img src="0540kernel/menuconfig_1.jpg" alt="make menuconfig 核心功能挑選選單示意圖" 
+		title="make menuconfig 核心功能挑選選單示意圖" border="1" /><br />
+		圖 2.3.1 、 make menuconfig 核心功能挑選選單示意圖<br /></center>
+
+		<p>看到上面的圖示之後，你會發現畫面主要分為兩大部分，一個是大框框內的反白光柱，另一個則是底下的小框框，
+		裡面有 select, exit 與 help 三個選項的內容。這幾個元件的大致用法如下：</p>
+
+		<ul class="text_import2">
+		<li>『左右方向鍵』：可以移動最底下的 &lt;Select&gt;, &lt;Exit&gt;, &lt;Help&gt;項目；</li>
+		<li>『上下方向鍵』：可以移動上面大框框部分的反白光柱，若該行有箭頭 (---&gt;) 
+		則表示該行內部還有其他細項需要來設定的意思；</li>
+		<li>選定項目：以『上下鍵』選擇好想要設定的項目之後，並以『左右鍵』選擇 &lt;Select&gt; 之後，
+		按下『 Enter 』就可以進入該項目去作更進一步的細部設定囉；</li>
+		<li>可挑選之功能：在細部項目的設定當中，如果前面有 [ ] 或 &lt; &gt; 符號時，該項目才可以選擇，
+		而選擇可以使用『空白鍵』來選擇；</li>
+		<li>若為 [*] &lt;*&gt; 則表示編譯進核心；若為 &lt;M&gt; 則表示編譯成模組！
+		盡量在不知道該項目為何時，且有模組可以選，那麼就可以直接選擇為模組囉！</li>
+		<li>當在細項目選擇 &lt;Exit&gt; 後，並按下 Enter ，那麼就可以離開該細部項目囉！</li>
+		</ul>
+
+		<p>基本上建議只要『上下左右的方向鍵、空白鍵、Enter』這六個按鍵就好了！不要使用 Esc 
+		，否則一不小心就有可能按錯的！另外，關於整個核心功能的選擇上面，建議你可以這樣思考：</p>
+
+		<ul class="text_import2">
+		<li>『肯定』核心一定要的功能，直接編譯進核心內；</li>
+		<li>『可能在未來會用到』的功能，那麼盡量編譯成為模組；</li>
+		<li>『不知道那個東西要幹嘛的，看 help 也看不懂』的話，那麼就保留預設值，或者將他編譯成為模組；</li>
+		</ul>
+
+		<p>總之，盡量保持核心小而美，剩下的功能就編譯成為模組，尤其是『需要考慮到未來擴充性』，
+		像鳥哥之前認為螃蟹卡就夠我用的了，結果，後來竟然網站流量大增，鳥哥只好改換 3Com 的網路卡。
+		不過，我的核心卻沒有相關的模組可以使用～因為.....鳥哥自己編譯的核心忘記加入這個模組了。
+		最後，只好重新編譯一次核心的模組，呵呵！真是慘痛的教訓啊！</p>
+	</div>
+
+	<hr /><a name="config_kernel"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">核心功能細項選擇</span><br />
+	<div class="block2">
+		<p>由上面的圖示當中，我們知道核心的可以選擇的項目有很多啊！光是第一面，就有 16 
+		個項目，每個項目內還有不同的細項！哇！真是很麻煩啊～每個項目其實都可能有 &lt;Help&gt; 
+		的說明，所以，如果看到不懂的項目，務必要使用 Help 查閱查閱！
+		好了，底下我們就一個一個項目來看看如何選擇吧！<br /><br /></p>
+
+		<a name="general"></a>
+		<hr /><ul class="list1"><li class="text_import1">General setup</li></ul>
+
+		<p>與 Linux 最相關的程序互動、核心版本說明、是否使用發展中程式碼等資訊都在這裡設定的。
+		這裡的項目主要都是針對核心與程式之間的相關性來設計的，基本上，保留預設值即可！
+		不要隨便取消底下的任何一個項目，因為可能會造成某些程式無法被同時執行的困境喔！
+		不過底下有非常多新的功能，如果你有不清楚的地方，可以按 &lt;Help&gt; 
+		進入查閱，裡面會有一些建議！ 你可以依據 Help 的建議來選擇新功能的啟動與否！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[ ] Prompt for development and/or incomplete code/drivers
+    <span class="term_say"># 這個建議不要選擇，因為我們不是核心專家，不需要使用發展中或不完整的程式碼！</span>
+(<span class="term_write">vbird</span>)  Local version - append to kernel release
+[<span class="term_write">*</span>] Automatically append version information to the version string
+    <span class="term_say"># 我希望我的核心版本成為 2.6.30.3.vbird ，那這裡可以就這樣設定！</span>
+    Kernel compression mode (<span class="term_write">Bzip2</span>)  ---&gt;
+    <span class="term_say"># 建議選擇成為 Bzip2 即可，因為壓縮比較佳！</span>
+[<span class="term_write">*</span>] Support for paging of anonymous memory (swap)
+    <span class="term_say"># 任何人均可存取 swap 是合理的！所以這裡務必要勾選！</span>
+[<span class="term_write">*</span>] System V IPC
+    <span class="term_say"># IPC 是 Inter Process Communication (程序通訊) 縮寫，與程序溝通有關，要選！</span>
+[<span class="term_write">*</span>] BSD Process Accounting
+[ ]   BSD Process Accounting version 3 file format
+    <span class="term_say"># 與標準 Unix (BSD) 的程序支援有關，但不要支援 version 3 ，可能有相容性問題</span>
+[ ] Export task/process statistics through netlink (EXPERIMENTAL)
+    <span class="term_say"># 這個額外的進階選項可以將他取消的！</span>
+[<span class="term_write">*</span>] Auditing support
+[<span class="term_write">*</span>]   Enable system-call auditing support
+    <span class="term_say"># 上面這兩個是額外核心功能 (如 SELinux) 載入時所需要的設定！務必選擇</span>
+    RCU Subsystem  ---&gt;
+      RCU Implementation (<span class="term_write">Classic RCU</span>)  ---&gt;
+    <span class="term_say"># 選擇標準 RCU 即可，不需要使用大量 CPU 的整合功能。</span>
+&lt;<span class="term_write">M</span>&gt; Kernel .config support
+[ ]   Enable access to .config through /proc/config.gz (NEW)
+    <span class="term_say"># 讓 .config 這個核心功能列表可以寫入實際的核心檔案中！</span>
+(<span class="term_write">17</span>) Kernel log buffer size (16 =&gt; 64KB, 17 =&gt; 128KB)
+[ ] Control Group support (NEW)  ---&gt;
+    <span class="term_say"># 整合 CPU 或分離裝置的功能，屬於進階設定，我們先不要使用這功能。</span>
+[<span class="term_write">*</span>] Create deprecated sysfs layout for older userspace tools (NEW)
+    <span class="term_say"># 如果使用支援舊式裝置，如 /sys/devices 者，這裡要勾選！但如果是 2008 
+    # 年後的 distribution ，這裡可能需要取消喔！ CentOS 5.x 要選的！</span>
+-*- Kernel-&gt;user space relay support (formerly relayfs)
+-*- Namespaces support
+[<span class="term_write">*</span>]   UTS namespace (NEW)
+[<span class="term_write">*</span>]   IPC namespace (NEW)
+    <span class="term_say"># 使用 uname 時，會輸出較多的資訊，所以可以嘗試選擇看看。</span>
+[<span class="term_write">*</span>] Initial RAM filesystem and RAM disk (initramfs/initrd) support
+()    Initramfs source file(s)
+    <span class="term_say"># 這是一定要的！因為要支援開機時載入 initail RAM disk 嘛！</span>
+[<span class="term_write">*</span>] Optimize for size  
+    <span class="term_say"># 可以減低核心的檔案大小，其實是 gcc 參數使用 -Os 而不是 -O2</span>
+[ ] Configure standard kernel features (for small systems)  ---&gt;
+    <span class="term_say"># 給嵌入式系統使用的，我們用 PC ，所以這裡不選。</span>
+[ ] Strip assembler-generated symbols during link (NEW)
+[ ] Disable heap randomization (NEW)
+    <span class="term_say"># 2000 年後推出的版本，可以取消這個項目！</span>
+    Choose SLAB allocator (<span class="term_write">SLAB</span>)  ---&gt;
+[<span class="term_write">*</span>] Profiling support (EXPERIMENTAL)
+[ ] Activate markers (NEW)
+&lt;<span class="term_write">M</span>&gt; OProfile system profiling (EXPERIMENTAL)
+[ ]   OProfile AMD IBS support (EXPERIMENTAL) (NEW)
+[<span class="term_write">*</span>] Kprobes
+</pre></td></tr></table><br />
+
+		<a name="load"></a>
+		<hr /><ul class="list1"><li class="text_import1">loadable module + block layer</li></ul>
+
+		<p>要讓你的核心能夠支援動態的核心模組，那麼底下的第一個設定就得要啟動才行！至於第二個 block layer 則預設是啟動的，
+		你也可以進入該項目的細項設定，選擇其中你認為需要的功能即可！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] Enable loadable module support  ---&gt; <span class="term_note">&lt;==底下為細項</span>
+  --- Enable loadable module support
+  [ ]   Forced module loading     <span class="term_note">&lt;==大概就是這個不要選，其他的都選起來！</span>
+  [<span class="term_write">*</span>]   Module unloading
+  [<span class="term_write">*</span>]   Module versioning support
+  [<span class="term_write">*</span>]   Source checksum for all module
+<span class="term_say">================================================================================</span>
+-*- Enable the block layer  ---&gt;  <span class="term_note">&lt;==看吧！預設就是已經選擇了！底下為細項</span>
+  [ ]   Block layer data integrity support  <span class="term_note">&lt;==特殊儲存裝置支援，可以不選</span>
+        IO Schedulers  ---&gt;
+         &lt;<span class="term_write">*</span>&gt; Anticipatory I/O scheduler  <span class="term_note">&lt;==較複雜的一種I/O排程</span>
+         &lt;<span class="term_write">*</span>&gt; Deadline I/O scheduler      <span class="term_note">&lt;==較適用於 database 的載入</span>
+         &lt;<span class="term_write">*</span>&gt; CFQ I/O scheduler           <span class="term_note">&lt;==較適用於 desktop 的環境</span>
+             Default I/O scheduler (<span class="term_write">Deadline</span>)  ---&gt; <span class="term_note">&lt;==適用於鳥哥環境</span>
+</pre></td></tr></table><br />
+
+		<a name="cpu"></a>
+		<hr /><ul class="list1"><li class="text_import1">CPU 的類型與功能選擇</li></ul>
+
+		<p>進入『Processor type and features』後，請挑選你主機的實際 CPU 形式。鳥哥這裡使用的是 Athlon 64 的 CPU，
+		而且鳥哥的主機還有啟動 Xen 這個虛擬化的服務 (在一部主機上面同時啟動多個作業系統)，因此，所以底下的選擇是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] Tickless System (Dynamic Ticks)    <span class="term_note">&lt;==可增加些許省電功能</span>
+[ ] High Resolution Timer Support
+[<span class="term_write">*</span>] Symmetric multi-processing support <span class="term_note">&lt;==多核心 CPU 環境必選</span>
+[ ] Support sparse irq numbering
+[<span class="term_write">*</span>] Enable MPS table                   <span class="term_note">&lt;==讓多 CPU 支援 ACPI</span>
+[ ] Support for extended (non-PC) x86 platforms
+[<span class="term_write">*</span>] Single-depth WCHAN output
+[<span class="term_write">*</span>] Paravirtualized guest support  ---&gt;  <span class="term_note">&lt;==支援半虛擬化功能</span>
+     --- Paravirtualized guest support <span class="term_note">&lt;==底下為 Xen 與 KVM 兩種虛擬機器支援！</span>
+     [<span class="term_write">*</span>]   Xen guest support
+     (<span class="term_write">32</span>)    Maximum allowed size of a domain in gigabytes
+     [<span class="term_write">*</span>]     Enable Xen debug and tuning parameters in debugfs
+     [<span class="term_write">*</span>]   KVM paravirtualized clock
+     [<span class="term_write">*</span>]   KVM Guest support
+     -*-   Enable paravirtualization code
+<span class="term_say">================================================================================</span>
+[ ] paravirt-ops debugging (NEW)  <span class="term_note">&lt;==不需要具有 debug 的功能</span>
+[ ] Memtest
+    Processor family (<span class="term_write">Opteron/Athlon64/Hammer/K8</span>)  ---&gt; <span class="term_note">&lt;==要選對啊！</span>
+[<span class="term_write">*</span>] AMD IOMMU support <span class="term_note">&lt;==啟動 AMD 的 IOMMU 功能！</span>
+(<span class="term_write">8</span>) Maximum number of CPUs
+[ ] SMT (Hyperthreading) scheduler support <span class="term_note">&lt;==Intel CPU 的超執行緒功能</span>
+[<span class="term_write">*</span>] Multi-core scheduler support <span class="term_note">&lt;==多核心功能的支援</span>
+    Preemption Model (<span class="term_write">No Forced Preemption (Server)</span>)  ---&gt;
+    <span class="term_say"># 這是與程序有關的設定項目，鳥哥這裡建立 Server 主機，因此選這項！
+    # 如果是桌上型電腦的使用，建議進入選擇 desktop 項目。</span>
+[ ] Reroute for broken boot IRQs
+[<span class="term_write">*</span>] Machine Check Exception <span class="term_note">&lt;==可將核心偵測之錯誤回報到終端機顯示！</span>
+[<span class="term_write">*</span>]   Intel MCE features (NEW)
+[<span class="term_write">*</span>]   AMD MCE features (NEW)
+&lt; &gt; Dell laptop support
+&lt;<span class="term_write">M</span>&gt; /dev/cpu/microcode - microcode support
+[ ]   Intel microcode patch loading support
+[<span class="term_write">*</span>]   AMD microcode patch loading support
+&lt;<span class="term_write">M</span>&gt; /dev/cpu/*/msr - Model-specific register support
+&lt;<span class="term_write">*</span>&gt; /dev/cpu/*/cpuid - CPU information support
+&lt; &gt; /sys/kernel/debug/x86/cpu/* - CPU Debug support
+[ ] Numa Memory Allocation and Scheduler Support
+    Memory model (Sparse Memory)  ---&gt;
+[<span class="term_write">*</span>] Sparse Memory virtual memmap <span class="term_note">&lt;==可強化些許核心效能</span>
+[ ] Allow for memory hot-add
+[<span class="term_write">*</span>] Add LRU list to track non-evictable pages
+(<span class="term_write">65536</span>) Low address space to protect from user allocation
+[ ] Check for low memory corruption
+[<span class="term_write">*</span>] Reserve low 64K of RAM on AMI/Phoenix BIOSen <span class="term_note">&lt;==重新偵測 BIOS 資訊</span>
+[<span class="term_write">*</span>] MTRR (Memory Type Range Register) support
+    <span class="term_say"># 可以讓 CPU 具有讀取記憶體特殊區塊的能力，尤其在高效能的顯示卡方面，
+    # 可以增進不少效能。這個項目會產生 /proc/mtrr ，X 會讀取這個咚咚喔。</span>
+[<span class="term_write">*</span>]   MTRR cleanup support
+(<span class="term_write">0</span>)     MTRR cleanup enable value (0-1)
+(<span class="term_write">1</span>)     MTRR cleanup spare reg num (0-7)
+[ ]   x86 PAT support
+[ ] EFI runtime service support
+[<span class="term_write">*</span>] Enable seccomp to safely compute untrusted bytecode
+    Timer frequency (<span class="term_write">300 HZ</span>)  ---&gt;
+    <span class="term_say"># 這個項目則與核心針對某個事件立即回應的速度有關。Server 用途可以調整到
+    # 300Hz 即可，如果是桌上型電腦使用，需要調整高一點，例如 1000Hz 較佳！</span>
+[<span class="term_write">*</span>] kexec system call
+[ ] kernel crash dumps
+-*- Support for hot-pluggable CPUs
+[ ] Compat VDSO support  <span class="term_note">&lt;==舊式功能，可以不要選擇</span>
+[ ] Built-in kernel command line <span class="term_note">&lt;==正常開機選單 (grub) 環境，不需要此項功能</span>
+</pre></td></tr></table><br />
+
+		<a name="power"></a>
+		<hr /><ul class="list1"><li class="text_import1">電源管理功能</li></ul>
+
+		<p>如果選擇了『Power management and ACPI options』之後，就會進入系統的電源管理機制中。
+		其實電源管理機制還需要搭配主機板以及 CPU 的相關省電功能，才能夠實際達到省電的效率啦！
+		不論是 Server 還是 Desktop 的使用，在目前電力不足的情況下，能省電就加以省電吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] Power Management support
+[ ]   Power Management Debug Support
+[<span class="term_write">*</span>] Suspend to RAM and standby
+[ ] Hibernation (aka 'suspend to disk')
+[<span class="term_write">*</span>] ACPI (Advanced Configuration and Power Interface) Support  ---&gt;
+    <span class="term_say"># 這是個較新的電源管理模組，由於選擇後會增加核心約 70K ，所以
+    # 對嵌入式系統來說，可能需要考慮考慮。至於 desktop/server 當然就選擇啊</span>
+    --- ACPI (Advanced Configuration and Power Interface) Support
+    [ ]   Deprecated /proc/acpi files
+    [<span class="term_write">*</span>]   Deprecated power /proc/acpi directories
+    [<span class="term_write">*</span>]   Future power /sys interface
+    [<span class="term_write">*</span>]   Deprecated /proc/acpi/event support
+    &lt;<span class="term_write">M</span>&gt;   AC Adapter
+    &lt;<span class="term_write">M</span>&gt;   Battery
+    &lt;<span class="term_write">M</span>&gt;   Button
+    -M-   Video
+    &lt;<span class="term_write">*</span>&gt;   Fan
+    &lt;<span class="term_write">*</span>&gt;   Processor
+    &lt;<span class="term_write">*</span>&gt;     Thermal Zone
+    [ ]   Debug Statements
+    &lt;<span class="term_write">M</span>&gt;   PCI slot detection driver
+    &lt;<span class="term_write">M</span>&gt;   Smart Battery System
+<span class="term_say">================================================================================</span>
+    CPU Frequency scaling  ---&gt;
+    <span class="term_say"># 可以經過核心修改 CPU 的運作頻率，在說明檔當中也提及，還需要啟動底下的
+    # dynamic cpufreq governor 才可以順利的啟動這個項目。</span>
+    [<span class="term_write">*</span>] CPU Frequency scaling
+    [<span class="term_write">*</span>]   Enable CPUfreq debugging
+    &lt;<span class="term_write">M</span>&gt;   CPU frequency translation statistics
+    [<span class="term_write">*</span>]     CPU frequency translation statistics details
+          Default CPUFreq governor (userspace)  ---&gt;
+    -*-   'performance' governor
+    &lt;<span class="term_write">M</span>&gt;   'powersave' governor
+    &lt;<span class="term_write">M</span>&gt;   'userspace' governor for userspace frequency scaling
+    &lt;<span class="term_write">M</span>&gt;   'ondemand' cpufreq policy governor
+    -*-   'conservative' cpufreq governor
+          *** CPUFreq processor drivers ***
+    &lt;<span class="term_write">M</span>&gt;   ACPI Processor P-States driver
+    &lt;<span class="term_write">*</span>&gt;   AMD Opteron/Athlon64 PowerNow!  <span class="term_note">&lt;==因為我們是 AMD 的 CPU 啊！</span>
+    &lt;<span class="term_write">M</span>&gt;   Intel Enhanced SpeedStep (deprecated)
+    &lt; &gt;   Intel Pentium 4 clock modulation
+<span class="term_say">================================================================================</span>
+-*- CPU idle PM support
+    Memory power savings  ---&gt;
+</pre></td></tr></table><br />
+
+		<a name="bus"></a>
+		<hr /><ul class="list1"><li class="text_import1">一些匯流排 (bus) 的選項</li></ul>
+
+		<p>這個項目則與匯流排有關啦！分為最常見的 PCI 與 PCI-express 的支援，還有筆記型電腦常見的 PCMCIA 
+		插卡啊！要記住的是，那個 PCI-E 的介面務必要選取！不然你的新顯示卡可能會捉不到！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] PCI support
+[<span class="term_write">*</span>]   Support mmconfig PCI config space access
+[<span class="term_write">*</span>] PCI Express support
+&lt;<span class="term_write">M</span>&gt;   PCI Express Hotplug driver
+[<span class="term_write">*</span>]   Root Port Advanced Error Reporting support
+-*- Message Signaled Interrupts (MSI and MSI-X)
+[<span class="term_write">*</span>] Enable deprecated pci_find_* API
+[ ] PCI Debugging
+&lt;<span class="term_write">M</span>&gt; PCI Stub driver
+[<span class="term_write">*</span>] Interrupts on hypertransport devices
+[<span class="term_write">*</span>] PCI IOV support  <span class="term_note">&lt;==與虛擬化有關！請加選此項！</span>
+&lt; &gt; PCCard (PCMCIA/CardBus) support  ---&gt; <span class="term_note">&lt;==鳥哥的主機不是 notebook，所以不選。</span>
+&lt;<span class="term_write">*</span>&gt; Support for PCI Hotplug  ---&gt;  <span class="term_note">&lt;==不關機情況下，熱拔插 PCI 裝置</span>
+    --- Support for PCI Hotplug
+    &lt;<span class="term_write">M</span>&gt;   Fake PCI Hotplug driver
+    &lt;<span class="term_write">M</span>&gt;   ACPI PCI Hotplug driver
+    &lt;<span class="term_write">M</span>&gt;     ACPI PCI Hotplug driver IBM extensions
+    [ ]   CompactPCI Hotplug driver
+    &lt;<span class="term_write">M</span>&gt;   SHPC PCI Hotplug driver
+</pre></td></tr></table><br />
+
+		<a name="execute"></a>
+		<hr /><ul class="list1"><li class="text_import1">編譯後執行檔的格式</li></ul>
+
+		<p>選擇『Executable file formats / Emulations』會見到如下選項。
+		底下的選項必須要勾選才行喔！因為是給 Linux 核心運作執行檔之用的資料。通常是與編譯行為有關啦！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] Kernel support for ELF binaries
+[ ] Write ELF core dumps with partial segments
+&lt;<span class="term_write">*</span>&gt; Kernel support for MISC binaries
+[<span class="term_write">*</span>] IA32 Emulation  <span class="term_note">&lt;==因為我們這裡是 64 位元，因此 32 位元為模擬結果</span>
+&lt;<span class="term_write">M</span>&gt;   IA32 a.out support
+</pre></td></tr></table><br />
+
+		<a name="networking"></a>
+		<hr /><ul class="list1"><li class="text_import1">核心的網路功能</li></ul>
+
+		<p>這個『Networking support』項目是相當重要的選項，因為他還包含了防火牆相關的項目！就是未來在伺服器篇會談到的防火牆 
+		iptables 這個資料啊！所以，千萬注意了！在這個設定項目當中，很多東西其實我們在基礎篇還沒有講到，
+		因為大部分的參數都與網路、防火牆有關！由於防火牆是在啟動網路之後再設定即可，所以<span
+		class="text_import2">絕大部分的內容都可以被編譯成為模組，而且也建議你編成模組</span>！有用到再載入到核心即可啊！</p>
+
+<table class="term"><tr><td class="term"><pre>
+--- Networking support
+      Networking options  ---&gt;
+      <span class="term_say"># 就是這個光啊！裡面的資料全部都是重要的防火牆項目！盡量編成模組囉！
+      # 至於不曉得功能的部分，就盡量保留預設值即可！</span>
+      &lt;<span class="term_write">*</span>&gt; Packet socket          <span class="term_note">&lt;==網路封包，當然要選擇啊！</span>
+      [<span class="term_write">*</span>]   Packet socket: mmapped IO
+      &lt;<span class="term_write">*</span>&gt; Unix domain sockets    <span class="term_note">&lt;==Unix 插槽檔，也一定要選擇啊！</span>
+      &lt;<span class="term_write">*</span>&gt; Transformation user configuration interface
+      &lt;<span class="term_write">M</span>&gt; PF_KEY sockets
+      [<span class="term_write">*</span>] TCP/IP networking      <span class="term_note">&lt;==能不選擇 TCP/IP 嗎？</span>
+      [<span class="term_write">*</span>]   IP: multicasting
+      [<span class="term_write">*</span>]   IP: advanced router
+             Choose IP: FIB lookup algorithm (FIB_HASH)  ---&gt;
+      [<span class="term_write">*</span>]   IP: policy routing
+      [<span class="term_write">*</span>]   IP: equal cost multipath
+      [<span class="term_write">*</span>]   IP: verbose route monitoring
+      [ ]   IP: kernel level autoconfiguration
+      &lt;<span class="term_write">M</span>&gt;   IP: tunneling
+      &lt;<span class="term_write">M</span>&gt;   IP: GRE tunnels over IP
+      [<span class="term_write">*</span>]     IP: broadcast GRE over IP
+      [<span class="term_write">*</span>]   IP: multicast routing
+      [<span class="term_write">*</span>]     IP: PIM-SM version 1 support
+      [<span class="term_write">*</span>]     IP: PIM-SM version 2 support
+      [<span class="term_write">*</span>]   IP: TCP syncookie support (disabled per default)
+      &lt;<span class="term_write">M</span>&gt;   IP: AH transformation
+      &lt;<span class="term_write">M</span>&gt;   IP: ESP transformation
+      &lt;<span class="term_write">M</span>&gt;   IP: IPComp transformation
+      &lt;<span class="term_write">M</span>&gt;   IP: IPsec transport mode
+      &lt;<span class="term_write">M</span>&gt;   IP: IPsec tunnel mode
+      &lt;<span class="term_write">*</span>&gt;   IP: IPsec BEET mode
+      -*-   Large Receive Offload (ipv4/tcp)
+      &lt;<span class="term_write">M</span>&gt;   INET: socket monitoring interface
+      [<span class="term_write">*</span>]   TCP: advanced congestion control  ---&gt; <span class="term_note">&lt;==內部細項全為模組</span>
+      &lt;<span class="term_write">M</span>&gt;   The IPv6 protocol  ---&gt; <span class="term_note">&lt;==除必選外，內部細項全為模組</span>
+      [<span class="term_write">*</span>]   NetLabel subsystem support
+      -*- Security Marking
+      <u>[<span class="term_write">*</span>] Network packet filtering framework (Netfilter)  ---&gt;</u>
+      <span class="term_say"># 這個就是我們一直講的防火牆部分！裡面細項幾乎全選擇成為模組！</span>
+          --- Network packet filtering framework (Netfilter)
+          [ ]   Network packet filtering debugging  <span class="term_note">&lt;==debug 部分不選！</span>
+          [<span class="term_write">*</span>]   Advanced netfilter configuration
+          [<span class="term_write">*</span>]     Bridged IP/ARP packets filtering
+                Core Netfilter Configuration  ---&gt;
+          &lt;<span class="term_write">M</span>&gt;   IP virtual server support  ---&gt;
+                <u>IP: Netfilter Configuration  ---&gt;</u>
+                IPv6: Netfilter Configuration  ---&gt;
+          &lt;<span class="term_write">M</span>&gt;   Ethernet Bridge tables (ebtables) support  ---&gt;
+          <span class="term_say"># 上面的細項，除了必選外其他的都編成模組喔！原始沒選的也請選為模組</span>
+<span class="term_say">================================================================================</span>
+      &lt;<span class="term_write">M</span>&gt; Asynchronous Transfer Mode (ATM)
+      &lt;<span class="term_write">M</span>&gt;   Classical IP over ATM
+      [ ]     Do NOT send ICMP if no neighbour
+      &lt;<span class="term_write">M</span>&gt;   LAN Emulation (LANE) support
+      &lt; &gt;     Multi-Protocol Over ATM (MPOA) support
+      &lt;<span class="term_write">M</span>&gt;   RFC1483/2684 Bridged protocols
+      [ ]     Per-VC IP filter kludge
+      &lt;<span class="term_write">M</span>&gt; 802.1d Ethernet Bridging
+      &lt;<span class="term_write">M</span>&gt; 802.1Q VLAN Support
+      [ ]   GVRP (GARP VLAN Registration Protocol) support
+      &lt;<span class="term_write">M</span>&gt; DECnet Support
+      &lt;<span class="term_write">M</span>&gt; ANSI/IEEE 802.2 LLC type 2 Support
+      [ ]   IPX: Full internal IPX network (NEW)
+      &lt;<span class="term_write">M</span>&gt; Appletalk protocol support
+      &lt; &gt;   Appletalk interfaces support
+      &lt;<span class="term_write">M</span>&gt; Phonet protocols family
+      [<span class="term_write">*</span>] QoS and/or fair queueing  ---&gt; <span class="term_note">&lt;==內容同樣全為模組！</span>
+      [ ] Data Center Bridging support
+          Network testing  ---&gt; <span class="term_note">&lt;==保留成模組預設值</span>
+<span class="term_say">================================================================================</span>
+<span class="term_say"># 底下的則是一些特殊的網路設備，例如紅外線啊、藍芽啊！
+# 如果不清楚的話，就使用模組吧！除非你真的知道不要該項目！</span>
+[ ]   Amateur Radio support  ---&gt;
+&lt; &gt;   CAN bus subsystem support  ---&gt;
+&lt; &gt;   IrDA (infrared) subsystem support  ---&gt;
+&lt;<span class="term_write">M</span>&gt;   Bluetooth subsystem support  ---&gt;
+      <span class="term_say"># 這個是藍芽支援，同樣的，裡面除了必選之外，其他通通挑選成為模組！</span>
+[<span class="term_write">*</span>]   Wireless  ---&gt;
+      <span class="term_say"># 這個則是無線網路設備，裡面保留預設值，但可編成模組的就選模組</span>
+&lt;<span class="term_write">M</span>&gt;   WiMAX Wireless Broadband support  ---&gt;
+      <span class="term_say"># 新一代的無線網路，也請勾選成為模組！</span>
+{M}   RF switch subsystem support  ---&gt;
+</pre></td></tr></table><br />
+
+		<a name="device"></a>
+		<hr /><ul class="list1"><li class="text_import1">各項裝置的驅動程式</li></ul>
+
+		<p>進入『Device Drivers』這個是所有硬體裝置的驅動程式庫！哇！光是看到裡面這麼多內容，鳥哥頭都昏了～
+		不過，為了你自己的主機好，建議你還是得要一個項目一個項目的去挑選挑選才行～
+		這裡面的資料就與你主機的硬體有絕對的關係了！</p>
+
+		<p>在這裡面真的很重要，因為很多資料都與你的硬體有關。核心推出時的預設值是比較符合一般狀態的，
+		所以很多資料其實保留預設值就可以編的很不錯了！不過，也因為較符合一般狀態，
+		所以核心額外的編譯進來很多跟你的主機系統不符合的資料，例如網路卡裝置～
+		你可以針對你的主機板與相關硬體來進行編譯。不過，還是要記得有『未來擴充性』的考量！
+		之前鳥哥不是談過嗎，我的網路卡由螃蟹卡換成 3Com 時，核心捉不到～
+		因為...鳥哥並沒有將 3Com 的網路卡編譯成為模組啊！ @_@</p>
+
+<table class="term"><tr><td class="term"><pre>
+    Generic Driver Options  ---&gt;    <span class="term_note">&lt;==與韌體有關，保留預設值即可</span>
+&lt;<span class="term_write">*</span>&gt; Connector - unified userspace &lt;-&gt; kernelspace linker  ---&gt;
+    <span class="term_say"># 與使用者/核心層級的資訊溝通有關，務必要選擇啊！</span>
+&lt;<span class="term_write">M</span>&gt; Memory Technology Device (MTD) support  ---&gt;
+    <span class="term_say"># 例如快閃記憶體(拇指碟之類)之支援，通常與嵌入式系統有關！
+    # 但由於我們也會用到隨身碟，所以裡面的資料全編為模組！</span>
+&lt;<span class="term_write">M</span>&gt; Parallel port support  ---&gt;
+    <span class="term_say"># 平行序列埠的支援，例如早期的 25 針印表機與 9 針滑鼠等，細項全編為模組！</span>
+-*- Plug and Play support  ---&gt;     <span class="term_note">&lt;==不囉唆！當然要選擇這個項目！</span>
+[<span class="term_write">*</span>] Block devices  ---&gt;   <span class="term_note">&lt;==區塊裝置，就是一些儲存媒體！細項內容請全編為模組</span>
+[<span class="term_write">*</span>] Misc devices  ---&gt;    <span class="term_note">&lt;==一些較冷門的設備，建議還是全部編為模組！</span>
+&lt;<span class="term_write">*</span>&gt; ATA/ATAPI/MFM/RLL support  ---&gt; <span class="term_note">&lt;==IDE 介面相關的晶片組！</span>
+    <span class="term_say"># 這個其實與主機板的南橋晶片有關！由於鳥哥的主機為 ALi 的板子，所以：</span>
+    &lt;<span class="term_write">*</span>&gt;   ALI M15x3 chipset support
+    <span class="term_say"># 除了可以保留預設值之外，你也可以將沒用到的驅動程式取消選擇。較重要的還有：</span>
+    [ ]   Support for SATA (deprecated; conflicts with libata SATA driver)
+    <span class="term_say"># 這個一定不能選！因為 SATA 的模組是在 SCSI 中！</span>
+    &lt;<span class="term_write">*</span>&gt;   Include IDE/ATAPI CDROM support
+    <span class="term_say"># IDE 的 CDROM 最好直接編譯進核心！
+    # 其餘的驅動程式鳥哥幾乎都選擇成為模組了！沒用到的晶片也將 * 也改成 M 哩！</span>
+<span class="term_say">================================================================================</span>
+    SCSI device support  ---&gt; 
+    <span class="term_say"># 這部份是 SCSI 儲存媒體的驅動程式！請一定要選擇！因為：
+    # 1. 因為 USB 裝置用的就是模擬 SCSI 啊！
+    # 2. 因為 SATA 的設定項目就在這裡面！</span>
+    &lt;<span class="term_write">M</span>&gt; RAID Transport Class
+    {M} SCSI device support
+    [<span class="term_write">*</span>] legacy /proc/scsi/ support
+        *** SCSI support type (disk, tape, CD-ROM) ***
+    &lt;<span class="term_write">M</span>&gt; SCSI disk support   <span class="term_note">&lt;==幾乎全編為模組即可！</span>
+    &lt;<span class="term_write">M</span>&gt; SCSI tape support
+    &lt;<span class="term_write">M</span>&gt; SCSI OnStream SC-x0 tape support
+    &lt;<span class="term_write">M</span>&gt; SCSI CDROM support
+    [<span class="term_write">*</span>]   Enable vendor-specific extensions (for SCSI CDROM)
+    &lt;<span class="term_write">M</span>&gt; SCSI generic support
+    &lt;<span class="term_write">M</span>&gt; SCSI media changer support
+    &lt;<span class="term_write">M</span>&gt; SCSI Enclosure Support
+        *** Some SCSI devices (e.g. CD jukebox) support multiple LUNs ***
+    [<span class="term_write">*</span>] Probe all LUNs on each SCSI device
+    [<span class="term_write">*</span>] Verbose SCSI error reporting (kernel size +=12K)
+    [<span class="term_write">*</span>] SCSI logging facility
+    [<span class="term_write">*</span>] Asynchronous SCSI scanning
+        SCSI Transports  ---&gt;         <span class="term_note">&lt;==細項保留預設值</span>
+    [<span class="term_write">*</span>] SCSI low-level drivers  ---&gt;  <span class="term_note">&lt;==主要是磁碟陣列卡，細項可全選為模組</span>
+    &lt;<span class="term_write">M</span>&gt; SCSI Device Handlers  ---&gt;    <span class="term_note">&lt;==細項全選為模組</span>
+    &lt; &gt; OSD-Initiator library
+<span class="term_say">================================================================================</span>
+&lt;<span class="term_write">M</span>&gt; Serial ATA (prod) and Parallel ATA (experimental) drivers  ---&gt;
+    <span class="term_say"># SATA 之類的磁碟驅動程式！這裡的模組與 SCSI 模組是有相依屬性的關係！
+    # 底下的細項全部選擇模組，尤其是 ALi 的這個項目，對鳥哥來說，是一定要勾選的</span>
+    &lt;<span class="term_write">M</span>&gt;     ALi PATA support
+[<span class="term_write">*</span>] Multiple devices driver support (RAID and LVM)  ---&gt;
+    <span class="term_say"># RAID 與 LVM 怎可不選！我們<a href="/linux_basic/0420quota.php">第十五章</a>才講過這東西！細項均保留預設值即可</span>
+[ ] Fusion MPT device support  ---&gt;
+    <span class="term_say"># 一種高階的 SCSI 控制器，可選可不選！因為鳥哥這裡不會用到，所以不選！</span>
+    IEEE 1394 (FireWire) support  ---&gt;
+    <span class="term_say"># 這個就是俗稱的『火線』，許多外接式設備可能會用這個介面，因此，
+    # 在此部分內的細項部分，請務必設定為模組喔！不要忘了！</span>
+&lt;<span class="term_write">M</span>&gt; I2O device support  ---&gt;       <span class="term_note">&lt;==細項亦全選為模組！</span>
+[ ] Macintosh device drivers  ---&gt; <span class="term_note">&lt;==我們是 PC ，所以不需支援麥金塔周邊</span>
+[<span class="term_write">*</span>] Network device support  ---&gt;   <span class="term_note">&lt;==網路設備的支援是必選！</span>
+    --- Network device support
+    [<span class="term_write">*</span>]   Enable older network device API compatibility
+    &lt;<span class="term_write">M</span>&gt;   Intermediate Functional Block support
+    &lt;<span class="term_write">M</span>&gt;   Dummy net driver support
+    &lt;<span class="term_write">M</span>&gt;   Bonding driver support
+    &lt;<span class="term_write">M</span>&gt;   EQL (serial line load balancing) support
+    &lt;<span class="term_write">M</span>&gt;   Universal TUN/TAP device driver support
+    &lt;<span class="term_write">M</span>&gt;   Virtual ethernet pair device
+    &lt;<span class="term_write">M</span>&gt;   General Instruments Surfboard 1000
+    &lt; &gt;   ARCnet support  ---&gt; <span class="term_note">&lt;==較早期的網卡規格，可不選擇！</span>
+    {M}   PHY Device support and infrastructure  ---&gt; <span class="term_note">&lt;==細項全為模組</span>
+    <u>[<span class="term_write">*</span>]   Ethernet (10 or 100Mbit)  ---&gt;</u>
+    <u>[<span class="term_write">*</span>]   Ethernet (1000 Mbit)  ---&gt;</u>
+    <u>[<span class="term_write">*</span>]   Ethernet (10000 Mbit)  ---&gt;</u>
+    <span class="term_say"># 上面三個乙太網路網卡支援，不論是否用的到，細項請全編為模組來待命吧！</span>
+    &lt; &gt;   Token Ring driver support  ---&gt; <span class="term_note">&lt;==IBM 的 LAN ，可不選！</span>
+          Wireless LAN  ---&gt;
+          WiMAX Wireless Broadband devices  ---&gt;
+          USB Network Adapters  ---&gt;
+          <span class="term_say"># 上面三個為現階段很熱門的無線網路設備，所以全部內容的細項全選擇
+          # 為模組！免得未來你的主機加上新的無線設備時會找不到驅動程式！</span>
+    [ ]   Wan interfaces support  ---&gt; <span class="term_note">&lt;==WAN 的廣域網路設備應該就不用選擇了！</span>
+    [ ]   ATM drivers  ---&gt; <span class="term_note">&lt;==高階的 ATM 設備也不用選吧！</span>
+    &lt;<span class="term_write">*</span>&gt;   Xen network device frontend driver
+    &lt;<span class="term_write">*</span>&gt;   FDDI driver support
+    &lt;<span class="term_write">M</span>&gt;     Digital DEFTA/DEFEA/DEFPA adapter support
+    [ ]       Use MMIO instead of PIO (NEW)
+    &lt;<span class="term_write">M</span>&gt;     SysKonnect FDDI PCI support
+    &lt;<span class="term_write">M</span>&gt;   PLIP (parallel port) support
+    &lt;<span class="term_write">M</span>&gt;   PPP (point-to-point protocol) support
+    [<span class="term_write">*</span>]     PPP filtering
+    &lt;<span class="term_write">M</span>&gt;     PPP support for async serial ports
+    &lt;<span class="term_write">M</span>&gt;     PPP support for sync tty ports
+    &lt;<span class="term_write">M</span>&gt;     PPP Deflate compression
+    &lt;<span class="term_write">M</span>&gt;     PPP BSD-Compress compression
+    &lt;<span class="term_write">M</span>&gt;     PPP over ATM
+    <span class="term_say"># 如果你有 ADSL 撥接的話，呵呵！PPP 的裝置也要選擇上喔！</span>
+    &lt;<span class="term_write">M</span>&gt;   SLIP (serial line) support
+    [<span class="term_write">*</span>]     CSLIP compressed headers
+    [<span class="term_write">*</span>]   Keepalive and linefill
+    [ ]   Six bit SLIP encapsulation
+    [<span class="term_write">*</span>]   Fibre Channel driver support
+<span class="term_say">================================================================================</span>
+[ ] ISDN support  ---&gt;
+&lt; &gt; Telephony support  ---&gt;
+    <span class="term_say"># 這兩個設備沒用到，所以也可以不要選擇！</span>
+    Input device support  ---&gt;
+    <span class="term_say"># 這裡面含有滑鼠、鍵盤、搖桿、觸控版等輸入裝置，盡量全選為模組吧！</span>
+    Character devices  ---&gt;
+    <span class="term_say"># 周邊元件設備部分，也全選為模組吧！</span>
+{M} I2C support  ---&gt;
+    <span class="term_say"># 還記得我們去偵測主機板的溫度與壓力吧？呵呵！那就是透過核心的這個 I2C 
+    # 的模組功能！ALi 預設沒有被編入核心，所以請進入選擇成模組！</span>
+[ ] SPI support  ---&gt;
+[ ] GPIO Support  ---&gt;
+&lt; &gt; Dallas's 1-wire support  ---&gt;
+-*- Power supply class support  ---&gt;
+    <span class="term_say"># 絕大部分都沒有用到的咚咚，所以保留預設值，不選擇！</span>
+&lt;<span class="term_write">M</span>&gt; Hardware Monitoring support  ---&gt;
+    <span class="term_say"># 硬體偵測器的支援，記得也要挑選，然後內容全為模組！</span>
+-*- Generic Thermal sysfs driver  ---&gt;
+[<span class="term_write">*</span>] Watchdog Timer Support  ---&gt; <span class="term_note">&lt;==需搭配 watchdog 服務</span>
+    <span class="term_say"># 若搭配 watchdog 服務，可以設定在某些特定狀況下重新啟動主機！</span>
+    Sonics Silicon Backplane  ---&gt;
+    Multifunction device drivers  ---&gt;
+    <span class="term_say"># 鳥哥沒有這樣的設備，所以也沒有選擇！</span>
+[ ] Voltage and Current Regulator Support  ---&gt;
+    Multimedia devices  ---&gt;
+    <span class="term_say"># 一堆多媒體裝置如影像擷取卡、FM 廣播音效卡。但如果你的 Linux 是桌上型電腦，
+    # 裡面需要挑選成模組較佳！因為一大堆多媒體介面卡！</span>
+    Graphics support  ---&gt;  <span class="term_note">&lt;==這就重要了！顯示卡選擇！</span>
+    <span class="term_say"># 嘿嘿！重點之一，顯示卡的晶片組～剛剛前面提到的都是主機板的對顯示卡的
+    # 匯流排支援 (PCI-E 與 AGP) ，這裡則是針對顯示卡晶片！鳥哥的顯示卡是 NVidia 
+    # 的，所以將他選擇即可！其他的可以編成模組！</span>
+&lt;<span class="term_write">M</span>&gt; Sound card support  ---&gt;
+    <span class="term_say"># 音效卡部分，也全部選擇成為模組啦！反正編成模組又不用錢～</span>
+[<span class="term_write">*</span>] HID Devices  ---&gt; <span class="term_note">&lt;==人機介面裝置，保留預設值即可(也可不選)</span>
+[<span class="term_write">*</span>] USB support  ---&gt;
+    <span class="term_say"># 不能不選的 USB ，內容也全部是模組即可！尤其底下這三個：</span>
+    &lt;<span class="term_write">M</span>&gt;     EHCI HCD (USB 2.0) support
+    &lt;<span class="term_write">M</span>&gt;     OHCI HCD support
+    &lt;<span class="term_write">M</span>&gt;     UHCI HCD (most Intel and VIA) support
+&lt;<span class="term_write">M</span>&gt; MMC/SD/SDIO card support  ---&gt;  <span class="term_note">&lt;==多媒體介面卡，保留預設值</span>
+&lt; &gt; Sony MemoryStick card support (EXPERIMENTAL)  ---&gt;
+-*- LED Support  ---&gt;
+[ ] Accessibility support  ---&gt;
+&lt;<span class="term_write">M</span>&gt; InfiniBand support  ---&gt; <span class="term_note">&lt;==高階網路設備</span>
+[<span class="term_write">*</span>] EDAC - error detection and reporting  ---&gt;
+&lt;<span class="term_write">M</span>&gt; Real Time Clock  ---&gt; <span class="term_note">&lt;==內容選為模組吧！</span>
+[ ] DMA Engine support  ---&gt;
+[ ] Auxiliary Display support  ---&gt;
+&lt; &gt; Userspace I/O drivers  ---&gt;
+[<span class="term_write">*</span>] Xen memory balloon driver
+[<span class="term_write">*</span>]   Scrub pages before returning them to system
+&lt;<span class="term_write">*</span>&gt; Xen filesystem
+[<span class="term_write">*</span>]   Create compatibility mount point /proc/xen
+[ ] Staging drivers  ---&gt;
+[ ] X86 Platform Specific Device Drivers  ---&gt;
+    <span class="term_say"># 一堆筆記型電腦的驅動，可以不選啦！</span>
+</pre></td></tr></table>
+
+		<p>底下則與 Firmware Drivers 有關喔！基本上，都保留預設值就好了！</p>
+
+<table class="term"><tr><td class="term"><pre>
+&lt;<span class="term_write">M</span>&gt; BIOS Enhanced Disk Drive calls determine boot disk
+[ ]   Sets default behavior for EDD detection to off (NEW)
+&lt;<span class="term_write">M</span>&gt; BIOS update support for DELL systems via sysfs
+&lt;<span class="term_write">M</span>&gt; Dell Systems Management Base Driver
+[<span class="term_write">*</span>] Export DMI identification via sysfs to userspace
+[<span class="term_write">*</span>] iSCSI Boot Firmware Table Attributes
+&lt;<span class="term_write">M</span>&gt;   iSCSI Boot Firmware Table Attributes module
+</pre></td></tr></table><br />
+
+		<a name="filesystem"></a>
+		<hr /><ul class="list1"><li class="text_import1">檔案系統的支援</li></ul>
+
+		<p>檔案系統的支援也是很重要的一項核心功能！因為如果不支援某個檔案系統，那麼我們的 Linux kernel 
+		就無法認識，當然也就無法使用啦！例如 Quota, NTFS 等等特殊的 filesystem 。
+		這部份也是有夠麻煩～因為涉及核心是否能夠支援某些檔案系統，以及某些作業系統支援的
+		partition table 項目。在進行選擇時，也務必要特別的小心在意喔！
+		尤其是我們常常用到的網路作業系統 (NFS/Samba 等等)，以及基礎篇談到的 Quota 等，
+		你都得要勾選啊！否則是無法被支援的。比較有趣的是 NTFS 在這一版的核心裡面竟然有支援可寫入的項目，
+		著實讓鳥哥嚇了一跳了！^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+&lt;<span class="term_write">*</span>&gt; Second extended fs support
+[<span class="term_write">*</span>]   Ext2 extended attributes
+[<span class="term_write">*</span>]     Ext2 POSIX Access Control Lists
+[<span class="term_write">*</span>]     Ext2 Security Labels
+[<span class="term_write">*</span>]   Ext2 execute in place support
+&lt;<span class="term_write">*</span>&gt; Ext3 journalling file system support <span class="term_note">&lt;==建議這裡直接編進核心</span>
+[ ]   Default to 'data=ordered' in ext3 (legacy option)
+[<span class="term_write">*</span>]   Ext3 extended attributes
+[<span class="term_write">*</span>]     Ext3 POSIX Access Control Lists
+[<span class="term_write">*</span>]     Ext3 Security Labels
+&lt;<span class="term_write">M</span>&gt; The Extended 4 (ext4) filesystem
+[<span class="term_write">*</span>]   Enable ext4dev compatibility
+[<span class="term_write">*</span>]   Ext4 extended attributes (NEW)
+[<span class="term_write">*</span>]     Ext4 POSIX Access Control Lists
+[<span class="term_write">*</span>]     Ext4 Security Labels
+<span class="term_say"># 上面是傳統的 EXT2/EXT3 及進階的 EXT4 支援！除了 EXT4 外，其他編入核心吧！</span>
+<span class="term_say">================================================================================</span>
+[ ] JBD (ext3) debugging support
+[ ] JBD2 (ext4) debugging support (NEW)
+&lt;<span class="term_write">M</span>&gt; Reiserfs support
+[ ]   Enable reiserfs debug mode (NEW)
+[ ]   Stats in /proc/fs/reiserfs (NEW)
+[ ]   ReiserFS extended attributes (NEW)
+&lt; &gt; JFS filesystem support
+&lt;<span class="term_write">M</span>&gt; XFS filesystem support
+[<span class="term_write">*</span>]   XFS Quota support
+[<span class="term_write">*</span>]   XFS POSIX ACL support
+[<span class="term_write">*</span>]   XFS Realtime subvolume support
+&lt; &gt; OCFS2 file system support
+[<span class="term_write">*</span>] Dnotify support
+[<span class="term_write">*</span>] Inotify file change notification support
+[<span class="term_write">*</span>]   Inotify support for userspace
+[<span class="term_write">*</span>] Quota support
+[ ]   Report quota messages through netlink interface
+[<span class="term_write">*</span>]   Print quota warnings to console (OBSOLETE)
+&lt; &gt; Old quota format support
+&lt;<span class="term_write">*</span>&gt; Quota format v2 support
+&lt;<span class="term_write">M</span>&gt; Kernel automounter support
+&lt;<span class="term_write">M</span>&gt; Kernel automounter version 4 support (also supports v3)
+&lt; &gt; FUSE (Filesystem in Userspace) support 
+<span class="term_say"># XFS 以及 Reiserfs 與 Quota 建議也是選擇起來放啦！</span>
+<span class="term_say">================================================================================</span>
+    Caches  ---&gt;
+    CD-ROM/DVD Filesystems  ---&gt;  <span class="term_note">&lt;==CD內的檔案格式，預設值即可</span>
+    DOS/FAT/NT Filesystems  ---&gt;  <span class="term_note">&lt;==有支援 NTFS ，要進入挑挑！</span>
+      &lt;<span class="term_write">M</span>&gt; MSDOS fs support
+      &lt;<span class="term_write">M</span>&gt; VFAT (Windows-95) fs support
+      (<span class="term_write">950</span>) Default codepage for FAT    <span class="term_note">&lt;==支援繁體中文</span>
+      (<span class="term_write">utf8</span>) Default iocharset for FAT  <span class="term_note">&lt;==支援萬國碼</span>
+      &lt;<span class="term_write">M</span>&gt; NTFS file system support
+      [ ]   NTFS debugging support (NEW)
+      [<span class="term_write">*</span>]   NTFS write support
+<span class="term_say">================================================================================</span>
+    Pseudo filesystems  ---&gt;        <span class="term_note">&lt;==類似 /proc ，保留預設值</span>
+[*] Miscellaneous filesystems  ---&gt; <span class="term_note">&lt;==其他檔案系統的支援，保留預設值</span>
+[*] Network File Systems  ---&gt;      <span class="term_note">&lt;==網路檔案系統！很重要！也要挑挑！</span>
+    --- Network File Systems
+    &lt;<span class="term_write">M</span>&gt;   NFS client support
+    [<span class="term_write">*</span>]     NFS client support for NFS version 3
+    [<span class="term_write">*</span>]       NFS client support for the NFSv3 ACL protocol extension
+    &lt;<span class="term_write">M</span>&gt;   NFS server support
+    [<span class="term_write">*</span>]     NFS server support for NFS version 3
+    [<span class="term_write">*</span>]       NFS server support for the NFSv3 ACL protocol extension
+    &lt; &gt;   SMB file system support (OBSOLETE, please use CIFS)
+    &lt;<span class="term_write">M</span>&gt;   CIFS support (advanced network filesystem, SMBFS successor)
+<span class="term_say"># 最重要就這幾項，其他保留預設值即可！</span>
+<span class="term_say">================================================================================</span>
+    Partition Types  ---&gt;          <span class="term_note">&lt;==分割類型，也是保持預設值即可！</span>
+-*- Native language support  ---&gt;  <span class="term_note">&lt;==選擇預設的語系</span>
+    --- Native language support
+    (<span class="term_write">utf8</span>) Default NLS Option
+    &lt;<span class="term_write">*</span>&gt;   Traditional Chinese charset (Big5)
+    <span class="term_say"># 除了上述這兩個之外，其他的請選擇成為模組即可！</span>
+</pre></td></tr></table><br />
+
+		<a name="security"></a>
+		<hr /><ul class="list1"><li class="text_import1">核心駭客、資訊安全、密碼應用</li></ul>
+
+		<p>再接下來有個『Kernel hacking』的項目，那是與核心開發者比較有關的部分，這部分建議保留預設值即可，
+		應該不需要去修改他！除非你想要進行核心方面的研究喔。然後底下有個『 Security Options 』，那是屬於資訊安全方面的設定，
+		包括 SELinux 這個細部權限強化模組也在這裡編入核心的！這部分可以作一些額外的設定。
+		另外還有『 Cryptographic API 』這個密碼應用程式介面工具選項，也是可以保留預設值啦！
+		我們來看看有什麼比較特殊的地方吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+Security options  ---&gt;
+[<span class="term_write">*</span>] Enable access key retention support
+[<span class="term_write">*</span>]   Enable the /proc/keys file by which keys may be viewed
+[<span class="term_write">*</span>] Enable different security models
+[ ] Enable the securityfs filesystem
+[<span class="term_write">*</span>] Socket and Networking Security Hooks
+[<span class="term_write">*</span>]   XFRM (IPSec) Networking Security Hooks
+[ ] Security hooks for pathname based access control
+[ ] File POSIX Capabilities
+[ ] Root Plug Support
+[<span class="term_write">*</span>] NSA SELinux Support
+[<span class="term_write">*</span>]   NSA SELinux boot parameter
+(<span class="term_write">1</span>)     NSA SELinux boot parameter default value
+[<span class="term_write">*</span>]   NSA SELinux runtime disable
+[<span class="term_write">*</span>]   NSA SELinux Development Support
+[<span class="term_write">*</span>]   NSA SELinux AVC Statistics
+(<span class="term_write">1</span>)   NSA SELinux checkreqprot default value
+[ ]   NSA SELinux maximum supported policy format version
+[ ] Simplified Mandatory Access Control Kernel Support
+[ ] TOMOYO Linux Support
+[ ] Integrity Measurement Architecture(IMA)
+<span class="term_say"># 基本上，這部分保留預設值就對了！你也會發現 NSA 的資料都是直接編進核心！</span>
+<span class="term_say">================================================================================</span>
+Cryptographic API  ---&gt;
+<span class="term_say"># 基本上，除了底下這兩個編譯進核心之外，其他的通通選擇成為模組吧！</span>
+{<span class="term_write">*</span>}   MD5 digest algorithm
+{<span class="term_write">*</span>}   SHA1 digest algorithm
+</pre></td></tr></table>
+
+		<p>在密碼應用程式介面方面，一般我們使用的帳號密碼登入利用的就是 MD5 
+		這個加密機制，要讓核心有支援才行啊！幾乎所有的項目都給他做成模組即可！
+		不過 MD5 與 SHA1 必須要直接由核心支援比較好！<br /><br /></p>
+
+		<a name="virt"></a>
+		<hr /><ul class="list1"><li class="text_import1">虛擬化與函式庫</li></ul>
+
+		<p>虛擬化是近年來非常熱門的一個議題，因為電腦的能力太強，所以時常閒置在那邊，
+		此時，我們可以透過虛擬化技術在一部主機上面同時啟動多個作業系統來運作，這就是所謂的虛擬化。
+		Linux 核心已經主動的納入虛擬化功能喔！而 Linux 認可的虛擬化使用的機制為 KVM (Kernel base Virtual Machine)。
+		至於常用的核心函式庫也可以全部編為模組囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[<span class="term_write">*</span>] Virtualization  ---&gt;
+    --- Virtualization
+    &lt;<span class="term_write">M</span>&gt;   Kernel-based Virtual Machine (KVM) support
+    &lt;<span class="term_write">M</span>&gt;     KVM for Intel processors support
+    &lt;<span class="term_write">M</span>&gt;     KVM for AMD processors support
+    [ ]     KVM trace support (NEW)
+    &lt;<span class="term_write">M</span>&gt;   Virtio balloon driver (EXPERIMENTAL)
+<span class="term_say">================================================================================</span>
+Library routines  ---&gt;
+    {<span class="term_write">M</span>} CRC-CCITT functions
+    {<span class="term_write">M</span>} CRC16 functions
+    {<span class="term_write">M</span>} CRC calculation for the T10 Data Integrity Field
+    {<span class="term_write">M</span>} CRC ITU-T V.41 functions
+    -*- CRC32 functions
+    &lt;<span class="term_write">M</span>&gt; CRC7 functions
+    {<span class="term_write">*</span>} CRC32c (Castagnoli, et al) Cyclic Redundancy-Check
+</pre></td></tr></table>
+
+		<p>最後，還有底下這兩個項目，這兩個項目與核心功能無關，但是與挑選時的設定檔案有關：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Load an Alternate Configuration File
+Save an Alternate Configuration File
+</pre></td></tr></table>
+
+		<p>這兩個項目分別是儲存剛剛做好的所有項目的設定資料，另一個則是將來自其他人作的選擇給他讀入！
+		事實上，剛剛我們所做的設定只要在離開時選擇 SAVE ，那麼這些項目
+		<span class="text_import2">通通會記錄到目前這個目錄下的 .config 檔案內</span>。
+		而我們也可以使用上面提到的 Save Configuration 這個項目來將剛剛做完的設定儲存成另外的檔案，
+		做成這個檔案的好處是，你可以在下次在其他版本的核心作選擇時，直接以 Load 
+		來將這個檔案的設定項目讀入，這樣可以減少你還要重新挑選一遍的困境啊！</p>
+
+		<p>要請你注意的是，上面的資料主要是適用在鳥哥的個人機器上面的，
+		目前鳥哥比較習慣使用原本 distributions 提供的預設核心，因為他們也會主動的進行更新，
+		所以鳥哥就懶的自己重編核心了～ ^_^</p>
+
+		<p>此外，因為鳥哥重視的地方在於『網路伺服器』上面，所以裡頭的設定少掉了相當多的個人桌上型
+		Linux 的硬體編譯！所以，如果你想要編譯出一個適合你的機器的核心，
+		那麼可能還有相當多的地方需要來修正的！不論如何，請隨時以
+		Help 那個選項來看一看內容吧！反正 Kernel 重編的機率不大！花多一點時間重新編譯一次！
+		然後將該編譯完成的參數檔案儲存下來，未來就可以直接將該檔案叫出來讀入了！
+		所以花多一點時間安裝一次就好！那也是相當值得的！</p>
+	</div>
+</div>
+
+
+<hr /><a name="make"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">核心的編譯與安裝</span><br />
+<div class="block1">
+	<p>將最複雜的核心功能選擇完畢後，接下來就是進行這些核心、核心模組的編譯了！而編譯完成後，當然就是需要使用嚕～
+	那如何使用新核心呢？就得要考慮 grub 這個玩意兒啦！底下我們就來處理處理：<br /><br /></p>
+
+	<hr /><a name="make_kernel"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">編譯核心與核心模組</span><br />
+	<div class="block2">
+		<p>核心與核心模組需要先編譯起來，而編譯的過程其實非常簡單，你可以先使用『 make help 』去查閱一下所有可用編譯參數，
+		就會知道有底下這些基本功能：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www linux-2.6.30.3]# <span class="term_command">make vmlinux</span>  <span class="term_note">&lt;==未經壓縮的核心</span>
+[root@www linux-2.6.30.3]# <span class="term_command">make modules</span>  <span class="term_note">&lt;==僅核心模組</span>
+[root@www linux-2.6.30.3]# <span class="term_command">make bzImage</span>  <span class="term_note">&lt;==經壓縮過的核心(預設)</span>
+[root@www linux-2.6.30.3]# <span class="term_command">make all    </span>  <span class="term_note">&lt;==進行上述的三個動作</span>
+</pre></td></tr></table>
+
+		<p>我們常見的在 /boot/ 底下的核心檔案，都是經過壓縮過的核心檔案，因此，上述的動作中比較常用的是 modules 與
+		bzImage 這兩個，其中 bzImage 第三個字母是英文大寫的 I 喔！bzImage 可以製作出壓縮過後的核心，
+		也就是一般我們拿來進行系統開機的資訊囉！所以，基本上我們會進行的動作是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www linux-2.6.30.3]# <span class="term_command">make clean  </span>  <span class="term_note">&lt;==先清除暫存檔</span>
+[root@www linux-2.6.30.3]# <span class="term_command">make bzImage</span>  <span class="term_note">&lt;==先編譯核心</span>
+[root@www linux-2.6.30.3]# <span class="term_command">make modules</span>  <span class="term_note">&lt;==再編譯模組</span>
+</pre></td></tr></table>
+
+		<p>上述的動作會花費非常長的時間，編譯的動作依據你選擇的項目以及你主機硬體的效能而不同。
+		最後製作出來的資料是被放置在 /usr/src/kernels/linux-2.6.30.3/ 
+		這個目錄下，還沒有被放到系統的相關路徑中喔！在上面的編譯過程當中，如果有發生任何錯誤的話，
+		很可能是由於核心項目的挑選選擇的不好，可能你需要重新以 make menuconfig 再次的檢查一下你的相關設定喔！
+		如果還是無法成功的話，那麼或許將原本的核心資料內的 .config 檔案，複製到你的核心原始檔目錄下，
+		然後據以修改，應該就可以順利的編譯出你的核心了。最後注意到，下達了 make bzImage 後，最終的結果應該會像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Root device is (8, 1)
+Setup is 12696 bytes (padded to 12800 bytes).
+System is 2207 kB
+CRC 7701ab0e
+Kernel: <span class="term_write">arch/x86/boot/bzImage</span> is ready  (#1)
+[root@www linux-2.6.30.3]# <span class="term_command">ll arch/x86/boot/bzImage</span>
+-rw-r--r-- 1 root root 2272432  7月 30 13:35 arch/x86/boot/bzImage
+</pre></td></tr></table>
+
+		<p>可以發現你的核心已經編譯好而且放置在 /usr/src/kernels/linux-2.6.30.3/arch/x86/boot/bzImage
+		裡面囉～那個就是我們的核心檔案！最重要就是他啦！我們等一下就會安裝到這個檔案哩！
+		然後就是編譯模組的部分囉～ make modules 進行完畢後，就等著安裝啦！ ^_^</p>
+	</div>
+
+	<hr /><a name="make_module"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實際安裝模組</span><br />
+	<div class="block2">
+		<p>安裝模組前有個地方得要特別強調喔！我們知道模組是放置到 /lib/modules/$(uname -r) 目錄下的，那如果<span
+		class="text_import2">同一個版本的模組被反覆編譯後來安裝時，會不會產生衝突</span>呢？舉例來說，鳥哥這個 2.6.30.3
+		的版本第一次編譯完成且安裝妥當後，發現有個小細節想要重新處理，因此又重新編譯過一次，那兩個版本一模一樣時，
+		模組放置的目錄會一樣，此時就會產生衝突了！如何是好？有兩個解決方法啦：</p>
+		<ul>
+		<li>先將舊的模組目錄更名，然後才安裝核心模組到目標目錄去；</li>
+		<li>在 make menuconfig 時，那個 <a href="#general">General setup</a> 內的 Local version 修改成新的名稱。</li>
+		</ul>
+		<p>鳥哥建議使用第二個方式，因為如此一來，你的模組放置的目錄名稱就不會相同，這樣也就能略過上述的目錄同名問題囉！
+		好，那麼如何安裝模組到正確的目標目錄呢？很簡單，同樣使用 make 的功能即可：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www linux-2.6.30.3]# <span class="term_command">make modules_install</span>
+[root@www linux-2.6.30.3]# <span class="term_command">ll /lib/modules/</span>
+drwxr-xr-x 3 root root 4096  7月 30 14:31 <span class="term_write">2.6.30.3vbird</span>
+</pre></td></tr></table>
+
+		<p>看到否，最終會在 /lib/modules 底下建立起你這個核心的相關模組喔！不錯吧！模組這樣就已經處理妥當囉～
+		接下來，就是準備要進行核心的安裝了！哈哈！又跟 grub 有關囉～</p>
+	</div>
+
+	<hr /><a name="make_install"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開始安裝新核心與多重核心選單 (grub)</span><br />
+	<div class="block2">
+		<p>現在我們知道核心檔案放置在 /usr/src/kernels/linux-2.6.30.3/arch/x86/boot/bzImage 
+		，但是其實系統核心理論上都是擺在 /boot  底下，且為 vmlinuz 開頭的檔名。
+		此外，我們也曉得一部主機是可以做成多重開機系統的！這樣說，應該知道鳥哥想要幹嘛了吧？
+		對啦！我們將同時保留舊版的核心，並且新增新版的核心在我們的主機上面。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">移動核心到 /boot 且保留舊核心檔案</li></ul>
+
+		<p>保留舊核心有什麼好處呢？最大的好處是可以確保系統能夠順利開機啦！因為核心雖然被編譯成功了，
+		但是並不保證我們剛剛挑選的核心項目完全適合於目前這部主機系統，
+		可能有某些地方我們忘記選擇了，這將導致新核心無法順利驅動整個主機系統，更差的情況是，
+		你的主機無法成功開機成功！此時，如果我們保留舊的核心，呵呵！若新核心測試不通過，就用舊核心來啟動啊！嘿嘿！
+		保證比較不會有問題嘛！新核心通常可以這樣作的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cp /usr/src/kernels/linux-2.6.30.3/arch/x86/boot/bzImage \</span>
+&gt; <span class="term_command">/boot/vmlinuz-2.6.30.3vbird</span>  <span class="term_note">&lt;==實際核心</span>
+[root@www ~]# <span class="term_command">cp /usr/src/kernels/linux-2.6.30.3/.config \</span>
+&gt; <span class="term_command">/boot/config-2.6.30.3vbird</span>   <span class="term_note">&lt;==建議設定檔也複製備份</span>
+</pre></td></tr></table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">建立相對應的 Initial Ram Disk (initrd)</li></ul>
+
+		<p>還記得<a href="/linux_basic/0510osloader.php#grub_initrd">第二十章談過的 initrd</a> 這個玩意兒吧！
+		由於鳥哥的系統使用 SATA 磁碟，加上剛剛 SATA 磁碟支援的功能並沒有直接編譯到核心去，所以當然要使用 initrd 來載入才行！
+		使用如下的方法來建立 initrd 吧！記得搭配正確的核心版本喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkinitrd -v /boot/initrd-2.6.30.3vbird.img  2.6.30.3vbird</span>
+<span class="term_say">....(前面省略)....</span>
+Adding module ehci-hcd
+Adding module ohci-hcd
+Adding module uhci-hcd
+<span class="term_say">....(後面省略)....</span>
+</pre></td></tr></table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">編輯開機選單 (grub)</li></ul>
+
+		<p>鳥哥這部測試機之前是使用 Xen 的核心來啟動的，但因為 Xen 核心的製作比較複雜，本章並沒有實作出 Xen 虛擬機器的核心。
+		底下鳥哥使用的是剛剛編譯成功的核心來進行開機選單的設定，你會看到的設定檔與你的環境可能會有不一樣喔！
+		那就來看看吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim /boot/grub/menu.lst</span>
+default=0
+timeout=10
+splashimage=(hd0,0)/boot/grub/splash.xpm.gz
+#hiddenmenu
+title CentOS (2.6.18-128.2.1.el5xen)
+        root (hd0,0)
+        kernel /boot/xen.gz-2.6.18-128.2.1.el5
+        module /boot/vmlinuz-2.6.18-128.2.1.el5xen ro root=LABEL=/ rhgb quiet
+        module /boot/initrd-2.6.18-128.2.1.el5xen.img
+<span class="term_write">title CentOS testing kernel from vbird
+        root (hd0,0)
+        kernel /boot/vmlinuz-2.6.30.3vbird ro root=LABEL=/ rhgb
+        initrd /boot/initrd-2.6.30.3vbird.img</span>
+</pre></td></tr></table>
+
+		<p>新增上述的特殊字體到你的設定檔當中。另外，你會發現我上頭的 default 並沒有修改到最新的那個核心的選單上，
+		因為我必須要測試一下新核心能否順利開機！如果順利開機且運作沒有問題後，那麼才來修訂這個 default 的值吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">重新以新核心開機、測試、修改</li></ul>
+
+		<p>如果上述的動作都成功後，接下來就是重新開機並選擇新核心來啟動系統啦！如果系統順利啟動之後，你使用 uname -a
+		會出現類似底下的資料：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">uname -a</span>
+Linux www.vbird.tsai <span class="term_write">2.6.30.3vbird</span> #1 SMP Thu Jul 30 13:34:31 
+CST 2009 <span class="term_write">x86_64 x86_64 x86_64</span> GNU/Linux
+</pre></td></tr></table>
+
+		<p>包括核心版本與支援的硬體平台都是 OK 的！嘿嘿！那你所編譯的核心就是差不多成功的啦！
+		如果運作一陣子後，你的系統還是穩定的情況下，那就能夠將 default 值使用這個新的核心來作為預設開機囉！
+		這就是核心編譯！那你也可以自己處理嵌入式系統的核心編譯囉！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="module"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">額外(單一)核心模組編譯</span><br />
+<div class="block1">
+	<p>我們現在知道核心所支援的功能當中，有直接編譯到核心內部的，也有使用外掛模組的，外掛模組可以簡單的想成<span 
+	class="text_import2">就是驅動程式</span> 啦！那麼也知道這些核心模組依據不同的版本，被分別放置到 
+	/lib/modules/$(uname -r)/kernel/ 目錄中，各個硬體的驅動程式則是放置到 /lib/modules/$(uname -r)/kernel/drivers/ 
+	當中！換個角度再來思考一下，如果剛剛我自己編譯的資料中，有些驅動程式忘記編譯成為模組了，那是否需要重新進行上述的所有動作？
+	又如果我想要使用硬體廠商釋出的新驅動程式，那該如何是好？<br /><br /></p>
+
+	<hr /><a name="module_before"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">編譯前注意事項</span><br />
+	<div class="block2">
+		<p>由於我們的核心原本就有提供很多的核心工具給硬體開發商來使用，
+		而硬體開發商也需要針對核心所提供的功能來設計他們的驅動程式模組，因此，
+		我們如果想要自行使用硬體開發商所提供的模組來進行編譯時，就需要使用到核心所提供的原始檔當中，
+		所謂的標頭檔案 (header include file) 來取得驅動模組所需要的一些函式庫或標頭的定義啦！
+		也因此我們常常會發現到，如果想要自行編譯核心模組時，就得要擁有核心原始碼嘛！</p>
+
+		<p>那核心原始碼我們知道他是可能放置在 /usr/src/ 底下，早期的核心原始碼被要求一定要放置到 /usr/src/linux/
+		目錄下，不過，如果你有多個核心在一個 Linux 系統當中，而且使用的原始碼並不相同時，
+		呵呵～問題可就大了！所以，在 2.6 版以後，核心使用比較有趣的方法來設計他的原始碼放置目錄，
+		那就是以 /lib/modules/$(uname -r)/build 及 /lib/modules/$(uname -r)/source
+		這兩個連結檔來指向正確的核心原始碼放置目錄。如果以我們剛剛由 kernel 2.6.30.3 建立的核心模組來說，
+		那麼他的核心模組目錄底下有什麼咚咚？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll -h /lib/modules/2.6.30.3vbird/</span>
+<span style="font-size: 9pt">lrwxrwxrwx  1 root root   31  7月 30 14:29 build -&gt; /usr/src/kernels/linux-2.6.30.3
+drwxr-xr-x 10 root root 4.0K  7月 30 14:30 kernel
+-rw-r--r--  1 root root 337K  7月 30 14:31 modules.alias
+-rw-r--r--  1 root root   69  7月 30 14:31 modules.ccwmap
+-rw-r--r--  1 root root 224K  7月 30 14:31 modules.dep
+<span class="term_say">....(中間省略)....</span>
+lrwxrwxrwx  1 root root   31  7月 30 14:29 source -&gt; /usr/src/kernels/linux-2.6.30.3</span>
+</pre></td></tr></table>
+
+		<p>比較有趣的除了那兩個連結檔之外，還有那個 modules.dep 檔案也挺有趣的，
+		那個檔案是記錄了核心模組的相依屬性的地方，依據該檔案，我們可以簡單的使用
+		modprobe 這個指令來載入模組呢！至於核心原始碼提供的標頭檔，在上面的案例當中，
+		則是放置到 /usr/src/kernels/linux-2.6.30.3/include/ 目錄中，當然就是藉由 build/source
+		這兩個連結檔案來取得目錄所在的啦！^_^</p>
+
+		<p>由於核心模組的編譯其實與核心原本的原始碼有點關係的，因此如果你需要重新編譯模組時，
+		那除了 make, gcc 等主要的編譯軟體工具外，<span class="text_import2">你還需要的就是 kernel-devel 
+		這個軟體</span>！記得一定要安裝喔！而如果你想要在預設的核心底下新增模組的話，那麼就得要找到 kernel 的 SRPM 檔案了！
+		將該檔案給他安裝，並且取得 source code 後，才能夠順利的編譯喔！</p>
+	</div>
+
+	<hr /><a name="module_compile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">單一模組編譯</span><br />
+	<div class="block2">
+		<p>想像兩個情況：</p>
+
+		<ul>
+		<li>如果我的預設核心忘記加入某個功能，而且該功能可以編譯成為模組，不過，
+		預設核心卻也沒有將該項功能編譯成為模組，害我不能使用時，該如何是好？<br /><br /></li>
+		<li>如果 Linux 核心原始碼並沒有某個硬體的驅動程式 (module) ，但是開發該硬體的廠商有提供給
+		Linux 使用的驅動程式原始碼，那麼我又該如何將該項功能編進核心模組呢？</li>
+		</ul>
+
+		<p>很有趣對吧！不過，在這樣的情況下其實沒有什麼好說的，反正就是
+		『去取得原始碼後，重新編譯成為系統可以載入的模組』啊！很簡單，對吧！^_^！
+		但是，上面那兩種情況的模組編譯行為是不太一樣的，不過，都是需要 make, 
+		gcc 以及核心所提供的 include 標頭檔與函式庫等等。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">硬體開發商提供的額外模組</li></ul>
+
+		<p>很多時候，可能由於核心預設的核心驅動模組所提供的功能你不滿意，或者是硬體開發商所提供的核心模組具有更強大的功能，
+		又或者該硬體是新的，所以預設的核心並沒有該硬體的驅動模組時，那你只好自行由硬體開發商處取得驅動模組，
+		然後自行編譯囉！</p>
+
+		<p>如果你的硬體開發商有提供驅動程式的話，那麼真的很好解決，直接下載該原始碼，重新編譯，
+		將他放置到核心模組該放置的地方後就能夠使用了！舉個例子來說，為了省電，鳥哥在 2009 
+		年初買了整合型主機板來架設家用的伺服器，沒想到 CentOS 5.1 以前的版本對鳥哥新買的主機板內建網卡支援度不足，
+		使用的網卡驅動程式 r8169 有問題！搜尋了 google 才發現大家都有這個問題。解決方法就是到 Realtek
+		官網下載網卡驅動程式來編譯即可。</p>
+
+		<ul><li>Realtek 的 r8168 網卡驅動程式：<a href="http://www.realtek.com.tw/downloads/"
+		target="_blank">http://www.realtek.com.tw/downloads/</a></li>
+		<li>選擇『Communications Network ICs』--&gt;『Network Interface Controlllers』--&gt;
+		『10/100/1000M Gigabit Ethernet』--&gt; 『PCI Express』--&gt;
+		『Software』就能夠下載了！</li>
+		</ul>
+
+		<p>你可以利用各種方法將他下載後，假設這個檔案放置到 /root ，那麼直接將他解壓縮吧！
+		之後就可以讀一讀 INSTALL/README ，然後找一下 Makefile ，就能夠編譯了。整體流程有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 將檔案解壓縮：</span>
+[root@www ~]# <span class="term_command">cd /usr/local/src</span>
+[root@www src]# <span class="term_command">tar -jxvf /root/r8168-8.013.00.tar.bz2</span>
+[root@www src]# <span class="term_command">cd r8168-8.013.00/</span>
+
+<span class="term_hd"># 2. 開始進行編譯與安裝：</span>
+[root@www r8168-8.013.00]# <span class="term_command">vi readme</span>  <span class="term_note">&lt;==注意查一下該檔案內容</span>
+[root@www r8168-8.013.00]# <span class="term_command">make clean modules</span>
+[root@www r8168-8.013.00]# <span class="term_command">ll src/*.ko</span>  <span class="term_note">&lt;==建立底下的模組檔！</span>
+-rw-r--r-- 1 root root 112216  7月 31 01:11 src/r8168.ko
+[root@www r8168-8.013.00]# <span class="term_command">make install</span>
+install -m 744 -c r8168.ko /lib/modules/2.6.30.3vbird/kernel/drivers/net/
+<span class="term_say"># 重點在上面這行！會發現模組已經被移動到核心模組目錄！</span>
+
+<span class="term_hd">4. 更新模組相依屬性！</span>
+[root@www r8168-8.013.00]# <span class="term_command">depmod -a</span>
+</pre></td></tr></table>
+
+		<p>有趣吧！透過這樣的動作，我們就可以輕易的將模組編譯起來，並且還可以將他直接放置到核心模組目錄中，
+		同時以 depmod 將模組建立相關性，未來就能夠利用 modprobe 來直接取用啦！
+		但是需要提醒你的是，<span class="text_import2">當自行編譯模組時，
+		若你的核心有更新 (例如利用自動更新機制進行線上更新) 時，則你必須要重新編譯該模組一次，
+		重複上面的步驟</span>才行！因為這個模組僅針對目前的核心來編譯的啊！對吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">利用舊有的核心原始碼進行編譯</li></ul>
+
+		<p>如果你後來發現忘記加入某個模組功能了，那該如何是好？其實如果僅是重新編譯模組的話，
+		那麼整個過程就會變的非常簡單！我們先到目前的核心原始碼所在目錄下達 make menuconfig ，
+		然後將 NTFS 的選項設定成為模組，之後直接下達：</p>
+
+		<blockquote class="text_import2">make fs/ntfs/</blockquote>
+
+		<p>那麼 ntfs 的模組 (ntfs.ko) 就會自動的被編譯出來了！
+		然後將該模組複製到 /lib/modules/2.6.30.3vbird/kernel/fs/ntsf/ 目錄下，
+		再執行 depmod -a ，呵呵～就可以在原來的核心底下新增某個想要加入的模組功能囉～ ^_^</p>
+	</div>
+
+	<hr /><a name="module_mod"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">核心模組管理</span><br />
+	<div class="block2">
+		<p>核心與核心模組是分不開的，至於驅動程式模組在編譯的時候，更與核心的原始碼功能分不開～
+		因此，你必須要先瞭解到：核心、核心模組、驅動程式模組、核心原始碼與標頭檔案的相關性，
+		然後才有辦法瞭解到為何編譯驅動程式的時候老是需要找到核心的原始碼才能夠順利編譯！
+		然後也才會知道，為何當核心更新之後，自己之前所編譯的核心模組會失效～</p>
+
+		<p>此外，與核心模組有相關的，還有那個很常被使用的 modprobe 指令，
+		以及開機的時候會讀取到的模組定義資料檔案 /etc/modprobe.conf ，
+		這些資料你也必須要瞭解才行～相關的指令說明我們已經在<a href="/linux_basic/0510osloader.php">第二十章</a>內談過了，
+		你應該要自行前往瞭解喔！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>其實核心就是系統上面的一個檔案而已，這個檔案包含了驅動主機各項硬體的偵測程式與驅動模組；</li>
+	<li>上述的核心模組放置於：/lib/modules/$(uname -r)/kernel/</li>
+	<li>『驅動程式開發』的工作上面來說，應該是屬於硬體發展廠商的問題</li>
+	<li>一般的使用者，由於系統已經將核心編譯的相當的適合一般使用者使用了，因此一般入門的使用者，基本上，不太需要編譯核心</li>
+	<li>編譯核心的一般目的：新功能的需求、原本的核心太過臃腫、與硬體搭配的穩定性、其他需求(如嵌入式系統)</li>
+	<li>編譯核心前，最好先瞭解到您主機的硬體，以及主機的用途，才能選擇好核心功能；</li>
+	<li>編譯前若想要保持核心原始碼的乾淨，可使用 make mrproper 來清除暫存檔與設定檔；</li>
+	<li>挑選核心功能與模組可用 make 配合：menuconfig, oldconfig, xconfig, gconfig 等等</li>
+	<li>核心功能挑選完畢後，一般常見的編譯過程為：make bzImage, make modules</li>
+	<li>模組編譯成功後的安裝方式為： make modules_install</li>
+	<li>核心的安裝過程中，需要移動 bzImage 檔案、建立 initrd 檔案、編輯 /boot/grub/menu.lst 等動作；</li>
+	<li>我們可以自行由硬體開發商之官網下載驅動程式來自行編譯核心模組！</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看)
+<div class="block1">
+<ul>
+	<li>簡單說明核心編譯的步驟為何？
+	<div class="blockex">
+	<ol>
+		<li>先下載核心原始碼，可以從 http://www.kernel.org 或者是 distributions 的 SRPM 來著手；</li>
+		<li>以下以 Tarball 來處理，解開原始碼到 /usr/src/kernels 目錄下；</li>
+		<li>先進行舊資料刪除的動作：『make mrproper』；</li>
+		<li>開始挑選核心功能，可以利用『make menuconfig』、『make oldconfig』、『make gconfig』等等；</li>
+		<li>清除過去的中間暫存檔資料：『make clean』</li>
+		<li>開始核心檔案與核心模組的編譯：『make bzImage』、『make modules』</li>
+		<li>開始核心模組的安裝：『make modules_install』</li>
+		<li>開始核心檔案的安裝，可以使用的方式有：『make install』或者是透過手動的方式複製核心檔案到 /boot/grub 當中；</li>
+		<li>建立 initrd 檔案；</li>
+		<li>修改 /boot/grub/menu.lst 檔案；</li>
+	</ol>
+	</div></li>
+
+	<li>如果你利用新編譯的核心來操作系統，發現系統並不穩定，你想要移除這個自行編譯的核心該如何處理？
+	<div class="blockex">
+		首先，可以將原始碼刪除：rm -rf /usr/src/kernels/linux-2.6.30<br />
+		再者，刪除掉核心模組的目錄： rm -rf /lib/modules/2.6.30<br />
+		最後刪除掉 /boot/ 內的核心檔案與 initrd 檔案，以及 /boot/grub/menu.lst 內的 title 設定即可。
+	</div></li>
+
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：透過在 /usr/src/kernels/linux-2.6.30.3 底下的 README 以及『 make 
+		help 』可以得到相當多的解釋</li>
+	<li>核心編譯的功能：可以用來測試 CPU 效能喔！因為 compile 非常耗系統資源！</li>
+	<li><a href="http://lxr.xensource.com/lxr/source/README?a=x86_64"
+		target="_blank">http://lxr.xensource.com/lxr/source/README?a=x86_64</a></li>
+</ul>
+</div>
+
+<hr /><span class="text_history">
+2002/05/29：第一次完成<br />
+2003/02/11：重新編排與加入 FAQ<br />
+2004/06/11：原本的 2.4.xx 版本核心被移動到 <a href="0540kernel/0540kernel-2.4.18.php">此處</a><br />
+2005/11/15：原本的模組管理已經先移動到<a href="0510osloader.php#kernel">開機流程管理</a>那一篇囉！<br />
+2005/12/05：經過將近一個月，呵呵！終於給他整理出來這一篇了～真難得～<br />
+2007/06/27：<a href="#20070627">增加了 initrd 的簡單說明</a>，詳細還是得看 loader 那一章。<br />
+2009/07/21：將基於 FC4 所撰寫的文章移動到<a href="/linux_basic/0540kernel/0540kernel-fc4.php">此處</a><br />
+2009/08/03：原本的 KDE/GNOME 使用的引擎寫錯了！ KDE 用 Qt ，而 GNOME 是用 Gtk ！非常感謝 Chua Tze An 兄提供的指正！<br />
+2009/09/18：加入兩個簡單的題目，給大家思考一下而已。<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

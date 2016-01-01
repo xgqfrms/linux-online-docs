@@ -1,0 +1,1847 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW"><!-- InstanceBegin template="/Templates/tp_basic.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+    <title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    <!-- InstanceEndEditable -->
+    <!-- InstanceBeginEditable name="head" -->
+    <!-- InstanceEndEditable -->
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  
+  <!-- InstanceBeginEditable name="content" -->
+<td width="718">
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十二章、正規表示法與文件格式化處理</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/08/26</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	正規表示法 (Regular Expression, RE, 或稱為常規表示法)是透過一些特殊字元的排列，用以『搜尋/取代/刪除』一列或多列文字字串，
+	簡單的說，正規表示法就是用在字串的處理上面的一項『表示式』。正規表示法並不是一個工具程式，
+	而是一個字串處理的標準依據，如果您想要以正規表示法的方式處理字串，就得要使用支援正規表示法的工具程式才行，
+	這類的工具程式很多，例如 vi, sed, awk 等等。<br /><br />
+
+	正規表示法對於系統管理員來說實在是很重要！因為系統會產生很多的訊息，這些訊息有的重要有的僅是告知，
+	此時，管理員可以透過正規表示法的功能來將重要訊息擷取出來，並產生便於查閱的報表來簡化管理流程。此外，
+	很多的套裝軟體也都支援正規表示法的分析，例如郵件伺服器的過濾機制(過濾垃圾信件)就是很重要的一個例子。
+	所以，您最好要瞭解正規表示法的相關技能，在未來管理主機時，才能夠更精簡處理您的日常事務！<br /><br />
+
+	註：本章節使用者需要多加練習，因為目前很多的套件都是使用正規表示法來達成其『過濾、分析』的目的，
+	為了未來主機管理的便利性，使用者至少要能看的懂正規表示法的意義！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#before">前言： 什麼是正規表示法</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#before_1">什麼是正規表示法</a><br />
+
+	　　1.2 <a href="#before_2">正規表示法對於系統管理員的用途</a><br />
+	　　1.3 <a href="#before_3">正規表示法的廣泛用途</a><br />
+	　　1.4 <a href="#before_4">正規表示法與 Shell 在 Linux 當中的角色定位</a><br />
+	　　1.5 <a href="#before_5">延伸的正規表示法</a><br />
+	</span>
+
+2. <a href="#basic_regexp">基礎正規表示法</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#lang">語系對正規表示法的影響</a><br />
+	　　2.2 <a href="#grep">grep 的一些進階選項</a><br />
+	　　2.3 <a href="#basicre">基礎正規表示法練習</a><br />
+
+	　　2.4 <a href="#basic_regexp_char">基礎正規表示法字符彙整(characters)</a><br />
+	　　2.5 <a href="#sed">sed 工具</a>：
+		<a href="#sed_line_add">行的新增/刪除</a>, <a href="#sed_line_replace">行的取代/顯示</a>,
+		<a href="#sed_replace">搜尋並取代</a>, <a href="#sed_file">直接改檔</a><br />
+	</span>
+
+3. <a href="#extend">延伸正規表示法</a><br />
+4. <a href="#docs">文件的格式化與相關處理</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#printf">printf： 格式化列印</a><br />
+	　　4.2 <a href="#awk">awk：好用的資料處理工具</a><br />
+	　　4.3 <a href="#doc_compare">檔案比對工具：</a>, <a href="#diff">diff</a>, <a href="#cmp">cmp</a>, 
+		<a href="#patch">patch</a><br />
+
+	　　4.4 <a href="#pr">檔案列印準備工具： pr</a><br />
+	</span>
+
+5. <a href="#hint">重點回顧</a><br />
+6. <a href="#ex">本章習題</a><br />
+7. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+
+8. <a href="http://phorum.vbird.org/viewtopic.php?t=23885"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23885</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">前言：什麼是正規表示法</span><br />
+<div class="block1">
+	<p>約略瞭解了 Linux 的基本指令 (<a href="/linux_basic/0320bash.php">BASH</a>) 並且熟悉了
+	<a href="/linux_basic/0310vi.php">vim</a> 之後，相信你對於敲擊鍵盤的打字與指令下達比較不陌生了吧？
+	接下來，底下要開始介紹一個很重要的觀念，那就是所謂的『<span class="text_import2">正規表示法
+	(Regular Expression)</span>』囉！<br /><br /></p>
+
+	<a name="before_1"></a><hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是正規表示法</span><br />
+	<div class="block2">
+		<p>任何一個有經驗的系統管理員，都會告訴你：『<span class="text_import2">正規表示法真是挺重要的</span>！』
+		為什麼很重要呢？因為日常生活就使用的到啊！舉個例子來說，
+		在你日常使用 <a href="/linux_basic/0310vi.php">vim</a> 作文書處理或程式撰寫時使用到的『搜尋/取代』等等的功能，
+		這些舉動要作的漂亮，就得要配合正規表示法來處理囉！</p>
+
+		<p class="text_import2">簡單的說，正規表示法就是處理字串的方法，他是以行為單位來進行字串的處理行為，
+		正規表示法透過一些特殊符號的輔助，可以讓使用者輕易的達到『搜尋/刪除/取代』某特定字串的處理程序！</p>
+
+		<p>舉例來說，我只想找到 VBird(前面兩個大寫字元) 或 Vbird(僅有一個大寫字元) 這個字樣，但是不要其他的字串 (例如 VBIRD, vbird 
+		等不需要)，該如何辦理？如果在沒有正規表示法的環境中(例如 MS word)，你或許就得要使用忽略大小寫的辦法，
+		或者是分別以 VBird 及 Vbird 搜尋兩遍。但是，忽略大小寫可能會搜尋到 VBIRD/vbird/VbIrD 等等的不需要的字串而造成困擾。</p>
+
+		<p>再舉個系統常見的例子好了，假設妳發現系統在開機的時候，老是會出現一個關於 mail 程式的錯誤，
+		而開機過程的相關程序都是在 /etc/init.d/ 底下，也就是說，在該目錄底下的某個檔案內具有 mail 
+		這個關鍵字，你想要將該檔案捉出來進行查詢修改的動作。此時你怎麼找出來含有這個關鍵字的檔案？
+		你當然可以一個檔案一個檔案的開啟，然後去搜尋 mail 這個關鍵字，只是.....該目錄底下的檔案可能不止 100 個說～
+		如果瞭解正規表示法的相關技巧，那麼只要一行指令就找出來啦：『grep 'mail' /etc/init.d/*』
+		那個 grep 就是支援正規表示法的工具程式之一！如何～很簡單吧！</p>
+
+		<p>談到這裡就得要進一步說明了，<span class="text_import2">正規表示法基本上是一種『表示法』，
+		只要工具程式支援這種表示法，那麼該工具程式就可以用來作為正規表示法的字串處理之用。</span>
+		例如 vi, grep, awk ,sed 等等工具，因為她們有支援正規表示法，
+		所以，這些工具就可以使用正規表示法的特殊字元來進行字串的處理。但例如 cp, ls 等指令並未支援正規表示法，
+		所以就只能使用 <a href="/linux_basic/0320bash.php#settings_wildcard">bash 自己本身的萬用字元</a>而已。</p>
+
+	</div>
+
+	<a name="before_2"></a><hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">正規表示法對於系統管理員的用途</span><br />
+	<div class="block2">
+		<p>那麼為何我需要學習正規表示法呢？對於一般使用者來說，由於使用到正規表示法的機會可能不怎麼多，
+		因此感受不到他的魅力，不過，對於身為系統管理員的你來說，<span 
+		class="text_import2">正規表示法則是一個『不可不學的好東西！</span>』
+		怎麼說呢？由於系統如果在繁忙的情況之下，每天產生的訊息資訊會多到你無法想像的地步，
+		而我們也都知道，系統的『<a href="/linux_basic/0570syslog.php">錯誤訊息登錄檔案 (第十九章)</a>』
+		的內容記載了系統產生的所有訊息，當然，這包含你的系統是否被『入侵』的記錄資料。</p>
+
+		<p>但是系統的資料量太大了，要身為系統管理員的你每天去看這麼多的訊息資料，
+		從千百行的資料裡面找出一行有問題的訊息，呵呵～光是用肉眼去看，想不瘋掉都很難！
+		這個時候，我們就可以透過『正規表示法』的功能，將這些登錄的資訊進行處理，
+		僅取出『有問題』的資訊來進行分析，哈哈！如此一來，你的系統管理工作將會
+		『快樂得不得了』啊！當然，正規表示法的優點還不止於此，等你有一定程度的瞭解之後，你會愛上他喔！</p>
+
+	</div>
+
+	<a name="before_3"></a><hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">正規表示法的廣泛用途</span><br />
+	<div class="block2">
+		<p>正規表示法除了可以讓系統管理員管理主機更為便利之外，事實上，由於正規表示法強大的字串處理能力，
+		目前一堆軟體都支援正規表示法呢！最常見的就是『郵件伺服器』啦！</p>
+
+		<p>如果你留意網際網路上的消息，那麼應該不能發現，目前造成網路大塞車的主因之一就是『垃圾/廣告信件』了，
+		而如果我們可以在伺服器端，就將這些問題郵件剔除的話，用戶端就會減少很多不必要的頻寬耗損了。
+		那麼如何剔除廣告信件呢？由於廣告信件幾乎都有一定的標題或者是內容，因此，
+		只要每次有來信時，都先將來信的標題與內容進行特殊字串的比對，發現有不良信件就予以剔除！
+		嘿！這個工作怎麼達到啊？就使用正規表示法啊！目前兩大郵件伺服器軟體 sendmail 與 postfix 
+		以及支援郵件伺服器的相關分析軟體，都支援正規表示法的比對功能！</p>
+
+		<p>當然還不止於此啦，很多的伺服器軟體都支援正規表示法呢！當然，
+		雖然各家軟體都支援他，不過，這些『字串』的比對還是需要系統管理員來加入比對規則的，
+		所以啦！身為系統管理員的你，為了自身的工作以及用戶端的需求，
+		正規表示法實在是很需要也很值得學習的一項工具呢！</p>
+
+	</div>
+
+	<a name="before_4"></a><hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">正規表示法與 Shell 在 Linux 當中的角色定位</span><br />
+	<div class="block2">
+		<p>說實在的，我們在學數學的時候，一個很重要、但是粉難的東西是一定要『背』的，
+		那就是九九乘法表，背成功了之後，未來在數學應用的路途上，真是一帆風順啊！
+		這個九九乘法表我們在小學的時候幾乎背了一整年才背下來，並不是這麼好背的呢！
+		但他卻是基礎當中的基礎！你現在一定受惠相當的多呢 ^_^！</p>
+
+		<p>而我們談到的這個正規表示法，與前一章的 <a href="/linux_basic/0320bash.php">BASH</a> 
+		就有點像是數學的九九乘法表一樣，是 Linux 基礎當中的基礎，雖然也是最難的部分，
+		不過，如果學成了之後，一定是『大大的有幫助』的！這就好像是金庸小說裡面的學武難關：任督二脈！
+		打通任督二脈之後，武功立刻成倍成長！所以啦，
+		不論是對於系統的認識與系統的管理部分，他都有很棒的輔助啊！請好好的學習這個基礎吧！ ^_^</p>
+
+	</div>
+
+	<a name="before_5"></a><hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">延伸的正規表示法</span><br />
+	<div class="block2">
+		<p>唔！正規表示法還有分喔？沒錯喔！<span class="text_import2">正規表示法的字串表示方式依照不同的嚴謹度而分為：
+		基礎正規表示法與延伸正規表示法</span>。延伸型正規表示法除了簡單的一組字串處理之外，還可以作群組的字串處理，
+		例如進行搜尋 VBird 或 netman 或 lman 的搜尋，注意，是『或(or)』而不是『和(and)』的處理，
+		此時就需要延伸正規表示法的幫助啦！藉由特殊的『 ( 』與『 | 』等字元的協助，
+		就能夠達到這樣的目的！不過，我們在這裡主力僅是介紹最基礎的基礎正規表示法而已啦！好啦！清清腦門，咱們用功去囉！</p>
+	</div>
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		有一點要向大家報告的，那就是：『<b>正規表示法與萬用字元是完全不一樣的東西！</b>』
+		這很重要喔！因為『萬用字元 (wildcard) 代表的是 bash 操作介面的一個功能』，但正規表示法則是一種字串處理的表示方式！
+		這兩者要分的很清楚才行喔！所以，學習本章，請將前一章 bash 的萬用字元意義先忘掉吧！<br /><br />
+
+		老實說，鳥哥以前剛接觸正規表示法時，老想著要將這兩者歸納在一起，結果就是...錯誤認知一大堆～
+		所以才會建議您學習本章先忘記萬用字元再來學習吧！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div></div>
+
+<hr /><a name="basic_regexp"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">基礎正規表示法</span><br />
+<div class="block1">
+	<p>既然正規表示法是處理字串的一種表示方式，那麼對字元排序有影響的語系資料就會對正規表示法的結果有影響！
+	此外，正規表示法也需要支援工具程式來輔助才行！所以，我們這裡就先介紹一個最簡單的字串擷取功能的工具程式，那就是 grep 囉！
+	前一章已經介紹過 grep 的相關選項與參數，本章著重在較進階的 grep 選項說明囉！
+	介紹完 grep 的功能之後，就進入正規表示法的特殊字符的處理能力了。<br /><br /></p>
+
+	<hr /><a name="lang"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">語系對正規表示法的影響</span><br />
+	<div class="block2">
+		<p>為什麼語系的資料會影響到正規表示法的輸出結果呢？我們在<a 
+		href="/linux_basic/0105computers.php#data_word">第零章計算機概論的文字編碼系統</a>裡面談到，檔案其實記錄的僅有 0 與
+		1，我們看到的字元文字與數字都是透過編碼表轉換來的。由於不同語系的編碼資料並不相同，所以就會造成資料擷取結果的差異了。
+		舉例來說，在英文大小寫的編碼順序中，zh_TW.big5 及 C 這兩種語系的輸出結果分別如下：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>LANG=C &nbsp; &nbsp; 時：0 1 2 3 4 ... A B C D ... Z a b c d ...z</li>
+		<li>LANG=zh_TW 時：0 1 2 3 4 ... a A b B c C d D ... z Z</li>
+		</ul>
+ 
+		<p>上面的順序是編碼的順序，我們可以很清楚的發現這兩種語系明顯就是不一樣！如果你想要擷取大寫字元而使用 [A-Z] 時，
+		會發現 LANG=C 確實可以僅捉到大寫字元 (因為是連續的) ，但是如果 LANG=zh_TW.big5 時，就會發現到，
+		連同小寫的 b-z 也會被擷取出來！因為就編碼的順序來看， big5 語系可以擷取到『 A b B c C ... z Z 』這一堆字元哩！
+		所以，<span class="text_import2">使用正規表示法時，需要特別留意當時環境的語系為何，
+		否則可能會發現與別人不相同的擷取結果</span>喔！</p>
+
+		<p>由於一般我們在練習正規表示法時，使用的是相容於 POSIX 的標準，因此就使用『 C 』這個語系(<a href="#ps1">註1</a>)！
+		因此，<span class="text_import2">底下的很多練習都是使用『 LANG=C 』這個語系資料來進行</span>的喔！
+		另外，為了要避免這樣編碼所造成的英文與數字的擷取問題，因此有些特殊的符號我們得要瞭解一下的！
+		這些符號主要有底下這些意義：(<a href="#ps1">註1</a>)</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow" class="fontwidth">
+<tr bgcolor="lightblue" align="center"><td>特殊符號</td><td>代表意義</td></tr>
+<tr><td>[:alnum:]</td><td>代表英文大小寫字元及數字，亦即 0-9, A-Z, a-z</td></tr>
+
+<tr><td>[:alpha:]</td><td>代表任何英文大小寫字元，亦即 A-Z, a-z</td></tr>
+<tr><td>[:blank:]</td><td>代表空白鍵與 [Tab] 按鍵兩者</td></tr>
+<tr><td>[:cntrl:]</td><td>代表鍵盤上面的控制按鍵，亦即包括 CR, LF, Tab, Del.. 等等</td></tr>
+<tr><td>[:digit:]</td><td>代表數字而已，亦即 0-9</td></tr>
+<tr><td>[:graph:]</td><td>除了空白字元 (空白鍵與 [Tab] 按鍵) 外的其他所有按鍵</td></tr>
+<tr><td>[:lower:]</td><td>代表小寫字元，亦即 a-z</td></tr>
+
+<tr><td>[:print:]</td><td>代表任何可以被列印出來的字元</td></tr>
+<tr><td>[:punct:]</td><td>代表標點符號 (punctuation symbol)，亦即：" ' ? ! ; : # $...</td></tr>
+<tr><td>[:upper:]</td><td>代表大寫字元，亦即 A-Z</td></tr>
+<tr><td>[:space:]</td><td>任何會產生空白的字元，包括空白鍵, [Tab], CR 等等</td></tr>
+<tr><td>[:xdigit:]</td><td>代表 16 進位的數字類型，因此包括： 0-9, A-F, a-f 的數字與字元</td></tr>
+</table>
+
+		<p>尤其上表中的<span class="text_import2">[:alnum:], [:alpha:], [:upper:], [:lower:], [:digit:]</span>
+		這幾個一定要知道代表什麼意思，因為他要比 a-z 或 A-Z 的用途要確定的很！好了，底下就讓我們開始來玩玩進階版的 grep 吧！</p>
+	</div>
+
+	<hr /><a name="grep"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">grep 的一些進階選項</span><br />
+	<div class="block2">
+		<p>我們在<a href="/linux_basic/0320bash.php#grep">第十一章 BASH 裡面的 grep </a>談論過一些基礎用法，
+		但其實 grep 還有不少的進階用法喔！底下我們僅列出較進階的 grep 選項與參數給大家參考，
+		<a href="/linux_basic/0320bash.php#grep">基礎的 grep 用法</a>請參考前一章的說明囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep [-A] [-B] [--color=auto] '搜尋字串' filename</span>
+<span class="term_say">選項與參數：
+-A ：後面可加數字，為 after 的意思，除了列出該行外，後續的 n 行也列出來；
+-B ：後面可加數字，為 befer 的意思，除了列出該行外，前面的 n 行也列出來；
+--color=auto 可將正確的那個擷取資料列出顏色</span>
+
+<span class="term_hd">範例一：用 dmesg 列出核心訊息，再以 grep 找出內含 eth 那行</span>
+[root@www ~]# <span class="term_command">dmesg | grep 'eth'</span>
+eth0: RealTek RTL8139 at 0xee846000, 00:90:cc:a6:34:84, IRQ 10
+eth0:  Identified 8139 chip type 'RTL-8139C'
+eth0: link up, 100Mbps, full-duplex, lpa 0xC5E1
+eth0: no IPv6 routers present
+<span class="term_say"># dmesg 可列出核心產生的訊息！透過 grep 來擷取網路卡相關資訊 (eth) ，
+# 就可發現如上資訊。不過沒有行號與特殊顏色顯示！看看下個範例吧！</span>
+
+<span class="term_hd">範例二：承上題，要將捉到的關鍵字顯色，且加上行號來表示：</span>
+[root@www ~]# <span class="term_command">dmesg | grep -n --color=auto 'eth'</span>
+247:<span class="term_write">eth</span>0: RealTek RTL8139 at 0xee846000, 00:90:cc:a6:34:84, IRQ 10
+248:<span class="term_write">eth</span>0:  Identified 8139 chip type 'RTL-8139C'
+294:<span class="term_write">eth</span>0: link up, 100Mbps, full-duplex, lpa 0xC5E1
+305:<span class="term_write">eth</span>0: no IPv6 routers present
+<span class="term_say"># 你會發現除了 eth 會有特殊顏色來表示之外，最前面還有行號喔！</span>
+
+<span class="term_hd">範例三：承上題，在關鍵字所在行的前兩行與後三行也一起捉出來顯示</span>
+[root@www ~]# <span class="term_command">dmesg | grep -n -A3 -B2 --color=auto 'eth'</span>
+245-PCI: setting IRQ 10 as level-triggered
+246-ACPI: PCI Interrupt 0000:00:0e.0[A] -&gt; Link [LNKB] ...
+247:<span class="term_write">eth</span>0: RealTek RTL8139 at 0xee846000, 00:90:cc:a6:34:84, IRQ 10
+248:<span class="term_write">eth</span>0:  Identified 8139 chip type 'RTL-8139C'
+249-input: PC Speaker as /class/input/input2
+250-ACPI: PCI Interrupt 0000:00:01.4[B] -&gt; Link [LNKB] ...
+251-hdb: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(66)
+<span class="term_say"># 如上所示，你會發現關鍵字 247 所在的前兩行及 248 後三行也都被顯示出來！
+# 這樣可以讓你將關鍵字前後資料捉出來進行分析啦！</span>
+</pre></td></tr></table>
+
+		<p>grep 是一個很常見也很常用的指令，他最重要的功能就是進行字串資料的比對，然後將符合使用者需求的字串列印出來。
+		需要說明的是『<span class="text_import2">grep 在資料中查尋一個字串時，是以 "整行" 
+		為單位來進行資料的擷取的！</span>』也就是說，假如一個檔案內有 10 
+		行，其中有兩行具有你所搜尋的字串，則將那兩行顯示在螢幕上，其他的就丟棄了！</p>
+
+		<p>在關鍵字的顯示方面，grep 可以使用 --color=auto 來將關鍵字部分使用顏色顯示。
+		這可是個很不錯的功能啊！但是如果每次使用 grep 都得要自行加上 --color=auto 又顯的很麻煩～
+		此時那個好用的 alias 就得來處理一下啦！你可以在 ~/.bashrc 內加上這行：『<span class="text_import2">alias
+		grep='grep --color=auto'</span>』再以『 source ~/.bashrc 』來立即生效即可喔！
+		這樣每次執行 grep 他都會自動幫你加上顏色顯示啦！</p>
+	</div>
+
+	<hr /><a name="basicre"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">基礎正規表示法練習</span><br />
+
+	<div class="block2">
+		<p>要瞭解正規表示法最簡單的方法就是由實際練習去感受啦！所以在彙整正規表示法特殊符號前，
+		我們先以底下這個檔案的內容來進行正規表示法的理解吧！先說明一下，底下的練習大前提是：</p>
+		<ul class="text_import2">
+		<li>語系已經使用『 export LANG=C 』的設定值；</li>
+		<li>grep 已經使用 alias 設定成為『 grep --color=auto 』</li>
+		</ul>
+
+		<p>至於本章的練習用檔案請由底下的連結來下載。需要特別注意的是，底下這個檔案是鳥哥在 MS Windows 系統下編輯的，
+		並且已經特殊處理過，因此，他雖然是純文字檔，但是內含一些 Windows 
+		系統下的軟體常常自行加入的一些特殊字元，例如斷行字元 (^M) 就是一例！
+		所以，你可以直接將底下的文字以 vi 儲存成 regular_express.txt 這個檔案，
+		不過，還是比較建議直接點底下的連結：</p>
+
+		<blockquote style="font-family:'細明體'">
+		<a href="/linux_basic/0330regularex/regular_express.txt">http://linux.vbird.org/linux_basic/0330regularex/regular_express.txt</a></blockquote>
+
+		<p>如果你的 Linux 可以直接連上 Internet 的話，那麼使用如下的指令來捉取即可：</p>
+
+		<blockquote>
+		wget http://linux.vbird.org/linux_basic/0330regularex/regular_express.txt
+		</blockquote>
+
+		<p>至於這個檔案的內容如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi regular_express.txt</span>
+"Open Source" is a good mechanism to develop programs.
+apple is my favorite food.
+Football game is not use feet only.
+this dress doesn't fit me.
+However, this dress is about $ 3183 dollars.^M
+GNU is free air not free beer.^M
+Her hair is very beauty.^M
+I can't finish the test.^M
+Oh! The soup taste good.^M
+motorcycle is cheap than car.
+This window is clear.
+the symbol '*' is represented as start.
+Oh!     My god!
+The gd software is a library for drafting programs.^M
+You are the best is mean you are the no. 1.
+The world &lt;Happy&gt; is the same with "glad".
+I like dog.
+google is the best tools for search keyword.
+goooooogle yes!
+go! go! Let's go.
+# I am VBird
+
+</pre></td></tr></table>
+
+		<p>這檔案共有 22  行，最底下一行為空白行！現在開始我們一個案例一個案例的來介紹吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">例題一、搜尋特定字串</li></ul>
+
+		<p>搜尋特定字串很簡單吧？假設我們要從剛剛的檔案當中取得 the 這個特定字串，最簡單的方式就是這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'the' regular_express.txt</span>
+8:I can't finish <span class="term_write">the</span> test.
+12:<span class="term_write">the</span> symbol '*' is represented as start.
+15:You are <span class="term_write">the</span> best is mean you are <span class="term_write">the</span> no. 1.
+16:The world &lt;Happy&gt; is <span class="term_write">the</span> same with "glad".
+18:google is <span class="term_write">the</span> best tools for search keyword.
+
+</pre></td></tr></table>
+
+		<p>那如果想要『<span class="text_import2">反向選擇</span>』呢？也就是說，當該行沒有 
+		'the' 這個字串時才顯示在螢幕上，那就直接使用：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -vn 'the' regular_express.txt</span>
+</pre></td></tr></table>
+
+		<p>你會發現，螢幕上出現的行列為除了 8,12,15,16,18 五行之外的其他行列！
+		接下來，如果你想要取得不論大小寫的 the 這個字串，則：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -in 'the' regular_express.txt</span>
+8:I can't finish <span class="term_write">the</span> test.
+9:Oh! <span class="term_write">The</span> soup taste good.
+12:<span class="term_write">the</span> symbol '*' is represented as start.
+14:<span class="term_write">The</span> gd software is a library for drafting programs.
+15:You are <span class="term_write">the</span> best is mean you are <span class="term_write">the</span> no. 1.
+16:<span class="term_write">The</span> world &lt;Happy&gt; is <span class="term_write">the</span> same with "glad".
+18:google is <span class="term_write">the</span> best tools for search keyword.
+
+</pre></td></tr></table>
+
+		<p>除了多兩行 (9, 14行) 之外，第 16 行也多了一個 The 的關鍵字被擷取到喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">例題二、利用中括號 [] 來搜尋集合字元</li></ul>
+
+		<p>如果我想要搜尋 test 或 taste 這兩個單字時，可以發現到，其實她們有共通的 't?st'
+		存在～這個時候，我可以這樣來搜尋：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 't[ae]st' regular_express.txt</span>
+
+8:I can't finish the <span class="term_write">test</span>.
+9:Oh! The soup <span class="term_write">tast</span>e good.
+</pre></td></tr></table>
+
+		<p>瞭解了吧？<span class="text_import2">其實 [] 裡面不論有幾個字元，他都謹代表某『一個』字元</span>，
+		所以，上面的例子說明了，我需要的字串是『tast』或『test』兩個字串而已！
+		而如果想要搜尋到有 oo 的字元時，則使用：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'oo' regular_express.txt</span>
+
+1:"Open Source" is a g<span class="term_write">oo</span>d mechanism to develop programs.
+2:apple is my favorite f<span class="term_write">oo</span>d.
+3:F<span class="term_write">oo</span>tball game is not use feet only.
+9:Oh! The soup taste g<span class="term_write">oo</span>d.
+18:g<span class="term_write">oo</span>gle is the best t<span class="term_write">oo</span>ls for search keyword.
+19:g<span class="term_write">oooooo</span>gle yes!
+</pre></td></tr></table>
+
+		<p>但是，如果我不想要 oo 前面有 g 的話呢？此時，可以利用在集合字元的反向選擇 [^] 來達成：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '[^g]oo' regular_express.txt</span>
+2:apple is my favorite <span class="term_write">foo</span>d.
+3:<span class="term_write">Foo</span>tball game is not use feet only.
+18:google is the best <span class="term_write">too</span>ls for search keyword.
+19:g<span class="term_write">oooooo</span>gle yes!
+
+</pre></td></tr></table>
+
+		<p>意思就是說，我需要的是 oo ，但是 oo 前面不能是 g 就是了！仔細比較上面兩個表格，妳會發現，第 
+		1,9 行不見了，因為 oo 前面出現了 g 所致！第 2,3 行沒有疑問，因為 foo 與 Foo 均可被接受！但是第 18 
+		行明明有 google 的 goo 啊～別忘記了，因為該行後面出現了 tool 的 too 啊！所以該行也被列出來～
+		也就是說， 18 行裡面雖然出現了我們所不要的項目 (goo) 但是由於有需要的項目 (too) ，
+		因此，是符合字串搜尋的喔！</p>
+
+		<p>至於第 19 行，同樣的，因為 goooooogle 裡面的 oo 前面可能是 o ，例如：
+		go(ooo)oogle ，所以，這一行也是符合需求的！</p>
+
+		<p>再來，假設我 oo 前面不想要有小寫字元，所以，我可以這樣寫 [^abcd....z]oo ，
+		但是這樣似乎不怎麼方便，由於小寫字元的 ASCII 上編碼的順序是連續的，
+		因此，我們可以將之簡化為底下這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '[^a-z]oo' regular_express.txt</span>
+
+3:<span class="term_write">Foo</span>tball game is not use feet only.
+</pre></td></tr></table>
+
+		<p>也就是說，當我們在一組集合字元中，如果該字元組是連續的，例如大寫英文/小寫英文/數字等等，
+		就可以使用[a-z],[A-Z],[0-9]等方式來書寫，那麼如果我們的要求字串是數字與英文呢？
+		呵呵！就將他全部寫在一起，變成：[a-zA-Z0-9]。例如，我們要取得有數字的那一行，就這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '[0-9]' regular_express.txt</span>
+5:However, this dress is about $ <span class="term_write">3183</span> dollars.
+15:You are the best is mean you are the no. <span class="term_write">1</span>.
+
+</pre></td></tr></table>
+
+		<p>但由於考慮到語系對於編碼順序的影響，因此除了連續編碼使用減號『 - 』之外，
+		你也可以使用如下的方法來取得前面兩個測試的結果：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '[^[:lower:]]oo' regular_express.txt</span>
+<span class="term_say"># 那個 [:lower:] 代表的就是 a-z 的意思！請參考前兩小節的說明表格</span>
+
+[root@www ~]# <span class="term_command">grep -n '[[:digit:]]' regular_express.txt</span>
+</pre></td></tr></table>
+
+		<p>這樣對於 [] 以及 [^] 以及 [] 當中的 - ，還有關於前面表格提到的特殊關鍵字有瞭解了嗎？^_^！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">例題三、行首與行尾字元 ^ $</li></ul>
+
+		<p>我們在例題一當中，可以查詢到一行字串裡面有 the 的，那如果我想要讓 the 只在行首列出呢？
+		這個時候就得要使用定位字元了！我們可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '^the' regular_express.txt</span>
+
+12:<span class="term_write">the</span> symbol '*' is represented as start.
+</pre></td></tr></table>
+
+		<p>此時，就只剩下第 12 行，因為只有第 12 行的行首是 the 開頭啊～此外，
+		如果我想要開頭是小寫字元的那一行就列出呢？可以這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '^[a-z]' regular_express.txt</span>
+2:<span class="term_write">apple</span> is my favorite food.
+4:<span class="term_write">this</span> dress doesn't fit me.
+10:<span class="term_write">motorcycle</span> is cheap than car.
+12:<span class="term_write">the</span> symbol '*' is represented as start.
+18:<span class="term_write">google</span> is the best tools for search keyword.
+19:<span class="term_write">goooooogle</span> yes!
+20:<span class="term_write">go</span>! go! Let's go.
+
+</pre></td></tr></table>
+
+		<p>你可以發現我們可以捉到第一個字元都不是大寫的！只不過 grep 列出的關鍵字部分不只有第一個字元，
+		grep 是列出一整個字 (word) 說！同樣的，上面的指令也可以用如下的方式來取代的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '^[[:lower:]]' regular_express.txt</span>
+</pre></td></tr></table>
+
+		<p>好！那如果我不想要開頭是英文字母，則可以是這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+
+[root@www ~]# <span class="term_command">grep -n '^[^a-zA-Z]' regular_express.txt</span>
+1:<span class="term_write">"</span>Open Source" is a good mechanism to develop programs.
+21:<span class="term_write">#</span> I am VBird
+<span class="term_say"># 指令也可以是： grep -n '^[^[:alpha:]]' regular_express.txt</span>
+</pre></td></tr></table>
+
+		<p>注意到了吧？<span class="text_import2">那個 ^ 符號，在字元集合符號(括號[])之內與之外是不同的！
+		在 [] 內代表『反向選擇』，在 [] 之外則代表定位在行首的意義</span>！要分清楚喔！
+		反過來思考，那如果我想要找出來，行尾結束為小數點 (.) 的那一行，該如何處理：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '\.$' regular_express.txt</span>
+1:"Open Source" is a good mechanism to develop programs<span class="term_write">.</span>
+2:apple is my favorite food<span class="term_write">.</span>
+3:Football game is not use feet only<span class="term_write">.</span>
+4:this dress doesn't fit me<span class="term_write">.</span>
+
+10:motorcycle is cheap than car<span class="term_write">.</span>
+11:This window is clear<span class="term_write">.</span>
+12:the symbol '*' is represented as start<span class="term_write">.</span>
+15:You are the best is mean you are the no. 1<span class="term_write">.</span>
+16:The world &lt;Happy&gt; is the same with "glad"<span class="term_write">.</span>
+
+17:I like dog<span class="term_write">.</span>
+18:google is the best tools for search keyword<span class="term_write">.</span>
+20:go! go! Let's go<span class="term_write">.</span>
+</pre></td></tr></table>
+
+		<p>特別注意到，因為小數點具有其他意義(底下會介紹)，所以必須要使用跳脫字元(\)來加以解除其特殊意義！
+		不過，你或許會覺得奇怪，但是第 5~9 行最後面也是 . 啊～怎麼無法列印出來？
+		這裡就牽涉到 Windows 平台的軟體對於斷行字元的判斷問題了！我們使用 cat -A 將第五行拿出來看，
+		你會發現：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat -An regular_express.txt | head -n 10 | tail -n 6</span>
+
+     5  However, this dress is about $ 3183 dollars.<span class="term_write">^M</span>$
+     6  GNU is free air not free beer.<span class="term_write">^M</span>$
+     7  Her hair is very beauty.<span class="term_write">^M</span>$
+     8  I can't finish the test.<span class="term_write">^M</span>$
+     9  Oh! The soup taste good.<span class="term_write">^M</span>$
+    10  motorcycle is cheap than car.$
+</pre></td></tr></table>
+
+		<p>我們在<a href="/linux_basic/0310vi.php#tips_dos">第十章內談到過斷行字元</a>在 Linux 與 Windows 上的差異，
+		在上面的表格中我們可以發現 5~9 行為 Windows 的斷行字元 (^M$) ，而正常的 Linux 應該僅有第 10 行顯示的那樣 ($)
+		。所以囉，那個 . 自然就不是緊接在 $ 之前喔！也就捉不到 5~9 行了！這樣可以瞭解 ^ 與 $ 的意義嗎？
+		好了，先不要看底下的解答，自己想一想，那麼如果我想要找出來，哪一行是『空白行』，
+		也就是說，該行並沒有輸入任何資料，該如何搜尋？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '^$' regular_express.txt</span>
+22:
+</pre></td></tr></table>
+
+		<p>因為只有行首跟行尾 (^$)，所以，這樣就可以找出空白行啦！再來，假設你已經知道在一個程式腳本
+		(shell script) 或者是設定檔當中，空白行與開頭為 # 的那一行是註解，因此如果你要將資料列出給別人參考時，
+		可以將這些資料省略掉以節省保貴的紙張，那麼你可以怎麼作呢？
+		我們以 /etc/syslog.conf 這個檔案來作範例，你可以自行參考一下輸出的結果：</p>
+
+<a name="blank_line"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat -n /etc/syslog.conf</span>
+
+<span class="term_say"># 在 CentOS 中，結果可以發現有 33 行的輸出，很多空白行與 # 開頭</span>
+
+[root@www ~]# <span class="term_command">grep -v '^$' /etc/syslog.conf | grep -v '^#'</span>
+<span class="term_say"># 結果僅有 10 行，其中第一個『 -v '^$' 』代表『不要空白行』，
+# 第二個『 -v '^#' 』代表『不要開頭是 # 的那行』喔！</span>
+</pre></td></tr></table>
+
+		<p>是否節省很多版面啊？<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">例題四、任意一個字元 . 與重複字元 *</li></ul>
+
+		<p>在<a href="/linux_basic/0320bash.php">第十一章 bash</a> 當中，我們知道<a
+		href="/linux_basic/0320bash.php#settings_wildcard">萬用字元 *</a> 可以用來代表任意(0或多個)字元，
+		但是<span class="text_import2">正規表示法並不是萬用字元</span>，兩者之間是不相同的！
+		至於正規表示法當中的『 . 』則代表『絕對有一個任意字元』的意思！這兩個符號在正規表示法的意義如下：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>. (小數點)：代表『一定有一個任意字元』的意思；</li>
+
+		<li>* (星星號)：代表『重複前一個 0 到無窮多次』的意思，為組合形態</li>
+		</ul>
+
+		<p>這樣講不好懂，我們直接做個練習吧！假設我需要找出 g??d 的字串，亦即共有四個字元，
+		起頭是 g 而結束是 d ，我可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'g..d' regular_express.txt</span>
+1:"Open Source" is a <span class="term_write">good</span> mechanism to develop programs.
+9:Oh! The soup taste <span class="term_write">good</span>.
+16:The world &lt;Happy&gt; is the same with "<span class="term_write">glad</span>".
+
+</pre></td></tr></table>
+
+		<p>因為強調 g 與 d 之間一定要存在兩個字元，因此，第 13 行的 god 與第 14 行的 gd 
+		就不會被列出來啦！再來，如果我想要列出有 oo, ooo, oooo 等等的資料，
+		也就是說，至少要有兩個(含) o 以上，該如何是好？是 o* 還是 oo* 還是 ooo* 呢？
+		雖然你可以試看看結果， 不過結果太佔版面了 @_@ ，所以，我這裡就直接說明。</p>
+
+		<p>因為 * 代表的是『<span class="text_import2">重複 0 個或多個前面的 RE 字符</span>』的意義，
+		因此，<span class="text_import2">『o*』代表的是：『擁有空字元或一個 o 以上的字元』</span>，
+		特別注意，因為允許空字元(就是有沒有字元都可以的意思)，因此，『 <span class="text_import2">
+		grep -n 'o*' regular_express.txt</span> 』將會把所有的資料都列印出來螢幕上！</p>
+
+		<p>那如果是『oo*』呢？則第一個 o 肯定必須要存在，第二個 o 則是可有可無的多個 o ，
+		所以，凡是含有 o, oo, ooo, oooo 等等，都可以被列出來～</p>
+
+		<p>同理，當我們需要『至少兩個 o 以上的字串』時，就需要 ooo* ，亦即是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'ooo*' regular_express.txt</span>
+1:"Open Source" is a g<span class="term_write">oo</span>d mechanism to develop programs.
+2:apple is my favorite f<span class="term_write">oo</span>d.
+3:F<span class="term_write">oo</span>tball game is not use feet only.
+9:Oh! The soup taste g<span class="term_write">oo</span>d.
+18:g<span class="term_write">oo</span>gle is the best t<span class="term_write">oo</span>ls for search keyword.
+19:g<span class="term_write">oooooo</span>gle yes!
+
+</pre></td></tr></table>
+
+		<p>這樣理解 * 的意義了嗎？好了，現在出個練習，如果我想要字串開頭與結尾都是 g，但是兩個 g 
+		之間僅能存在至少一個 o ，亦即是 gog, goog, gooog.... 等等，那該如何？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'goo*g' regular_express.txt</span>
+18:<span class="term_write">goog</span>le is the best tools for search keyword.
+19:<span class="term_write">goooooog</span>le yes!
+</pre></td></tr></table>
+
+		<p>如此瞭解了嗎？再來一題，如果我想要找出 g 開頭與 g 結尾的字串，當中的字元可有可無，那該如何是好？是『g*g』嗎？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'g*g' regular_express.txt</span>
+1:"Open Source" is a <span class="term_write">g</span>ood mechanism to develop pro<span class="term_write">g</span>rams.
+3:Football <span class="term_write">g</span>ame is not use feet only.
+9:Oh! The soup taste <span class="term_write">g</span>ood.
+13:Oh!  My <span class="term_write">g</span>od!
+14:The <span class="term_write">g</span>d software is a library for draftin<span class="term_write">g</span> pro<span class="term_write">g</span>rams.
+16:The world &lt;Happy&gt; is the same with "<span class="term_write">g</span>lad".
+17:I like do<span class="term_write">g</span>.
+18:<span class="term_write">g</span>oo<span class="term_write">g</span>le is the best tools for search keyword.
+19:<span class="term_write">g</span>oooooo<span class="term_write">g</span>le yes!
+20:<span class="term_write">g</span>o! <span class="term_write">g</span>o! Let's <span class="term_write">g</span>o.
+
+</pre></td></tr></table>
+
+		<p>但測試的結果竟然出現這麼多行？太詭異了吧？其實一點也不詭異，因為 g*g 裡面的 g* 代表『空字元或一個以上的 g』
+		在加上後面的 g ，因此，整個 RE 的內容就是 g, gg, ggg, gggg ，
+		因此，只要該行當中擁有一個以上的 g 就符合所需了！</p>
+
+		<p>那該如何得到我們的 g....g 的需求呢？呵呵！就利用任意一個字元『.』啊！
+		亦即是：『g.*g』的作法，因為 * 可以是 0 或多個重複前面的字符，而 . 是任意字元，所以：
+		『<span class="text_import2">.* 就代表零個或多個任意字元</span>』的意思啦！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'g.*g' regular_express.txt</span>
+1:"Open Source" is a <span class="term_write">good mechanism to develop prog</span>rams.
+14:The <span class="term_write">gd software is a library for drafting prog</span>rams.
+18:<span class="term_write">goog</span>le is the best tools for search keyword.
+19:<span class="term_write">goooooog</span>le yes!
+20:<span class="term_write">go! go! Let's g</span>o.
+
+</pre></td></tr></table>
+
+		<p>因為是代表 g 開頭與 g 結尾，中間任意字元均可接受，所以，第 1, 14, 20 行是可接受的喔！
+		這個 .* 的 RE 表示任意字元是很常見的，希望大家能夠理解並且熟悉！
+		再出一題，如果我想要找出『任意數字』的行列呢？因為僅有數字，所以就成為：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n '[0-9][0-9]*' regular_express.txt</span>
+5:However, this dress is about $ <span class="term_write">3183</span> dollars.
+15:You are the best is mean you are the no. <span class="term_write">1</span>.
+</pre></td></tr></table>
+
+		<p>雖然使用 grep -n '[0-9]' regular_express.txt 也可以得到相同的結果，
+		但鳥哥希望大家能夠理解上面指令當中 RE 表示法的意義才好！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">例題五、限定連續 RE 字符範圍 {}</li></ul>
+
+		<p>在上個例題當中，我們可以利用 . 與 RE 字符及 * 來設定 0 個到無限多個重複字元，
+		那如果我想要限制一個範圍區間內的重複字元數呢？舉例來說，我想要找出兩個到五個 o 
+		的連續字串，該如何作？這時候就得要使用到限定範圍的字符 {} 了。
+		但<span class="text_import2">因為 { 與 } 的符號在 shell 是有特殊意義的，因此，
+		我們必須要使用跳脫字符 \ 來讓他失去特殊意義才行。</span>
+		至於 {} 的語法是這樣的，假設我要找到兩個 o 的字串，可以是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'o\{2\}' regular_express.txt</span>
+1:"Open Source" is a g<span class="term_write">oo</span>d mechanism to develop programs.
+2:apple is my favorite f<span class="term_write">oo</span>d.
+3:F<span class="term_write">oo</span>tball game is not use feet only.
+9:Oh! The soup taste g<span class="term_write">oo</span>d.
+18:g<span class="term_write">oo</span>gle is the best t<span class="term_write">oo</span>ls for search keyword.
+19:g<span class="term_write">oooooo</span>gle yes!
+
+</pre></td></tr></table>
+
+		<p>這樣看似乎與 ooo* 的字符沒有什麼差異啊？因為第 19 行有多個 o 依舊也出現了！
+		好，那麼換個搜尋的字串，假設我們要找出 g 後面接 2 到 5 個 o ，然後再接一個 g 的字串，他會是這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'go\{2,5\}g' regular_express.txt</span>
+18:<span class="term_write">goog</span>le is the best tools for search keyword.
+</pre></td></tr></table>
+
+		<p>嗯！很好！第 19 行終於沒有被取用了(因為 19 行有 6 個 o 啊！)。
+		那麼，如果我想要的是 2 個 o 以上的 goooo....g 呢？除了可以是 gooo*g ，也可以是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep -n 'go\{2,\}g' regular_express.txt</span>
+18:<span class="term_write">goog</span>le is the best tools for search keyword.
+19:<span class="term_write">goooooog</span>le yes!
+</pre></td></tr></table>
+
+		<p>呵呵！就可以找出來啦～</p>
+	</div>
+
+	<hr /><a name="basic_regexp_char"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">基礎正規表示法字符彙整
+	(characters)</span><br />
+	<div class="block2">
+		<p>經過了上面的幾個簡單的範例，我們可以將基礎的正規表示法特殊字符彙整如下：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" style="text-align: center"><td width="15%">RE 字符</td><td>意義與範例</td></tr>
+<tr class="fontwidth"><td align="center">^word</td><td><u>意義：待搜尋的字串(word)在行首！</u><br />
+
+	範例：搜尋行首為 # 開始的那一行，並列出行號
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n '^#' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">word$</td><td><u>意義：待搜尋的字串(word)在行尾！</u><br />
+	範例：將行尾為 ! 的那一行列印出來，並列出行號
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n '!$' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">.</td><td><u>意義：代表『一定有一個任意字元』的字符！</u><br />
+
+	範例：搜尋的字串可以是 (eve) (eae) (eee) (e e)， 但不能僅有 (ee) ！亦即 e 與 e 中間『一定』僅有一個字元，而空白字元也是字元！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n 'e.e' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">\</td><td><u>意義：跳脫字符，將特殊符號的特殊意義去除！</u><br />
+	範例：搜尋含有單引號 ' 的那一行！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n \' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">*</td><td><u>意義：重複零個到無窮多個的前一個 RE 字符</u><br />
+
+	範例：找出含有 (es) (ess) (esss) 等等的字串，注意，因為 * 可以是 0 個，所以 es 也是符合帶搜尋字串。另外，因為 * 
+	為重複『前一個 RE 字符』的符號， 因此，在 * 之前必須要緊接著一個 RE 字符喔！例如任意字元則為 『.*』 ！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n 'ess*' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">[list]</td><td><u>意義：字元集合的 RE 字符，裡面列出想要擷取的字元！</u><br />
+	範例：搜尋含有 (gl) 或 (gd) 的那一行，需要特別留意的是，在 [] 當中『謹代表一個待搜尋的字元』，
+	例如『 a[afl]y 』代表搜尋的字串可以是 aay, afy, aly 即 [afl] 代表 a 或 f 或 l 的意思！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n 'g[ld]' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">[n1-n2]</td><td><u>意義：字元集合的 RE 字符，裡面列出想要擷取的字元範圍！</u><br />
+
+	範例：搜尋含有任意數字的那一行！需特別留意，在字元集合 [] 中的減號 - 
+	是有特殊意義的，他代表兩個字元之間的所有連續字元！但這個連續與否與 ASCII 編碼有關，因此，你的編碼需要設定正確(在 
+	bash 當中，需要確定 LANG 與 LANGUAGE 的變數是否正確！) 例如所有大寫字元則為 [A-Z]
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n '[0-9]' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">[^list]</td><td><u>意義：字元集合的 RE 字符，裡面列出不要的字串或範圍！</u><br />
+	範例：搜尋的字串可以是 (oog) (ood) 但不能是 (oot) ，那個 ^ 在 [] 內時，代表的意義是『反向選擇』的意思。
+	例如，我不要大寫字元，則為 [^A-Z]。但是，需要特別注意的是，如果以 grep -n [^A-Z] regular_express.txt 
+	來搜尋，卻發現該檔案內的所有行都被列出，為什麼？因為這個 [^A-Z] 是『非大寫字元』的意思，
+	因為每一行均有非大寫字元，例如第一行的 "Open Source" 就有 p,e,n,o.... 等等的小寫字
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n 'oo[^t]' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">\{n,m\}</td><td><u>意義：連續 n 到 m 個的『前一個 RE 字符』<br />
+
+意義：若為 \{n\} 則是連續 n 個的前一個 RE 字符，<br />
+意義：若是 \{n,\} 則是連續 n 個以上的前一個 RE 字符！</u>
+	範例：在 g 與 g 之間有 2 個到 3 個的 o 存在的字串，亦即 (goog)(gooog)
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	grep -n 'go\{2,3\}g' regular_express.txt</blockquote></td></tr>
+</table>
+
+		<p>再次強調：『<span class="text_import2">正規表示法的特殊字元』與一般在指令列輸入指令的『萬用字元』並不相同</span>，
+		例如，在萬用字元當中的 * 代表的是『 0 ~ 無限多個字元』的意思，但是在正規表示法當中，
+		* 則是『重複 0 到無窮多個的前一個 RE 字符』的意思～使用的意義並不相同，不要搞混了！</p>
+
+		<p>舉例來說，不支援正規表示法的 ls 這個工具中，若我們使用 『ls -l * 』
+		代表的是任意檔名的檔案，而 『ls -l a* 』代表的是以 a 為開頭的任何檔名的檔案，
+		但在正規表示法中，我們要找到含有以 a 為開頭的檔案，則必須要這樣：(需搭配支援正規表示法的工具)</p>
+
+		<blockquote style="font-family:'細明體'">ls | grep -n '^a.*' </blockquote>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+以 ls -l 配合 grep 找出 /etc/ 底下檔案類型為連結檔屬性的檔名
+</div>
+答：<div class="block2">
+由於 ls -l 列出連結檔時標頭會是『 lrwxrwxrwx 』，因此使用如下的指令即可找出結果：
+
+<blockquote style="font-family:'細明體'">ls -l /etc | grep '^l'</blockquote>
+若僅想要列出幾個檔案，再以『 |wc -l 』 來累加處理即可。
+</div>
+</td></tr></table><br />
+
+	</div>
+
+	<hr /><a name="sed"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">sed 工具</span><br />
+	<div class="block2">
+		<p>在瞭解了一些正規表示法的基礎應用之後，再來呢？呵呵～兩個東西可以玩一玩的，那就是 sed 跟底下會介紹的 awk 了！
+		這兩個傢伙可是相當的有用的啊！舉例來說，鳥哥寫的 <a href="/linux_basic/0570syslog.php">logfile.sh 分析登錄檔的小程式</a>
+
+		(第十九章會談到)，絕大部分分析關鍵字的取用、統計等等，就是用這兩個寶貝蛋來幫我完成的！那麼你說，要不要玩一玩啊？^_^</p>
+
+		<p>我們先來談一談 sed 好了， sed 本身也是一個管線命令，可以分析 standard input 的啦！
+		而且 sed 還可以將資料進行取代、刪除、新增、擷取特定行等等的功能呢！很不錯吧～
+		我們先來瞭解一下 sed 的用法，再來聊他的用途好了！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sed [-nefr] [動作]</span>
+<span class="term_say">選項與參數：
+-n  ：使用安靜(silent)模式。在一般 sed 的用法中，所有來自 STDIN 
+      的資料一般都會被列出到螢幕上。但如果加上 -n 參數後，則只有經過
+      sed 特殊處理的那一行(或者動作)才會被列出來。
+-e  ：直接在指令列模式上進行 sed 的動作編輯；
+-f  ：直接將 sed 的動作寫在一個檔案內， -f filename 則可以執行 filename 內的 
+      sed 動作；
+-r  ：sed 的動作支援的是延伸型正規表示法的語法。(預設是基礎正規表示法語法)
+-i  ：直接修改讀取的檔案內容，而不是由螢幕輸出。
+
+動作說明：  [n1[,n2]]function
+n1, n2 ：不見得會存在，一般代表『選擇進行動作的行數』，舉例來說，如果我的動作
+         是需要在 10 到 20 行之間進行的，則『 10,20[動作行為] 』
+
+function 有底下這些咚咚：
+a   ：新增， a 的後面可以接字串，而這些字串會在新的一行出現(目前的下一行)～
+c   ：取代， c 的後面可以接字串，這些字串可以取代 n1,n2 之間的行！
+d   ：刪除，因為是刪除啊，所以 d 後面通常不接任何咚咚；
+i   ：插入， i 的後面可以接字串，而這些字串會在新的一行出現(目前的上一行)；
+p   ：列印，亦即將某個選擇的資料印出。通常 p 會與參數 sed -n 一起運作～
+s   ：取代，可以直接進行取代的工作哩！通常這個 s 的動作可以搭配
+      正規表示法！例如 1,20s/old/new/g 就是啦！</span>
+</pre></td></tr></table>
+
+		<a name="sed_line_add"></a>
+
+		<hr /><ul class="list1"><li class="text_import1">以行為單位的新增/刪除功能</li></ul>
+
+		<p>sed 光是用看的是看不懂的啦！所以又要來練習了！先來玩玩刪除與新增的功能吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：將 /etc/passwd 的內容列出並且列印行號，同時，請將第 2~5 行刪除！</span>
+[root@www ~]# <span class="term_command">nl /etc/passwd | sed '2,5d'</span>
+     1  root:x:0:0:root:/root:/bin/bash
+     6  sync:x:5:0:sync:/sbin:/bin/sync
+     7  shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+<span class="term_say">.....(後面省略).....</span>
+
+</pre></td></tr></table>
+
+		<p>看到了吧？sed 的動作為 '2,5d' ，那個 d 就是刪除！因為 2-5 行給他刪除了，所以顯示的資料就沒有 2-5 行囉～
+		另外，注意一下，原本應該是要下達 sed -e 才對，沒有 -e 也行啦！同時也要注意的是， sed 
+		後面接的動作，請務必以 '' 兩個單引號括住喔！</p>
+
+		<p>如果題型變化一下，舉例來說，如果只要刪除第 2 行，可以使用『 nl /etc/passwd | sed '2d' 』來達成，
+		至於若是要刪除第 3 到最後一行，則是『 nl /etc/passwd | sed '3,$d' 』的啦，那個<span 
+		class="text_import2">錢字號『 $ 』代表最後一行！</span></p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：承上題，在第二行後(亦即是加在第三行)加上『drink tea?』字樣！</span>
+[root@www ~]# <span class="term_command">nl /etc/passwd | sed '2a drink tea'</span>
+
+     1  root:x:0:0:root:/root:/bin/bash
+     2  bin:x:1:1:bin:/bin:/sbin/nologin
+drink tea
+     3  daemon:x:2:2:daemon:/sbin:/sbin/nologin
+<span class="term_say">.....(後面省略).....</span>
+</pre></td></tr></table>
+
+		<p>嘿嘿！在 a 後面加上的字串就已將出現在第二行後面囉！那如果是要在第二行前呢？『
+		nl /etc/passwd | sed '2i drink tea' 』就對啦！就是將『 a 』變成『 i 』即可。
+		增加一行很簡單，那如果是要增將兩行以上呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：在第二行後面加入兩行字，例如『Drink tea or .....』與『drink beer?』</span>
+[root@www ~]# <span class="term_command">nl /etc/passwd | sed '2a Drink tea or ......\</span>
+&gt; <span class="term_command">drink beer ?'</span>
+
+     1  root:x:0:0:root:/root:/bin/bash
+     2  bin:x:1:1:bin:/bin:/sbin/nologin
+Drink tea or ......
+drink beer ?
+     3  daemon:x:2:2:daemon:/sbin:/sbin/nologin
+<span class="term_say">.....(後面省略).....</span>
+</pre></td></tr></table>
+
+		<p>這個範例的重點是『我們可以新增不只一行喔！可以新增好幾行』但是每一行之間都必須要以反斜線『 \ 
+		』來進行新行的增加喔！所以，上面的例子中，我們可以發現在第一行的最後面就有 \ 存在啦！那是一定要的喔！<br /><br /></p>
+
+		<a name="sed_line_replace"></a>
+		<hr /><ul class="list1"><li class="text_import1">以行為單位的取代與顯示功能</li></ul>
+
+		<p>剛剛是介紹如何新增與刪除，那麼如果要整行取代呢？看看底下的範例吧：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例四：我想將第2-5行的內容取代成為『No 2-5 number』呢？</span>
+[root@www ~]# <span class="term_command">nl /etc/passwd | sed '2,5c No 2-5 number'</span>
+     1  root:x:0:0:root:/root:/bin/bash
+No 2-5 number
+     6  sync:x:5:0:sync:/sbin:/bin/sync
+<span class="term_say">.....(後面省略).....</span>
+</pre></td></tr></table>
+
+		<p>透過這個方法我們就能夠將資料整行取代了！非常容易吧！sed 還有更好用的東東！我們以前想要列出第 11~20 行，
+		得要透過『head -n 20 | tail -n 10』之類的方法來處理，很麻煩啦～
+		sed 則可以簡單的直接取出你想要的那幾行！是透過行號來捉的喔！看看底下的範例先：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例五：僅列出 /etc/passwd 檔案內的第 5-7 行</span>
+[root@www ~]# <span class="term_command">nl /etc/passwd | sed -n '5,7p'</span>
+     5  lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+     6  sync:x:5:0:sync:/sbin:/bin/sync
+     7  shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+</pre></td></tr></table>
+
+		<p>上述的指令中有個重要的選項『 -n 』，按照說明文件，這個 -n 代表的是『安靜模式』！
+		那麼為什麼要使用安靜模式呢？你可以自行下達 sed '5,7p' 就知道了 (5-7 行會重複輸出)！
+		有沒有加上 -n 的參數時，輸出的資料可是差很多的喔！你可以透過這個 sed 的以行為單位的顯示功能，
+		就能夠將某一個檔案內的某些行號捉出來查閱！很棒的功能！不是嗎？<br /><br /></p>
+
+		<a name="sed_replace"></a>
+		<hr /><ul class="list1"><li class="text_import1">部分資料的搜尋並取代的功能</li></ul>
+
+		<p>除了整行的處理模式之外， sed 還可以用行為單位進行部分資料的搜尋並取代的功能喔！
+		基本上 sed 的搜尋與取代的與 vi 相當的類似！他有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">sed 's/</span>要被取代的字串<span class="term_command">/</span>新的字串<span class="term_command">/g'</span>
+</pre></td></tr></table>
+
+		<p>上表中特殊字體的部分為關鍵字，請記下來！至於三個斜線分成兩欄就是新舊字串的替換啦！
+		我們使用底下這個取得 IP 數據的範例，一段一段的來處理給您瞧瞧，讓你瞭解一下什麼是咱們所謂的搜尋並取代吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">步驟一：先觀察原始訊息，利用 /sbin/ifconfig  查詢 IP 為何？</span>
+[root@www ~]# <span class="term_command">/sbin/ifconfig eth0</span>
+eth0      Link encap:Ethernet  HWaddr 00:90:CC:A6:34:84
+          <span class="term_write">inet addr:192.168.1.100  Bcast:192.168.1.255  Mask:255.255.255.0</span>
+          inet6 addr: fe80::290:ccff:fea6:3484/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+<span class="term_say">.....(以下省略).....
+# 因為我們還沒有講到 IP ，這裡你先有個概念即可啊！我們的重點在第二行，
+# 也就是 192.168.1.100 那一行而已！先利用關鍵字捉出那一行！</span>
+
+<span class="term_hd">步驟二：利用關鍵字配合 grep 擷取出關鍵的一行資料</span>
+
+[root@www ~]# <span class="term_command">/sbin/ifconfig eth0 | grep 'inet addr'</span>
+          <span class="term_write">inet addr</span>:192.168.1.100  Bcast:192.168.1.255  Mask:255.255.255.0
+<span class="term_say"># 當場僅剩下一行！接下來，我們要將開始到 addr: 通通刪除，就是像底下這樣：
+# <span style="text-decoration: line-through">inet addr:</span>192.168.1.100  Bcast:192.168.1.255  Mask:255.255.255.0
+# 上面的刪除關鍵在於『 ^.*inet addr: 』啦！正規表示法出現！ ^_^</span>
+
+<span class="term_hd">步驟三：將 IP 前面的部分予以刪除</span>
+[root@www ~]# <span class="term_command">/sbin/ifconfig eth0 | grep 'inet addr' | \</span>
+&gt; <span class="term_command"> sed 's/^.*addr://g'</span>
+
+192.168.1.100  Bcast:192.168.1.255  Mask:255.255.255.0
+<span class="term_say"># 仔細與上個步驟比較一下，前面的部分不見了！接下來則是刪除後續的部分，亦即：
+# 192.168.1.100  <span style="text-decoration: line-through">Bcast:192.168.1.255  Mask:255.255.255.0</span>
+# 此時所需的正規表示法為：『 Bcast.*$ 』就是啦！</span>
+
+<span class="term_hd">步驟四：將 IP 後面的部分予以刪除</span>
+[root@www ~]# <span class="term_command">/sbin/ifconfig eth0 | grep 'inet addr' | \</span>
+&gt; <span class="term_command"> sed 's/^.*addr://g' | sed 's/Bcast.*$//g'</span>
+192.168.1.100
+
+</pre></td></tr></table>
+
+		<p>透過這個範例的練習也建議您依據此一步驟來研究你的指令！就是先觀察，然後再一層一層的試做，
+		如果有做不對的地方，就先予以修改，改完之後測試，成功後再往下繼續測試。以鳥哥上面的介紹中，
+		那一大串指令就做了四個步驟！對吧！ ^_^</p>
+
+		<p>讓我們再來繼續研究 sed 與正規表示法的配合練習！假設我只要 MAN 存在的那幾行資料，
+		但是含有 # 在內的註解我不想要，而且空白行我也不要！此時該如何處理呢？可以透過這幾個步驟來實作看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">步驟一：先使用 grep 將關鍵字 MAN 所在行取出來</span>
+[root@www ~]# <span class="term_command">cat /etc/man.config | grep 'MAN'</span>
+# when MANPATH contains an empty substring), to find out where the cat
+# MANBIN                pathname
+# MANPATH               manpath_element [corresponding_catdir]
+# MANPATH_MAP           path_element    manpath_element
+# MANBIN                /usr/local/bin/man
+# Every automatically generated MANPATH includes these fields
+MANPATH /usr/man
+
+<span class="term_say">....(後面省略)....</span>
+
+<span class="term_hd">步驟二：刪除掉註解之後的資料！</span>
+[root@www ~]# <span class="term_command">cat /etc/man.config | grep 'MAN'| sed 's/#.*$//g'</span>
+
+
+
+
+
+
+MANPATH /usr/man
+<span class="term_say">....(後面省略)....
+# 從上面可以看出來，原本註解的資料都變成空白行啦！所以，接下來要刪除掉空白行</span>
+
+[root@www ~]# <span class="term_command">cat /etc/man.config | grep 'MAN'| sed 's/#.*$//g' | \</span>
+&gt; <span class="term_command">sed '/^$/d'</span>
+MANPATH /usr/man
+MANPATH /usr/share/man
+MANPATH /usr/local/man
+<span class="term_say">....(後面省略)....</span>
+</pre></td></tr></table>
+
+		<a name="sed_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">直接修改檔案內容(危險動作)</li></ul>
+
+		<p>你以為 sed 只有這樣的能耐嗎？那可不！ sed 甚至可以直接修改檔案的內容呢！而不必使用管線命令或資料流重導向！
+		不過，由於這個動作會直接修改到原始的檔案，所以請你千萬不要隨便拿系統設定檔來測試喔！
+
+		我們還是使用你下載的 regular_express.txt 檔案來測試看看吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例六：利用 sed 將 regular_express.txt 內每一行結尾若為 . 則換成 !</span>
+[root@www ~]# <span class="term_command">sed -i 's/\.$/\!/g' regular_express.txt</span>
+<span class="term_say"># 上頭的 -i 選項可以讓你的 sed 直接去修改後面接的檔案內容而不是由螢幕輸出喔！
+# 這個範例是用在取代！請您自行 cat 該檔案去查閱結果囉！</span>
+
+<span class="term_hd">範例七：利用 sed 直接在 regular_express.txt 最後一行加入『# This is a test』</span>
+[root@www ~]# <span class="term_command">sed -i '$a # This is a test' regular_express.txt</span>
+
+<span class="term_say"># 由於 $ 代表的是最後一行，而 a 的動作是新增，因此該檔案最後新增囉！</span>
+</pre></td></tr></table>
+
+		<p>sed 的『 -i 』選項可以直接修改檔案內容，這功能非常有幫助！舉例來說，如果你有一個 100 萬行的檔案，你要在第 
+		100 行加某些文字，此時使用 vim 可能會瘋掉！因為檔案太大了！那怎辦？就利用 sed 啊！透過 sed 
+		直接修改/取代的功能，你甚至不需要使用 vim 去修訂！很棒吧！</p>
+
+		<p>總之，這個 sed 不錯用啦！而且很多的 shell script 都會使用到這個指令的功能～
+		sed 可以幫助系統管理員管理好日常的工作喔！要仔細的學習呢！</p>
+	</div>
+</div>
+
+
+<hr /><a name="extend"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">延伸正規表示法</span><br />
+<div class="block1">
+	<p>事實上，一般讀者只要瞭解基礎型的正規表示法大概就已經相當足夠了，不過，某些時刻為了要簡化整個指令操作，
+	瞭解一下使用範圍更廣的延伸型正規表示法的表示式會更方便呢！舉個簡單的例子好了，在上節的<a 
+	href="#blank_line">例題三的最後一個例子</a>中，我們要去除空白行與行首為 # 的行列，使用的是</p>
+
+	<blockquote class="fontwidth">grep -v '^$' regular_express.txt | grep -v '^#'</blockquote>
+
+	<p>需要使用到管線命令來搜尋兩次！那麼如果使用延伸型的正規表示法，我們可以簡化為：</p>
+
+	<blockquote class="fontwidth">egrep -v '^$|^#' regular_express.txt</blockquote>
+
+	<p>延伸型正規表示法可以透過群組功能『 | 』來進行一次搜尋！那個在單引號內的管線意義為『或 or』啦！
+	是否變的更簡單呢？此外，grep 預設僅支援基礎正規表示法，如果要使用延伸型正規表示法，你可以使用 grep -E ，
+	不過更建議直接使用 egrep ！直接區分指令比較好記憶！其實 egrep 與 grep -E 是類似命令別名的關係啦！</p>
+
+	<p>熟悉了正規表示法之後，到這個延伸型的正規表示法，你應該也會想到，不就是多幾個重要的特殊符號嗎？ ^_^y 
+	是的～所以，我們就直接來說明一下，延伸型正規表示法有哪幾個特殊符號？由於底下的範例還是有使用到 regular_express.txt
+	，不巧的是剛剛我們可能將該檔案修改過了 @_@，所以，請重新下載該檔案來練習喔！</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" style="text-align: center"><td width="10%">RE 字符</td><td>意義與範例</td></tr>
+<tr class="fontwidth"><td align="center">+</td><td><u>意義：重複『一個或一個以上』的前一個 RE 字符</u><br />
+
+	範例：搜尋 (god) (good) (goood)... 等等的字串。 那個 o+ 代表『一個以上的 o 』所以，底下的執行成果會將第 1, 9, 13 行列出來。
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	egrep -n 'go+d' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">?</td><td><u>意義：『零個或一個』的前一個 RE 字符</u><br />
+	範例：搜尋 (gd) (god) 這兩個字串。 那個 o? 代表『空的或 1 個 o 』所以，上面的執行成果會將第 13, 14 行列出來。
+	有沒有發現到，這兩個案例( 'go+d' 與 'go?d' )的結果集合與 'go*d' 相同？ 想想看，這是為什麼喔！ ^_^
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	egrep -n 'go?d' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">|</td><td><u>意義：用或( or )的方式找出數個字串</u><br />
+
+	範例：搜尋 gd 或 good 這兩個字串，注意，是『或』！ 所以，第 1,9,14 這三行都可以被列印出來喔！那如果還想要找出 dog 呢？
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	egrep -n 'gd|good' regular_express.txt<br />
+	egrep -n 'gd|good|dog' regular_express.txt</blockquote></td></tr>
+<tr class="fontwidth"><td align="center">()</td><td><u>意義：找出『群組』字串</u><br />
+	範例：搜尋 (glad) 或 (good) 這兩個字串，因為 g 與 d 是重複的，所以， 我就可以將 la 與 oo 列於 ( ) 當中，並以 | 來分隔開來，就可以啦！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	egrep -n 'g(la|oo)d' regular_express.txt</blockquote></td></tr>
+
+<tr class="fontwidth"><td align="center">()+</td><td><u>意義：多個重複群組的判別</u><br />
+	範例：將『AxyzxyzxyzxyzC』用 echo 叫出，然後再使用如下的方法搜尋一下！
+	<blockquote style="padding: 0 0 0 25px; margin: 0; color: #000088; font-weight:bolder">
+	echo 'AxyzxyzxyzxyzC' | egrep 'A(xyz)+C'</blockquote>
+	上面的例子意思是說，我要找開頭是 A 結尾是 C ，中間有一個以上的 "xyz" 字串的意思～</td></tr>
+</table><br />
+
+	<p>以上這些就是延伸型的正規表示法的特殊字元。另外，要特別強調的是，那個 ! 在正規表示法當中並不是特殊字元，
+	所以，如果你想要查出來檔案中含有 ! 與 &gt; 的字行時，可以這樣：</p>
+
+	<blockquote class="fontwidth">grep -n '[!&gt;]' regular_express.txt</blockquote>
+
+	<p>這樣可以瞭解了嗎？常常看到有陷阱的題目寫：『反向選擇這樣對否？ '[!a-z]'？』，
+	呵呵！是錯的呦～要 '[^a-z] 才是對的！至於更多關於正規表示法的進階文章，請參考文末的參考資料(<a
+	href="#ps2">註2</a>)</p>
+</div>
+　
+
+<hr /><a name="docs"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">文件的格式化與相關處理</span><br />
+<div class="block1">
+	<p>接下來讓我們來將文件進行一些簡單的編排吧！底下這些動作可以將你的訊息進行排版的動作，
+	不需要重新以 vim 去編輯，透過資料流重導向配合底下介紹的 printf 功能，以及 awk 指令，
+	就可以讓你的訊息以你想要的模樣來輸出了！試看看吧！<br /><br /></p>
+
+	<hr /><a name="printf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">格式化列印： printf</span><br />
+	<div class="block1">
+		<p>在很多時候，我們可能需要將自己的資料給他格式化輸出的！
+		舉例來說，考試卷分數的輸出，姓名與科目及分數之間，總是可以稍微作個比較漂亮的版面配置吧？
+		例如我想要輸出底下的樣式：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Name     Chinese   English   Math    Average
+DmTsai        80        60     92      77.33
+VBird         75        55     80      70.00
+Ken           60        90     70      73.33
+</pre></td></tr></table>
+
+		<p>上表的資料主要分成五個欄位，各個欄位之間可使用 tab 或空白鍵進行分隔。
+		請將上表的資料轉存成為 printf.txt 檔名，等一下我們會利用這個檔案來進行幾個小練習的。
+		因為每個欄位的原始資料長度其實並非是如此固定的 (Chinese 長度就是比 Name 要多)，
+		而我就是想要如此表示出這些資料，此時，就得需要列印格式管理員 printf 的幫忙了！
+		printf 可以幫我們將資料輸出的結果格式化，而且而支援一些特殊的字符～底下我們就來看看！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">printf '列印格式' 實際內容</span>
+<span class="term_say">選項與參數：
+關於格式方面的幾個特殊樣式：
+       \a    警告聲音輸出
+       \b    倒退鍵(backspace)
+       \f    清除螢幕 (form feed)
+       \n    輸出新的一行
+       \r    亦即 Enter 按鍵
+       \t    水平的 [tab] 按鍵
+       \v    垂直的 [tab] 按鍵
+       \xNN  NN 為兩位數的數字，可以轉換數字成為字元。
+關於 C 程式語言內，常見的變數格式
+       %ns   那個 n 是數字， s 代表 string ，亦即多少個字元；
+       %ni   那個 n 是數字， i 代表 integer ，亦即多少整數位數；
+       %N.nf 那個 n 與 N 都是數字， f 代表 floating (浮點)，如果有小數位數，
+             假設我共要十個位數，但小數點有兩位，即為 %10.2f 囉！</span>
+</pre></td></tr></table>
+
+		<p>接下來我們來進行幾個常見的練習。假設所有的資料都是一般文字 (這也是最常見的狀態)，因此最常用來分隔資料的符號就是 
+		[Tab] 啦！因為 [Tab] 按鍵可以將資料作個整齊的排列！那麼如何利用 printf 呢？參考底下這個範例：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：將剛剛上頭資料的檔案 (printf.txt) 內容僅列出姓名與成績：(用 [tab] 分隔)</span>
+[root@www ~]# <span class="term_command">printf '%s\t %s\t %s\t %s\t %s\t \n' $(cat printf.txt)</span>
+
+Name     Chinese         English         Math    Average
+DmTsai   80      60      92      77.33
+VBird    75      55      80      70.00
+Ken      60      90      70      73.33
+</pre></td></tr></table>
+
+		<p>由於 printf 並不是管線命令，因此我們得要透過類似上面的功能，將檔案內容先提出來給 printf 作為後續的資料才行。
+		如上所示，我們將每個資料都以 [tab] 作為分隔，但是由於 Chinese 長度太長，導致 English 中間多了一個 [tab] 
+		來將資料排列整齊！啊～結果就看到資料對齊結果的差異了！</p>
+
+		<p>另外，在 printf 後續的那一段格式中，%s 代表一個不固定長度的字串，而字串與字串中間就以 \t 這個 [tab]
+		分隔符號來處理！你要記得的是，由於 \t 與 %s 中間還有空格，因此每個字串間會有一個 [tab] 與一個空白鍵的分隔喔！</p>
+
+		<p>既然每個欄位的長度不固定會造成上述的困擾，那我將每個欄位固定就好啦！沒錯沒錯！這樣想非常好！
+		所以我們就將資料給他進行固定欄位長度的設計吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：將上述資料關於第二行以後，分別以字串、整數、小數點來顯示：</span>
+
+[root@www ~]# <span class="term_command">printf '%10s %5i %5i %5i %8.2f \n' $(cat printf.txt |\</span>
+&gt; <span class="term_command">grep -v Name)</span>
+    DmTsai    80    60    92    77.33
+     VBird    75    55    80    70.00
+       Ken    60    90    70    73.33
+</pre></td></tr></table>
+
+		<p>上面這一串格式想必您看得很辛苦！沒關係！一個一個來解釋！上面的格式共分為五個欄位， %10s 
+		代表的是一個長度為 10 個字元的字串欄位，%5i 代表的是長度為 5 個字元的數字欄位，至於那個 %8.2f 
+		則代表長度為 8 個字元的具有小數點的欄位，其中小數點有兩個字元寬度。我們可以使用底下的說明來介紹 %8.2f 的意義：</p>
+
+		<blockquote class="fontwidth">字元寬度： 12345678<br />%8.2f意義：00000.00</blockquote>
+
+		<p>如上所述，全部的寬度僅有 8 個字元，整數部分佔有 5 個字元，小數點本身 (.) 佔一位，小數點下的位數則有兩位。
+		這種格式經常使用於數值程式的設計中！這樣瞭解乎？自己試看看如果要將小數點位數變成 1 位又該如何處理？</p>
+
+		<p>printf 除了可以格式化處理之外，他還可以依據 ASCII 的數字與圖形對應來顯示資料喔(<a href="#ps3">註3</a>)！
+		舉例來說 16 進位的 45 可以得到什麼 ASCII 的顯示圖 (其實是字元啦)？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：列出 16 進位數值 45 代表的字元為何？</span>
+[root@www ~]# <span class="term_command">printf '\x45\n'</span>
+
+E
+<span class="term_say"># 這東西也很好玩～他可以將數值轉換成為字元，如果你會寫 script 的話，
+# 可以自行測試一下，由 20~80 之間的數值代表的字元是啥喔！ ^_^</span>
+</pre></td></tr></table>
+
+		<p>printf 的使用相當的廣泛喔！包括等一下後面會提到的 awk 以及在 C 程式語言當中使用的螢幕輸出，
+		都是利用 printf 呢！鳥哥這裡也只是列出一些可能會用到的格式而已，有興趣的話，可以自行多作一些測試與練習喔！ ^_^</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		列印格式化這個 printf 指令，乍看之下好像也沒有什麼很重要的～
+		不過，如果你需要自行撰寫一些軟體，需要將一些資料在螢幕上頭漂漂亮亮的輸出的話，
+		那麼 printf 可也是一個很棒的工具喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="awk"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">awk：好用的資料處理工具</span><br />
+
+	<div class="block1">
+		<p>awk 也是一個非常棒的資料處理工具！相較於 sed 常常作用於一整個行的處理， awk 
+		則比較傾向於一行當中分成數個『欄位』來處理。因此，awk 相當的適合處理小型的數據資料處理呢！awk
+		通常運作的模式是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">awk '條件類型1{動作1} 條件類型2{動作2} ...' filename</span>
+</pre></td></tr></table>
+
+		<p>awk 後面接兩個單引號並加上大括號 {} 來設定想要對資料進行的處理動作。
+		awk 可以處理後續接的檔案，也可以讀取來自前個指令的 standard output 。
+		但如前面說的， <span class="text_import2">awk 主要是處理『每一行的欄位內的資料』，而預設的『欄位的分隔符號為
+		"空白鍵" 或 "[tab]鍵" 』</span>！舉例來說，我們用 last 可以將登入者的資料取出來，結果如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">last -n 5</span> <span class="term_note">&lt;==僅取出前五行</span>
+root     pts/1   192.168.1.100  Tue Feb 10 11:21   still logged in
+root     pts/1   192.168.1.100  Tue Feb 10 00:46 - 02:28  (01:41)
+root     pts/1   192.168.1.100  Mon Feb  9 11:41 - 18:30  (06:48)
+dmtsai   pts/1   192.168.1.100  Mon Feb  9 11:41 - 11:41  (00:00)
+root     tty1                   Fri Sep  5 14:09 - 14:10  (00:01)
+</pre></td></tr></table>
+
+		<p>若我想要取出帳號與登入者的 IP ，且帳號與 IP 之間以 [tab] 隔開，則會變成這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">last -n 5 | awk '{print $1 "\t" $3}'</span>
+
+root    192.168.1.100
+root    192.168.1.100
+root    192.168.1.100
+dmtsai  192.168.1.100
+root    Fri
+</pre></td></tr></table>
+
+		<p>上表是 awk 最常使用的動作！透過 print 的功能將欄位資料列出來！欄位的分隔則以空白鍵或 [tab] 按鍵來隔開。
+		因為不論哪一行我都要處理，因此，就不需要有 "條件類型" 的限制！我所想要的是第一欄以及第三欄，
+		但是，第五行的內容怪怪的～這是因為資料格式的問題啊！所以囉～使用 awk
+		的時候，請先確認一下你的資料當中，如果是連續性的資料，請不要有空格或 [tab] 
+		在內，否則，就會像這個例子這樣，會發生誤判喔！</p>
+
+		<p>另外，由上面這個例子你也會知道，在<span class="text_import2">每一行的每個欄位都是有變數名稱的，那就是 $1, $2... 
+		等變數名稱</span>。以上面的例子來說， root 是 $1 ，因為他是第一欄嘛！至於 192.168.1.100 是第三欄，
+		所以他就是 $3 啦！後面以此類推～呵呵！還有個變數喔！那就是 $0 ，<span class="text_import2">$0 
+		代表『一整列資料』的意思～</span>以上面的例子來說，第一行的 $0 代表的就是『root .... 』那一行啊！
+		由此可知，剛剛上面五行當中，整個 awk 的處理流程是：</p>
+
+		<ol class="text_import2">
+
+		<li>讀入第一行，並將第一行的資料填入 $0, $1, $2.... 等變數當中；</li>
+		<li>依據 "條件類型" 的限制，判斷是否需要進行後面的 "動作"；</li>
+		<li>做完所有的動作與條件類型；</li>
+		<li>若還有後續的『行』的資料，則重複上面 1~3 的步驟，直到所有的資料都讀完為止。</li>
+		</ol>
+
+		<p>經過這樣的步驟，你會曉得， awk 是『<span class="text_import2">以行為一次處理的單位</span>』，
+		而『<span class="text_import2">以欄位為最小的處理單位</span>』。好了，那麼 awk 
+		怎麼知道我到底這個資料有幾行？有幾欄呢？這就需要 awk 的內建變數的幫忙啦～</p>
+
+<table width="75%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>變數名稱</td><td>代表意義</td></tr>
+<tr><td align="center">NF</td><td>每一行 ($0) 擁有的欄位總數</td></tr>
+<tr><td align="center">NR</td><td>目前 awk 所處理的是『第幾行』資料</td></tr>
+<tr><td align="center">FS</td><td>目前的分隔字元，預設是空白鍵</td></tr>
+</table><br />
+
+		<p>我們繼續以上面 last -n 5 的例子來做說明，如果我想要：</p>
+
+		<ul>
+		<li>列出每一行的帳號(就是 $1)；</li>
+		<li>列出目前處理的行數(就是 awk 內的 NR 變數)</li>
+		<li>並且說明，該行有多少欄位(就是 awk 內的 NF 變數)</li></ul>
+
+		<p>則可以這樣：</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		要注意喔，awk 後續的所有動作是以單引號『 ' 』括住的，由於單引號與雙引號都必須是成對的，
+		所以， awk 的格式內容如果想要以 print 列印時，記得非變數的文字部分，包含上一小節 
+		<a href="#printf">printf</a> 提到的格式中，都需要使用雙引號來定義出來喔！因為單引號已經是 awk 的指令固定用法了！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">last -n 5| awk '{print $1 "\t lines: " NR "\t columes: " NF}'</span>
+root     lines: 1        columes: 10
+root     lines: 2        columes: 10
+root     lines: 3        columes: 10
+dmtsai   lines: 4        columes: 10
+root     lines: 5        columes: 9
+<span class="term_say"># 注意喔，在 awk 內的 NR, NF 等變數要用大寫，且不需要有錢字號 $ 啦！</span>
+</pre></td></tr></table>
+
+		<p>這樣可以瞭解 NR 與 NF 的差別了吧？好了，底下來談一談所謂的 "條件類型" 了吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">awk 的邏輯運算字元</li></ul>
+
+		<p>既然有需要用到 "條件" 的類別，自然就需要一些邏輯運算囉～例如底下這些：</p>
+
+<table width="75%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>運算單元</td><td>代表意義</td></tr>
+<tr align="center"><td><font face="'細明體'">&gt;</font></td><td>大於</td></tr>
+
+<tr align="center"><td><font face="'細明體'">&lt;</font></td><td>小於</td></tr>
+<tr align="center"><td><font face="'細明體'">&gt;=</font></td><td>大於或等於</td></tr>
+<tr align="center"><td><font face="'細明體'">&lt;=</font></td><td>小於或等於</td></tr>
+<tr align="center"><td><font face="'細明體'">==</font></td><td>等於</td></tr>
+<tr align="center"><td><font face="'細明體'">!=</font></td><td>不等於</td></tr>
+</table>
+
+		<p>值得注意的是那個『 <font face="'細明體'">==</font> 』的符號，因為：</p>
+
+		<ul>
+		<li>邏輯運算上面亦即所謂的大於、小於、等於等判斷式上面，習慣上是以『 <font face="'細明體'">==</font> 』來表示；</li>
+		<li>如果是直接給予一個值，例如變數設定時，就直接使用 = 而已。</li>
+		</ul>
+
+		<p>好了，我們實際來運用一下邏輯判斷吧！舉例來說，在 /etc/passwd 當中是以冒號 ":" 來作為欄位的分隔，
+		該檔案中第一欄位為帳號，第三欄位則是 UID。那假設我要查閱，第三欄小於 10 以下的數據，並且僅列出帳號與第三欄，
+		那麼可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/passwd | \</span>
+&gt; <span class="term_command">awk '{FS=":"} $3 &lt; 10 {print $1 "\t " $3}'</span>
+root:x:0:0:root:/root:/bin/bash
+bin      1
+daemon   2
+<span class="term_say">....(以下省略)....</span>
+</pre></td></tr></table>
+
+		<p>有趣吧！不過，怎麼第一行沒有正確的顯示出來呢？這是因為我們讀入第一行的時候，那些變數 $1, 
+		$2... 預設還是以空白鍵為分隔的，所以雖然我們定義了 FS=":" 了，
+		但是卻僅能在第二行後才開始生效。那麼怎麼辦呢？我們可以預先設定 awk 的變數啊！
+		利用 BEGIN 這個關鍵字喔！這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/passwd | \</span>
+&gt; <span class="term_command">awk 'BEGIN {FS=":"} $3 &lt; 10 {print $1 "\t " $3}'</span>
+root     0
+bin      1
+daemon   2
+<span class="term_say">......(以下省略)......</span>
+</pre></td></tr></table>
+
+		<p>很有趣吧！而除了 BEGIN 之外，我們還有 END 呢！另外，如果要用 awk 來進行『計算功能』呢？以底下的例子來看，
+		假設我有一個薪資資料表檔名為 pay.txt ，內容是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Name    1st     2nd     3th
+VBird   23000   24000   25000
+DMTsai  21000   20000   23000
+Bird2   43000   42000   41000
+</pre></td></tr></table>
+
+		<p>如何幫我計算每個人的總額呢？而且我還想要格式化輸出喔！我們可以這樣考慮：</p>
+
+		<ul>
+		<li>第一行只是說明，所以第一行不要進行加總 (NR==1 時處理)；</li>
+		<li>第二行以後就會有加總的情況出現 (NR&gt;=2 以後處理)</li>
+
+		</ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat pay.txt | \</span>
+> <span class="term_command">awk 'NR==1{printf "%10s %10s %10s %10s %10s\n",$1,$2,$3,$4,"Total" }
+NR>=2{total = $2 + $3 + $4
+printf "%10s %10d %10d %10d %10.2f\n", $1, $2, $3, $4, total}'</span>
+      Name        1st        2nd        3th      Total
+     VBird      23000      24000      25000   72000.00
+    DMTsai      21000      20000      23000   64000.00
+     Bird2      43000      42000      41000  126000.00
+</pre></td></tr></table>
+
+		<p>上面的例子有幾個重要事項應該要先說明的：</p>
+
+		<ul class="text_import2">
+		<li>awk 的指令間隔：所有 awk 的動作，亦即在 {} 內的動作，如果有需要多個指令輔助時，可利用分號『;』間隔，
+			或者直接以 [Enter] 按鍵來隔開每個指令，例如上面的範例中，鳥哥共按了三次 [enter] 喔！</li>
+		<li>邏輯運算當中，如果是『等於』的情況，則務必使用兩個等號『==』！</li>
+		<li>格式化輸出時，在 printf 的格式設定當中，務必加上 \n ，才能進行分行！</li>
+		<li>與 bash shell 的變數不同，在 awk 當中，變數可以直接使用，不需加上 $ 符號。</li>
+		</ul>
+
+		<p>利用 awk 這個玩意兒，就可以幫我們處理很多日常工作了呢！真是好用的很～
+		此外， awk 的輸出格式當中，常常會以 <a href="#printf">printf</a> 來輔助，所以，
+		最好你對 printf 也稍微熟悉一下比較好啦！另外， awk 的動作內 {} 也是支援 if (條件) 的喔！
+		舉例來說，上面的指令可以修訂成為這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat pay.txt | \</span>
+&gt; <span class="term_command">awk '{if(NR==1) printf "%10s %10s %10s %10s %10s\n",$1,$2,$3,$4,"Total"}
+NR&gt;=2{total = $2 + $3 + $4
+printf "%10s %10d %10d %10d %10.2f\n", $1, $2, $3, $4, total}'</span>
+</pre></td></tr></table>
+
+		<p>你可以仔細的比對一下上面兩個輸入有啥不同～從中去瞭解兩種語法吧！我個人是比較傾向於使用第一種語法，
+		因為會比較有統一性啊！ ^_^</p>
+
+		<p>除此之外， awk 還可以幫我們進行迴圈計算喔！真是相當的好用！不過，那屬於比較進階的單獨課程了，
+		我們這裡就不再多加介紹。如果你有興趣的話，請務必參考延伸閱讀中的相關連結喔 (<a href="#ps4">註4</a>)。</p>
+	</div>
+
+	<hr /><a name="doc_compare"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">檔案比對工具</span><br />
+	<div class="block2">
+
+		<p>什麼時候會用到檔案的比對啊？通常是『<span 
+		class="text_import2">同一個套裝軟體的不同版本之間，比較設定檔與原始檔的差異</span>』。
+		很多時候所謂的檔案比對，通常是用在 ASCII 純文字檔的比對上的！那麼比對檔案的指令有哪些？最常見的就是 diff 囉！
+		另外，除了 diff 比對之外，我們還可以藉由 cmp 來比對非純文字檔！同時，也能夠藉由 diff 建立的分析檔，
+		以處理補丁 (patch) 功能的檔案呢！就來玩玩先！<br /><br /></p>
+
+		<a name="diff"></a>
+		<hr /><ul class="list1"><li class="text_import1">diff</li></ul>
+
+		<p>diff 就是用在比對兩個檔案之間的差異的，並且是以行為單位來比對的！一般是用在 ASCII 純文字檔的比對上。
+		由於是以行為比對的單位，因此<span class="text_import2"> diff 通常是用在同一的檔案(或軟體)的新舊版本差異上！</span>
+
+		舉例來說，假如我們要將 /etc/passwd 處理成為一個新的版本，處理方式為：
+		將第四行刪除，第六行則取代成為『no six line』，新的檔案放置到 /tmp/test 裡面，那麼應該怎麼做？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkdir -p /tmp/test</span> <span class="term_note">&lt;==先建立測試用的目錄</span>
+[root@www ~]# <span class="term_command">cd /tmp/test</span>
+[root@www test]# <span class="term_command">cp /etc/passwd passwd.old</span>
+[root@www test]# <span class="term_command">cat /etc/passwd | \</span>
+
+&gt; <span class="term_command">sed -e '4d' -e '6c no six line' &gt; passwd.new</span>
+<span class="term_say"># 注意一下， sed 後面如果要接超過兩個以上的動作時，每個動作前面得加 -e 才行！
+# 透過這個動作，在 /tmp/test  裡面便有新舊的 passwd 檔案存在了！</span>
+</pre></td></tr></table>
+
+		<p>接下來討論一下關於 diff 的用法吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">diff [-bBi] from-file to-file</span>
+
+<span class="term_say">選項與參數：
+from-file ：一個檔名，作為原始比對檔案的檔名；
+to-file   ：一個檔名，作為目的比對檔案的檔名；
+注意，from-file 或 to-file 可以 - 取代，那個 - 代表『Standard input』之意。
+
+-b  ：忽略一行當中，僅有多個空白的差異(例如 "about me" 與 "about     me" 視為相同
+-B  ：忽略空白行的差異。
+-i  ：忽略大小寫的不同。</span>
+
+<span class="term_hd">範例一：比對 passwd.old 與 passwd.new 的差異：</span>
+[root@www test]# <span class="term_command">diff passwd.old passwd.new</span>
+4d3    <span class="term_note">&lt;==左邊第四行被刪除 (d) 掉了，基準是右邊的第三行</span>
+&lt; adm:x:3:4:adm:/var/adm:/sbin/nologin  <span class="term_note">&lt;==這邊列出左邊(&lt;)檔案被刪除的那一行內容</span>
+6c5    <span class="term_note">&lt;==左邊檔案的第六行被取代 (c) 成右邊檔案的第五行</span>
+
+&lt; sync:x:5:0:sync:/sbin:/bin/sync  <span class="term_note">&lt;==左邊(&lt;)檔案第六行內容</span>
+---
+&gt; no six line                      <span class="term_note">&lt;==右邊(&gt;)檔案第五行內容</span>
+<span class="term_say"># 很聰明吧！用 diff 就把我們剛剛的處理給比對完畢了！</span>
+</pre></td></tr></table>
+
+		<p>用 diff 比對檔案真的是很簡單喔！不過，你不要用 diff 去比對兩個完全不相干的檔案，因為比不出個啥咚咚！
+		另外， diff 也可以比對整個目錄下的差異喔！舉例來說，我們想要瞭解一下不同的開機執行等級 (runlevel) 
+		內容有啥不同？假設你已經知道執行等級 3 與 5 的啟動腳本分別放置到 /etc/rc3.d 及 /etc/rc5.d ，
+		則我們可以將兩個目錄比對一下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">diff /etc/rc3.d/ /etc/rc5.d/</span>
+Only in /etc/rc3.d/: K99readahead_later
+Only in /etc/rc5.d/: S96readahead_later
+</pre></td></tr></table>
+
+		<p>我們的 diff 很聰明吧！還可以比對不同目錄下的相同檔名的內容，這樣真的很方便喔～<br /><br /></p>
+
+		<a name="cmp"></a>
+		<hr /><ul class="list1"><li class="text_import1">cmp</li></ul>
+
+		<p>相對於 diff 的廣泛用途， cmp 似乎就用的沒有這麼多了～ cmp 主要也是在比對兩個檔案，他主要利用『位元組』單位去比對，
+		因此，當然也可以比對 binary file 囉～(還是要再提醒喔， diff 主要是以『行』為單位比對，
+		cmp 則是以『位元組』為單位去比對，這並不相同！)</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cmp [-s] file1 file2</span>
+<span class="term_say">選項與參數：
+-s  ：將所有的不同點的位元組處都列出來。因為 cmp 預設僅會輸出第一個發現的不同點。</span>
+
+<span class="term_hd">範例一：用 cmp 比較一下 passwd.old 及 passwd.new</span>
+[root@www test]# <span class="term_command">cmp passwd.old passwd.new</span>
+
+passwd.old passwd.new differ: byte 106, line 4
+</pre></td></tr></table>
+
+		<p>看到了嗎？第一個發現的不同點在第四行，而且位元組數是在第 106 個位元組處！這個 cmp 也可以用來比對 binary 
+		啦！ ^_^<br /><br /></p>
+
+		<a name="patch"></a>
+		<hr /><ul class="list1"><li class="text_import1">patch</li></ul>
+
+		<p>patch 這個指令與 diff 可是有密不可分的關係啊！我們前面提到，diff 可以用來分辨兩個版本之間的差異，
+		舉例來說，剛剛我們所建立的 passwd.old 及 passwd.new 之間就是兩個不同版本的檔案。
+		那麼，如果要『升級』呢？就是『<span class="text_import2">將舊的檔案升級成為新的檔案</span>』時，應該要怎麼做呢？
+		其實也不難啦！就是『先比較先舊版本的差異，並將差異檔製作成為補丁檔，再由補丁檔更新舊檔案』即可。
+		舉例來說，我們可以這樣做測試：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：以 /tmp/test 內的 passwd.old 與 passwd.new  製作補丁檔案</span>
+[root@www test]# <span class="term_command">diff -Naur passwd.old passwd.new &gt; passwd.patch</span>
+[root@www test]# <span class="term_command">cat passwd.patch</span>
+--- passwd.old  2009-02-10 14:29:09.000000000 +0800 <span class="term_note">&lt;==新舊檔案的資訊</span>
++++ passwd.new  2009-02-10 14:29:18.000000000 +0800
+@@ -1,9 +1,8 @@   <span class="term_note">&lt;==新舊檔案要修改資料的界定範圍，舊檔在 1-9 行，新檔在 1-8 行</span>
+
+ root:x:0:0:root:/root:/bin/bash
+ bin:x:1:1:bin:/bin:/sbin/nologin
+ daemon:x:2:2:daemon:/sbin:/sbin/nologin
+-adm:x:3:4:adm:/var/adm:/sbin/nologin      <span class="term_note">&lt;==左側檔案刪除</span>
+ lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+-sync:x:5:0:sync:/sbin:/bin/sync           <span class="term_note">&lt;==左側檔案刪除</span>
++no six line                               <span class="term_note">&lt;==右側新檔加入</span>
+ shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+ halt:x:7:0:halt:/sbin:/sbin/halt
+ mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+</pre></td></tr></table>
+
+		<p>一般來說，使用 diff 製作出來的比較檔案通常使用副檔名為 .patch 囉。至於內容就如同上面介紹的樣子。
+		基本上就是以行為單位，看看哪邊有一樣與不一樣的，找到一樣的地方，然後將不一樣的地方取代掉！
+		以上面表格為例，新檔案看到 - 會刪除，看到 + 會加入！好了，那麼如何將舊的檔案更新成為新的內容呢？
+		就是將 passwd.old 改成與 passwd.new 相同！可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">patch -pN &lt; patch_file   </span> <span class="term_note">&lt;==更新</span>
+[root@www ~]# <span class="term_command">patch -R -pN &lt; patch_file</span> <span class="term_note">&lt;==還原</span>
+<span class="term_say">選項與參數：
+-p  ：後面可以接『取消幾層目錄』的意思。
+-R  ：代表還原，將新的檔案還原成原來舊的版本。</span>
+
+<span class="term_hd">範例二：將剛剛製作出來的 patch file 用來更新舊版資料</span>
+[root@www test]# <span class="term_command">patch -p0 &lt; passwd.patch</span>
+patching file passwd.old
+[root@www test]# <span class="term_command">ll passwd*</span>
+-rw-r--r-- 1 root root <span class="term_write">1929</span> Feb 10 14:29 passwd.new
+-rw-r--r-- 1 root root <span class="term_write">1929</span> Feb 10 15:12 passwd.old <span class="term_note">&lt;==檔案一模一樣！</span>
+
+<span class="term_hd">範例三：恢復舊檔案的內容</span>
+[root@www test]# <span class="term_command">patch -R -p0 &lt; passwd.patch</span>
+[root@www test]# <span class="term_command">ll passwd*</span>
+-rw-r--r-- 1 root root 1929 Feb 10 14:29 passwd.new
+-rw-r--r-- 1 root root <span class="term_write">1986</span> Feb 10 15:18 passwd.old
+<span class="term_say"># 檔案就這樣恢復成為舊版本囉</span>
+
+</pre></td></tr></table>
+
+		<p>為什麼這裡會使用 -p0 呢？因為我們在比對新舊版的資料時是在同一個目錄下，
+		因此不需要減去目錄啦！如果是使用整體目錄比對 (diff 舊目錄 新目錄) 時，
+		就得要依據建立 patch 檔案所在目錄來進行目錄的刪減囉！</p>
+
+		<p>更詳細的 patch 用法我們會在後續的第五篇的<a 
+		href="/linux_basic/0520source_code_and_tarball.php#tarball_patch">原始碼編譯 (第二十二章)</a>再跟大家介紹，
+		這裡僅是介紹給你，我們可以利用 diff 來比對兩個檔案之間的差異，
+		更可進一步利用這個功能來製作修補檔案 (patch file) ，讓大家更容易進行比對與升級呢！很不賴吧！ ^_^</p>
+	</div>
+
+	<hr /><a name="pr"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">檔案列印準備： pr</span><br />
+
+	<div class="block2">
+		<p>如果你曾經使用過一些圖形介面的文書處理軟體的話，那麼很容易發現，當我們在列印的時候，
+		可以同時選擇與設定每一頁列印時的標頭吧！也可以設定頁碼呢！那麼，如果我是在 Linux 底下列印純文字檔呢
+		可不可以具有標題啊？可不可以加入頁碼啊？呵呵！當然可以啊！使用 pr 就能夠達到這個功能了。不過， 
+		pr 的參數實在太多了，鳥哥也說不完，一般來說，鳥哥都僅使用最簡單的方式來處理而已。舉例來說，如果想要列印 
+		/etc/man.config 呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">pr /etc/man.config</span>
+
+
+<span class="term_write">2007-01-06 18:24                 /etc/man.config                  Page 1</span>
+
+
+#
+# Generated automatically from man.conf.in by the
+# configure script.
+
+<span class="term_say">.....以下省略......</span>
+</pre></td></tr></table>
+
+		<p>上面特殊字體那一行呢，其實就是使用 pr 處理後所造成的標題啦！標題中會有『檔案時間』、『檔案檔名』及『頁碼』三大項目。
+		更多的 pr 使用，請參考 pr 的說明啊！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>正規表示法就是處理字串的方法，他是以行為單位來進行字串的處理行為；</li>
+
+	<li>正規表示法透過一些特殊符號的輔助，可以讓使用者輕易的達到『搜尋/刪除/取代』某特定字串的處理程序；</li>
+	<li>只要工具程式支援正規表示法，那麼該工具程式就可以用來作為正規表示法的字串處理之用；</li>
+	<li>正規表示法與萬用字元是完全不一樣的東西！萬用字元 (wildcard) 代表的是 bash 操作介面的一個功能，
+		但正規表示法則是一種字串處理的表示方式！</li>
+	<li>使用 grep 或其他工具進行正規表示法的字串比對時，因為編碼的問題會有不同的狀態，因此，
+ 		你最好將 LANG 等變數設定為 C 或者是 en 等英文語系！</li>
+	<li>grep 與 egrep 在正規表示法裡面是很常見的兩支程式，其中， egrep 支援更嚴謹的正規表示法的語法；</li>
+	<li>由於編碼系統的不同，不同的語系 (LANG) 會造成正規表示法擷取資料的差異。因此可利用特殊符號如 [:upper:] 
+		來替代編碼範圍較佳；</li>
+
+	<li>由於嚴謹度的不同，正規表示法之上還有更嚴謹的延伸正規表示法；</li>
+	<li>基礎正規表示法的特殊字符有： *, ?, [], [-], [^], ^, $ 等！</li>
+	<li>常見的正規表示法工具有： grep , sed, vim 等等</li>
+	<li>printf 可以透過一些特殊符號來將資料進行格式化輸出；</li>
+	<li>awk 可以使用『欄位』為依據，進行資料的重新整理與輸出；</li>
+	<li>文件的比對中，可利用 diff 及 cmp 進行比對，其中 diff 主要用在純文字檔案方面的新舊版本比對</li>
+
+	<li>patch 指令可以將舊版資料更新到新版 (主要亦由 diff 建立 patch 的補丁來源檔案)</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+	<li>情境模擬題一：透過 grep 搜尋特殊字串，並配合資料流重導向來處理大量的檔案搜尋問題。<br /><br />
+	<ul>
+
+		<li>目標：正確的使用正規表示法；</li>
+		<li>前提：需要瞭解資料流重導向，以及透過子指令 $(command) 來處理檔名的搜尋；</li>
+	</ul><br />
+
+	我們簡單的以搜尋星號 (*) 來處理底下的任務：<br /><br />
+
+	<ol style="padding-left: 0px">
+	<li>利用正規表示法找出系統中含有某些特殊關鍵字的檔案，舉例來說，找出在 /etc 底下含有星號 (*) 的檔案與內容：<br /><br />
+
+	解決的方法必須要搭配萬用字元，但是星號本身就是正規表示法的字符，因此需要如此進行：
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep '\*' /etc/*</span>
+</pre></td></tr></table>
+
+	你必須要注意的是，在單引號內的星號是正規表示法的字符，但我們要找的是星號，因此需要加上跳脫字符 (\)。但是在 
+	/etc/* 的那個 * 則是 bash  的萬用字元！
+	代表的是檔案的檔名喔！不過由上述的這個結果中，我們僅能找到 /etc 底下第一層子目錄的資料，無法找到次目錄的資料，
+	如果想要連同完整的 /etc 次目錄資料，就得要這樣做：
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep '\*' $(find /etc -type f)</span>
+</pre></td></tr></table><br /></li>
+
+	<li>但如果檔案數量太多呢？如同上述的案例，如果要找的是全系統 (/) 呢？你可以這樣做：
+
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">grep '\*' $(find / -type f)</span>
+-bash: /bin/grep: Argument list too long
+</pre></td></tr></table>
+
+	真要命！由於指令列的內容長度是有限制的，因此當搜尋的對象是整個系統時，上述的指令會發生錯誤。那該如何是好？
+	此時我們可以透過管線命令以及 xargs 來處理。舉例來說，讓 grep 每次僅能處理 10 個檔名，此時你可以這樣想：<br /><br />
+	<ol type="a">
+		<li>先用 find 去找出檔案；</li>
+		<li>用 xargs 將這些檔案每次丟 10 個給 grep 來作為參數處理；</li>
+
+		<li>grep 實際開始搜尋檔案內容。</li>
+	</ol><br />
+	所以整個作法就會變成這樣：
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">find / -type f | xargs -n 10 grep '\*'</span>
+</pre></td></tr></table><br /></li>
+
+	<li>從輸出的結果來看，資料量實在非常龐大！那如果我只是想要知道檔名而已呢？你可以透過 grep 的功能來找到如下的參數！
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">find / -type f | xargs -n 10 grep -l '\*'</span>
+
+</pre></td></tr></table><br /></li>
+	</ol></li>
+
+	<li>情境模擬題二：使用管線命令配合正規表示法建立新指令與新變數。我想要建立一個新的指令名為 myip ，
+	這個指令能夠將我系統的 IP 捉出來顯示。而我想要有個新變數，變數名為 MYIP ，這個變數可以記錄我的 IP 。<br /><br />
+
+	處理的方式很簡單，我們可以這樣試看看：<br /><br />
+
+	<ol style="padding-left: 0px">
+		<li>首先，我們依據本章內的 ifconfig, sed 與 awk 來取得我們的 IP ，指令為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ifconfig eth0 | grep 'inet addr' | \</span>
+&gt;  <span class="term_command">sed 's/^.*inet addr://g'| cut -d ' ' -f1</span>
+</pre></td></tr></table></li>
+
+		<li>再來，我們可以將此指令利用 alias 指定為 myip 喔！如下所示：
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">alias myip="ifconfig eth0 | grep 'inet addr' | \</span>
+&gt;  <span class="term_command">sed 's/^.*inet addr://g'| cut -d ' ' -f1 "</span>
+
+</pre></td></tr></table></li>
+
+		<li>最終，我們可以透過變數設定來處理 MYIP 喔！
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">MYIP=$( myip )</span>
+</pre></td></tr></table></li>
+
+		<li>如果每次登入都要生效，可以將 alias 與 MYIP 的設定那兩行，寫入你的 ~/.bashrc 即可！</li>
+	</ol></li>
+</ul><br />
+
+<hr />簡答題部分：
+<ul>
+	<li>我想要知道，在 /etc 底下，只要含有 XYZ 三個字元的任何一個字元的那一行就列出來，要怎樣進行？
+	<div class="blockex">
+		grep [XYZ] /etc/*
+	</div></li>
+
+	<li>將 /etc/termcap 內容取出後，(1)去除開頭為 # 的行 (2)去除空白行 (3)取出開頭為英文字母的那幾行 (4)最終統計總行數該如何進行？
+	<div class="blockex">
+		grep -v '^#' /etc/termcap | grep -v '^$' | grep '^[:alpha:]' | wc -l
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：關於正規表示法與 POSIX 及特殊語法的參考網址可以查詢底下的來源：<br />
+		維基百科的說明：<a href="http://en.wikipedia.org/wiki/Regular_expression"
+		target="_blank">http://en.wikipedia.org/wiki/Regular_expression</a><br />
+		ZYTRAX 網站介紹：<a href="http://zytrax.com/tech/web/regex.htm"
+		target="_blank">http://zytrax.com/tech/web/regex.htm</a><br /></li>
+
+	<li><a name="ps2"></a>註2：其他關於正規表示法的網站介紹：<br />
+		洪朝貴老師的網頁：<a href="http://www.cyut.edu.tw/~ckhung/b/re/index.php" 
+		target="_blank">http://www.cyut.edu.tw/~ckhung/b/re/index.php</a><br />
+		龍門少尉的窩：<a href="http://main.rtfiber.com.tw/~changyj/" 
+		target="_blank">http://main.rtfiber.com.tw/~changyj/</a><br />
+		PCRE 官方網站：<a href="http://perldoc.perl.org/perlre.html"
+		target="_blank">http://perldoc.perl.org/perlre.html</a><br /></li>
+	<li><a name="ps3"></a>註3：關於 ASCII 編碼對照表可參考維基百科的介紹：<br />
+
+		維基百科 (ASCII) 條目： <a href="http://zh.wikipedia.org/w/index.php?title=ASCII&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=ASCII&amp;variant=zh-tw</a></li>
+	<li><a name="ps4"></a>註4：關於 awk 的進階文獻，包括有底下幾個連結：<br />
+		中研院計算中心 ASPAC 計畫之 awk 程式介紹：<a href="http://phi.sinica.edu.tw/aspac/reports/94/94011/"
+		target="_blank">http://phi.sinica.edu.tw/aspac/reports/94/94011/</a><br />
+		鳥哥備份：<a href="http://linux.vbird.org/linux_basic/0330regularex/awk.pdf"
+		target="_blank">http://linux.vbird.org/linux_basic/0330regularex/awk.pdf</a><br />
+		這份文件寫的非常棒！歡迎大家多多參考！<br />
+
+		Study Area：<a href="http://www.study-area.org/linux/system/linux_shell.htm" 
+		target="_blank">http://www.study-area.org/linux/system/linux_shell.htm</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/07/29：第一次完成；<br />
+2003/02/10：重新編排與加入 FAQ ；<br />
+2005/01/28：重新彙整基礎正規表示法的內容！重點在 regular_express.txt 的處理與練習上！<br />
+2005/03/30：修訂了 grep -n 'goo*g' regular_express.txt 這一段<br />
+
+2005/05/23：修訂了 grep -n '^[a-z]' regular_express.txt 所要擷取的是小寫，之前寫成大寫，錯了！<br />
+2005/08/22：加入了 awk, sed 等工具的介紹，還有 diff 與 cmp 等指令的說明！<br />
+2005/09/05：加入 printf 內，關於 \xNN 的說明！<br />
+2006/03/10：將原本的 sed 內的動作(action)中， s 由『搜尋』改成『取代』了！<br />
+2006/10/05：在 sed 當中多了一個 -i 的參數說明，也多了一個範例八可以參考。感謝討論區的thyme兄！<br />
+2008/10/08：加入 grep 內的 --color=auto 說明！<br />
+2009/02/07：將舊的基於 FC4 版本的文章移動到<a href="0330regularex/0330regularex-fc4.php">此處</a><br />
+2009/02/10：重新排版，並且加入<a href="#lang">語系</a>的說明，以及特殊 [:資料:] 的說明！更改不少範例的說明。<br />
+
+2009/05/14：感謝網友 Jack 的回報， cmp 應該是使用『位元組 bytes』而非位元 bits，感謝 Jack 兄。<br />
+2009/08/26：加入情境模擬題目了！<br />
+</span>
+<hr />
+<br />
+    </td>
+  <!-- InstanceEndEditable -->
+  
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+<!-- InstanceEnd --></html>
