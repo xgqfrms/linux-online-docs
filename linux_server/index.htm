@@ -1,0 +1,491 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="VBird's Linux 架站文件彙整" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 伺服器架設篇目錄</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="index.htm">
+    <span class="text_head0">鳥哥的<span class="text_head_en"> Linux </span>私房菜 -- 伺服器架設篇目錄</span></a><br />
+</div>
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+<center><span class="text_h2">特別強調</span></center>
+	底下這些文件主要是針對 Linux 的網路伺服器架設來書寫的，鳥哥主要以使用 RPM 安裝的 CentOS 作為基礎的作業系統，
+	CentOS 是屬於 Red Hat 系統的作業系統，所以理論上 RHEL, CentOS, Fedora 等版本都適用的啦！
+	為什麼要使用預設的套件管理方式來安裝所有的伺服器呢？這是因為大多數的 Linux 開發商都會有所謂的線上升級系統，
+	包括 CentOS/Fedora 的 yum ，以及 SuSE 的 YOU ，還有 Debian 的 apt 等等，
+	因為有線上『自動升級』，所以當然會比您自己手動使用 Tarball 的安裝方式來的方便且安全！
+	因為你的系統上頭所有的資料可以在第一時間內『自動』修補完畢嘛！<br /><br />
+
+	要架設好一部 Linux 主機實在很簡單，只要按照鳥哥網站上的步驟，一步一步的慢慢設定下去，
+	鐵定可以完成您的設定的！但是，要維護好一部 Linux 主機，卻是很困難的！您必須要熟悉 
+	Linux 的系統架構、網路的基本知識如協定、IP、路由、DNS
+	等等的基礎知識才行！<br /><br />
+
+	無論如何，您要開始『伺服器架設篇』之前，請務必先讀完『<a href="../linux_basic/">Linux 基礎篇</a>』的文章才行！
+	否則幾乎就如同上面提到的，維護這樣的一部 Linux
+	主機，是很花時間的！沒有這個認知，那就不要架站吧！免得毒害其他的同袍吶！<br /><br />
+
+	在架站的過程當中，無論出現任何問題，第一個步驟就是察看登錄檔 (log file)，那是克服問題的地方！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+<a href="#part1">第一部份：架站前的進修專區</a><br />
+<a href="#part2">第二部分：主機的簡易防火措施</a><br />
+<a href="#part3">第三部分：區域網路內與小型企業常見伺服器架設</a><br />
+<a href="#part4">第四部分：一些舊資料</a><br />
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+
+<a name="part1"></a>
+<hr /><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">第一部份：架站前的進修專區</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	架站需要很強的 Linux 基礎概念以及網路基礎知識，否則的話，當網路斷斷續續的時候，您永遠也不會知道是哪裡出問題！
+	而當某個伺服器軟體出問題的時候，您永遠也不曉得是發生了什麼事情！老人家說『對症下藥才有效』，
+	隨便吃藥是不可能『無病強身』的！因此，對於網路伺服器來說最重要的基礎檔案權限、程序之啟動關閉與管理、
+	Bash shell 之操作與 script 、使用者帳號的管理等等，您都必須要具備最基礎的認知才行，
+	否則，網路真的不好碰！<br /><br />
+
+	在這一篇當中，鳥哥會介紹一下架設伺服器之前你必須要具備的基礎觀念，以及重要的網路基礎，
+	當然啦，一大堆的網路指令是需要熟悉的。這些網路指令不是要你背起來，
+	而是希望在你需要的時候可以很快速的查閱到如何使用的說！
+	無論如何，請您務必在架站前『<a href="../linux_basic/">讀過 Linux 基礎篇</a>』及『
+	<a href="0110network_basic.htm">讀過網路基礎篇</a>』的文章，否則大家很難跟您討論呢！
+	這個部分鳥哥放在最前面，希望大家『務必』要查看這些資料啊！<br /><br /></span>
+
+	<table width="100%" cellspacing="0" cellpadding="5" style="text-align:justify" border="1">
+	    <tr>
+		<td width="170" align="center">
+			<a href="0103introduce.htm">序言</a>
+			<br /><font face="細明體" size="-1">2003/07/14</font>
+		</td>
+		<td><font size="-1">
+			先來談一談架站篇的內容吧！得瞭解一下這個篇幅當中主要在介紹些什麼？
+			還有，您要如何進入伺服器的架設狀況呢？！有些事情還是得瞭解的啦！
+		</font></td></tr>
+
+	    <tr>
+		<td align="center">
+			<a href="0105beforeserver.htm">架站之前所需<br />的技能分析</a>
+			<br /><font face="細明體" size="-1">2006/02/08</font>
+		</td>
+		<td><font size="-1">
+			架站之前您至少需要學會什麼咚咚呢？可能要知道的有『什麼是群組、使用者與其他類群組？』
+		『什麼是檔案的權限與樹狀目錄？』『什麼是
+		Shell 與 Shell Scripts ？』『什麼是服務？』以及其他林林總總需要瞭解的事項，
+		不知道這些東西，那就不要想架站啦！否則....怎麼翹辮子的都不曉得哩！
+		</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0110network_basic.htm">簡易網路基礎架構</a>
+			<br /><font face="細明體" size="-1">2006/07/12</font>
+		</td>
+		<td><font size="-1">要進入多樣化的網路世界之前，請先瞭解一下網路的基礎架構吧！例如：什麼是
+		IP？ 一個資料封包傳送到 Internet 上面的時候，他的程序是如何進行的？什麼是
+		TCP 封包？另外， Hub 與 Switch 哪一個比較好？為什麼呢？嘿嘿！這個在架站之前都必須要先瞭解一下，
+		否則怎麼架站呀！？而且瞭解整個網路架構之後，比較容易網路除錯呦！
+		</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0120intranet.htm">區域網路架構簡介</a>
+			<br /><font face="細明體" size="-1">2006/07/15</font>
+		</td>
+		<td><font size="-1">在瞭解了基本的 <a href="0110network_basic.htm">網路架構</a>
+		之後，再來就是將你家的電腦全部連在一起好做成一個 LAN 啦！那你預計有幾台
+		PC 在你的 Linux 主機附近？要怎麼連接這些不同的電腦才行？需要哪些網路參數？
+		該如何挑選你的網路硬體裝置及一些線材的選擇？另外，<span class="text_import2">先將你的
+		Windows 電腦的網路設定搞定</span>吧！呵呵！來這裡查看看吧！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0130internet_connect.htm">連上 Internet</a>
+			<br /><font face="細明體" size="-1">2006/07/24</font>
+		</td>
+		<td><font size="-1">如何連上 Internet 呢？ Linux 的網路相關設定檔案有哪些？使用
+			ADSL 撥接、Cable moden 的上網方式、以及固定
+			IP 的上網方式是怎樣的一個狀態？！此外，萬一你是 ADSL 撥接的，而你的網路斷線了，
+			要如何隨時讓 Linux 自行偵測，並且讓他自行重新撥接呢？來這裡看看我們是怎樣做的吧！！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0140networkcommand.htm">Linux 網路功能</a>
+			<br /><font face="細明體" size="-1">2006/08/02</font>
+		</td>
+		<td><font size="-1">嘿嘿！已經可以連接上網路了嗎？如果可以的話，那就恭喜你囉！那麼趕快來試一試
+			Linux 的網路功能吧！先利用 ping, ifconfig, route, traceroute 來看看你的網路結構；再利用
+			telnet, ftp, ncftp 來試試看 Linux 強大的網路功能哩！此外，我們還有文字界面的瀏覽器
+			lynx 呦！另外，嘻嘻！還有 wget 這個好用的下載軟體呢！還要介紹怎麼查詢其他
+			Internet 上面的主機 IP 呦！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0150detect_network.htm">Linux 網路偵錯</a>
+			<br /><font face="細明體" size="-1">2006/08/04</font>
+		</td>
+		<td><font size="-1">瞭解了基礎的網路功能之後，現在要來解決你無法連上
+			Internet 的困擾囉！對！沒錯！不要懷疑，就是一些 FAQ 問題的總整理啦！呵呵！如果你一直無法連接上
+			Internet 的話，這裡面的資料或許會對你有啟發的作用呢！趕快來除蟲吧！</font></td></tr>
+</table>
+</div>
+
+
+<a name="part2"></a>
+<hr /><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">第二部分：主機的簡易防火措施</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	有很多團體做過許多作業系統安全性偵測的研究，他們發現一部沒有經過更新與保護的 Linux/Windows 主機
+	(不論是一般個人電腦還是伺服器)，只要一接上 Internet 幾乎可以在三小時以內就被入侵或被當成跳板！
+	您瞧瞧，這是啥世界啊～所以說，要好好的保護好您自己的伺服器主機才行喔！那應該要如何保護你的伺服器主機呢？
+	基本上，你最要知道的是你的伺服器開了多少網路服務，而這些服務會啟動什麼埠口？
+	根據這層關係來關閉一些不必要的網路服務。再者，利用線上更新系統讓你的 Linux 隨時保持在最新的軟體的狀態，
+	這個小動作可以預防絕大部分的入侵攻擊，可以說是最重要的一步了！最後才是架設基礎防火牆。<br /><br />
+
+	因為 Linux 的功能太強了，如果你不好好的保護好你的主機，要是被入侵並且被當成跳板，這可能會讓您吃上官司的！
+	不要小看這層動作喔！雖然被入侵後只要將就系統移除並且重灌後，你的伺服器主機就能夠『短暫』的恢復正成，
+	不過如過您的一些操作習慣不改的話，呵呵，並不是重灌就能夠讓你的伺服器主機活的好好的喔！
+	所以囉，我們在架站之前，基本的網路防備措施還是得來瞭解一下，免得三不五時要重灌、重灌、重灌、、、、<br /><br /></span>
+
+	<table width="100%" cellspacing="0" cellpadding="5" style="text-align:justify" border="1">
+	<tr>
+		<td width="170" align="center">
+			<a href="0210port_limit.htm">限制對外埠口 port</a>
+			<br /><font face="細明體" size="-1">2006/08/08</font>
+		</td>
+		<td><font size="-1">在上網之前，最起碼要知道你的 port 目前開放了哪些呢？
+			最重要的工作就是，將所有的 port 都給他關閉 (反正我們還沒有提到架站的部分)
+			，那麼這些關閉 port 的地方在哪裡？要如何關閉？每個
+			port 對應的服務是什麼？在哪裡可以查詢到？來這兒瞧一瞧！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0220upgrade.htm">Linux 網路套件升級</a>
+			<br /><font face="細明體" size="-1">2006/08/16</font>
+		</td>
+		<td><font size="-1">曉得你能上網之後的第一件工作嗎？不是查資料！不是申請
+			DNS ，也不是去看新聞，而是去『更新你的套件！』這個相當的重要，
+			請您立刻更新你的套件版本，否則....嘿嘿....怎麼被怪客入侵的都不曉得呢！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0230router.htm">簡易 Router 架設</a>
+			<br /><font face="細明體" size="-1">2006/08/30</font>
+		</td>
+		<td><font size="-1">這個可就有趣啦！我們要介紹一下如何在 Linux 這個系統當中，
+			讓他可以當作一個高貴的 Router 哩！這個應該很適合小型的企業內部來使用！用 486 
+			的電腦就可以達成囉！同時我們也會介紹動態路由軟體 zebra 哩！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0240network-secure-1.htm">認識網路安全</a>
+			<br /><font face="細明體" size="-1">2006/09/06</font>
+		</td>
+		<td><font size="-1">好了！好不容易，連那個 <a href="0230router.htm">Router</a>
+			都是屬於內部網路的延伸，現在終於來到要進入 Network 架設安全的網站啦！
+			不過，在這個時候可得先來瞭解一下，嘿嘿嘿嘿！我們的
+			Internet 到底有多危險哪？！這才是進入網路的第一課呢！會架設網站沒啥了不起，
+			但是會架設一個『安全的網站』，哇！那可真是了不起呀！在這一小節當中，
+			我們會約略的談一談網路安全的幾個基礎概念而已，比較重要的是：
+			『如何恢復一部被入侵的主機』！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0250simple_firewall.htm">防火牆與 NAT</a>
+			<br /><font face="細明體" size="-1">2006/09/15</font>
+		</td>
+		<td><font size="-1">好了，目前你的所有的內部電腦都可以上網囉！這個時候，
+			請特別留意你的『防火牆』囉！我們這裡選擇
+			iptables 與 TCP_Wrappers 來進行我們的防火牆規劃設定，嗯！
+			這個防火牆真的很簡單，所以還要再加強其他的考慮呦！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0270dynamic_dns.htm">申請合法的主機名稱</a>
+			<br /><font face="細明體" size="-1">2006/09/16</font>
+		</td>
+		<td><font size="-1">要架站嗎？嘿嘿！當然就需要讓你的主機有一個『合法』的名字囉！
+			那麼如何『建立一個合法的名字呢』？最簡單的方式就是向
+			ISP 申請主機名稱的對應了！而主機名稱的對應有靜態與動態兩種，我們這裡會介紹
+			www.no-ip.org 的申請方式，當然不會放過 .idv.tw 的申請流程囉！</font></td></tr>
+	</table>
+</div>
+
+
+<a name="part3"></a>
+<hr /><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">第三部分：區域網路內與小型企業常見的伺服器架設</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	在開始實際 Linux 的網路伺服器架設之前，切記前面兩篇的內容都已經閱讀過，並且已經強化您主機的網路安全後，才開始架設吧！
+	在這一篇當中我們會介紹區域網路內常見的 DHCP, NFS, NIS, SSH, vsFTP, SAMBA 等伺服器，當然啦，常見的網際網路伺服器如：
+	WWW, email, DNS 等也不會放過的！這些伺服器的設定以及未來的應用是非常好玩的，不過如果前面兩篇您沒有預先讀過，
+	那麼您的伺服器被入侵也是一個可以『預期』的後果！所以囉，看完前兩篇後，仔細的開始瞧一瞧這一篇的伺服器吧！ ^_^
+	<br /><br /></span>
+
+	<table  width="100%" cellspacing="0" cellpadding="5" style="text-align:justify" border="1">
+	<tr>
+		<td width="170" align="center">
+			<a href="0310telnetssh.htm">遠端連線伺服器<br />telnet, ssh, rsh, vnc, xdmcp</a>
+			<br /><font face="細明體" size="-1">2006/09/19</font>
+		</td>
+		<td><font size="-1">Linux 由於安全性的考量，所以目前已經預設不開放
+			telnet 囉，好了，那麼如果你還想要開放 telnet 怎麼辦？又！如果要開放 SSH
+			又要怎麼辦，又！如果要針對這兩個咚咚來設定安全機制，又要怎麼做？！鳥哥來提供幾個小建議吧！
+			還有，有了 sftp 幹嘛需要開放 FTP 呢？</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0330nfs.htm">NFS 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/09/22</font>
+		</td>
+		<td><font size="-1">最簡單的伺服器架設之一就是 NFS 了！架設真的是很簡單！不過，這個
+			NFS 有什麼用途呀！呵呵！他就是 Linux &lt;-> Linux 檔案傳送之間最簡便的方式之一了！
+			架設簡單，使用也很簡單，不過，就是有點危險～所以，我們只要對內部開放就好了呦！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0430nis.htm">NIS 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/10/11</font>
+		</td>
+		<td><font size="-1">NIS 是什麼東西呢？假如我有好幾部l Linux 主機，而這幾部 Linux 
+			主機的『帳號與密碼其實都一樣』啊！這樣的架構其實在一般的企業界是很常見的，果真如此的話，如果每一部
+			Linux 主機都要設定帳號密碼，會瘋掉，此時就需要 NIS 的幫忙啦！NIS 
+			可以讓網域當中所有使用者的帳號與密碼都放置在一部
+			NIS server 當中，至於其他的 Linux 主機就做為 NIS Client ，當有用戶要登入
+			NIS client 時，那麼 NIS client 就會向 NIS server 要求讀取帳號與密碼的資料，如此一來，只要在
+			NIS server 上面進行帳號與密碼的管理即可囉！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0340dhcp.htm">DHCP 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/12/06</font>
+		</td>
+		<td><font size="-1">DHCP 就是分配『動態 IP 』的協定啦！那麼如果你的內部網路還蠻大的，
+			而且你又不想一個一個的去設定你的
+			Client( 客戶 ) 的電腦，那麼使用 DHCP 實在是一個很方便的事情！不過，由於
+			Client 端每次開機都要搜尋一次 DHCP ，所以開機速度很慢，建議內部電腦不多的時候，
+		還是手動設定比較好ㄋㄟ～</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0350dns.htm">DNS 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/10/20</font>
+		</td>
+		<td><font size="-1">可以的話，最好是不要架設 DNS 啦！一者，很難設定的好，二者，
+			又有安全性上面的顧慮，所以，非必要，鳥哥個人認為，還是不要設定
+			DNS 伺服器的好！但是，很多時候，偏偏沒有 DNS 在管理主機名稱上面，又很麻煩！唉！
+			當真是兩難吶！我們這裡會先提一個觀念：『我要架站，是否一定需要架設
+			DNS 伺服器？』這個觀念相當的重要，很多人都被市面上的書誤導了～再者，才是簡易的
+			DNS 設定啦！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0360apache.htm">WWW 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/11/10</font>
+		</td>
+		<td><font size="-1">目前最熱門的網頁伺服器之一，就是 LAMP 囉，什麼是
+			LAMP 呢？吶！簡單的說，也沒有什麼了不起，不過是 Linux + Apache + MySQL
+			+ PHP 囉！這裡我們除了介紹最簡單的 RPM 方式安裝的 LAMP 伺服器，如果要升級！哇！可累了～要使用
+			tarball ㄋㄟ！此外，還會介紹 2.xx 版的 Apache 喔！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0380mail.htm">Mail 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/11/30</font>
+		</td>
+		<td><font size="-1">
+			在這個郵件伺服器的架設中，我們首先談論 Mail 與 DNS 的重要相關性，然後依序介紹 Mail Server 
+			的相關名詞，以及 Mail Server 的運作基本流程與協定，也會談到相關的 Relay 
+			與郵件認證機制等項目， 這些項目對於未來郵件主機的管理與設定是重要的，請不要忽略了這方面問題的討論喔。 
+			在這篇新文章中，我們將 sendmail 與 postfix 合在一起講了，因為目前 Postfix 
+			這個伺服器的設定上面具有比較佳的親和力， 所以 sendmail 我們僅作個簡單的介紹，主要在以 Postfix 
+			為主的郵件主機架設喔！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0370samba.htm">SAMBA 伺服器</a>
+			<br /><font face="細明體" size="-1">2006/12/29</font>
+		</td>
+		<td><font size="-1">Linux 對 Linux 使用的是 NFS ，那麼 Windows 對 Windows
+			使用的是 NetBEUI ，好了，那麼 Linux 對 Windows 用的是什麼？沒辦法，配合
+			Windows ，所以我們使用的也是 NetBEUI 囉！而使用的套件就是 SAMBA 啦！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0410vsftpd.htm">vsFTPd 檔案伺服器</a>
+			<br /><font face="細明體" size="-1">2006/12/20</font>
+		</td>
+		<td><font size="-1">
+			vsftpd 是 very secure FTP daemon 的意思，這是個較為簡單但比較強調安全議題的一個 FTP
+			伺服器軟體說。雖然功能比較簡單，不過該有的也都有了，
+			用 vsftpd  來架設一部提供校內共同分享資料的 FTP 伺服器真的是簡單啊！
+			所以，那就趕緊來瞧瞧先！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0440ntp.htm">NTP 時間伺服器</a>
+			<br /><font face="細明體" size="-1">2006/12/08</font>
+		</td>
+		<td><font size="-1">NTP 的全名是『Network Time Protocol』，主要的功能就是讓
+			Client 端的電腦可以透過 NTP 這個協定來進行網路校時的工作啊！什麼時候需要網路校時呢？呵呵！像鳥哥的
+			Cluster 就需要時間同步的說～</font></td></tr>
+	<tr>
+		<td align="center">
+		<a href="0420squid.htm">簡易 Proxy 伺服器</a>
+		<br /><font face="細明體" size="-1">2003/09/16</font>
+		</td>
+		<td><font size="-1">
+		代理伺服器這個東西對於大企業可了不得囉！可以提升內部的網路的速度呢！雖然是有點奇怪的說法，
+		不過，他確實可以『假象』的提升企業內部的網路工作效率，嘿嘿，廢話不多說，趕快來看看怎樣架設吧！</font></td></tr>
+
+	<tr>
+		<td align="center">
+			<a href="0450apt.htm">簡易 APT Server</a>
+			<br /><font face="細明體" size="-1">2003/08/27</font>
+		</td>
+		<td><font size="-1">APT (Advanced Package Tool) 是由 debian 這個 distribution 
+			所發展的一個套件管理工具，不過因為太好用了，所以很多機構就將他設計成為可以符合其他
+			distribution 做為網路更新的一項利器！在這個章節當中，我們要介紹如何在 Red
+			Hat 9 上面建置一個 ATP 伺服器，並且提供 Mandrake 的更新給 Client 端來更新使用！</font></td></tr>
+	<tr>
+		<td align="center">
+			<a href="0520openwebmail.htm">OpenWebMail</a>
+			<br /><font face="細明體" size="-1">2004/08/26</font>
+		</td>
+		<td><font size="-1">
+		使用 Webmail 可以避免大部分的病毒信呢！所以這個小東西有越來越熱門的趨勢！
+		在這裡，我們使用台灣人自己寫的一套自由軟體：OpenWebMail 來架設我們的 MUA ！
+		很不錯的東西！趕緊來看看先！</font></td></tr>
+	<tr>
+		<td align="center">
+		<a href="0600cluster.htm">平行計算電腦的建置</a>
+		<br /><a href="0600cluster.htm">Cluster Server</a>
+		<br /><font face="細明體" size="-1">2003/05/12</font>
+		</td>
+		<td><font size="-1">
+		當您想要使用電腦來進行大量的計算時，呵呵！這個平行計算電腦的架構就顯得相當的重要啦！基本上，
+		Cluster (叢集電腦) 的解釋相當的紊亂，我們這裡主要以『平行計算』的功能來做為
+		cluster 的說明！什麼是平行計算呢？當你需要使用數值模式(一些很龐大的程式，會使用到很大量的
+		CPU 運算功能)，那麼越多顆 CPU 來分擔這樣的工作，自然運算的速度就越快了！而這個將運算資料同時丟給很多顆
+		CPU 來跑得功能，就是我們簡稱的平行運算啦！</font></td></tr>
+	<tr>
+		<td align="center">
+			<a href="1000results.htm">課後練習的參考解答</a>
+		</td>
+		<td><font size="-1">
+		每個章節雖然不見得會有課後練習，不過還是有很多的練習題啊！這些練習題真的可以嘗試作作看，對於新手來說，
+		這個練習題絕對會有幫助的！我這裡僅列出鳥哥自己的解答，解答的比較粗淺，不過，還是可以做為讀者參考的依據咯！</font></td></tr>
+	</table>
+</div>
+
+
+<a name="part4"></a>
+<hr /><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">第四部分：一些舊資料</span><br />
+<div class="block1" style="text-align:justify">
+	<span class="text_import2">
+	一些比較老舊的資料啦！僅供參考而已～
+	<br /><br /></span>
+
+	<table width="100%" cellspacing="0" cellpadding="5" style="text-align:justify" border="1">
+            <tr valign="middle">
+                <td width="170" align="center"> 內容大綱 </td>
+                <td align="center">主要內容說明</td>
+            </tr>
+	<tr>
+		<td align="center">
+			Red Hat 6.x 舊文件 <br /><font face="細明體" size="-1">1999~2001</font>
+		</td>
+		<td><font size="-1">這些是早期針對Red Hat 6.x所寫的伺服器設定文章，當時寫的簡單到不行，
+		很多地方甚至可能是有錯誤的！所以，除非您的系統是Red Hat 6.x版，否則不要再看啦！...</font></td></tr>
+	<tr>
+		<td align="center">
+			伺服器篇第一版 <br /><font face="細明體" size="-1">2002~2005</font>
+		</td>
+		<td><font size="-1">
+		這些文件則是鳥哥的伺服器篇第一版的內容，寫成的時間大約是2003年，但是直到2005年都還有在進行修改～
+		這些文章與書籍內的就非常相近了！列出來主要是讓大家容易查閱與對照啦！<a
+		href="redhat9.htm">...</a></font></td></tr>
+	<tr>
+		<td align="center">
+			伺服器篇第二版
+			<br /><font face="細明體" size="-1">2005~2008</font>
+		</td>
+		<td><font size="-1">
+		這個部分則是第二版的內容，不過目前站上的資料還沒有開始進行修改，所以這部份還沒有開始進行彙整囉～
+		</font></td></tr>
+	</table>
+</div>
+
+
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

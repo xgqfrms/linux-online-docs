@@ -1,0 +1,1452 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718"><!-- 本文的檔頭部分 -->
+    <div style="text-align:center"> <span class="text_head0">第零章、計算機概論</span><br />
+    </div>
+    <div style="text-align:right"> <span class="text_history">最近更新日期：2009/08/03</span> </div>
+    <!-- 本文的檔頭部分 -->
+    <table class="head1" summary="排版：文章檔頭的說明">
+      <tr>
+        <td class="head1"> 這幾年鳥哥開始在大學任教了，在教學的經驗中發現到，由於對 Linux 有興趣的朋友很多可能並非資訊相關科系出身，
+          因此對於電腦硬體及計算機方面的概念不熟。然而作業系統這種咚咚跟硬體有相當程度的關連性，
+          所以，如果不瞭解一下計算機概論，要很快的瞭解 Linux 的概念是有點難度的。因此，鳥哥就自作聰明的新增一個小章節來談談計概囉！
+          因為鳥哥也不是資訊相關學門出身，所以，寫的不好的地方請大家多多指教啊！^_^ </td>
+      </tr>
+    </table>
+    <br />
+    <!-- 本文的連結區部分 -->
+    <div class="block1"> <span class="text_h1"> 1. <a href="#computer">電腦：輔助人腦的好工具</a><br />
+      <span class="text_h2"> 　　1.1 <a href="#computer_hw">電腦硬體的五大單元</a><br />
+        1.2 <a href="#computer_cpu">CPU的種類</a><br />
+        1.3 <a href="#computer_other">周邊設備</a><br />
+        1.4 <a href="#computer_flow">運作流程</a><br />
+        1.5 <a href="#computer_type">電腦分類</a><br />
+        1.6 <a href="#computer_unit">電腦上面常用的計算單位 (容量、速度等)</a><br />
+        </span> 2. <a href="#pc">個人電腦架構與周邊設備</a><br />
+      <span class="text_h2"> 　　2.1 <a href="#pc_cpu">CPU</a>： <a href="#pc_cpu_speed">CPU的外頻與倍頻</a>, <a href="#pc_cpu_arch">32位元與64位元</a>, <a href="#pc_cpu_arch2">CPU等級</a><br />
+        2.2 <a href="#pc_ram">記憶體</a><br />
+        2.3 <a href="#pc_vga">顯示卡</a><br />
+        2.4 <a href="#pc_hd">硬碟與儲存設備</a><br />
+        2.5 <a href="#pc_pci">PCI介面卡</a><br />
+        2.6 <a href="#pc_mb">主機板</a><br />
+        2.7 <a href="#pc_power">電源供應器</a><br />
+        2.8 <a href="#pc_select">選購須知</a><br />
+        </span> 3. <a href="#data">資料表示方式</a><br />
+      <span class="text_h2"> 　　3.1 <a href="#data_number">數字系統</a><br />
+        3.2 <a href="#data_word">文字編碼系統</a><br />
+        </span> 4. <a href="#program">軟體程式運作</a><br />
+      <span class="text_h2"> 　　4.1 <a href="#program_mechin">機器程式與編譯程式</a><br />
+        4.2 <a href="#program_os">作業系統</a><br />
+        4.3 <a href="#program_ap">應用程式</a><br />
+        </span> 5. <a href="#hint">重點回顧</a><br />
+      6. <a href="#ex">本章習題</a><br />
+      7. <a href="#reference">參考資料與延伸閱讀</a><br />
+      <span class="text_h2"> 8. <a href="http://phorum.vbird.org/viewtopic.php?t=31574"
+	target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=31574</a> </span> </span> </div>
+    <!-- 本文的正式部分 -->
+    <hr />
+    <a name="computer" id="computer"></a><span class="text_h1">電腦：輔助人腦的好工具</span><br />
+    <div class="block1">
+      <p>進入二十一世紀的現在，沒有用過電腦的朋友應該算很少了吧？但是，你瞭解電腦是什麼嗎？
+        電腦的機殼裡面含有什麼元件？不同的電腦可以作什麼事情？你生活周遭有哪些電器用品內部是含有電腦相關元件的？
+        底下我們就來談一談這些東西呢！</p>
+      <p>所謂的電腦就是一種計算機，而計算機其實是：『<span class="text_import2">接受使用者輸入指令與資料，
+        經由中央處理器的數學與邏輯單元運算處理後，以產生或儲存成有用的資訊</span>』。
+        因此，只要有輸入設備 (不管是鍵盤還是觸控式螢幕)及輸出設備(螢幕或直接列印出來)，讓你可以輸入資料使該機器產生資訊的，
+        那就是一部計算機了。</p>
+      <center>
+        <img src="0105computers/computer01.gif" alt="計算機的功能" title="計算器的功能" border="0"/><br />
+        圖1.1.1、計算機的功能<br />
+      </center>
+      <p>根據這個定義你知道哪些東西是計算機了嗎？包括一般商店用的簡易型加減乘除計算機、打電話用的手機、開車用的衛星定位系統
+        (GPS)、提款用的提款機 (ATM)、你常使用的桌上型個人電腦、可攜帶的筆記型電腦還有這兩年 (2008, 2009) 
+        很火紅的 Eee PC (或稱為 netbook) 等等，這些都是計算機！</p>
+      <p>那麼計算機主要的組成元件是什麼呢？底下我們以常見的個人電腦來作為說明。<br />
+        <br />
+      </p>
+      <hr />
+      <a name="computer_hw" id="computer_hw"></a><span class="text_h2">電腦硬體的五大單元</span><br />
+      <div class="block2">
+        <p>關於電腦的組成部分，其實你可以觀察你的桌上型電腦分析一下，依外觀來說這傢伙主要分為三部分：</p>
+        <ul>
+          <li>輸入單元：包括鍵盤、滑鼠、讀卡機、掃描器、手寫板、觸控螢幕等等一堆；</li>
+          <li>主機部分：這個就是系統單元，被主機機殼保護住了，裡面含有 CPU 與主記憶體等；</li>
+          <li>輸出單元：例如螢幕、印表機等等</li>
+        </ul>
+        <p>我們主要透過輸入設備如滑鼠與鍵盤來將一些資料輸入到主機裡面，然後再由主機的功能處理成為圖表或文章等資訊後，
+          將結果傳輸到輸出設備，如螢幕或印表機上面。重點在於主機裡面含有什麼元件呢？如果你曾經拆開過電腦主機機殼，
+          會發現其實主機裡面最重要的就是一片主機板，上面安插了中央處理器 (CPU) 以及主記憶體還有一些介面卡裝置而已。</p>
+        <p>整部主機的重點在於中央處理器 (Central Processing Unit, CPU)，<span class="text_import2">CPU 為一個具有特定功能的晶片，
+          裡頭含有微指令集</span>，如果你想要讓主機進行什麼特異的功能，就得要參考這顆 CPU 是否有相關內建的微指令集才可以。
+          由於 CPU 的工作主要在於管理與運算，因此在 CPU 內又可分為兩個主要的單元，分別是： <span class="text_import2">算數邏輯單元與控制單元</span>。(<a href="#ps1">註1</a>)
+          其中算數邏輯單元主要負責程式運算與邏輯判斷，控制單元則主要在協調各周邊元件與各單元間的工作。</p>
+        <p>既然 CPU 的重點是在進行運算與判斷，那麼要被運算與判斷的資料是從哪裡來的？ <span class="text_import2">CPU 讀取的資料都是從主記憶體來的！</span> 主記憶體內的資料則是從輸入單元所傳輸進來！而 CPU 處理完畢的資料也必須要先寫回主記憶體中，
+          最後資料才從主記憶體傳輸到輸出單元。</p>
+        <p>綜合上面所說的，我們會知道其實電腦是由幾個單元所組成的，包括<span class="text_import2">輸入單元、
+          輸出單元、</span>CPU內部的<span class="text_import2">控制單元、算數邏輯單元與主記憶體</span>五大部分。
+          相關性如下所示：</p>
+        <center>
+          <img src="0105computers/computer02.gif" alt="電腦的五大單元" title="電腦的五大單元" border="0"/><br />
+          圖1.1.2、電腦的五大單元(<a href="#ps2">註2</a>)<br />
+        </center>
+        <p>上面圖示中的『系統單元』其實指的就是電腦機殼內的主要元件，而重點在於CPU與主記憶體。
+          特別要看的是實線部分的傳輸方向，<span class="text_import2">基本上資料都是流經過主記憶體再轉出去的</span>！
+          至於資料會流進/流出記憶體則是CPU所發佈的控制命令！而CPU實際要處理的資料則完全來自於主記憶體！
+          這是個很重要的概念喔！</p>
+        <p>而由上面的圖示我們也能知道，所有的單元都是由CPU內部的控制單元來負責協調的，因此CPU是整個電腦系統的最重要部分！
+          那麼目前世界上有哪些主流的CPU呢？是否剛剛我們談到的硬體內全部都是相同的CPU種類呢？底下我們就來談一談。</p>
+      </div>
+      <hr />
+      <a name="computer_cpu" id="computer_cpu"></a><span class="text_h2">CPU的種類</span><br />
+      <div class="block2">
+        <p>如前面說過的，CPU其實內部已經含有一些小指令集，我們所使用的軟體都要經過CPU內部的微指令集來達成才行。
+          那這些指令集的設計主要又被分為兩種設計理念，這就是目前世界上常見到的兩種主要CPU種類：
+          分別是精簡指令集(RISC)與複雜指令集(CISC)系統。底下我們就來談談這兩種不同CPU種類的差異囉！<br />
+          <br />
+        </p>
+        <a name="risc" id="risc"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">精簡指令集(Reduced Instruction Set 
+            Computing, RISC)：(<a href="#ps3">註3</a>)</span></li>
+        </ul>
+        <p>這種CPU的設計中，微指令集較為精簡，每個指令的執行時間都很短，完成的動作也很單純，指令的執行效能較佳；
+          但是若要做複雜的事情，就要由多個指令來完成。常見的RISC微指令集CPU主要例如昇陽(Sun)公司的SPARC系列、
+          IBM公司的Power Architecture(包括PowerPC)系列、與ARM系列等。</p>
+        <p>在應用方面，SPARC架構的電腦常用於學術領域的大型工作站中，包括銀行金融體系的主要伺服器也都有這類的電腦架構；
+          至於PowerPC架構的應用上，例如新力(Sony)公司出產的Play Station 3(PS3)就是使用PowerPC架構的Cell處理器；
+          那ARM呢？你常使用的各廠牌手機、PDA、導航系統、網路設備(交換器、路由器等)等，幾乎都是使用ARM架構的CPU喔！
+          老實說，<span class="text_import2">目前世界上使用範圍最廣的CPU可能就是ARM呢</span>！
+          (<a href="#ps4">註4</a>)<br />
+          <br />
+        </p>
+        <a name="cisc" id="cisc"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">複雜指令集(Complex Instruction Set 
+            Computer, CISC)：(<a href="#ps5">註5</a>)</span></li>
+        </ul>
+        <p>與RISC不同的，CISC在微指令集的每個小指令可以執行一些較低階的硬體操作，指令數目多而且複雜，
+          每條指令的長度並不相同。因為指令執行較為複雜所以每條指令花費的時間較長，
+          但每條個別指令可以處理的工作較為豐富。常見的CISC微指令集CPU主要有AMD、Intel、VIA等的x86架構的CPU。</p>
+        <p>由於AMD、Intel、VIA所開發出來的x86架構CPU被大量使用於個人電腦(Personal computer)用途上面，
+          因此，個人電腦常被稱為x86架構的電腦！那為何稱為x86架構(<a href="#ps6">註6</a>)呢？
+          這是因為最早的那顆Intel發展出來的CPU代號稱為8086，後來依此架構又開發出80286, 80386...，
+          因此這種架構的CPU就被稱為x86架構了。</p>
+        <p>在2003年以前由Intel所開發的x86架構CPU由8位元升級到16、32位元，後來AMD依此架構修改新一代的CPU為64位元，
+          為了區別兩者的差異，因此64位元的個人電腦CPU又被統稱為x86_64的架構喔！</p>
+        <p>那麼不同的x86架構的CPU有什麼差異呢？除了CPU的整體結構(如第二層快取、每次運作可執行的指令數等)之外，
+          主要是在於微指令集的不同。新的x86的CPU大多含有很先進的微指令集，
+          這些微指令集可以加速多媒體程式的運作，也能夠加強虛擬化的效能，而且某些微指令集更能夠增加能源效率，
+          讓CPU耗電量降低呢！由於電費越來越高，購買電腦時，除了整體的效能之外，
+          節能省電的CPU特色也可以考慮喔！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 最新的Intel/AMD的x86架構中，請查詢出多媒體、虛擬化、省電功能各有哪些重要的微指令集？(僅供參考) </div>
+              答：
+              <ul>
+                <li>多媒體微指令集：MMX, SSE, SSE2, SSE3, SSE4, AMD-3DNow!</li>
+                <li>虛擬化微指令集：Intel-VT, AMD-SVM</li>
+                <li>省電功能：Intel-SpeedStep, AMD-PowerNow!</li>
+                <li>64/32位元相容技術：AMD-AMD64, Intel-EM64T</li>
+              </ul></td>
+          </tr>
+        </table>
+        <br />
+      </div>
+      <hr />
+      <a name="computer_other" id="computer_other"></a><span class="text_h2">周邊設備</span><br />
+      <div class="block2">
+        <p>單有CPU也無法運作電腦的，所以電腦還需要其他的周邊設備才能夠實際運作。
+          除了前面稍微提到的輸入/輸出設備，以及CPU與主記憶體之外，還有什麼周邊設備呢？
+          其實最重要的周邊設備是主機板！因為主機板負責將所有的設備通通連接在一起，讓所有的設備能夠進行協調與溝通。
+          而主機板上面最重要的元件就是主機板晶片組！這個晶片組可以將所有的設備匯集在一起！</p>
+        <p>其他重要的設備還有：</p>
+        <ul>
+          <li>儲存裝置：儲存裝置包括硬碟、軟碟、光碟、磁帶等等；</li>
+          <li>顯示裝置：顯示卡對於玩3D遊戲來說是非常重要的一環，他與顯示的精緻度、色彩與解析度都有關係；</li>
+          <li>網路裝置：沒有網路活不下去啊！所以網路卡對於電腦來說也是相當重要的！</li>
+        </ul>
+        <p>更詳細的各項周邊裝置我們將在下個小節進行介紹！在這裡我們先來瞭解一下各元件的相關係囉！
+          那就是，電腦是如何運作的呢？</p>
+      </div>
+      <hr />
+      <a name="computer_flow" id="computer_flow"></a><span class="text_h2">運作流程</span><br />
+      <div class="block2">
+        <p>如果不是很瞭解電腦的運作流程，鳥哥拿個簡單的想法來思考好了～
+          假設電腦是一個人體，那麼每個元件對應到那個地方呢？可以這樣思考： </p>
+        <center>
+          <img src="0105computers/computer03.gif" alt="各元件運作" title="各元件運作" border="0" /><br />
+          圖1.4.1、各元件運作<br />
+        </center>
+        <ul>
+          <li>CPU=腦袋瓜子：每個人會作的事情都不一樣(微指令集的差異)，
+            但主要都是透過腦袋瓜子來進行判斷與控制身體各部分的活動；<br />
+            <br />
+          </li>
+          <li>主記憶體=腦袋中的記錄區塊：在實際活動過程中，我們的腦袋瓜子能夠將外界的互動暫時記錄起來，
+            提供CPU來進行判斷；<br />
+            <br />
+          </li>
+          <li>硬碟=腦袋中的記憶區塊：將重要的資料記錄起來，以便未來將這些重要的經驗再次的使用；<br />
+            <br />
+          </li>
+          <li>主機板=神經系統：好像人類的神經一樣，將所有重要的元件連接起來，包括手腳的活動都是腦袋瓜子發佈命令後，
+            透過神經(主機板)傳導給手腳來進行活動啊！<br />
+            <br />
+          </li>
+          <li>各項周邊設備=人體與外界溝通的手、腳、皮膚、眼睛等：就好像手腳一般，是人體與外界互動的重要關鍵！<br />
+            <br />
+          </li>
+          <li>顯示卡=腦袋中的影像：將來自眼睛的刺激轉成影響後在腦袋中呈現，所以顯示卡所產生的資料來源也是CPU控制的。 <br />
+            <br />
+          </li>
+          <li>電源供應器 (Power)=心臟：所有的元件要能運作得要有足夠的電力供給才行！這電力供給就好像心臟一樣，如果心臟不夠力，
+            那麼全身也就無法動彈的！心臟不穩定呢？那你的身體當然可能斷斷續續的～不穩定！</li>
+        </ul>
+        <p>由這樣的關係圖當中，我們知道整個活動中最重要的就是腦袋瓜子！
+          而腦袋瓜子當中與現在正在進行的工作有關的就是CPU與主記憶體！任何外界的接觸都必須要由腦袋瓜子中的主記憶體記錄下來，
+          然後給腦袋中的CPU依據這些資料進行判斷後，再發佈命令給各個周邊設備！如果需要用到過去的經驗，
+          就得由過去的經驗(硬碟)當中讀取囉！</p>
+        <p>也就是說，整個人體最重要的地方就是腦袋瓜子，同樣的，整部主機當中最重要的就是CPU與主記憶體，
+          而CPU的資料來源通通來自於主記憶體，<span class="text_import2">如果要由過去的經驗來判斷事情時，
+            也要將經驗(硬碟)挪到目前的記憶(主記憶體)當中，再交由CPU來判斷喔</span>！這點得要再次的強調啊！
+          下個章節當中，我們就對目前常見的個人電腦各個元件來進行說明囉！</p>
+      </div>
+      <hr />
+      <a name="computer_type" id="computer_type"></a><span class="text_h2">電腦分類</span><br />
+      <div class="block2">
+        <p>知道了電腦的基本組成與周邊裝置，也知道其實電腦的CPU種類非常的多，再來我們想要瞭解的是，電腦如何分類？
+          電腦的分類非常多種，如果以電腦的複雜度與運算能力進行分類的話，主要可以分為這幾類：</p>
+        <ul>
+          <li><span class="text_import2">超級電腦(Supercomputer)</span><br />
+            超級電腦是運作速度最快的電腦，但是他的維護、操作費用也最高！主要是用於需要有高速計算的計畫中。
+            例如：國防軍事、氣象預測、太空科技，用在模擬的領域較多。詳情也可以參考：
+            國家高速網路與計算中心<a href="http://www.nchc.org.tw" target="_blank">http://www.nchc.org.tw</a>的介紹！
+            至於全世界最快速的前500大超級電腦，則請參考：<a href="http://www.top500.org"
+		target="_blank">http://www.top500.org</a>。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">大型電腦(Mainframe Computer)</span><br />
+            大型電腦通常也具有數個高速的CPU，功能上雖不及超級電腦，但也可用來處理大量資料與複雜的運算。
+            例如大型企業的主機、全國性的證券交易所等每天需要處理數百萬筆資料的企業機構，
+            或者是大型企業的資料庫伺服器等等。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">迷你電腦(Minicomputer)</span><br />
+            迷你電腦仍保有大型電腦同時支援多使用者的特性，但是主機可以放在一般作業場所，
+            不必像前兩個大型電腦需要特殊的空調場所。通常用來作為科學研究、工程分析與工廠的流程管理等。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">工作站(Workstation)</span><br />
+            工作站的價格又比迷你電腦便宜許多，是針對特殊用途而設計的電腦。在個人電腦的效能還沒有提升到目前的狀況之前，
+            工作站電腦的性能/價格比是所有電腦當中較佳的，因此在學術研究與工程分析方面相當常見。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">微電腦(Microcomputer)</span><br />
+            又可以稱為個人電腦，也是我們這裡主要探討的目標！體積最小，價格最低，但功能還是五臟俱全的！
+            大致又可分為桌上型、筆記型等等。</li>
+        </ul>
+        <p>若光以效能來說，目前的個人電腦效能已經夠快了，甚至已經比工作站等級以上的電腦運算速度還要快！
+          但是工作站電腦強調的是穩定不當機，並且運算過程要完全正確，因此工作站以上等級的電腦在設計時的考量與個人電腦並不相同啦！
+          這也是為啥工作站等級以上的個人電腦售價較貴的原因。</p>
+      </div>
+      <hr />
+      <a name="computer_unit" id="computer_unit"></a><span class="text_h2">電腦上面常用的計算單位 
+        (容量、速度等)</span><br />
+      <div class="block2">
+        <p>電腦的運算能力是由速度來決定的，而存放在電腦儲存設備當中的資料容量也是有單位的。</p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">容量單位</span></li>
+        </ul>
+        <p>電腦依有沒有通電來記錄資訊，所以理論上它只認識 0 與 1 而已。0/1 的單位我們稱為 bit。但 bit 實在太小了，
+          並且在儲存資料時每份簡單的資料都會使用到 8 個 bits 的大小來記錄，因此定義出 byte 這個單位，他們的關係為：</p>
+        <blockquote class="text_import2">1 Byte = 8 bits</blockquote>
+        <p>不過同樣的，Byte 還是太小了，在較大的容量情況下，使用 byte 相當不容易判斷資料的大小，舉例來說，1000000 bytes
+          這樣的顯示方式你能夠看得出有幾個零嗎？所以後來就有一些常見的簡化單位表示法，例如 K 代表 1024，M 代表 1024K 等。
+          而這些單位在不同的進位制下有不同的數值表示，底下就列出常見的單位與進位制對應：</p>
+        <table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+          <tr bgcolor="lightblue" align="center">
+            <td>進位制</td>
+            <td>K</td>
+            <td>M</td>
+            <td>G</td>
+            <td>T</td>
+            <td>P</td>
+          </tr>
+          <tr align="center">
+            <td>二進位</td>
+            <td>1024</td>
+            <td>1024K</td>
+            <td>1024M</td>
+            <td>1024G</td>
+            <td>1024T</td>
+          </tr>
+          <tr align="center">
+            <td>十進位</td>
+            <td>1000</td>
+            <td>1000K</td>
+            <td>1000M</td>
+            <td>1000G</td>
+            <td>1000T</td>
+          </tr>
+        </table>
+        <br />
+        <p>一般來說，檔案容量使用的是二進位的方式，所以 1 GBytes 的檔案大小實際上為：1024x1024x1024 Bytes 這麼大！
+          速度單位則常使用十進位，例如 1GHz 就是 1000x1000x1000 Hz 的意思。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">速度單位</span></li>
+        </ul>
+        <p>CPU的運算速度常使用 MHz 或者是 GHz 之類的單位，這個 Hz 其實就是秒分之一。而在網路傳輸方面，由於網路使用的是
+          bit 為單位，因此網路常使用的單位為 Mbps 是 Mbits per second，亦即是每秒多少 Mbit。舉例來說，大家常聽到的 8M/1M ADSL
+          傳輸速度，如果轉成檔案容量的 byte 時，其實理論最大傳輸值為：每秒 1Mbyte/ 每秒125Kbyte的上傳/下載容量喔！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 假設你今天購買了500GB的硬碟一顆，但是格式化完畢後卻只剩下460GB左右的容量，這是什麼原因？ </div>
+              答：
+              <div class="block2"> 因為一般硬碟製造商會使用十進位的單位，所以500GByte代表為500*1000*1000*1000Byte之意。
+                轉成檔案的容量單位時使用二進位(1024為底)，所以就成為466GB左右的容量了。<br />
+                <br />
+                硬碟廠商並非要騙人，只是因為硬碟的最小物理量為512Bytes，最小的組成單位為磁區(sector)，
+                通常硬碟容量的計算採用『多少個sector』，所以才會使用十進位來處理的。相關的硬碟資訊在這一章後面會提到的！ </div></td>
+          </tr>
+        </table>
+        <br />
+      </div>
+    </div>
+    <hr />
+    <a name="pc" id="pc"></a><span class="text_h1">個人電腦架構與周邊設備</span><br />
+    <div class="block1">
+      <p>一般消費者常說的電腦通常指的就是x86的個人電腦架構，因此我們有必要來瞭解一下這個架構的各個元件。
+        事實上，Linux最早在發展的時候，就是依據個人電腦的架構來發展的，所以，真的得要瞭解一下呢！
+        另外，因為兩大主流x86開發商(Intel, AMD)的CPU架構並不相容，而且設計理念也有所差異，
+        所以兩大主流CPU所需要的主機板晶片組設計也就不太相同。目前(2009)最新的主機板架構主要是這樣的：</p>
+      <a name="chipset" id="chipset"></a>
+      <center>
+        <img src="0105computers/computer04.jpg" alt="Intel晶片架構" title="Intel晶片架構" border="0" /><br />
+        圖2.1.1、Intel晶片架構<br />
+      </center>
+      <p>就如同前一小節提到的，整個主機板上面最重要的就是晶片組了！而晶片組通常又分為兩個橋接器來控制各元件的溝通，
+        分別是：<span class="text_import2">(1)北橋：負責連結速度較快的CPU、主記憶體與顯示卡等元件；(2)南橋：負責連接速度較慢的周邊介面，
+          包括硬碟、USB、網路卡等等。</span>(晶片組的南北橋與三國的大小喬沒有關係 @_@)至於AMD的晶片組架構如下所示：</p>
+      <center>
+        <img src="0105computers/computer05.jpg" alt="AMD晶片架構" title="AMD晶片架構" border="1" /><br />
+        圖2.1.2、AMD晶片架構<br />
+      </center>
+      <p>與Intel不同的地方在於主記憶體是直接與CPU溝通而不透過北橋！從前面的說明我們可以知道CPU的資料主要都是來自於主記憶體提供，
+        因此<span class="text_import2">AMD為了加速這兩者的溝通，所以將記憶體控制元件整合到CPU當中</span>，
+        理論上這樣可以加速CPU與主記憶體的傳輸速度！這是兩種CPU在架構上面主要的差異點。</p>
+      <p>畢竟目前世界上x86的CPU主要供應商為Intel，所以底下鳥哥將以Intel的主機板架構說明各元件囉！
+        我們以技嘉公司出的主機板，型號：Gigabyte GA-X48-DQ6作為一個說明的範例，主機板各元件如下所示：</p>
+      <a name="gigabit" id="gigabit"></a>
+      <center>
+        <img src="0105computers/computer06.jpg" alt="技嘉主機板各元件" title="技嘉主機板各元件" border="1" /><br />
+        圖2.1.3、技嘉主機板各元件(圖片為各公司所有)<br />
+      </center>
+      <p>主要的元件為：CPU、主記憶體、磁碟裝置(IDE/SATA)、匯流排晶片組(南橋/北橋)、顯示卡介面(PCI-Express)與其他介面卡(PCI)。
+        底下的各項元件在講解時，請參考Intel晶片組架構與技嘉主機板各元件來印證喔！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="pc_cpu" id="pc_cpu"></a><span class="text_h2">CPU</span><br />
+      <div class="block2">
+        <p>如同<a href="#gigabit">技嘉主機板示意圖</a>上最上方的中央部分，那就是CPU插槽。
+          由於CPU負責大量運算，因此CPU通常是具有相當高發熱量的元件。所以如果你曾經拆開過主機板，
+          應該就會看到CPU上頭通常會安插一顆風扇來主動散熱的。</p>
+        <p>x86個人電腦的CPU主要供應商為Intel與AMD，目前(2009)主流的CPU都是雙核以上的架構了！
+          原本的單核心CPU僅有一個運算單元，所謂的多核心則是在一顆CPU封裝當中嵌入了兩個以上的運算核心，
+          簡單的說，就是一個實體的CPU外殼中，含有兩個以上的CPU單元就是了。</p>
+        <p>不同的CPU型號大多具有不同的腳位(CPU上面的插腳)，能夠搭配的主機板晶片組也不同，
+          所以當你想要將你的主機升級時，不能只考慮CPU，你還得要留意你的主機板上面所支援的CPU型號喔！
+          不然買了最新的CPU也不能夠安插在你的舊主機板上頭的！目前主流的CPU有Intel的Core 2 Duo與AMD的Athlon64 X2雙核CPU，
+          高階產品則有Intel的Core i7 與AMD的Phenom II 四核心CPU喔！</p>
+        <center>
+          <img src="0105computers/cpu_01.jpg" alt="不同的CPU腳位" title="不同的CPU腳位" border="0" /><br />
+          圖2.1.4、不同的CPU腳位<br />
+        </center>
+        <p>我們前面談到CPU內部含有微指令集，不同的微指令集會導致CPU工作效率的優劣。除了這點之外，
+          CPU效能的比較還有什麼呢？那就是CPU的時脈了！什麼是時脈呢？簡單的說， <span class="text_import2">時脈就是CPU每秒鐘可以進行的工作次數</span>。
+          所以時脈越高表示這顆CPU單位時間內可以作更多的事情。舉例來說，Intel的Core 2 Duo型號E8400的CPU時脈為3.0GHz，
+          表示這顆CPU在一秒內可以進行3.0x10<sup>9</sup>次工作，每次工作都可以進行少數的指令運作之意。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 注意，不同的CPU之間不能單純的以時脈來判斷運算效能喔！這是因為每顆CPU的微指令集不相同，架構也不見得一樣，
+                  每次時脈能夠進行的工作指令數也不同之故！所以，時脈目前僅能用來比較同款CPU的速度！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <a name="pc_cpu_speed" id="pc_cpu_speed"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">CPU的『外頻』與『倍頻』</span></li>
+        </ul>
+        <p>我們可以看到<a href="#chipset">圖2.1.1的晶片架構圖</a>當中各個元件都是透過北橋與南橋所連接在一起。
+          但就像一群人共同在處理一個連續作業一般，如果這一群人裡面有個人的動作特別快或特別慢，
+          將導致前面或者是後面的人事情一堆處理不完！也就是說，這一群人最好能夠速度一致較佳！
+          所以，CPU與外部各元件的速度理論上應該要一致才好。但是因為CPU需要較強大的運算能力，
+          因為很多判斷與數學都是在CPU內處理的，因此CPU開發商就在CPU內再加上一個加速功能，
+          所以CPU有所謂的外頻與倍頻！</p>
+        <p><span class="text_import2">所謂的外頻指的是CPU與外部元件進行資料傳輸時的速度，倍頻則是 CPU
+          內部用來加速工作效能的一個倍數，
+          兩者相乘才是CPU的時脈速度</span>。我們以剛剛Intel Core 2 Duo E8400 CPU來說，他的時脈是3.0GHz，
+          而外頻是333MHz，因此倍頻就是9倍囉！(3.0G=333Mx9, 其中1G=1000M)</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 很多電腦硬體玩家很喜歡玩『超頻』，所謂的超頻指的是：
+                  將CPU的倍頻或者是外頻透過主機板的設定功能更改成較高頻率的一種方式。但因為CPU的倍頻通常在出廠時已經被鎖定而無法修改，
+                  因此較常被超頻的為外頻。<br />
+                  舉例來說，像上述3.0GHz的CPU如果想要超頻，
+                  可以將他的外頻333MHz調整成為400MHz，但如此一來整個主機板的各個元件的運作頻率可能都會被增加成原本的1.333倍(4/3)，
+                  雖然CPU可能可以到達3.6GHz，但卻因為頻率並非正常速度，故可能會造成當機等問題。 </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <a name="pc_cpu_arch" id="pc_cpu_arch"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">32位元與64位元</span></li>
+        </ul>
+        <p>前面談到CPU運算的資料都是由主記憶體提供的，主記憶體與CPU的溝通速度靠的是外部頻率，
+          那麼每次工作可以傳送的資料量有多大呢？那就是匯流排的功能了。一般主機板晶片組有分北橋與南橋， <span class="text_import2">北橋的匯流排稱為系統匯流排，因為是記憶體傳輸的主要通道，所以速度較快。
+            南橋就是所謂的輸入輸出(I/O)匯流排</span>，主要在聯繫硬碟、USB、網路卡等周邊設備。</p>
+        <p>目前北橋所支援的頻率可高達333/400/533/800/1066/1333/1600MHz等不同頻率，支援情況依晶片組功能而有不同。 <span class="text_import2">北橋所支援的頻率我們稱為前端匯流排速度(Front Side Bus, FSB)，
+          而每次傳送的位元數則是匯流排寬度。</span> 那所謂的匯流排頻寬則是：『FSBx匯流排寬度』亦即每秒鐘可傳送的最大資料量。
+          目前常見的匯流排寬度有32/64位元(bits)。</p>
+        <p>而如<a href="#chipset">圖 2.1.1</a>中的圖示，在該架構中前端匯流排最高速度可達1600MHz。
+          我們看到記憶體與北橋的頻寬為12.8GBytes/s，亦即是1600MHz*64bits = 1600MHz*8Bytes = 12800MByes/s
+          = 12.8GBytes/s</p>
+        <p>與匯流排寬度相似的，<span class="text_import2">CPU每次能夠處理的資料量稱為字組大小(word size)，
+          字組大小依據CPU的設計而有32位元與64位元。我們現在所稱的電腦是32或64位元主要是依據這個
+          CPU解析的字組大小而來的</span>！早期的32位元CPU中，因為CPU每次能夠解析的資料量有限，
+          因此由主記憶體傳來的資料量就有所限制了。<span class="text_import2"
+		>這也導致32位元的CPU最多只能支援最大到4GBytes的記憶體。</span></p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 字組大小與匯流排寬度是可以不同的！舉例來說，在Pentium Pro時代，該CPU是32位元的處理器，
+                  但當時的晶片組可以設計出64位元的匯流排寬度。在這樣的架構下我們通常還是以CPU的字組大小來稱呼該架構。
+                  個人電腦的64位元CPU是到2003年由AMD Athlon64後才出現的。 </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <a name="pc_cpu_arch2" id="pc_cpu_arch2"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">CPU等級</span></li>
+        </ul>
+        <p>由於x86架構的CPU在Intel的Pentium系列(1993年)後就有不統一的腳位與設計，為了將不同種類的CPU規範等級，
+          所以就有i386,i586,i686等名詞出現了。基本上，在Intel Pentium MMX與AMD K6年代的CPU稱為i586等級，
+          而Intel Celeron與AMD Athlon(K7)年代之後的32位元CPU就稱為i686等級。
+          至於目前的64位元CPU則統稱為x86_64等級。</p>
+        <p>目前很多的程式都有對CPU做最佳化的設計，萬一哪天你發現一些程式是註明給686的CPU使用時，
+          就不要將他安裝在586以下等級的電腦中，否則可是會無法執行該軟體的！
+          不過，在686倒是可以安裝386的軟體喔！也就是說，這些東西具有向下相容的能力啦！</p>
+      </div>
+      <hr />
+      <a name="pc_ram" id="pc_ram"></a><span class="text_h2">記憶體</span><br />
+      <div class="block2">
+        <p>如同<a href="#gigabit">圖2.1.3、技嘉主機板示意圖</a>中的右上方部分的那四根插槽，那就是主記憶體的插槽了。
+          主記憶體插槽中間通常有個突起物將整個插槽稍微切分成為兩個不等長的距離，
+          這樣的設計可以讓使用者在安裝主記憶體時，不至於前後腳位安插錯誤，是一種防呆的設計喔。</p>
+        <p>前面提到CPU所使用的資料都是來自於主記憶體(main memory)，不論是軟體程式還是資料，都必須要讀入主記憶體後CPU才能利用。 <span class="text_import2">個人電腦的主記憶體主要元件為動態隨機存取記憶體(Dynamic Random Access Memory, DRAM)</span>，
+          隨機存取記憶體只有在通電時才能記錄與使用，斷電後資料就消失了。因此我們也稱這種RAM為揮發性記憶體。</p>
+        <p>DRAM根據技術的更新又分好幾代，而使用上較廣泛的有所謂的SDRAM與DDR SDRAM兩種。
+          這兩種記憶體的差別除了在於腳位與工作電壓上的不同之外，DDR是所謂的雙倍資料傳送速度(Double Data Rate)，
+          他可以在一次工作週期中進行兩次資料的傳送，感覺上就好像是CPU的倍頻啦！
+          所以傳輸頻率方面比SDRAM還要好。新一代的PC大多使用DDR記憶體了。
+          下表列出SDRAM與DDR SDRAM的型號與頻率及頻寬之間的關係。</p>
+        <table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+          <tr bgcolor="lightblue" align="center">
+            <td>SDRAM/DDR</td>
+            <td>型號</td>
+            <td>資料寬度(bit)</td>
+            <td>外頻(MHz)</td>
+            <td>頻率速度</td>
+            <td>頻寬(頻率x寬度)</td>
+          </tr>
+          <tr align="center">
+            <td>SDRAM</td>
+            <td>PC100</td>
+            <td>64</td>
+            <td>100</td>
+            <td>100</td>
+            <td>800MBytes/sec</td>
+          </tr>
+          <tr align="center">
+            <td>SDRAM</td>
+            <td>PC133</td>
+            <td>64</td>
+            <td>133</td>
+            <td>133</td>
+            <td>1064MBytes/sec</td>
+          </tr>
+          <tr align="center">
+            <td>DDR</td>
+            <td>DDR266</td>
+            <td>64</td>
+            <td>133</td>
+            <td>266</td>
+            <td>2.1GBytes/sec</td>
+          </tr>
+          <tr align="center">
+            <td>DDR</td>
+            <td>DDR400</td>
+            <td>64</td>
+            <td>200</td>
+            <td>400</td>
+            <td>3.2GBytes/sec</td>
+          </tr>
+          <tr align="center">
+            <td>DDR</td>
+            <td>DDRII800</td>
+            <td>64</td>
+            <td>400</td>
+            <td>800</td>
+            <td>6.4GBytes/sec</td>
+          </tr>
+        </table>
+        <p>DDR SDRAM又依據技術的發展，有DDR, DDRII, DDRIII等等。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 主記憶體型號的挑選與CPU及晶片組有關，所以主機板、CPU與記憶體在購買的時候必須要考慮其相關性喔。
+                  並不是任何主機板都可以安插DDR III的記憶體呢！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <p>主記憶體除了頻率/頻寬與型號需要考慮之外，記憶體的容量也是很重要的喔！
+          因為所有的資料都得要載入記憶體當中才能夠被CPU判讀，如果記憶體容量不夠大的話將會導致某些大容量資料無法被完整的載入，
+          此時已存在記憶體當中但暫時沒有被使用到的資料必須要先被釋放，使得可用記憶體容量大於該資料，那份新資料才能夠被載入呢！
+          所以，通常越大的記憶體代表越快速的系統，這是因為系統不用常常釋放一些記憶體內部的資料。
+          以<span class="text_import2">伺服器來說，主記憶體的容量有時比CPU的速度還要來的重要的</span>！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">雙通道設計</span></li>
+        </ul>
+        <p>由於所有的資料都必須要存放在主記憶體，所以主記憶體的資料寬度當然是越大越好。
+          但傳統的匯流排寬度一般大約僅達64位元，為了要加大這個寬度，因此晶片組廠商就將兩個主記憶體彙整在一起，
+          如果一支記憶體可達64位元，兩支記憶體就可以達到128位元了，這就是雙通道的設計理念。</p>
+        <p>如上所述，要啟用雙通道的功能你必須要安插兩支(或四支)主記憶體，這兩支記憶體最好連型號都一模一樣比較好，
+          這是因為啟動雙通道記憶體功能時，資料是同步寫入/讀出這一對主記憶體中，如此才能夠提升整體的頻寬啊！
+          所以當然除了容量大小要一致之外，型號也最好相同啦！</p>
+        <p>你有沒有發現<a href="#gigabit">圖 2.1.3、技嘉主機板示意圖</a>上那四根記憶體插槽的顏色呢？是否分為兩種顏色，且兩兩成對？
+          為什麼要這樣設計？答出來了嗎？是啦！這種顏色的設計就是為了雙通道來的！要啟動雙通道的功能時，
+          你必須要將兩根容量相同的主記憶體插在相同顏色的插槽當中喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">CPU時脈與主記憶體的關係</span></li>
+        </ul>
+        <p>理論上，CPU與主記憶體的外頻應該要相同才好。不過，因為技術方面的提升，因此這兩者的頻率速度不會相同，
+          但外頻則應該是一致的較佳。舉例來說，上面提到的Intel E8400 CPU外頻為333MHz，則應該選用DDR II 667這個型號，
+          因為該記憶體型號的外頻為333MHz之故喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">DRAM與SRAM</span></li>
+        </ul>
+        <p>除了主記憶體之外，事實上整部個人電腦當中還有許許多多的記憶體存在喔！最為我們所知的就是CPU內的第二層快取記憶體。
+          我們現在知道CPU的資料都是由主記憶體提供，但主記憶體的資料畢竟得經由北橋送到CPU內。
+          如果某些很常用的程式或資料可以放置到CPU內部的話，那麼CPU資料的讀取就不需要透過北橋了！
+          對於效能來說不就可以大大的提升了？這就是第二層快取的設計概念。第二層快取與主記憶體及CPU的關係如下圖所示：</p>
+        <center>
+          <img src="0105computers/computer07.gif" alt="記憶體相關性" title="記憶體相關性" border="1" /><br />
+          圖2.2.1、記憶體相關性<br />
+        </center>
+        <br />
+        <p>因為第二層快取(L2 cache)整合到CPU內部，因此這個L2記憶體的速度必須要CPU時脈相同。
+          使用DRAM是無法達到這個時脈速度的，此時就需要靜態隨機存取記憶體(Static Random Access Memory, SRAM)的幫忙了。
+          SRAM在設計上使用的電晶體數量較多，價格較高，且不易做成大容量，不過由於其速度快，
+          因此整合到CPU內成為快取記憶體以加快資料的存取是個不錯的方式喔！新一代的CPU都有內建容量不等的L2快取在CPU內部，
+          以加快CPU的運作效能。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">唯讀記憶體(ROM)</span></li>
+        </ul>
+        <p>主機板上面的元件是非常多的，而每個元件的參數又具有可調整性。舉例來說，CPU與記憶體的時脈是可調整的；
+          而主機板上面如果有內建的網路卡或者是顯示卡時，該功能是否要啟動與該功能的各項參數，
+          是被記錄到主機板上頭的一個稱為CMOS的晶片上，這個晶片需要藉著額外的電源來發揮記錄功能，
+          這也是為什麼你的主機板上面會有一顆電池的緣故。</p>
+        <p>那CMOS內的資料如何讀取與更新呢？還記得你的電腦在開機的時候可以按下[Del]按鍵來進入一個名為BIOS的畫面吧？ <span class="text_import2">BIOS(Basic Input Output System)是一套程式，這套程式是寫死到主機板上面的一個記憶體晶片中，
+          這個記憶體晶片在沒有通電時也能夠將資料記錄下來，那就是唯讀記憶體(Read Only Memory, ROM)</span>。
+          ROM是一種非揮發性的記憶體。另外，BIOS對於個人電腦來說是非常重要的，
+          因為他是系統在開機的時候首先會去讀取的一個小程式喔！</p>
+        <p>另外，韌體(firmware)(<a href="#ps7">註7</a>)很多也是使用ROM來進行軟體的寫入的。
+          韌體像軟體一樣也是一個被電腦所執行的程式，然而他是對於硬體內部而言更加重要的部分。例如BIOS就是一個韌體，
+          BIOS雖然對於我們日常操作電腦系統沒有什麼太大的關係，但是他卻控制著開機時各項硬體參數的取得！
+          所以我們會知道很多的硬體上頭都會有ROM來寫入韌體這個軟體。</p>
+        <p>BIOS 對電腦系統來講是非常重要的，因為他掌握了系統硬體的詳細資訊與開機設備的選擇等等。但是電腦發展的速度太快了，
+          因此 BIOS 程式碼也可能需要作適度的修改才行，所以你才會在很多主機板官網找到 BIOS 的更新程式啊！但是 BIOS
+          原本使用的是無法改寫的 ROM ，因此根本無法修正 BIOS 程式碼！為此，現在的 BIOS 通常是寫入類似快閃記憶體 (flash) 
+          或 EEPROM (<a href="#ps8">註8</a>) 中。(<a href="#ps9">註9</a>) </p>
+      </div>
+      <hr />
+      <a name="pc_vga" id="pc_vga"></a><span class="text_h2">顯示卡</span><br />
+      <div class="block2">
+        <p>顯示卡插槽如同<a href="#gigabit">圖 2.1.3、技嘉主機板示意圖</a>所示，是在中央較長的插槽！
+          這張主機板中提供了兩個顯示卡插槽喔！</p>
+        <p>顯示卡又稱為VGA(Video Graphics Array)，他對於圖形影像的顯示扮演相當關鍵的角色。
+          一般對於圖形影像的顯示重點在於解析度與色彩深度，因為每個圖像顯示的顏色會佔用掉記憶體，
+          因此顯示卡上面會有一個記憶體的容量，<span class="text_import2"
+		>這個顯示卡記憶體容量將會影響到最終你的螢幕解析度與色彩深度的喔！</span></p>
+        <p>除了顯示卡記憶體之外，現在由於三度空間遊戲(3D game)與一些3D動畫的流行，因此顯示卡的『運算能力』越來越重要。
+          一些3D的運算早期是交給CPU去運作的，但是CPU並非完全針對這些3D來進行設計的，而且CPU平時已經非常忙碌了呢！
+          所以後來顯示卡廠商直接在顯示卡上面嵌入一個3D加速的晶片，這就是所謂的GPU稱謂的由來。</p>
+        <p>顯示卡主要也是透過北橋晶片與CPU、主記憶體等溝通。如前面提到的，對於圖形影像(尤其是3D遊戲)來說，
+          顯示卡也是需要高速運算的一個元件，所以資料的傳輸也是越快越好！因此顯示卡的規格由早期的PCI導向AGP，
+          近期AGP又被PCI-Express規格所取代了。如前面<a href="#gigabit">技嘉主機板</a>圖示當中看到的就是PCI-Express的插槽。
+          這些插槽最大的差異就是在資料傳輸的頻寬了！如下所示：</p>
+        <table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+          <tr bgcolor="lightblue" align="center">
+            <td>規格</td>
+            <td>寬度</td>
+            <td>速度</td>
+            <td>頻寬</td>
+          </tr>
+          <tr align="center">
+            <td>PCI</td>
+            <td>32 bits</td>
+            <td>33 MHz</td>
+            <td>133 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>PCI 2.2</td>
+            <td>64 bits</td>
+            <td>66 MHz</td>
+            <td>533 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>PCI-X</td>
+            <td>64 bits</td>
+            <td>133 MHz</td>
+            <td>1064 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>AGP 4x</td>
+            <td>32 bits</td>
+            <td>66x4 MHz</td>
+            <td>1066 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>AGP 8x</td>
+            <td>32 bits</td>
+            <td>66x8 MHz</td>
+            <td>2133 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>PCIe x1</td>
+            <td>無</td>
+            <td>無</td>
+            <td>250 MBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>PCIe x8</td>
+            <td>無</td>
+            <td>無</td>
+            <td>2 GBytes/s</td>
+          </tr>
+          <tr align="center">
+            <td>PCIe x16</td>
+            <td>無</td>
+            <td>無</td>
+            <td>4 GBytes/s</td>
+          </tr>
+        </table>
+        <br />
+        <p>比較特殊的是，PCIe(PCI-Express)使用的是類似管線的概念來處理，每條管線可以具有250MBytes/s的頻寬效能，
+          管線越大(最大可達x32)則總頻寬越高！目前顯示卡大多使用x16的PCIe規格，這個規格至少可以達到4GBytes/s的頻寬！
+          比起AGP是快很多的！此外，新的PCIe 2.0規格也已經推出了，這個規格又可將每個管線的效能提升一倍呢！
+          好可怕的傳輸量....</p>
+        <p>如果你的主機是用來打3D遊戲的，那麼顯示卡的選購是非常重要喔！如果你的主機是用來做為網路伺服器的，
+          那麼簡單的入門級顯示卡對你的主機來說就非常夠用了！因為網路伺服器很少用到3D與圖形影像功能。</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 假設你的桌面使用1024x768解析度，且使用全彩(每個像素佔用3bytes的容量)，請問你的顯示卡至少需要多少記憶體才能使用這樣的彩度？ </div>
+              答：
+              <div class="block2"> 因為1024x768解析度中會有786432個像素，每個像素佔用3bytes，所以總共需要2.25MBytes以上才行！
+                但如果考慮螢幕的更新率(每秒鐘螢幕的更新次數)，顯示卡的記憶體還是越大越好！ </div></td>
+          </tr>
+        </table>
+        <br />
+      </div>
+      <hr />
+      <a name="pc_hd" id="pc_hd"></a><span class="text_h2">硬碟與儲存設備</span><br />
+      <div class="block2">
+        <p>電腦總是需要記錄與讀取資料的，而這些資料當然不可能每次都由使用者經過鍵盤來打字！所以就需要有儲存設備咯。
+          電腦系統上面的儲存設備包括有：硬碟、軟碟、MO、CD、DVD、磁帶機、隨身碟(快閃記憶體)、還有新一代的藍光光碟機等，
+          乃至於大型機器的區域網路儲存設備(SAN, NAS)等等，都是可以用來儲存資料的。而其中最常見的應該就是硬碟了吧！ <br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">硬碟的物理組成</span></li>
+        </ul>
+        <p>大家應該都看過硬碟吧！硬碟依據桌上型與筆記型電腦而有分為3.5吋及2.5吋的大小。我們以3.5吋的桌上型電腦使用硬碟來說明。
+          在硬碟盒裡面其實是由<span class="text_import2">許許多多的圓形磁碟盤、機械手臂、
+            磁碟讀取頭與主軸馬達所組成的</span>，整個內部如同下圖所示：</p>
+        <center>
+          <img src="0105computers/hard_disk01.jpg" alt="硬碟物理構造" title="硬碟物理構造" border="1" /><br />
+          圖2.4.1、硬碟物理構造(圖片取自維基百科)<br />
+        </center>
+        <br />
+        <p>實際的資料都是寫在具有磁性物質的磁碟盤上頭，而讀寫主要是透過在機械手臂上的讀取頭(head)來達成。 <span class="text_import2">實際運作時，
+          主軸馬達讓磁碟盤轉動，然後機械手臂可伸展讓讀取頭在磁碟盤上頭進行讀寫的動作</span>。
+          另外，由於單一磁碟盤的容量有限，因此有的硬碟內部會有兩個以上的磁碟盤喔！</p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">磁碟盤上的資料</span></li>
+        </ul>
+        <p>既然資料都是寫入磁碟盤上頭，那麼磁碟盤上頭的資料又是如何寫入的呢？
+          其實磁碟盤上頭的資料有點像下面的圖示所示：</p>
+        <center>
+          <img src="0105computers/hard_disk02.gif" alt="磁碟盤上的資料格式" title="磁碟盤上的資料格式" 
+		border="1" /><br />
+          圖2.4.2、磁碟盤上的資料格式<br />
+        </center>
+        <br />
+        <p>整個磁碟盤上頭好像有多個同心圓繪製出的圓形圖，而由圓心以放射狀的方式分割出<span class="text_import2"
+		>磁碟的最小儲存單位，那就是磁區(Sector)，
+          在物理組成分面，每個磁區大小為512Bytes，這個值是不會改變的</span>。而磁區組成一個圓就成為磁軌(track)，
+          如果是在多碟的硬碟上面，<span class="text_import2">在所有磁碟盤上面的同一個磁軌可以組成一個磁柱(Cylinder)，
+            磁柱也是一般我們分割硬碟時的最小單位了</span>！</p>
+        <p>在計算整個硬碟的儲存量時，簡單的計算公式就是：『header數量 * 每個header負責的磁柱數量 * 
+          每個磁柱所含有的磁區數量 * 磁區的容量』，單位換算為『header * cylinder/header * secter/cylinder * 
+          512bytes/secter』，簡單的寫法如下： <span class="text_import2">Head x Cylinder x Sector x 512 Bytes</span>。
+          不過要注意的是，一般硬碟製造商在顯示硬碟的容量時，大多是以十進位來編號，因此市售的500GB硬碟，
+          理論上僅會有460GBytes左右的容量喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">傳輸介面</span></li>
+        </ul>
+        <p>由於傳輸速度的需求提升，目前硬碟與主機系統的聯繫主要有幾種傳輸介面規格：</p>
+        <center>
+          <img src="0105computers/hd_line.jpg" alt="兩款硬碟介面(左邊為IDE介面，右邊為SATA介面)" 
+		title="兩款硬碟介面(左邊為IDE介面，右邊為SATA介面)" border="1" /><br />
+          圖2.4.3、兩款硬碟介面(左邊為IDE介面，右邊為SATA介面)<br />
+        </center>
+        <ul>
+          <li><span class="text_import1">IDE介面</span>：<br />
+            <br />
+            如同<a href="#gigabit">圖 2.1.3、技嘉主機板圖示右側的較寬的插槽</a>所示，那就是IDE的介面插槽。
+            IDE介面插槽所使用的排線較寬，每條排線上面可以接兩個IDE裝置，由於可以接兩個裝置，那為了判別兩個裝置的主/從架構，
+            因此這種磁碟機上面需要調整跳針(Jump)成為Master或slave才行喔！這種介面的最高傳輸速度為Ultra 133規格，
+            亦即每秒理論傳輸速度可達133MBytes。<br />
+            <br />
+            <center>
+              <img src="0105computers/80pin.jpg" alt="IDE 介面的排線 (圖示取自 Seagate 網站)" 
+		title="IDE 介面的排線 (圖示取自 Seagate 網站)" border="1" /><br />
+              圖2.4.4、IDE 介面的排線 (圖示取自 Seagate 網站)<br />
+            </center>
+            <br />
+          </li>
+          <li><span class="text_import1">SATA介面</span>：<br />
+            <br />
+            如同<a href="#gigabit">技嘉主機板圖示</a>右下方所示為SATA硬碟的連接介面插槽。
+            我們可以看到該插槽要比IDE介面的小很多，每條SATA連接線僅能接一個SATA裝置。SATA介面除了速度較快之外，
+            由於其排線較細小所以有利於主機機殼內部的散熱與安裝！目前SATA已經發展到了第二代，
+            其速度由SATA-1的每秒150MBytes提升到SATA-2每秒300MBytes的傳輸速度喔，
+            也因此目前主流的個人電腦硬碟已經被SATA取代了。SATA的插槽示意圖如下所示：<br />
+            <br />
+            <center>
+              <img src="0105computers/sata_pin.jpg" alt="SATA 介面的排線 (圖示取自 Seagate 網站)" 
+		title="SATA 介面的排線 (圖示取自 Seagate 網站)" border="1" /><br />
+              圖2.4.5、SATA 介面的排線 (圖示取自 Seagate 網站)<br />
+            </center>
+            <br />
+            由於SATA一條排線僅接一顆硬碟，所以妳不需要調整跳針。不過一張主機板上面SATA插槽的數量並不是固定的，
+            且每個插槽都有編號，在連接SATA硬碟與主機板的時候，還是需要留意一下。<br />
+            <br />
+          </li>
+          <li><span class="text_import1">SCSI介面</span>：<br />
+            <br />
+            另一種常見於工作站等級以上的硬碟傳輸介面為SCSI介面，這種介面的硬碟在控制器上含有一顆處理器，
+            所以除了運轉速度快之外，也比較不會耗費CPU資源喔！在個人電腦上面這種介面的硬碟不常見啦！</li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">選購與運轉須知</span></li>
+        </ul>
+        <p>如果你想要增加一顆硬碟在你的主機裡頭時，除了需要考慮你的主機板可接受的插槽介面(IDE/SATA)之外，
+          還有什麼要注意的呢？</p>
+        <ul>
+          <li><span class="text_import1">容量</span><br />
+            通常首先要考量的就是容量的問題！目前(2009)主流市場硬碟容量已經到達320GB以上，甚至有的廠商已經生產高達 2TB
+            的產品呢！硬碟可能可以算是一種消耗品，要注意重要資料還是得常常備份出來喔！<br />
+            <br />
+          </li>
+          <li><span class="text_import1">緩衝記憶體</span><br />
+            硬碟上頭含有一個緩衝記憶體，這個記憶體主要可以將硬碟內常使用的資料快取起來，以加速系統的讀取效能。
+            通常這個緩衝記憶體越大越好，因為緩衝記憶體的速度要比資料從硬碟盤中被找出來要快的多了！
+            目前主流的產品可達16MB左右的記憶體大小喔。<br />
+            <br />
+          </li>
+          <li><span class="text_import1">轉速</span><br />
+            因為硬碟主要是利用主軸馬達轉動磁碟盤來存取，因此轉速的快慢會影響到效能。
+            主流的桌上型電腦硬碟為每分鐘7200轉，筆記型電腦則是5400轉。有的廠商也有推出高達10000轉的硬碟，
+            若有高效能的資料存取需求，可以考慮購買高轉速硬碟。<br />
+            <br />
+          </li>
+          <li><span class="text_import1">運轉須知</span><br />
+            由於硬碟內部機械手臂上的磁頭與硬碟盤的接觸是很細微的空間，
+            如果有抖動或者是髒污在磁頭與硬碟盤之間就會造成資料的損毀或者是實體硬碟整個損毀～
+            因此，正確的使用電腦的方式，應該是在電腦通電之後，就絕對不要移動主機，並免抖動到硬碟，
+            而導致整個硬碟資料發生問題啊！另外，也不要隨便將插頭拔掉就以為是順利關機！因為機械手臂必須要歸回原位，
+            所以使用作業系統的正常關機方式，才能夠有比較好的硬碟保養啊！因為他會讓硬碟的機械手臂歸回原位啊！</li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 可能因為環境的關係，電腦內部的風扇常常會卡灰塵而造成一些聲響。很多朋友只要聽到這種聲響都是二話不說的
+                  『用力拍幾下機殼』就沒有聲音了～現在你知道了，這麼做的後果常常就是你的硬碟容易壞掉！
+                  下次千萬不要再這樣做囉！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="pc_pci" id="pc_pci"></a><span class="text_h2">PCI介面卡</span><br />
+      <div class="block2">
+        <p>PCI介面卡的插槽就如同<a href="#gigabit">圖2.1.3、技嘉主機板示意圖</a>所示的左下方那個白色的插槽，
+          這種PCI插槽通常會提供多個給使用者，如果使用者有額外需要的功能卡，
+          就能夠安插在這種PCI介面插槽上。</p>
+        <p>我們在前面<a href="#pc_vga">顯示卡</a>的部分稍微談過PCI介面，事實上有相當多的元件是使用PCI介面作為傳輸的，
+          例如網路卡、音效卡、特殊功能卡等等。但由於PCI Express規格的發展，很多製造商都往PCIe介面開發硬體了。
+          不過還是有很多硬體使用PCI介面啦，例如大賣場上面常見的網路卡就是一個。</p>
+        <p>目前在個人電腦上面常見到的網路卡是一種稱為乙太網路(Ethernet)的規格，目前乙太網路卡速度輕輕鬆鬆的就能到達10/100/1000
+          Mbits/second的速度，但同樣速度的乙太網路卡所支援的標準可能不太一樣，因此造成的價差是非常大的。
+          如果想要在伺服器主機上面安裝新的網路卡時，得要特別注意標準的差異呢！</p>
+        <p>由於各元件的價格直直落，現在主機板上面通常已經整合了相當多的設備元件了！
+          常見整合到主機板的元件包括音效卡、網路卡、USB控制卡、顯示卡、磁碟陣列卡等等。
+          你可以在主機板上面發現很多方形的晶片，那通常是一些個別的設備晶片喔。
+          由於主機板已經整合了很多常用的功能晶片，所以現在的主機板上面所安插的PCI介面卡就少很多了！</p>
+      </div>
+      <hr />
+      <a name="pc_mb" id="pc_mb"></a><span class="text_h2">主機板</span><br />
+      <div class="block2">
+        <p>主機板可以說是整部主機相當重要的一個部分，因為上面我們所談到的所有元件都是安插在主機板上面的呢！
+          而主機板上面負責溝通各個元件的就是晶片組，如同<a href="#chipset">圖2.1.1、Intel晶片組圖示</a>所示，
+          圖中我們也可以發現晶片組一般分為北橋與南橋喔！北橋負責CPU/RAM/VGA等的連接，南橋則負責PCI介面與速度較慢的I/O裝置。</p>
+        <p>由於晶片組負責所有設備的溝通，所以事實上晶片組(尤其是北橋)也是一個可能會散發出高熱量的元件。
+          因此在主機板上面常會發現一些外接的小風扇或者是散熱片在這組晶片上面。在本章所附的主機板圖示中，
+          技嘉使用較高散熱能力的熱導管技術，因此你可以發現圖中的南橋與北橋上面覆蓋著黃銅色的散熱片，
+          且連接著數根圓形導管，主要就是為了要散熱的。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">晶片組功能</span></li>
+        </ul>
+        <p>所有的晶片組幾乎都是參考CPU的能力去規劃的，而CPU能夠接受的主記憶體規格也不相同，因此<span class="text_import2"
+		>在新購買或升級主機時，CPU、主機板、主記憶體與相關的周邊設備都需要同時考慮才行</span> ！此外，每一種晶片組的功能可能都不太相同，
+          有的晶片組強調的是全功能，因此連顯示卡、音效、網路等都整合了，在這樣的整合型晶片中，
+          你幾乎只要購買CPU、主機板、主記憶體再加上硬碟，就能夠組裝成一部主機了。不過整合型晶片的效能通常比較弱，
+          對於愛玩3D遊戲的玩家以及強調高效能運算的主機來說，就不是這麼適合了。</p>
+        <p>至於獨立型晶片組雖然可能具有較高的效能，不過你可能必須要額外負擔周邊設備的CoCo呢！
+          例如顯示卡、網路卡、音效卡等等。但獨立型晶片組也有一定程度的好處，那就是你可以隨時抽換周邊設備。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">設備I/O位址與IRQ中斷通道</span></li>
+        </ul>
+        <p>主機板是負責各個電腦元件之間的溝通，但是電腦元件實在太多了，有輸出/輸入/不同的儲存裝置等等，
+          主機板晶片組怎麼知道如何負責溝通吶？這個時候就需要用到所謂的I/O位址與IRQ囉！</p>
+        <p>I/O位址有點類似每個裝置的門牌號碼，每個裝置都有他自己的位址，一般來說，不能有兩個裝置使用同一個I/O位址，
+          否則系統就會不曉得該如何運作這兩個裝置了。而除了I/O位址之外，還有個IRQ中斷(Interrupt)這個咚咚。</p>
+        <p>如果I/O位址想成是各裝置的門牌號碼的話，那麼IRQ就可以想成是各個門牌連接到郵件中心(CPU)的專門路徑囉！
+          各裝置可以透過IRQ中斷通道來告知CPU該裝置的工作情況，以方便CPU進行工作分配的任務。
+          老式的主機板晶片組IRQ只有15個，如果你的周邊介面太多時可能就會不夠用，
+          這個時候你可以選擇將一些沒有用到的周邊介面關掉，以空出一些IRQ來給真正需要使用的介面喔！
+          當然，也有所謂的sharing IRQ的技術就是了！<br />
+          <br />
+        </p>
+        <a name="cmosvsbios" id="cmosvsbios"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">CMOS與BIOS</span></li>
+        </ul>
+        <p>前面記憶體的地方我們有提過CMOS與BIOS的功能，在這裡我們再來強調一下： <span class="text_import2">CMOS主要的功能為記錄主機板上面的重要參數，
+          包括系統時間、CPU電壓與頻率、各項設備的I/O位址與IRQ等，由於這些資料的記錄要花費電力，因此主機板上面才有電池。
+          BIOS為寫入到主機板上某一塊 flash 或 EEPROM 的程式，他可以在開機的時候執行，以載入CMOS當中的參數，
+          並嘗試呼叫儲存裝置中的開機程式，進一步進入作業系統當中</span>。BIOS程式也可以修改CMOS中的資料，
+          每種主機板呼叫BIOS設定程式的按鍵都不同，一般桌上型電腦常見的是使用[del]按鍵進入BIOS設定畫面。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">連接周邊設備的介面</span></li>
+        </ul>
+        <p>主機板與各項輸出/輸入設備的連結主要都是在主機機殼的後方，主要有：</p>
+        <ul>
+          <li><span class="text_import2">PS/2介面</span>：這是常見的鍵盤與滑鼠的介面，不過漸漸有被USB介面取代的趨勢；</li>
+          <li><span class="text_import2">USB介面</span>：目前相當流行的一個介面，支援隨插即用。
+            主流的USB版本為USB 2.0，這個規格的速度可達480Mbps，相對之下的USB 1.1僅達12Mbps差異很大，購買周邊設備要注意啊！
+            不然copy一些資料到USB硬碟時，會吐血....</li>
+          <li><span class="text_import2">聲音輸出、輸入與麥克風</span>：這個是一些圓形的插孔，
+            而必須你的主機板上面有內建音效晶片時，才會有這三個東西；</li>
+          <li><span class="text_import2">RJ-45網路頭</span>：如果有內建網路晶片的話，那麼就會有這種接頭出現。
+            這種接頭有點類似電話接頭，不過內部有八蕊線喔！接上網路線後在這個接頭上會有燈號亮起才對！</li>
+          <li>其他過時介面：包括早期的用來連結滑鼠的九針序列埠(com1)，以及連結印表機的25針並列埠(LPT1)等等。</li>
+        </ul>
+        <p>我們以技嘉主機板的連結介面來看的話，主要有這些：</p>
+        <center>
+          <img src="0105computers/connect01.jpg" alt="連接周邊介面" title="連接周邊介面" border="1" /><br />
+          圖2.6.1、連接周邊介面<br />
+        </center>
+      </div>
+      <hr />
+      <a name="pc_power" id="pc_power"></a><span class="text_h2">電源供應器</span><br />
+      <div class="block2">
+        <p>除了上面這些元件之外，其實還有一個很重要的元件也要來談一談，那就是電源供應器(Power)。
+          在你的機殼內，有個大大的鐵盒子，上頭有很多電源線會跑出來，那就是電源供應器了。
+          我們的CPU/RAM/主機板/硬碟等等都需要用電，而近來的電腦元件耗電量越來越高，以前很古早的230W電源已經不夠用了，
+          有的系統甚至得要有500W以上的電源才能夠運作～真可怕～</p>
+        <p>電源供應器的價差非常大！貴一點的300W可以到4000 NT，便宜一點的300W只要500 NT不到！
+          怎麼差這麼多？沒錯～因為Power的用料不同，電源供應的穩定度也會差很多。如前所述，電源供應器相當於你的心臟，
+          心臟差的話，活動力就會不足了！所以，
+          穩定度差的電源供應器甚至是造成電腦不穩定的元兇呢！所以，盡量不要使用太差的電源供應器喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">能源轉換率</span></li>
+        </ul>
+        <p><span class="text_import2">電源供應器本身也會吃掉一部份的電力</span>的！如果你的主機系統需要 300W
+          的電力時，因為電源供應器本身也會消耗掉一部份的電力，
+          因此你最好要挑選400W以上的電源供應器。電源供應器出廠前會有一些測試數據，最好挑選高轉換率的電源供應器。
+          所謂的高轉換率指的是『輸出的功率/輸入的功率』。意思是說，假如你的主機板用電量為250W，
+          但是電源供應器其實已經使用掉320W的電力，則轉換率為：250/320=0.78的意思。
+          這個數值越高表示被電源供應器『玩掉』的電力越少，那就符合能源效益了！^_^<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">連接介面</span></li>
+        </ul>
+        <p>目前主機板與電源供應器的連接介面主要有20pin與24pin兩種規格，購買時也需要考慮你的主機板所需要的規格喔！</p>
+      </div>
+      <hr />
+      <a name="pc_select" id="pc_select"></a><span class="text_h2">選購須知</span><br />
+      <div class="block2">
+        <p>在購買主機時應該需要進行整體的考量，很難依照某一項標準來選購的。
+          老實說，如果你的公司需要一部伺服器的話，建議不要自行組裝，買品牌電腦的伺服器比較好！
+          這是因為自行組裝的電腦雖然比較便宜，但是每項設備之間的適合性是否完美則有待自行檢測。</p>
+        <p>另外，在效能方面並非僅考量CPU的能力而已，速度的快慢與『<span class="text_import2"
+		>整體系統的最慢的那個設備有關！</span>』，如果你是使用最快速的Intel Core 2 Duo，使用最快的DDR II記憶體，
+          但是配上一個慢慢的過時顯示卡，那麼整體的3D速度效能將會卡在那個顯示卡上面喔！所以，在購買整套系統時，
+          請特別留意需要全部的介面都考慮進去喔！尤其是當您想要升級時，要特別注意這個問題，
+          並非所有的舊的設備都適合繼續使用的。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">系統不穩定的可能原因</span></li>
+        </ul>
+        <p>除此之外，到底那個元件特別容易造成系統的不穩定呢？有幾個常見的系統不穩定的狀態是：</p>
+        <ul>
+          <li>系統超頻：這個行為很不好！不要這麼做！<br />
+            <br />
+          </li>
+          <li>電源供應器不穩：
+            這也是個很嚴重的問題，當您測試完所有的元件都沒有啥大問題時，記得測試一下電源供應器的穩定度！<br />
+            <br />
+          </li>
+          <li>記憶體無法負荷：現在的記憶體品質差很多，差一點的記憶體，可能會造成您的主機在忙碌的工作時，
+            產生不穩定或當機的現象喔！<br />
+            <br />
+          </li>
+          <li>系統過熱：『熱』是造成電子零件運作不良的主因之一，如果您的主機在夏天容易當機，
+            冬天卻還好，那麼考慮一下加幾個風扇吧！有助於機殼內的散熱，系統會比較穩定喔！
+            『 這個問題也是很常見的系統當機的元凶！』(鳥哥之前的一台伺服器老是容易當機，
+            後來拆開機殼研究後才發現原來是北橋上面的小風扇壞掉了，導致北橋溫度太高。後來換掉風扇就穩定多了。)</li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 事實上，要瞭解每個硬體的詳細架構與構造是很難的！這裡鳥哥僅是列出一些比較基本的概念而已。
+                  另外，要知道某個硬體的製造商是哪間公司時，可以看該硬體上面的資訊。
+                  舉例來說，主機板上面都會列出這個主機板的開發商與主機板的型號，知道這兩個資訊就可以找到驅動程式了。
+                  另外，顯示卡上面有個小小的晶片，上面也會列出顯示卡廠商與晶片資訊喔。 </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <a name="data" id="data"></a><span class="text_h1">資料表示方式</span><br />
+    <div class="block1">
+      <p>事實上我們的電腦只認識0與1，記錄的資料也是只能記錄0與1而已，所以電腦常用的資料是二進位的。
+        但是我們人類常用的數值運算是十進位，文字方面則有非常多的語言，台灣常用的語言就有英文、中文(又分正體與簡體中文)、日文等。
+        那麼電腦如何記錄與顯示這些數值/文字呢？就得要透過一系列的轉換才可以啦！底下我們就來談談數值與文字的編碼系統囉！</p>
+      <hr />
+      <a name="data_number" id="data_number"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">數字系統</span><br />
+      <div class="block2">
+        <p>早期的電腦使用的是利用通電與否的特性的真空管，如果通電就是1，沒有通電就是0，
+          後來沿用至今，我們稱這種只有0/1的環境為二進位制，英文稱為binary的哩。所謂的十進位指的是逢十進一位，
+          因此在個位數歸為零而十位數寫成1。所以所謂的二進位，就是逢二就前進一位的意思。</p>
+        <p>那二進位怎麼用呢？我們先以十進位來解釋好了。如果以十進位來說，3456的意義為：</p>
+        <div class="block2"><span class="text_import2">3456 = 3x10<sup>3</sup> + 4x10<sup>2</sup> + 5x10<sup>1</sup> + 
+          6x10<sup>0</sup></span></div>
+        <p>特別注意：『<span class="text_import2">任何數值的零次方為1</span>』所以10<sup>0</sup>的結果就是1囉。
+          同樣的，將這個原理帶入二進位的環境中，我們來解釋一下1101010的數值轉為十進位的話，結果如下：</p>
+        <div class="block2"><span class="text_import2">1101010=1x2<sup>6</sup> + 1x2<sup>5</sup> + 0x2<sup>4</sup> +
+          1x2<sup>3</sup> + 0x2<sup>2</sup> + 1x2<sup>1</sup> + 0x2<sup>0</sup><br />
+          = 64 + 32 + 0x16 + 8 + 0x4 + 2 + 0x1 = 106</span></div>
+        <p>這樣你瞭解二進位的意義了嗎？二進位是電腦基礎中的基礎喔！瞭解了二進位後，八進位、十六進位就依此類推啦！
+          那麼知道二進位轉成十進位後，那如果有十進位數值轉為二進位的環境時，該如何計算？
+          剛剛是乘法，現在則是除法就對了！我們同樣的使用十進位的106轉成二進位來測試一下好了：</p>
+        <center>
+          <img src="0105computers/number_01.gif" alt="二進位轉十進位" title="二進位轉十進位" border="0" /><br />
+          圖3.1.1、十進位轉二進位的方法
+        </center>
+        <p>最後的寫法就如同上面的紅色箭頭，由最後的數字向上寫，因此可得到1101010的數字囉！
+          這些數字的轉換系統是非常重要的，因為電腦的加減乘除都是使用這些機制來處理的！
+          有興趣的朋友可以再參考一下其他計算計概論的書籍中，關於1的補數/2的補數等運算方式喔！</p>
+      </div>
+      <hr />
+      <a name="data_word" id="data_word"></a><span class="text_h2">文字編碼系統</span><br />
+      <div class="block2">
+        <p>既然電腦都只有記錄0/1而已，甚至記錄的資料都是使用byte/bit等單位來記錄的，那麼文字該如何記錄啊？
+          事實上文字檔案也是被記錄為0與1而已，而這個檔案的內容要被取出來查閱時，必須要經過一個編碼系統的處理才行。
+          所謂的『編碼系統』可以想成是一個『字碼對照表』，他的概念有點像底下的圖示：</p>
+        <center>
+          <img src="0105computers/word_01.gif" alt="編碼表" title="編碼表" border="0" /><br />
+          圖3.2.1、資料參考編碼表的示意圖
+        </center>
+        <p>當我們要寫入檔案的文字資料時，該文字資料會由編碼對照表將該文字轉成數字後，再存入檔案當中。
+          同樣的，當我們要將檔案內容的資料讀出時，也會經過編碼對照表將該數字轉成對應的文字後，再顯示到螢幕上。
+          現在你知道為何瀏覽器上面如果編碼寫錯時，會出現亂碼了嗎？這是因為編碼對照表寫錯，
+          導致對照的文字產生誤差之故啦！</p>
+        <p><span class="text_import2">常用的英文編碼表為ASCII系統</span>，這個編碼系統中，
+          每個符號(英文、數字或符號等)都會佔用1bytes的記錄，
+          因此總共會有2<sup>8</sup>=256種變化。至於<span class="text_import2"
+		>中文字當中的編碼系統目前最常用的就是big5這個編碼表了</span>。
+          每個中文字會佔用2bytes，理論上最多可以有2<sup>16</sup>=65536，亦即最多可達6萬多個中文字。
+          但是因為big5編碼系統並非將所有的位元都拿來運用成為對照，所以並非可達這麼多的中文字碼的。
+          目前big5僅定義了一萬三千多個中文字，很多中文利用big5是無法成功顯示的～所以才會有造字程式說。</p>
+        <p>big5碼的中文字編碼對於某些資料庫系統來說是很有問題的，某些字碼例如『許、蓋、功』等字，
+          由於這幾個字的內部編碼會被誤判為單/雙引號，在寫入還不成問題，在讀出資料的對照表時，
+          常常就會變成亂碼。不只中文字，其他非英語系國家也常常會有這樣的問題出現啊！</p>
+        <p>為了解決這個問題，由國際組織ISO/IEC跳出來制訂了所謂的<span class="text_import2">Unicode編碼系統，
+          我們常常稱呼的UTF8或萬國碼的編碼就是這個咚咚</span>。因為這個編碼系統打破了所有國家的不同編碼，
+          因此目前網際網路社會大多朝向這個編碼系統在走，所以各位親愛的朋友啊，記得將你的編碼系統修訂一下喔！</p>
+      </div>
+    </div>
+    <hr />
+    <a name="program" id="program"></a><span class="text_h1">軟體程式運作</span><br />
+    <div class="block1">
+      <p>鳥哥在上課時常常會開玩笑的問：『<span class="text_import2">我們知道沒有插電的電腦是一堆廢鐵，那麼插了電的電腦是什麼？』
+        答案是：『一堆會電人的廢鐵』</span>！這是因為沒有軟體的運作，電腦的功能就無從發揮之故。
+        就好像沒有了靈魂的軀體也不過就是行屍走肉，重點在於軟體/靈魂囉！所以底下咱們就得要瞭解一下『軟體』是什麼。</p>
+      <p>一般來說，目前的電腦系統將軟體分為兩大類，一個是系統軟體，一個是應用程式。但鳥哥認為我們還是得要瞭解一下什麼是程式，
+        尤其是機器程式，瞭解了之後再來探討一下為什麼現今的電腦系統需要『作業系統』這玩意兒呢！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="program_mechin" id="program_mechin"></a><span class="text_h2">機器程式與編譯程式</span><br />
+      <div class="block2">
+        <p>我們前面談到電腦只認識0與1而已，而且電腦最重要的運算與邏輯判斷是在CPU內部，
+          而CPU其實是具有微指令集的。因此，我們需要CPU幫忙工作時，就得要參考微指令集的內容，
+          然後撰寫讓CPU讀的懂得指令碼給CPU執行，這樣就能夠讓CPU運作了。</p>
+        <p>不過這樣的流程有幾個很麻煩的地方，包括：</p>
+        <ul>
+          <li><span class="text_import2">需要瞭解機器語言：</span>機器只認識0與1，因此你必須要學習直接寫給機器看的語言！
+            這個地方相當的難呢！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">需要瞭解所有硬體的相關功能函數：</span>因為你的程式必須要寫給機器看，
+            當然你就得要參考機器本身的功能，然後針對該功能去撰寫程式碼。例如，你要讓DVD影片能夠放映，
+            那就得要參考DVD光碟機的硬體資訊才行。萬一你的系統有比較冷門的硬體，光是參考技術手冊可能會昏倒～<br />
+            <br />
+          </li>
+          <li><span class="text_import2">程式不具有可攜性：</span>每個CPU都有獨特的微指令集，同樣的，每個硬體都有其功能函數。
+            因此，你為A電腦寫的程式，理論上是沒有辦法在B電腦上面運作的！而且程式碼的修改非常困難！
+            因為是機器碼，並不是人類看的懂得程式語言啊！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">程式具有專一性：</span>因為這樣的程式必須要針對硬體功能函數來撰寫，
+            如果已經開發了一支瀏覽器程式，想要再開發檔案管理程式時，還是得從頭再參考硬體的功能函數來繼續撰寫，
+            每天都在和『硬體』挑戰！可能需要天天喝蠻牛了！@_@</li>
+        </ul>
+        <p>那怎麼解決啊？為了解決這個問題，電腦科學家設計出一種讓人類看的懂得程式語言，
+          然後創造一種『編譯器』來將這些人類能夠寫的程式語言轉譯成為機器能看懂得機器碼，
+          如此一來我們修改與撰寫程式就變的容易多了！目前常見的編譯器有C, C++, Java, Fortran等等。
+          機器語言與高階程式語言的差別如下所示：</p>
+        <center>
+          <img src="0105computers/compiler.gif" alt="編譯器" title="編譯器" border="1" /><br />
+          圖4.1.1、編譯器的角色<br />
+        </center>
+        <p>從上面的圖示我們可以看到高階程式語言的程式碼是很容易察看的！鳥哥已將經程式碼(英文)寫成中文說～
+          這樣比較好理解啦！所以這樣已經將程式的修改問題處理完畢了。
+          問題是，在這樣的環境底下我們還是得要考量整體的硬體系統來設計程式喔！</p>
+        <p>舉例來說，當你需要將運作的資料寫入記憶體中，你就得要自行分配一個記憶體區塊出來讓自己的資料能夠填上去，
+          所以你還得要瞭解到記憶體的位址是如何定位的，啊！眼淚還是不知不覺的流了下來...
+          怎麼寫程式這麼麻煩啊！</p>
+        <p>為了要克服硬體方面老是需要重複撰寫控制碼的問題，所以就有作業系統(Operating System, OS)的出現了！
+          什麼是作業系統呢？底下就來談一談先！</p>
+      </div>
+      <hr />
+      <a name="program_os" id="program_os"></a><span class="text_h2">作業系統</span><br />
+      <div class="block2">
+        <p>如同前面提到的，在早期想要讓電腦執行程式就得要參考一堆硬體功能函數，並且學習機器語言才能夠撰寫程式。
+          同時每次寫程式時都必須要重新改寫，因為硬體與軟體功能不見得都一致之故。那如果我能夠將所有的硬體都驅動，
+          並且提供一個發展軟體的參考介面來給工程師開發軟體的話，那發展軟體不就變的非常的簡單了？那就是作業系統啦！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">作業系統核心(Kernel)</span></li>
+        </ul>
+        <p><span class="text_import2">作業系統(Operating System, OS)其實也是一組程式，
+          這組程式的重點在於管理電腦的所有活動以及驅動系統中的所有硬體。</span> 我們剛剛談到電腦沒有軟體只是一堆廢鐵，那麼作業系統的功能就是讓CPU可以開始判斷邏輯與運算數值、
+          讓主記憶體可以開始載入/讀出資料與程式碼、讓硬碟可以開始被存取、讓網路卡可以開始傳輸資料、
+          讓所有周邊可以開始運轉等等。總之，硬體的所有動作都必須要透過這個作業系統來達成就是了。</p>
+        <p>上述的功能就是作業系統的核心(Kernel)了！你的電腦能不能做到某些事情，都與核心有關！
+          只有核心有提供的功能，你的電腦系統才能幫你完成！舉例來說，你的核心並不支援TCP/IP的網路協定，
+          那麼無論你購買了什麼樣的網卡，這個核心都無法提供網路能力的！</p>
+        <p>但是單有核心我們使用者也不知道能作啥事的～因為核心主要在管控硬體與提供相關的能力(例如網路功能)，
+          這些管理的動作是非常的重要的，如果使用者能夠直接使用到核心的話，萬一使用者不小心將核心程式停止或破壞，
+          將會導致整個系統的崩潰！因此<span class="text_import2">核心程式所放置到記憶體當中的區塊是受保護的！
+            並且開機後就一直常駐在記憶體當中。</span></p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 所以整部系統只有核心的話，我們就只能看著已經準備好運作(Ready)的電腦系統，但無法操作他！
+                  好像有點望梅止渴的那種感覺啦！這個時候就需要軟體的幫忙了！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">系統呼叫(System Call)</span></li>
+        </ul>
+        <p>既然我的硬體都是由核心管理，那麼如果我想要開發軟體的話，自然就得要去參考這個核心的相關功能！
+          唔！如此一來不是從原本的參考硬體函數變成參考核心功能，還是很麻煩啊！有沒有更簡單的方法啊！</p>
+        <p>為了解決這個問題，作業系統通常會提供一整組的開發介面給工程師來開發軟體！
+          工程師只要遵守該開發介面那就很容易開發軟體了！舉例來說，我們學習C程式語言只要參考C程式語言的函式即可，
+          不需要再去考量其他核心的相關功能，因為核心的系統呼叫介面會主動的將C程式語言的相關語法轉成核心可以瞭解的任務函數，
+          那核心自然就能夠順利運作該程式了！</p>
+        <p>如果我們將整個電腦系統的相關軟/硬體繪製成圖的話，他的關係有點像這樣：</p>
+        <center>
+          <img src="0105computers/os_01.gif" alt="作業系統的角色" title="作業系統的角色" border="1" /><br />
+          圖4.2.1、作業系統的角色<br />
+        </center>
+        <br />
+        <p>電腦系統主要由硬體構成，然後核心程式主要在管理硬體，提供合理的電腦系統資源分配(包括CPU資源、記憶體使用資源等等)，
+          因此<span class="text_import2">只要硬體不同(如x86架構與RISC架構的CPU)，核心就得要進行修改才行。</span> 而由於核心只會進行電腦系統的資源分配，所以在上頭還需要有應用程式的提供，使用者才能夠操作系統的。</p>
+        <p>為了保護核心，並且讓程式設計師比較容易開發軟體，因此作業系統除了核心程式之外，通常還會提供一整組開發介面，
+          那就是系統呼叫層。軟體開發工程師只要遵循公認的系統呼叫參數來開發軟體，該軟體就能夠在該核心上頭運作。
+          所以你可以發現，軟體與核心有比較大的關係，與硬體關係則不大！硬體也與核心有比較大的關係！
+          至於與使用者有關的，那就是應用程式啦！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 在定義上，只要能夠讓電腦硬體正確無誤的運作，那就算是作業系統了。所以說，
+                  作業系統其實就是核心與其提供的介面工具，不過就如同上面講的，因為最陽春的核心缺乏了與使用者溝通的親和介面，
+                  所以在目前，一般我們提到的『作業系統』都會包含核心與相關的使用者應用軟體呢！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <p>簡單的說，上面的圖示可以帶給我們底下的概念：</p>
+        <ul>
+          <li><span class="text_import2">作業系統的核心層直接參考硬體規格寫成，
+            所以同一個作業系統程式不能夠在不一樣的硬體架構下運作</span>。舉例來說，個人電腦版的Windows 
+            XP不能直接在RISC架構的電腦下運作。
+            所以您知道為何Windows XP又分為32位元及64位元的版本了吧？因為32/64位元的CPU指令集不太相同，
+            所以當然要設計不同的作業系統版本了。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">作業系統只是在管理整個硬體資源，包括CPU、記憶體、輸入輸出裝置及檔案系統檔</span>。
+            如果沒有其他的應用程式輔助，作業系統只能讓電腦主機準備妥當(Ready)而已！並無法運作其他功能。
+            所以你現在知道為何Windows 
+            XP上面要達成網頁影像的運作還需要類似PhotoImpact或Photoshop之類的軟體安裝了吧？<br />
+            <br />
+          </li>
+          <li><span class="text_import2">應用程式的開發都是參考作業系統提供的開發介面，
+            所以該應用程式只能在該作業系統上面運作而已，不可以在其他作業系統上面運作的</span>。
+            現在您知道為何去購買線上遊戲的光碟時，光碟上面會明明白白的寫著該軟體適合用於哪一種作業系統上了吧？
+            也該知道某些遊戲為何不能夠在Linux上面安裝了吧？</li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">核心功能</span></li>
+        </ul>
+        <p>既然核心主要是在負責整個電腦系統相關的資源分配與管理，那我們知道其實整部電腦系統最重要的就是CPU與主記憶體，
+          因此，核心至少也要有這些功能的：</p>
+        <ul>
+          <li><span class="text_import2">系統呼叫介面(System call interface)</span><br />
+            剛剛談過了，這是為了方便程式開發者可以輕易的透過與核心的溝通，將硬體的資源進一步的利用，
+            於是需要有這個簡易的介面來方便程式開發者。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">程序管理(Process control)</span><br />
+            總有聽過所謂的『多工環境』吧？一部電腦可能同時間有很多的工作跑到CPU等待運算處理，
+            核心這個時候必須要能夠控制這些工作，讓CPU的資源作有效的分配才行！另外，
+            良好的CPU排程機制(就是CPU先運作那個工作的排列順序)將會有效的加快整體系統效能呢！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">記憶體管理(Memory management)</span><br />
+            控制整個系統的記憶體管理，這個記憶體控制是非常重要的，因為系統所有的程式碼與資料都必須要先存放在記憶體當中。
+            通常核心會提供虛擬記憶體的功能，當記憶體不足時可以提供記憶體置換(swap)的功能哩。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">檔案系統管理(Filesystem management)</span><br />
+            檔案系統的管理，例如資料的輸入輸出(I/O)等等的工作啦！還有不同檔案格式的支援啦等等，
+            如果你的核心不認識某個檔案系統，那麼您將無法使用該檔案格式的檔案囉！例如：Windows 98就不認識NTFS檔案格式的硬碟； <br />
+            <br />
+          </li>
+          <li><span class="text_import2">裝置的驅動(Device drivers)</span><br />
+            就如同上面提到的，硬體的管理是核心的主要工作之一，當然囉，裝置的驅動程式就是核心需要做的事情啦！
+            好在目前都有所謂的『可載入模組』功能，可以將驅動程式編輯成模組，就不需要重新的編譯核心啦！
+            這個也會在後續的<a href="/linux_basic/0510osloader.php">第二十章</a>當中提到的！</li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 事實上，驅動程式的提供應該是硬體廠商的事情！硬體廠商要推出硬體時，應該要自行參考作業系統的驅動程式開發介面，
+                  開發完畢後將該驅動程式連同硬體一同販賣給使用者才對！舉例來說，當你購買顯示卡時，
+                  顯示卡包裝盒都會附上一片光碟，讓你可以在進入Windows之後進行驅動程式的安裝啊！ </font></span></td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">作業系統與驅動程式</span></li>
+        </ul>
+        <p>老實說，驅動程式可以說是作業系統裡面相當重要的一環了！不過，硬體可是持續在進步當中的！
+          包括主機板、顯示卡、硬碟等等。那麼比較晚推出的較新的硬體，例如顯示卡，我們的作業系統當然就不認識囉！
+          那作業系統該如何驅動這塊新的顯示卡？為了克服這個問題，作業系統通常會提供一個開發介面給硬體開發商，
+          讓他們可以根據這個介面設計可以驅動他們硬體的『驅動程式』，如此一來，只要使用者安裝驅動程式後，
+          自然就可以在他們的作業系統上面驅動這塊顯示卡了。</p>
+        <center>
+          <img src="0105computers/computer_driver.png" 
+		alt="驅動程式與作業系統的關係" title="驅動程式與作業系統的關係" border="0" /><br />
+          圖4.2.2、驅動程式與作業系統的關係<br />
+        </center>
+        <p>由上圖我們可以得到幾個小重點：</p>
+        <ul class="text_import2">
+          <li>作業系統必須要能夠驅動硬體，如此應用程式才能夠使用該硬體功能；</li>
+          <li>一般來說，作業系統會提供開發介面，讓開發商製作他們的驅動程式；</li>
+          <li>要使用新硬體功能，必須要安裝廠商提供的驅動程式才行；</li>
+          <li>驅動程式是由廠商提供的，與作業系統開發者無關。 </li>
+        </ul>
+        <p>所以，如果妳想要在某個作業系統上面安裝一張新的顯示卡，那麼請要求該硬體廠商提供適當的驅動程式吧！
+          ^_^！ 為什麼要強調『<span class="text_import2">適當的驅動程式</span>』呢？
+          因為驅動程式仍然是依據作業系統而開發的， 所以，給Windows用的驅動程式當然不能使用於Linux的環境下了。</p>
+      </div>
+      <hr />
+      <a name="program_ap" id="program_ap"></a><span class="text_h2">應用程式</span><br />
+      <div class="block2">
+        <p>應用程式是參考作業系統提供的開發介面所開發出來軟體，這些軟體可以讓使用者操作，以達到某些電腦的功能利用。
+          舉例來說，辦公室軟體(Office)主要是用來讓使用者辦公用的；影像處理軟體主要是讓使用者用來處理影音資料的；
+          瀏覽器軟體主要是讓使用者用來上網瀏覽用的等等。</p>
+        <p>需要注意的是，應用程式是與作業系統有關係的，如同上面的圖示當中的說明喔。因此，如果你想要購買新軟體，
+          請務必參考軟體上面的說明，看看該軟體是否能夠支援你的作業系統啊！舉例來說，如果你想要購買線上遊戲光碟，
+          務必參考一下該光碟是否支援你的作業系統，例如是否支援Windows XP/Windows Vista/MAC/Linux等等。
+          不要購買了才發現該軟體無法安裝在你的作業系統上喔！</p>
+        <p>我們拿常見的微軟公司的產品來說明。妳知道Windows XP, Office 2007之間的關係了嗎？</p>
+        <ul>
+          <li>Windows XP是一套作業系統，他必須先安裝到個人電腦上面，否則電腦無法開機運作；</li>
+          <li>Windows 98與Windows XP是兩套不同的作業系統，所以能在Win 98上安裝的軟體不見得可在WinXP上安裝；</li>
+          <li>Windows XP安裝好後，就只能擁有很少的功能，並沒有辦公室軟體；</li>
+          <li>Office 2007是一套應用程式，要安裝前必須要瞭解他能在哪些作業系統上面運作。</li>
+        </ul>
+      </div>
+    </div>
+    <hr />
+    <a name="hint" id="hint"></a><span class="text_h1">重點回顧</span><br />
+    <div class="block1">
+      <ul class="text_import2">
+        <li>計算機的定義為：『接受使用者輸入指令與資料，經由中央處理器的數學與邏輯單元運算處理後，以產生或儲存成有用的資訊』；</li>
+        <li>電腦的五大單元包括：輸入單元、 輸出單元、CPU內部的控制單元、算數邏輯單元與主記憶體五大部分；</li>
+        <li>資料會流進/流出記憶體是CPU所發佈的控制命令，而CPU實際要處理的資料則完全來自於主記憶體；</li>
+        <li>CPU依設計理念主要分為：精簡指令集(RISC)與複雜指令集(CISC)系統；</li>
+        <li>關於CPU的時脈部分：外頻指的是CPU與外部元件進行資料傳輸時的速度，倍頻則是CPU內部用來加速工作效能的一個倍數，
+          兩者相乘才是CPU的時脈速度；</li>
+        <li>一般主機板晶片組有分北橋與南橋，北橋的匯流排稱為系統匯流排，因為是記憶體傳輸的主要通道，所以速度較快。
+          南橋就是所謂的輸入輸出(I/O)匯流排，主要在聯繫硬碟、USB、網路卡等周邊設備；</li>
+        <li>北橋所支援的頻率我們稱為前端匯流排速度(Front Side Bus, FSB)，而每次傳送的位元數則是匯流排寬度。</li>
+        <li>CPU每次能夠處理的資料量稱為字組大小(word size)，字組大小依據CPU的設計而有32位元與64位元。
+          我們現在所稱的電腦是32或64位元主要是依據這個 CPU解析的字組大小而來的！</li>
+        <li>個人電腦的主記憶體主要元件為動態隨機存取記憶體(Dynamic Random Access Memory, DRAM)，
+          至於CPU內部的第二層快取則使用靜態隨機存取記憶體(Static Random Access Memory, SRAM)；</li>
+        <li>BIOS(Basic Input Output System)是一套程式，這套程式是寫死到主機板上面的一個記憶體晶片中，
+          這個記憶體晶片在沒有通電時也能夠將資料記錄下來，那就是唯讀記憶體(Read Only Memory, ROM)；</li>
+        <li>顯示卡的規格有PCI/AGP/PCIe，目前的主流為PCIe介面；</li>
+        <li>硬碟的組成為：圓形磁碟盤、機械手臂、 磁碟讀取頭與主軸馬達所組成的，其中磁碟盤的組成為磁區、磁軌與磁柱；</li>
+        <li>作業系統(Operating System, OS)其實也是一組程式， 這組程式的重點在於管理電腦的所有活動以及驅動系統中的所有硬體。</li>
+        <li>電腦主要以二進位作為單位，常用的磁碟容量單位為bytes，其單位換算為1 Byte = 8bits。</li>
+        <li>最陽春的作業系統僅在驅動與管理硬體，而要使用硬體時，就得需要透過應用軟體或者是殼程式(shell)的功能，
+          來呼叫作業系統操縱硬體工作。目前稱為作業系統的，除了上述功能外，通常已經包含了日常工作所需要的應用軟體在內了。</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="ex" id="ex"></a><span class="text_h1">本章習題</span><br />
+    <div class="block1">
+      <ul>
+        <li>動動手實作題：假設你不知道你的主機內部的各項元件資料，請拆開你的主機機殼，並將內部所有的元件拆開，並且依序列出：
+          <ul>
+            <li>CPU的廠牌、型號、最高時脈；</li>
+            <li>主記憶體的容量、介面 (DDR/DDR II等)；</li>
+            <li>顯示卡的介面 (AGP/PCIe/內建) 與容量</li>
+            <li>主機板的廠牌、南北橋的晶片型號、BIOS的廠牌、有無內建的網卡或音效卡等</li>
+            <li>硬碟的連接介面 (IDE/SATA等)、硬碟容量、轉速、緩衝記憶體容量等。</li>
+          </ul>
+          然後再將他組裝回去。注意，拆裝前務必先取得你主機板的說明書，因此你可能必須要上網查詢上述的各項資料。<br />
+          <br />
+        </li>
+        <li>利用軟體：假設你不想要拆開主機機殼，但想瞭解你的主機內部各元件的資訊時，該如何是好？
+          如果使用的是Windows作業系統，可使用CPU-Z(<a href="http://www.cpuid.com/cpuz.php" 
+		target="_blank">http://www.cpuid.com/cpuz.php</a>)這套軟體，如果是Linux環境下，可以使用『cat /proc/cpuinfo』
+          及使用『lspci』來查閱各項元件的型號；<br />
+          <br />
+        </li>
+        <li>依據文末的延伸閱讀連結，自行搜尋出 BIOS 的主要任務，以及目前在個人電腦上面常見的 BIOS 製造商有哪幾家？</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="reference" id="reference"></a><span class="text_h1">參考資料與延伸閱讀</span><br />
+    <div class="block1">
+      <ul>
+        <li><a name="ps1" id="ps1"></a>註1：對於CPU的原理有興趣的讀者，可以參考維基百科的說明：<br />
+          英文CPU(<a href="http://en.wikipedia.org/wiki/CPU"
+		target="_blank">http://en.wikipedia.org/wiki/CPU</a>)<br />
+          中文CPU(<a 
+		href="http://zh.wikipedia.org/w/index.php?title=%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8&amp;variant=zh-hant"
+		target="_blank">http://zh.wikipedia.org/wiki/中央處理器</a>)。</li>
+        <li><a name="ps2" id="ps2"></a>註2：圖片參考：作者：陳錦輝，『計算機概論-探索未來2008』，金禾資訊，2007出版</li>
+        <li><a name="ps3" id="ps3"></a>註3：更詳細的RISC架構可以參考維基百科：<br />
+          <a 
+		href="http://zh.wikipedia.org/w/index.php?title=%E7%B2%BE%E7%AE%80%E6%8C%87%E4%BB%A4%E9%9B%86&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=精簡指令集&amp;variant=zh-tw</a></li>
+        <li><a name="ps4" id="ps4"></a>註4：關於ARM架構的說明，可以參考維基百科：<br />
+          <a 
+		href="http://zh.wikipedia.org/w/index.php?title=ARM%E6%9E%B6%E6%A7%8B&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=ARM架構&amp;variant=zh-tw</a></li>
+        <li><a name="ps5" id="ps5"></a>註5：更詳細的CISC架構可參考維基百科：<br />
+          <a
+		href="http://zh.wikipedia.org/w/index.php?title=CISC&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=CISC&amp;variant=zh-tw</a></li>
+        <li><a name="ps6" id="ps6"></a>註6：更詳細的x86架構發展史可以參考維基百科：<br />
+          <a 
+		href="http://zh.wikipedia.org/w/index.php?title=X86&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=X86&amp;variant=zh-tw</a></li>
+        <li><a name="ps7" id="ps7"></a>註7：相關的韌體說明可參考維基百科：<br />
+          <a
+		href="http://zh.wikipedia.org/w/index.php?title=%E9%9F%8C%E9%AB%94&amp;variant=zh-hant"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=韌體&amp;variant=zh-hant</a></li>
+        <li><a name="ps8" id="ps8"></a>註8：相關 EEPROM 可以參考維基百科：<br />
+          <a
+		href="http://zh.wikipedia.org/w/index.php?title=EEPROM&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=EEPROM&amp;variant=zh-tw</a></li>
+        <li><a name="ps9" id="ps9"></a>註9：相關 BIOS 的說明可以參考維基百科：<br />
+          <a href="http://zh.wikipedia.org/w/index.php?title=BIOS&amp;variant=zh-tw"
+		target="_blank">http://zh.wikipedia.org/w/index.php?title=BIOS&amp;variant=zh-tw</a></li>
+        <li>感謝：本章當中出現很多圖示，很多是從Tom's Hardware(<a href="http://www.tomshardware.tw/"
+		target="_blank">http://www.tomshardware.tw/</a>)網站取得的，在此特別感謝！</li>
+      </ul>
+    </div>
+    <hr />
+    <span class="text_history"> 2008/07/22：利用暑假期間足足寫了快要兩個星期這篇才寫完！好多圖示都不知道如何呈現比較漂亮～@_@<br />
+      2008/07/29：又加入了SATA/IDE的連線排線，還有一些額外的圖示。<br />
+      2009/08/03：加入電源供應器是心臟一詞的說明<br />
+      2009/08/03：更正原本 BIOS 只放於 ROM 的資料，新的 BIOS 通常放於 EEPROM 或 Flash 記憶體中。<br />
+      </span>
+    <hr />
+    <br />    <br /></td>
+
+    <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

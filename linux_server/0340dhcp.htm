@@ -1,0 +1,919 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- DHCP 伺服器</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0340dhcp.htm">
+    <span class="text_head0"><span class="text_head_en">DHCP </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0340dhcp.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/12/06</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	如果您在工作單位使用的是筆記型電腦，而且常常要帶著您的筆記型電腦到處跑，那麼由前幾章的『
+	<a href="0130internet_connect.htm">連上 Internet </a> 』設定當中，會發現，哇！
+	我的網路卡參數要常常修改啊！而且，每到一個新的地方，就得問清楚該地的
+	Server 提供的網路參數才行！真是麻煩～～這個時候，動態主機設定協定 (DHCP)
+	可就大大的派上用場啦！DHCP 這個伺服器可以自動的分配 IP 與相關的網路參數給
+	Client 端，來提供 Client 端自動以主機提供的參數來設定他們的網路，如此一來，使用者只要將自己的
+	Notebook 設定好經由 DHCP 協定來取得網路參數後，一插上網路線，呵呵！馬上就可以享受
+	Internet 的服務啦！很方便吧！所以得來瞧一瞧這個好用的協定喔！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#theory">DHCP 運作的原理</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#theory_whatisdhcp">什麼是 DHCP 協定</a><br />
+	　　2.2 <a href="#theory_dhcpwork">DHCP 的運作方式</a><br />
+	　　2.3 <a href="#theory_need">何時需要架設 DHCP 伺服器</a><br />
+	</span>
+3. <a href="#server">DHCP 伺服器端的設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#server_pkg">所需套件與套件結構</a><br />
+	　　3.2 <a href="#server_dhcpd.conf">主要設定檔 /etc/dhcpd.conf 的語法</a><br />
+	　　3.3 <a href="#server_case">一個區域網路的 DHCP 伺服器設定案例</a><br />
+	　　3.4 <a href="#server_start">DHCP 伺服器的啟動與觀察</a><br />
+	　　3.5 <a href="#server_host">內部主機的 IP 對應</a><br />
+	</span>
+4. <a href="#client">DHCP 用戶端的設定</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#client_linux">Linux 用戶端</a><br />
+	　　4.2 <a href="#client_win">Windows 用戶端</a><br />
+	</span>
+5. <a href="#other">伺服器端資料查閱</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#other_lease">檢查租約檔案</a><br />
+	　　5.2 <a href="#other_remote">使用 ether-wake 實行遠端自動開機 (remote boot)</a><br />
+	</span>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a><br />
+8. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+9. <a href="http://phorum.vbird.org/viewtopic.htm?p=117845"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=117845</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	由於 DHCP 必需要設定整個區域網路的網段規定，還有得要瞭解路由設定，以及一堆與網路有關的資訊等等，
+	所以你一定要熟悉網路基礎。此外，由於 DHCP server 套件預設應該是不會安裝啦，所以你也必需要瞭解如何使用 rpm
+	或者是 yum 等工具才行。<br />
+	<ul>
+	<li>務必瞭解<a href="0110network_basic.htm">網路基礎</a>相關的資料；
+	<li>也得瞭解一下 <a href="0350dns.htm">DNS</a> 相關的議題；
+	<li>還有<a href="0250simple_firewall.htm">防火牆</a>最好也能瞭解一番。
+	</ul>
+</div>
+
+<hr /><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DHCP 運作的原理</span><br />
+<div class=block1>
+	老規矩，在正式的進入 <span class=text_import2>DHCP (Dynamic Host Configuration Protocol) </span>
+	主機設定之前，我們先來認識一下 DHCP 這個協定吧！還有，需要瞭解的是，我們是否有需要『一定』得設定 DHCP 
+	這個伺服器呢？這裡都需要釐清一下概念喔！ <br /><br />
+
+	<hr /><a NAME="theory_whatisdhcp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 DHCP 協定</span><br />
+	<div class=block2>
+		在開始 DHCP 的說明之前，我們先來複習一下之前在<a 
+		href="0110network_basic.htm">網路基礎</a>裡面提到的幾個網路參數吧！
+		要設定好一個網路的環境，使電腦可以順利的連上 Internet ，那麼您的電腦裡面一定要有底下幾個網路的參數才行，分別是：
+		<ul><span class=text_import2>IP, netmask, network, broadcast, gateway, DNS IP</span></ul>
+		其中，那個 IP, netmask, network, broadcast 與 gateway 都可以在 
+		/etc/sysconfig/network-scripts/ifcfg-eth[0-n] 這些檔案裡面設定，DNS 的位址則是在 
+		/etc/resolv.conf 裡頭設定。呵呵！只要這幾個項目設定正確，那麼電腦應該就沒問題的可以上網了！
+		所以說，您家裡面的 3, 4 部電腦，您都可以手動的來設定好您所需要的網路參數，
+		然後利用 <a href="0250simple_firewall.htm#nat">NAT 主機</a>的功能，就可以大搖大擺的<a
+		href="0130internet_connect.htm">連上 Internet</a> 了！真是不錯 ^_^，不是嗎？<br /><br />
+
+		好了，現在讓我們換一個大一些些的場景吧！假設您是學校宿舍的網路管理員，所管理的學生電腦大概有 100 
+		部好了，那麼您怎麼設定好這 100 部的電腦呢？<br />
+		<ol><span class=text_import2>
+		<li>直接每一部電腦都讓您登門拜訪手動的去設定好？
+		<li>將所有的學生都集合起來，然後精神訓話.....喔不！是直接教導一下怎麼設定？還是
+		<li>藉由一部主機來自動的分配所有的網路參數給宿舍內的任何一部電腦？
+		</span></ol>
+
+		這三種解決方案所需要的時間都不相同，如果您選擇的是(1)，那麼鳥哥個人認為，您不是工作狂就是瘋掉了，
+		因為所要花費的時間與您所得的薪水與付出的心力是完全不成比例的。如果選擇是(2)那麼很可能您會被掛上獨裁者、
+		沒良心的管理員的稱號！如果是選擇(3)呢？恭喜您！這個方案的管理時間花費最短，也是最不麻煩的作法啦！<br /><br />
+
+		呵呵！知道我要說些什麼了嗎？是的！這個 <span class=text_import2>DHCP (Dynamic Host Configuration Protocol)</span> 
+		主機最主要的工作，就是在進行前面提到的第三個方案，也就是自動的將網路參數正確的分配給網域中的每部電腦，
+		讓用戶端的電腦可以在開機的時候就立即自動的設定好網路的參數值，這些參數值可以包括了 IP、netmask、network、gateway
+		與 DNS 的位址等等。如此一來，呵呵！身為管理員的您，只要注意到這一部提供網路參數的主機有沒有掛掉就好了，
+		其他同學們的個人電腦，哈！您想都不必想要怎麼去幫忙！因為 DHCP 主機已經完全都幫您搞定啦！ 
+		^_^！ 阿！當管理員最大的幸福就是可以喝喝茶、聊聊天就能控管好一切的網路問題呢！<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_dhcpwork"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DHCP 的運作方式</span><br />
+	<div class=block2>
+		你必需要知道的是，DHCP 通常是用區域網路內的一個通訊協定，他主要藉由用戶端傳送廣播封包給整個物理網段內的所有主機，
+		若區域網路內有 DHCP 主機時，才會回應用戶端的 IP 參數要求。所以囉，DHCP 伺服器與用戶端是應該要在同一個物理網段內的。
+		而用戶端取得 IP 參數的程序可以簡化如下：<br />
+		<ol>
+		<li><span class=text_import1>用戶端利用廣播封包發送 DHCP 需求：</span><br />
+		若用戶端設定使用 DHCP 取得 IP (在 Windows 內為『自動取得 IP』)，則當用戶端開機或者是重新啟動網路卡時，
+		用戶端主機會發送出 DHCP 要求給所有物理網段內的電腦。此封包的目標 IP 會是 255.255.255.255，
+		所以一般主機接收到這個封包後會直接予以丟棄，但若區域網路內有 DHCP 伺服器時會如何回應？</li><br />
+
+		<li><span class=text_import1>DHCP 主機回應訊息：</span><br />
+		DHCP 主機在接收到這個用戶端的需求後，針對這個用戶端的<a 
+		href="0110network_basic.htm#fig_mac">硬體位址 (MAC)</a> 與本身的設定資料來進行下列工作：<br /><br />
+		<ul><span class=text_import2>
+		<li>到伺服器的登錄檔中尋找該用戶之前是否曾經用過某個 IP ，若有且該 IP 目前無人使用，則提供此 IP 給用戶端；
+		<li>若設定檔針對該 MAC 提供額外的固定 IP (static IP) 時，則給予該 IP 的設定；
+		<li>若不符合上述兩個條件，則隨機取用目前沒有被使用的 IP 給用戶，並記錄下來。
+		</span></ul><br />
+		此外，DHCP 伺服器還會提供一個租約時間給用戶端，並等待用戶端的回應。</li><br />
+
+		<li><span class=text_import1>用戶端接受 DHCP 伺服器提供的參數並設定本身的網路環境：</span><br />
+		若一切安好，則用戶端會接受該次取得的 IP 並開始處理本身的網路環境，包括改寫 /etc/resolv.conf 等等；
+		並且會向 DHCP 伺服器發送一個確認封包，確認該參數已被接受。</li><br />
+
+		<li><span class=text_import1>DHCP 伺服器記錄該次租約行為：</span><br />
+		用戶端回傳訊息以建立租約行為後，該次租約會被記錄到主機的登錄檔上頭，
+		並且開始租約計時喔！那麼該次租約何時會到期而被解約 (真可怕的字眼！) ？你可以這樣想：<br /><br />
+		<ul>
+		<li><span class=text_import2>用戶端離線</span>：不論是關閉網路介面 (ifdown)、重新開機 (reboot)、關機 (shutdown) 
+		等行為，皆算是離線狀態，這個時候 Server 端就會將該 IP 回收，並放到 Server 自己的備用區中，等待未來的使用；</li><br />
+		<li><span class=text_import2>用戶端租約到期：</span>前面提到 DHCP server 端發放的 IP 有使用的期限，用戶端使用這個 IP 
+		到達期限規定的時間，而且沒有重新提出 DHCP 的申請時，就需要將 IP 繳回去！這個時候就會造成斷線，而用戶也可以再向 
+		DHCP 主機要求再次分配 IP 囉
+		</ul>
+		</ol>
+
+		以上就是 DHCP 這個協定在 Server 端與 Client 端的運作狀態，由上面這個運作狀態來看，我們可以曉得，只要 
+		Server 端設定沒有問題，加上 Server 與 Client 在硬體連線上面確定是 OK 的，那麼 Client 就可以直接藉由 Server 
+		來取得上網的網路參數，當然啦，只要我們這些管理員能夠好好的、正確的管理好我們的 DHCP 
+		，嘿嘿！那麼上網的設定自然就變成一件很簡單的事情啦！ <br /><br />
+
+		<hr /><li><span class=text_import1>DHCP 伺服器給予用戶端的 IP 類型：</span></li>
+		<div class=block2>
+		在上面的步驟裡面，注意到第二步驟了嗎？就是伺服器會去比較用戶端的 MAC 硬體位址，並判斷該 MAC 
+		是否需要給予一個固定的 IP 呢！所以啦，我們可以設定 DHCP 伺服器給予用戶端的 IP 類型主要有兩種：<br />
+		<ul>
+		<li><span class=text_import2>固定 (Static) IP：</span><br />
+		只要那個用戶端電腦的網路卡不換掉，那麼 MAC 肯定就不會改變，由於 DHCP 可以根據 MAC 來給予固定的 
+		IP ，所以該電腦每次都能以一個固定的 IP 連上 Internet ！呵呵！
+		這種情況比較適合當這部電腦需要用來做為提供區域內的一些網路服務的主機之用。那麼如何在 Linux 
+		上面知道您的 MAC 呢？很簡單啦！有很多的方式，最簡單的方式就是使用 ifconfig 及 arp 來進行：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 觀察自己的 MAC 可用 ifconfig：</span>
+[root@linux ~]# <span class=term_command>ifconfig eth0</span>
+eth0      Link encap:Ethernet  HWaddr <span class=term_write>00:08:03:A3:E0:34</span>
+          inet addr:192.168.1.254  Bcast:192.168.1.255  Mask:255.255.255.0
+          <span class=term_say>....底下省略....</span>
+
+<span class=term_hd>2. 觀察別人的 MAC 可用 ping 配合 arp</span>
+[root@linux ~]# <span class=term_command>ping -c 1 192.168.1.101</span>
+[root@linux ~]# <span class=term_command>arp -n</span>
+Address        HWtype  HWaddress          Flags Mask   Iface
+192.168.1.101  ether   <span class=term_write>00:08:75:A0:B2:78</span>  C            eth0
+</pre></td></tr></table><br />
+
+		<li><span class=text_import2>動態 (dynamic) IP：</span><br />
+		Client 端每次連上 DHCP 所取得的 IP 都不是固定的！都直接經由 DHCP 所隨機由尚未被使用的 IP 中提供！
+		</ul>
+
+		除非您的區域網路內的電腦有可能用來做為主機之用，所以必需要設定成為固定 IP ，否則使用動態 IP 
+		的設定比較簡單，而且使用上面具有較佳的彈性。怎麼說呢？假如您是一個 ISP 好了，而您只申請到 
+		150 個 IP 來做為您的客戶連線之用。那麼您是否真的只能邀集到 150 的使用者？呵呵！當然不囉！我可以邀集 
+		200 個使用者以上呢！<br /><br />
+
+		為什麼？這樣想好了，我今天開了一家餐館，裡面只有 20 個座位，那麼是否我一餐只能賣給 20 
+		個人呢？當然不是啦！因為客人是人來人往的，有人先吃有人後吃，所以同樣是 20 個座位，但是可以有 
+		40 個人來吃我的簡餐，因為來的時間不一樣嘛！瞭解了嗎？呵呵！對啦！您這個 ISP 雖然只有 150 個 IP 
+		可以發放，但是因為您的使用者並非 24 小時都掛在線上的，所以您可以將這 150 個 IP 做良好的分配，讓 
+		200 個人來『輪流使用』這 150 個 IP 哩！ <br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實 IP 只有 Public IP 與 Private IP 兩種，中文翻譯成『公共 IP』與『私有 IP』這兩個，
+		至於其他所謂的『靜態 IP』、『實體 IP』、『虛擬 IP』、『浮動式 IP』等等，都是藉由一些 IP 取得的方式來分類的，
+		關於 IP 的種類我們在<a href="0110network_basic.htm#ipandmac_type">網路基礎</a>中談過了，記得再好好的釐清一下觀念喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		事實上現在主流的 ADSL 寬頻撥接上網也有使用到『<span class=text_import2>靜態 
+		IP</span> 』與『<span class=text_import2>固定 IP</span> 』之類的概念喔！
+		舉例來說好了，hinet/seed net 等主要 ISP 都有提供所謂的：『一個固定 IP 搭配 7~8 個浮動 IP 』的
+		ADSL 撥接功能，也就是說同樣透過一條電話線撥接到 ISP ，但是其中一個撥接是可以取得固定的 IP 呢！
+		而其他的則是非固定的 IP ，DHCP 的 static/dynamic 跟這個玩意兒有點類似啦！ ^_^<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>關於租約所造成的問題：</span></li>
+		<div class=block2>
+		怪了！如果我們觀察上面 DHCP 運作模式的第二個步驟，您會發現最後面 DHCP 伺服器還有給予還有一個租約期限！
+		幹嘛還要這樣的一個期限呢？其實設定期限還是有個優點啦！最大的優點就是可以避免 IP 
+		被某些使用者一直佔用著，但該使用者卻是 Idle (發呆) 的狀態！<br /><br />
+
+		舉個例子來說，我們剛剛不是說到，我有 150 個 IP ，但是偏偏我有 200 個用戶嗎？我們以 
+		2006 年的世界盃足球賽來說明好了。假設每個使用者都急著上網知道世足賽的消息，
+		那麼某些熱門對戰時段網路將可能達到使用尖峰！也就是說，這 200 個人同時要來使用這 150 個 
+		IP ，有可能嗎？當然不可能！肯定會有 50 個人無法連線，因為『很抱歉！目前系統正在忙線中，請您稍後再撥！』<br /><br />
+
+		那怎麼辦？這個時候租約到期的方式就很有用處啦！那幾個已經連線進來很久的人，
+		就會因為租約到期而被迫離線，這個時候該 IP 就會被釋放出來，哈哈！大家趕快搶呀！先搶到先贏喔！
+		所以，那 50 個人 (包括被迫離線的那個朋友) 只好繼續的、努力的、加油的來進行 DHCP 的要求囉！ ^_^""<br /><br />
+
+		雖然說是優點，但是其實如果站在使用者的角度來看，還是可能會造成公憤的！憑什麼大家一起交錢，
+		我先連線進來就需要先被踢出去？～呵呵！所以囉，如果要當 ISP ，還是得要先規劃好服務的方針才行呦！
+		這樣您可以瞭解租約到期的行為了嗎？！ ^_^ <br /><br />
+
+		既然有租約時間，那麼<span class=text_import2>是否代表我用 DHCP 取得的 IP 
+		就得要『手動』的在某個時間點去重新取得新的 IP 呢？</span>不需要的啦！因為目前的 DHCP 
+		用戶端程式大多會主動的依據租約時間去重新申請 IP (renew) 的！也就是說在租約到期前你的 DHCP 
+		用戶端程式就已經又重新申請更新租約時間了。所以除非 DHCP 主機掛點，
+		否則您所取得的 IP 應該是可以一直使用下去的！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>多部 DHCP 主機在同一物理網段的情況</span></li>
+		<div class=block2>
+		或許您曾經發現過一件事情，那就是當我的網域裡面有兩部以上的 DHCP 主機時，
+		到底哪一部主機會設定我的這部電腦所發出的 DHCP 要求？呵呵！很抱歉，俺也不曉得！
+		因為在網路上面，很多時候都是『先搶先贏』的， DHCP 的回應也是如此！當 Server1 先回應時，您使用的就是 
+		Server1 所提供的網路參數內容，如果是 Server2 先回應，您就是使用 Server2 的參數來設定您的 
+		PC ！不過，前提之下當然是這些電腦的『物理連線』都是在一起的啊！<br /><br />
+		</div>
+	</div>
+
+	<hr /><a NAME="theory_need"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">何時需要架設 DHCP 伺服器</span><br />
+	<div class=block2>
+		既然 DHCP 的好處是『免用戶端設定』，而且對於行動裝置的上網方面非常的方便！那麼是否代表你就得要架設一部 
+		DHCP 呢？那可不一定！接下來要告知大家的是幾個概念性的問題，
+		您倒不一定『必需』遵守底下的一些概念呢！反正，自己的網域自己『爽』就好啦！<br /><br />
+
+		<li><span class=text_import1>使用 DHCP 的幾個時機</span></li>
+		<div class=block2>
+		在某些情況之下，倒是強烈的建議架設 DHCP 主機的！什麼情況呢？例如：<br />
+
+		<ul>
+		<li><span class=text_import2>具有相當多行動裝置的場合：</span><br />
+		例如您的公司內部很多筆記型電腦 (筆電) 使用的場合！因為這種筆電本身就是移動性的裝置，
+		如果每到一個地方都要去問人家『喂！您這邊的網路參數是什麼？』還得要擔心是否會跟人家的 
+		IP 相衝突等等的問題！這個時候，DHCP 可就是您的救星囉！</li><br />
+
+		<li><span class=text_import2>區域內電腦數量相當的多時：</span><br />
+		另外一個情況就是您所負責的網域內電腦數量相當龐大時，
+		大到您沒有辦法一個一個的進行說明來設定他們自己的網路參數，這個時候為了省麻煩，還是架設 
+		DHCP 來的方便吶！況且，維護一部您熟悉的 DHCP 主機，要比造訪幾十個不懂電腦的人要簡單的多哩！^_^
+		</ul>
+		</div>
+
+		<li><span class=text_import1>不建議使用 DHCP 主機的時機</span></li>
+		<div class=block2>
+		雖然 DHCP 有很多好處，但是您有沒有發現一個步驟怪怪的呀！回頭看一下那個步驟一，
+		用戶端在開機的時候會主動的發送訊息給網域上的所有機器，這個時候，如果網域上就是沒有 DHCP 
+		主機呢？很抱歉，那麼您的這部用戶端電腦，『仍然會持續的發送訊息！』
+		真正的時間與次數我不曉得會有多久，不過，肯定會超過 30 秒以上，
+		甚至可以達到一分鐘以上！哇！那麼這段時間您能幹嘛？呵呵！除了等、還是等！
+		所以囉，如果電腦數不多，還是使用手動的方式來設定一下就好了！方便嘛！<br />
+		<ul><span class=text_import2>
+		<li>在您網域內的電腦，有很多機器其實是做為主機的用途，很少 Client 需求，那麼似乎就沒有必要架設 DHCP ；
+		<li>更極端的情況是，像一般家裡，只有 3 ~ 4 部電腦，這個時候，架設 DHCP 只能拿來練練功力，事實上，並沒有多大的效益；
+		<li>當您管理的網域當中，大多網路卡都屬於老舊的型號，並不支援 DHCP 的協定時；
+		<li>很多使用者的資訊知識都很高，那麼也沒有需要架設 DHCP 啦。
+		</span></ul>
+		</div>
+
+		如前所述，上面的都是概念性的說法，事實上，一件事情的解決之道是有很多的方案的，
+		沒有所謂的『完全正確』的方案，只有『相對可行、並且符合經濟效益與功能』的方案！
+		所以囉，架設任何網站之前，請先多評估評估吶！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DHCP 伺服器端的設定</span><br />
+<div class=block1>
+	事實上，目前市面上的 IP 分享器已經便宜到爆了！而 IP 分享器本身就含有 DHCP 的功能，
+	所以如果你只是想要單純的使用 DHCP 在你的區域網路當中而已，那麼建議你直接購買一部 IP 分享器來使用即可，
+	因為至少他很省電。如果你還有其他考量的話，才來架設 DHCP 吧！底下我們以一個簡單的範例來架設 DHCP 先。<br /><br />
+
+	<hr /><a NAME="server_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需套件與套件結構</span><br />
+	<div class=block2>
+		DHCP 的套件需求很簡單，就是只要伺服器端軟體即可。所需套件為：<br />
+
+		<ul><li><span class=text_import1>dhcp</span><br />
+		提供整個 DHCP 伺服器的主要設定檔與啟動的 script 及執行檔等等重要資料。
+		</ul>
+
+		真的只要一個套件就好了，而且沒有什麼很重大的相依性問題呢！請拿出你的原版光碟用 rpm 來安裝，
+		或者直接用 yum 線上安裝也可以！檔案很小啦！至於整個套件的結構是這樣的：<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/dhcpd.conf</span><br />
+		這個就是 dhcp 伺服器的主要設定檔咯！在某些 Linux 版本上頭這個檔案可能不存在，所以如果你確定有安裝 dhcp 
+		套件卻找不到這個檔案時，請手動自行建立他即可。這個檔案的設定很簡單啦，我們底下主要就是在談這個檔案的設定而已哩。
+		不過設定檔的實際位置還是得要參考 /etc/init.d/dhcpd 的規範才是。<br />
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實 dhcp 套件在釋出的時候都會附上一個範例檔案，你可以使用『 rpm -ql dhcp 』來查詢到 
+		dhcpd.conf.sample 這個範例檔案，然後將該檔案複製成為 /etc/dhcpd.conf 後，再手動去修改 
+		/etc/dhcpd.conf 即可，這樣設定比較容易咯！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<li><span class=text_import1>/usr/sbin/dhcpd</span><br />
+		啟動整個 dhcp daemon 的執行檔啊！其實最詳細的執行方式應該要使用『 man dhcpd 』來查閱一番的呢！^_^</li><br />
+
+		<li><span class=text_import1>/var/lib/dhcp/dhcpd.leases</span><br />
+		這檔案頗有趣的！我們前面原理部分不是有提到『租約』嗎？DHCP 
+		伺服器端與用戶端租約建立的啟始與到期日就是記錄在這個檔案當中的咯！</li>
+		</ul>
+
+		就跟你說很簡單吧！整個套件資料也不過才如此而已呢！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_dhcpd.conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主要設定檔 /etc/dhcpd.conf 
+	的語法</span><br />
+	<div class=block2>
+		其實 DHCP 的設定很簡單啊，只要將 dhcpd.conf 設定好就可以啟動了。不過編輯這個檔案時你必須要留意的是：<br />
+		<ul><span class=text_import2>
+		<li>『 # 』為註解符號；
+		<li>除了括號那一行之外，其他的每一行後面都要以『 ; 』做為結尾！這是最容易出錯的地方。
+		<li>通常設定的項目都有獨特的名稱，以：『 &lt;參數代號&gt;  &lt;設定內容&gt; 』來處理，例如：<br />
+		default-lease-time 259200;
+		<li>某些設定項目必須以 option 來設定，基本方式為『 option &lt;參數代碼&gt; &lt;設定內容&gt; 』例如：<br />
+		option domain-name "your.domain.name";
+		</span></ul>
+
+		基本上，我們剛剛前面提過說， 
+		DHCP 的 IP 分配可分為給予動態 IP 與靜態 IP ，其中又需要瞭解的是，如果需要設定靜態 IP 
+		的話，那麼就必須要知道要設定成靜態 IP 的那部電腦的硬體位址 (MAC) 才行，請使用 arp 及 
+		ifconfig 來查知您的介面的 MAC 吧！此外，我們需要設定的項目大概有幾項：<br />
+		<ul>
+		<li><span class=text_import2>整體設定 (Global)</span><br />
+		包括有租約期限、DNS 的 IP 位址、路由器的 IP 位址還有動態 DNS (DDNS) 更新的類型等等。
+		當靜態 IP 及動態 IP 內沒有規範到某些設定時，則以整體設定值為準。常使用參數有：<br />
+		<ul>
+		<li style="padding: 10px 0 0 0"><span class=text_import2>default-lease-time 時間</span>：<br />
+		預設的租約時間，後面的時間參數預設單位為秒；
+		<li style="padding: 10px 0 0 0"><span class=text_import2>max-lease-time 時間</span>：<br />
+		最大租約時間，當用戶端超過租約時間卻尚未更新 IP 時，最長可以使用該 IP 的時間；
+		<li style="padding: 10px 0 0 0"><span class=text_import2>option domain-name "領域名稱"</span>：<br />
+		如果你在 /etc/resolv.conf 裡面設定了一個『 search google.com 』的話，這表示當你要搜尋主機名稱時，
+		DNS 系統會主動幫你加上這個領域名稱的意思。所以這個設定參數也會修改 /etc/resolv.conf 喔！
+		<li style="padding: 10px 0 0 0"><span class=text_import2>option domain-name-servers IP1, 
+		IP2</span>：<br />這個設定參數可以修改用戶端的
+		/etc/resolv.conf 檔案！就是 nameserver 所接的那個 DNS IP 囉！特別注意設定參數最末尾為『servers』 (有 s 喔)；
+		<li style="padding: 10px 0 0 0"><span class=text_import2>ddns-update-style 類型</span>：<br />因為 DHCP 
+		用戶端所取得的 IP 通常是一直變動的，
+		所以某部主機的主機名稱與 IP 的對應就很難處理。此時 DHCP 可以透過 ddns (請參考
+		<a href="0270dynamic_dns.htm">合法主機名稱</a> 與 <a href="0350dns.htm">DNS 章節</a>的說明) 
+		來更新主機名與 IP 的對應。不過我們這裡不談這麼複雜的東西，所以你可以將他設定為 none 喔。
+		<li style="padding: 10px 0 0 0"><span class=text_import2>option routers 路由器的位址</span>：<br />
+		設定路由器的 IP 所在，記得那個『 routers 』要加 s 才對！</li>
+
+		<li style="padding: 10px 0 0 0"><span class=text_import2>option broadcasst-address 廣播位址</span>：<br />
+		設定廣播位址而已。如果沒有設定的話，系統應該會自動依據 class A, B, C 的原則來計算出廣播位址吧！</li>
+
+		</ul><br />
+
+		<li><span class=text_import2>動態 IP 分配設定：</span><br />
+		用來設定隨機給予 IP 的方式，只要給予網域 (network 以及 netmask) 配合 range 這個參數就能夠給予限制的 IP 範圍了。
+		設定方式並不怎麼難啊。</li><br />
+
+		<li><span class=text_import2>靜態 IP 的設定方式：</span><br />
+		透過硬體位址 (MAC) 來處理 IP 的取得。使用的是 host 這個設定參數，
+		配合底下兩個常見的參數值來處理：<br />
+
+		<ul>
+		<li style="padding: 10px 0 0 0"><span class=text_import2>hardware ethernet 硬體位址</span>：<br />
+		利用網路卡上面的固定硬體位址來設定，亦即該設定僅針對這個硬體位址有效的意思；</li>
+
+		<li style="padding: 10px 0 0 0"><span class=text_import2>fixed-address IP位址</span>：<br />
+		給予一個固定的 IP 位址的意思。
+		</ul>
+		</ul>
+		說再多也沒有什麼用啦！讓我們實際來玩一個案例吧！你就知道該如何處理了。<br /><br />
+	</div>
+
+	<hr /><a NAME="server_case"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個區域網路的 DHCP 伺服器設定案例</span><br />
+	<div class=block2>
+		假設我的環境當中，Linux 伺服器除了 NAT 主機之外還得要負責其他伺服器，例如郵件伺服器的支援。
+		而在後端區域網路中則想要提供 DHCP 的服務。整個硬體配置的情況如同下圖所示：<br /><br />
+
+		<a name="fig_01"></a><center><img src="0340dhcp/lan.png"
+		title="區域網路的實體連接情況"
+		alt="區域網路的實體連接情況"><br />
+		圖一、區域網路的實體連接情況</center><br />
+
+		如上圖所示，假設我的 Linux 有兩塊介面，其中 eth0 對內而 eth1 對外，至於其他的網路參數設計為：<br />
+		<ul>
+		<li>內部網段設定為 192.168.1.0/24 這一段，且 router 為 192.168.1.254 ，此外， DNS 主機的 IP 
+		為中華電信的 168.95.1.1 及 Seednet 的 139.175.10.20 這兩個；
+		<li>我想要讓每個使用者預設租約為 3 天，最長為 6 天；
+		<li>只想要分配的 IP 只有 192.168.1.21 到 192.168.1.100 這幾個，其他的 IP 則保留下來；
+		<li>我還有一部主機，他的 MAC 是『 00:40:95:30:43:B4 』，我要給他的主機名稱為 vbird-inside ，且 IP 為 192.168.1.5 這個。
+		</ul>
+		則我的設定檔就會像底下這個樣子了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/dhcpd.conf</span>
+<span class=term_write><span class=term_say># 1. 整體的環境設定
+#    當底下的 subnet 與 host 沒有設定時，以這裡的設定值為準喔！</span>
+ddns-update-style               none;          <span class=term_say>&lt;==不要更新 DDNS 的設定</span>
+default-lease-time              259200;        <span class=term_say>&lt;==預設租約為 3 天</span>
+max-lease-time                  518400;        <span class=term_say>&lt;==最大租約為 6 天</span>
+option routers                  192.168.1.254; <span class=term_say>&lt;==這就是預設路由</span>
+option broadcast-address        192.168.1.255; <span class=term_say>&lt;==這是廣播位址啊</span>
+option domain-name-servers      168.95.1.1, 139.175.10.20;
+<span class=term_say># 上面是 DNS 的 IP 設定，這個設定值會修改用戶端的 /etc/resolv.conf 檔案內容！
+# 此外，你可以設定多部 DNS 主機，不過必須要以逗號『 , 』分隔開才行。</span>
+
+<span class=term_say># 2. 關於動態分配的 IP</span>
+<span class=term_say>#     Network_IP↓        Netmask_IP↓</span>
+subnet 192.168.1.0 netmask 255.255.255.0 {
+    range 192.168.1.21 192.168.1.100;      <span class=term_say>&lt;==分配的 IP 範圍</span>
+    option subnet-mask   255.255.255.0; <span class=term_say>&lt;==可重複設定 netmask 位址</span>
+    option nis-domain    "vbird.tsai";  <span class=term_say>&lt;==額外給的 NIS 相關參數</span>
+    option domain-name   "vbird.tsai";  <span class=term_say>&lt;==在 /etc/resolv.conf 給一個搜尋領域</span>
+
+    <span class=term_say># 3. 關於靜態的 IP 啊！</span>
+    <span class=term_say>#    主機名稱↓</span>
+    host vbird-inside {
+        hardware ethernet    00:40:95:30:43:B4; <span class=term_say>&lt;==用戶端網卡 MAC</span>
+        fixed-address        192.168.1.5;       <span class=term_say>&lt;==給予固定的 IP</span>
+    }
+}</span>
+<span class=term_say># 相關的設定參數意義，請查詢前一小節的介紹，或者 man dhcpd.conf</span>
+</pre></td></tr></table>
+
+		夠簡單吧！這樣就設定好了！你可以複製上頭的資料然後修改一下，讓裡頭的 IP 參數符合你的環境，
+		就能夠設定好你的 DHCP 伺服器了。接下來理論上你就能夠啟動 dhcp 了。不過，在某些早期的 Linux distribution 上面，
+		當你的 Linux 主機具有多個介面時，你的一個設定可能會讓多個介面同時來監聽，那就可能會發生錯誤了。<br /><br />
+
+		舉例來說，我們現在的設定是 192.168.1.0/24 這個在 eth0 上頭的網域，假設你還有一個介面 eth1 在 192.168.2.0/24 好了，
+		那萬一你的 DHCP 同時監聽兩塊介面的話，想一想，如果 192.168.2.0/24 網域的用戶端發送出 dhcp 封包的要求時，
+		他會取得什麼 IP ？所以囉，我們就得要針對 dhcpd 這個執行檔設定他監聽的介面，
+		而不是針對所有的介面都監聽啊！您說是吧！^_^！那如何處理呢？在 CentOS (Red Hat 系統) 可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/dhcpd</span>
+DHCPDARGS=<span class=term_write>"eth0"</span>
+</pre></td></tr></table>
+
+		這樣做就好了，這是因為啟動 dhcpd 的 script 會主動的呼叫這個參數檔案。如果是在其他版本的 Linux 當中，
+		你可以直接修改 /etc/init.d/dhcpd 這個 script 檔案內容，找到『 daemon /usr/sbin/dhcpd ... 』那一行，
+		並新增網路卡代號即可，例如：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/init.d/dhcpd</span>
+<span class=term_say># 約在第 58 行左右會找到：</span>
+        daemon /usr/sbin/dhcpd <span class=term_write>${DHCPDARGS}</span> 2>/dev/null 
+</pre></td></tr></table>
+
+		在上述的特殊字體部分，你可以持續加入想要增加的監聽介面啦！更多的功能可以參考『 man dhcpd 』的解釋。
+		不過這個動作在較新的版本上面已經不需要了，因為新版本的 dhcp 會主動的分析伺服器的網段與實際的 dhcpd.conf 設定，
+		如果兩者無法吻合，就會有錯誤提示，人性化多了。 ^_^！
+		接下來我們可以開始啟動 dhcp 試看看囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_start"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DHCP 伺服器的啟動與觀察</span><br />
+	<div class=block2>
+		開始來啟動 dhcp 吧！另外你要注意的是：dhcpd 使用的埠口是 port 67 ，並且啟動的結果會記錄在 /var/log/messages
+		檔案內，你最好能去觀察一下 /var/log/messages 所顯示的 dhcpd 相關資訊才好。<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 就啟動吧！</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/dhcpd start</span>
+
+<span class=term_hd>2. 看看埠口啟動的情況</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address Foreign Address PID/Program name
+udp        0      <span class=term_write>0 0.0.0.0:67</span>    0.0.0.0:*       7294/dhcpd
+
+<span class=term_hd>3. 看看登錄檔的輸出資訊</span>
+[root@linux ~]# <span class=term_command>tail -n 30 /var/log/messages</span>
+Dec 5 10:58 linux dhcpd: Internet Systems Consortium DHCP Server V3.0.1
+Dec 5 10:58 linux dhcpd: Copyright 2004 Internet Systems Consortium.
+Dec 5 10:58 linux dhcpd: All rights reserved.
+Dec 5 10:58 linux dhcpd: For info, please visit http://www.isc.org/sw/dhcp/
+Dec 5 10:58 linux dhcpd: <span class=term_write>Wrote 0 deleted host decls to leases file.</span>
+Dec 5 10:58 linux dhcpd: <span class=term_write>Wrote 0 new dynamic host decls to leases file.</span>
+Dec 5 10:58 linux dhcpd: <span class=term_write>Wrote 0 leases to leases file.</span>
+Dec 5 10:58 linux dhcpd: <span class=term_write>Listening on LPF/eth0/00:40:fa:25:2a:db/192.168.1/24</span>
+Dec 5 10:58 linux dhcpd: dhcpd startup succeeded
+</pre></td></tr></table>
+
+		看到這些就是成功的象徵啦！恭喜你啊！真是『福氣啦！』不過，萬一你看到的登錄檔是類似底下的模樣呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+Dec 5 11:11 linux dhcpd: <span class=term_write>/etc/dhcpd.conf line 10</span>: semicolon expected.
+Dec 5 11:11 linux dhcpd: <span class=term_write>subnet</span>
+Dec 5 11:11 linux dhcpd: <span class=term_write>^</span>
+Dec 5 11:11 linux dhcpd: Configuration file errors encountered -- exiting
+</pre></td></tr></table>
+
+		這表示應該是第 10 行左右有點問題，問題點應該是沒有分號 (semicolon) 而已。而分號應該是在指數符號 (^) 指的地方，
+		也就是 subnet 附近而已，很容易分辨吧！那如果是出現如下的模樣呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+** You must add a <span class=term_write>ddns-update-style statement to /etc/dhcpd.conf</span>.
+   To get the same behaviour as in 3.0b2pl11 and previous
+   versions, add a line that says "ddns-update-style ad-hoc;"
+   Please read the dhcpd.conf manual page for more information. **
+</pre></td></tr></table>
+
+		這表示你忘記在 /etc/dhcpd.conf 裡面加入 ddns-update-style 的參數宣告啦！
+		瞧一瞧這個輸出資訊，就能夠曉得你的設定錯誤所在，根據錯誤來處理你的 dhcp 設定檔吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_host"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">內部主機的 IP 對應</span><br />
+	<div class=block2>
+		如果您有仔細的瞧過前幾章的<a href="0110network_basic.htm">網路基礎</a>的話，那麼應該還會記得那個 
+		<a href="0130internet_connect.htm#problem_hosts">/etc/hosts</a> 
+		會影響內部電腦的連線速度很大吧！那麼我現在使用 DHCP 之後，糟糕！我怎麼知道哪一部 PC 
+		連上我的主機，那要怎麼填寫 /etc/hosts 的內容呢？這真是太簡單了！就將所有可能的電腦 IP 
+		都加進去該檔案呀！ ^_^ ！以鳥哥為例，在這個例子中，鳥哥的分配的 IP 至少有 192.168.1.5, 192.168.1.21 ~ 
+		192.168.1.100 ，所以 /etc/hosts 可以寫成：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+127.0.0.1　　 localhost.localdomain localhost
+<span class=term_write>192.168.1.254  vbird-server
+192.168.1.5　  static-ip
+192.168.1.21 　dynamic-021
+192.168.1.22 　dynamic-022
+.....
+192.168.1.100  dynamic-100</span>
+</pre></td></tr></table>
+
+		這樣一來，所有可能連進來的 IP 都已經有紀錄了，哈哈！當然沒有什麼大問題囉！ ^_^
+	</div>
+</div>
+
+
+<hr /><a NAME="client"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DHCP 用戶端的設定</span><br />
+<div class=block1>
+	DHCP 的 Client 端，可以是 Windows 也可以是 Linux 呢！由於鳥哥的領域內剛好有兩部 Client 
+	端的電腦，一部為 Linux (CentOS 4.4) 另一部為 Windows xp ，這裡就提一下，分別是怎樣設定的呢？<br /><br />
+
+	<hr /><a NAME="client_linux"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 用戶端</span><br />
+	<div class=block2>
+		Linux 的網路參數設定還記得吧？不記得的話就得要打屁股了！在<a href="0130internet_connect.htm#connect_auto"
+		target="_blank">連上 Internet 章節</a>內我們談過自動取得 IP 的方式，設定真的很簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@client ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+DEVICE=eth0
+<span class=term_write>BOOTPROTO=dhcp</span>  <span class=term_say>&lt;==就是他！指定這一個就對了！</span>
+ONBOOT=yes
+
+[root@client ~]# <span class=term_command>/etc/init.d/network restart</span>
+</pre></td></tr></table>
+
+		改完之後，就將我們的整個網路重新啟動即可 (不要使用 ifdown 與 ifup ，因為還有預設路由要設定！)
+		。請注意，如果您是在遠端進行這個動作，您的連線『肯定會掛掉！』，因為網路卡被您關了嘛！
+		呵呵！所以請在本機前面才進行喔！如果執行的結果有找到正確的 DHCP 主機，那麼幾個檔案可能會被更動喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. DNS 的 IP 會被更動呢！查閱一下 resolv.conf 先：</span>
+[root@linux ~]# <span class=term_command>cat /etc/resolv.conf</span>
+; generated by /sbin/dhclient-script
+search vbird.tsai          <span class=term_say>&lt;==是否記得設定過 domain-name 呢？</span>
+nameserver 168.95.1.1      <span class=term_say>&lt;==這就是我們原本的設定值。</span>
+nameserver 139.175.10.20
+
+<span class=term_hd>2. 觀察一下路由啦！</span>
+[root@linux ~]# <span class=term_command>route -n</span>
+Kernel IP routing table
+Destination     Gateway        Genmask        Flags  Iface
+192.168.1.0     0.0.0.0        255.255.255.0  U      eth0
+169.254.0.0     0.0.0.0        255.255.0.0    U      eth0
+0.0.0.0         <span class=term_write>192.168.1.254</span>  0.0.0.0        UG     eth0
+<span class=term_say># 嗯！沒錯！路由也被正確的捉到了！OK的啦！</span>
+
+<span class=term_hd>3. 察看一下用戶端的指令吧！</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Proto Recv-Q Send-Q Local Address  Foreign Address State  PID/Program name
+udp        0      <span class=term_write>0 0.0.0.0:68</span>     0.0.0.0:*              3996/dhclient
+<span class=term_say># 你沒看錯！確實是有個小程式在監測 DHCP 的連線狀態吶！</span>
+
+<span class=term_hd>4. 看一看用戶端租約所記載的資訊吧！</span>
+[root@linux ~]# <span class=term_command>cat /var/lib/dhcp/dhclient-eth0.leases</span>
+lease {
+  interface "eth0";
+  <span class=term_write>fixed-address 192.168.1.100;</span>  <span class=term_say>&lt;==這就是為啥我每次取得的 IP 是固定的。</span>
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.254;
+  option dhcp-lease-time 259200;
+  option dhcp-message-type 5;
+  option domain-name-servers 168.95.1.1,139.175.10.20;
+  option dhcp-server-identifier 192.168.1.254;
+  option nis-domain "vbird.tsai";
+  option broadcast-address 192.168.1.255;
+  option domain-name "vbird.tsai";
+  renew 3 2006/12/6 18:15:41;   <span class=term_say>&lt;==下一次預計更新 (renew) 的時間點</span>
+  rebind 5 2006/12/8 05:26:26;
+  expire 5 2006/12/8 14:26:26;
+}
+<span class=term_say># 這個檔案會記錄該介面卡所曾經要求過的 DHCP 資訊喔！重要！
+# 有沒有看出來，他幾乎就與你設定的 /etc/dhcpd.conf 類似？ ^_^</span>
+
+<span class=term_hd>5. 額外看一下 NIS 的領域名稱有沒有設定妥當啊？</span>
+[root@linux ~]# <span class=term_command>nisdomainname</span>
+vbird.tsai   <span class=term_say>&lt;==因為我們有設定 nis-domain 的項目啊！</span>
+</pre></td></tr></table>
+
+		有沒有發現其實你的用戶端取得的資料都被記載在 /var/lib/dhcp/dhclient-eth0.leases 裡頭啊？
+		如果你有多張網卡，那麼每張網卡自己的 DHCP 要求就會被寫入到不同檔名的檔案當中去！
+		觀察該檔案就知道你的資料是如何囉！這可也是挺重要的呦！<br /><br />
+	</div>
+
+	<hr /><a NAME="client_win"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Windows 用戶端</span><br />
+	<div class=block2>
+		在 Windows 底下設定 DHCP 協定以取得 IP 實在是很簡單喔！我們以目前最常用的 Windows XP 來說明的話，
+		你可以依據『開始』-->『設定』-->『控制台』-->『網路和網際網路連線』-->『網路連線』-->『區域連線』
+		來開始一步一步的進行下面的動作喔：<br />
+		<ol>
+		<li>在點選了上面的區域網路後，你的桌面上應該會出現如下的圖示：<br /><br />
+
+		<a name="fig_02"></a><center><img src="0340dhcp/winxp_01.png"
+		title="區域網路的 DHCP 取得方式之設定"
+		alt="區域網路的 DHCP 取得方式之設定"><br />
+		圖二、區域網路的 DHCP 取得方式之設定</center><br />
+
+		<li>在上圖二的地方按下箭頭所指的『內容』處，就會出現如下畫面囉：<br ><br />
+
+		<a name="fig_03"></a><center><img src="0340dhcp/winxp_02.png"
+		title="區域網路的 DHCP 取得方式之設定"
+		alt="區域網路的 DHCP 取得方式之設定"><br />
+		圖三、區域網路的 DHCP 取得方式之設定</center><br />
+
+		在上面的畫面當中，建議你可以在箭頭所指的 1 處勾選那兩個項目，如此一來在桌面最底下的右側就會出現一個網路符號，
+		以後你就可以點選該圖示來進入這個畫面了！比較方便啦。然後在箭頭 2 的地方勾選 Internet Protocol (TCP/IP) 的項目，
+		並點選『內容』後，就可能進入到設定的畫面。<br /><br />
+
+		<li>接下來如下圖所示，你只要勾選『自動取得 IP 位址』那個項目，然後按下『確定』並離開設定畫面，
+		如此一來 Windows 就會開始自動取得 IP 的工作了。<br /><br />
+		<a name="fig_04"></a><center><img src="0340dhcp/winxp_03.png"
+		title="區域網路的 DHCP 取得方式之設定"
+		alt="區域網路的 DHCP 取得方式之設定"><br />
+		圖四、區域網路的 DHCP 取得方式之設定</center><br />
+
+		<li>那你如何確認你的 IP 已經被順利的取得呢？如果是在早期的 Windows 95 ，你可以使用一個名為『 winipcfg 』
+		來觀察你的 IP 設定。不過在 windows 2000 以後，你可能需要使用命令提示字元來觀察才行。你可以使用：
+		『開始』-->『程式集』-->『附屬應用程式』-->『命令提示字元』來取出終端機，然後這樣處理看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+C:\Documents and Settings\dmtsai> <span class=term_command>ipconfig /all</span>
+<span class=term_say>....前面省略....</span>
+Ethernet adapter 區域連線:
+
+        Connection-specific DNS Suffix  . : vbird.tsai
+        Physical Address. . . . . . . . . : 00-D0-18-AF-6E-81
+        Dhcp Enabled. . . . . . . . . . . : Yes
+        Autoconfiguration Enabled . . . . : Yes
+        IP Address. . . . . . . . . . . . : 192.168.1.99
+        Subnet Mask . . . . . . . . . . . : 255.255.255.0
+        Default Gateway . . . . . . . . . : 192.168.1.254
+        DHCP Server . . . . . . . . . . . : 192.168.1.254  <span class=term_say>&lt;==這一部 DHCP 主機</span>
+        DNS Servers . . . . . . . . . . . : 168.95.1.1
+                                            139.175.10.20
+        Lease Obtained. . . . . . . . . . : 2006年12月5日 下午 10:22:37
+        Lease Expires . . . . . . . . . . : 2006年12月8日 下午 10:22:37
+
+C:\Documents and Settings\dmtsai> <span class=term_command>ipconfig /renew</span>
+<span class=term_say># 這樣可以立即要求更新 IP 資訊喔！</span>
+</pre></td></tr></table>
+
+		這樣就 OK 的啦！簡單吧！
+		</ol>
+	</div>
+</div>
+
+
+<hr /><a NAME="other"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">伺服器端資料查閱</span><br />
+<div class=block1>
+
+
+	<hr /><a NAME="other_lease"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">檢查租約檔案</span><br />
+	<div class=block2>
+		用戶端會主動的紀錄租約資訊，那主機端更不能忘記記錄囉！主機端是記錄在這個地方：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /var/lib/dhcp/dhcpd.leases</span>
+lease 192.168.1.99 {  <span class=term_say>&lt;==就是那部 Windows 的紀錄</span>
+  starts 2 2006/12/05 14:23:37;
+  ends 5 2006/12/08 14:23:37;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00-d0-18-af-6e-81;
+  uid "\001\000\340\030\257n\003";
+  client-hostname "vbird_work";
+}
+lease 192.168.1.100 { <span class=term_say>&lt;==就是那部 Linux 的紀錄</span>
+  starts 2 2006/12/05 15:37:33;
+  ends 5 2006/12/08 15:37:33;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:30:20:1d:c3:6e;
+}
+</pre></td></tr></table>
+
+		從這個檔案裡面我們就知道有多少用戶端已經向我們申請了 DHCP 的 IP 使用了呢！
+		很容易瞭解吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="other_remote"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用 ether-wake 實行遠端自動開機 
+	(remote boot)</span><br />
+	<div class=block2>
+		既然已經知道用戶端的 MAC 位址了，如果<span class=text_import2>用戶端的主機符合一些電源標準，
+		並且該用戶端主機所使用之網路卡暨主機板支援網路喚醒的功能時，我們就可以透過網路來讓用戶端電腦開機</span>了。
+		如果你有一部主機想要讓他可以透過網路來啟動時，你必須要在這部用戶端電腦上進行：<br />
+
+		<ol><span class=text_import2>
+		<li>首先你得要在 BIOS 裡面設定『網路喚醒』的功能，否則是沒有用的喔！
+		<li>再來你必須要讓這部主機接上網路線，並且電源也是接通的。
+		<li>將這部主機的 MAC 抄下來，然後關機等待網路喚醒。
+		</span></ol>
+
+		接下來請到永遠開著的主機 DHCP 主機上面 (其實只要任何一部 Linux 主機均可！) ，
+		下載 ether-wake.c 這個檔案：<br />
+		<ul><a href="ftp://ftp.scyld.com/pub/diag/" target="_blank">ftp://ftp.scyld.com/pub/diag/</a></ul>
+		然後開始編譯他：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>gcc -O -Wall -o ether-wake ether-wake.c</span>
+</pre></td></tr></table>
+
+		此時你的家目錄下應該會有一個名為 ehter-wake 的檔案，假設用戶端主機的 MAC 為 11:22:33:44:55:66 好了，
+		那麼你想要讓這部主機被喚醒，就這樣做吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>./ether-wake 11:22:33:44:55:66</span>
+
+<span class=term_say># 更多功能可以這樣查閱喔：</span>
+[root@linux ~]# <span class=term_command>./ether-wake -u</span>
+</pre></td></tr></table>
+
+		然後你就會發現，哈哈！那部用戶端主機被啟動了！以後如果你要連到區域網路內的話，
+		只要能夠連上你的防火牆主機，然後透過這個 ether-wake 軟體，就能夠讓你區域網路內的主機啟動了，
+		控管上面就更加方便的啦！您說是吧！ ^_^
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>DHCP (Dynamic Host Configuration Protocol) 可以提供網路參數給用戶端電腦，使其自動設定網路的功能；
+	<li>透過 DHCP 的統一管理，在同一網域當中就比較不容易出現 IP 衝突的情況發生；
+	<li>DHCP 可以透過 MAC 的比對來提供 Static IP (或稱為靜態 IP)，否則通常提供用戶端 dynamic IP (或稱為動態 IP)；
+	<li>DHCP 除了 Static IP 與 Dynamic IP 之外，還可以提供租約行為之設定；
+	<li>在租約期限到期之前，用戶端 dhcp 軟體即會主動的要求更新 (約 0.5, 0.85 倍租約時間左右)；
+	<li>用戶端離線、不明原因的當機、超過租約期限等機會下，DHCP Server 與用戶端的租約行為會終止！
+	<li>DHCP 可以提供的 MAC 比對、Dynamic IP 的 IP 範圍以及租約期限等等，都在 dhcpd.conf 這個檔案當中設定的；
+	<li>一般的情況之下，使用者需要自行設定 dhcpd.leases 這個檔案，不過，真正的租約檔案記錄是在 /var/lib/dhcp/dhcpd.leases 裡面；
+	<li>新版的 DHCP 設定檔 dhcpd.conf 中，需含有『 ddns-update-style 』的參數設定；
+	<li>如果只是要單純的 DHCP 服務，建議可以購買類似 IP 分享器的設備即可提供穩定且低耗電的網路服務。
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>DHCP 的主要用途為何？</li>
+	<div class=block2><font color=white size=-1>
+	DHCP 主機的主要用途就是在於自動分配網路參數給 Client 端的電腦，以降低網域當中可能發生的 IP 
+	衝突問題，以及減少網管人員到處檢查錯誤的傷腦筋！ 
+	</font></div>
+
+	<li>DHCP 主要的兩種 IP 分配模式為何？</li>
+	<div class=block2><font color=white size=-1>
+	主要的兩種分配模式分別為 Dynamic IP 與 Static IP ， Static IP 透過 MAC 的比對，至於 Dynamic IP 
+	則是直接取用網域中尚未被使用到的 IP 來進行 Client 端的分配。
+	</font></div>
+
+	<li>在有 DHCP 主機存在的網域當中，且 client 端亦使用 DHCP 來規劃用戶端的網路參數，那麼請問，在該網域當中，Client
+	端是如何取得 IP 的呢？</li>
+	<div class=block2><font color=white size=-1>
+	<ol><li>首先， Client 端會發出一個 DHCP 要求封包；
+	<li>server 端接收到要求後，會主動的回應資訊給 Client ；
+	<li>Client 若接受該 DHCP 主機所提供的參數，則主機會記錄下租約資訊，至於 client 端則開始以主機提供的參數設定其網路
+	</ol>
+	</font></div>
+
+	<li>DHCP 是如何發送 Static IP 的？可以使用何種指令取得該資訊？</li>
+	<div class=block2><font color=white size=-1>
+	DHCP 主要利用網路卡的硬體位址，亦即俗稱的『網路卡卡號』，也就是 MAC 來進行 Client 端的比對的，至於主動取得 
+	Client 端的方式，可以透過 ping 以及 arp 來獲得。 
+	</font></div>
+
+	<li>在 DHCP 的租約檔，亦即 /var/lib/dhcp/dhcpd.leases 當中，記錄了什麼資訊？</li>
+	<div class=block2><font color=white size=-1>
+	這個檔案主要記錄了 Client 端連上 Server 端的紀錄資料，他會被 DHCP 主機用來判定與 Client 端的租約行為喔！
+	</font></div>
+
+	<li>DHCP 的登錄檔放置於何處？</li>
+	<div class=block2><font color=white size=-1>
+	就是最重要的 /var/log/messages 這個檔案啦(預設狀況下！)
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>Linux Magazine：<a href="http://www.linux-mag.com/2000-04/networknirvana_01.html" 
+		target="_blank">http://www.linux-mag.com/2000-04/networknirvana_01.html</a></li>
+	<li>DHCP mini HOWTO：<br />英文版：<a href="http://tldp.org/HOWTO/DHCP/index.html" 
+		target="_blank">http://tldp.org/HOWTO/DHCP/index.html</a><br />
+		中文版：<a href="http://www.linux.org.tw/CLDP/MiniHOWTO/network/DHCP/"
+		target="_blank">http://www.linux.org.tw/CLDP/MiniHOWTO/network/DHCP/</a></li>
+	<li>Internet Software consortium：<a href="http://www.isc.org/products/DHCP/" 
+		target="_blank">http://www.isc.org/products/DHCP/</a></li>
+	<li>Study Area：<a href="http://www.study-area.org/linux/servers/linux_dhcp.htm" 
+		target="_blank">http://www.study-area.org/linux/servers/linux_dhcp.htm</a></li>
+	<li>Study Area 網路開機(我本善良兄撰寫)：<a href="http://www.study-area.org/tips/wol.htm"
+		target="_blank">http://www.study-area.org/tips/wol.htm</a>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/11/23：第一次完成<br />
+2003/03/15：加入相關重點回顧、與練習題<br />
+2003/09/10：修改版面去！<br />
+2006/12/05：將舊的文章移動到<a href="0340dhcp/0340dhcp.htm">此處</a><br />
+2006/12/06：好累！怎麼老是在說累～總之，完成囉～新增加 <a href="#other_remote">ether-wake 的網路喚醒</a>功能。<br />
+</span>
+<hr><span class="text_date">2002/11/24以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0340dhcp.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

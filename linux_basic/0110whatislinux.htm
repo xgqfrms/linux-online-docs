@@ -1,0 +1,1513 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718"><!-- 本文的檔頭部分 -->
+    <div style="text-align:center">  <span class="text_head0">第一章、<span class="text_head_en">Linux</span>是什麼</span><br />
+    </div>
+    <div style="text-align:right"> <span class="text_history">最近更新日期：2009/08/05</span> </div>
+    <!-- 本文的檔頭部分 -->
+    <table class="head1" summary="排版：文章檔頭的說明">
+      <tr>
+        <td class="head1"> 眾所皆知的，Linux的核心原型是1991年由托瓦茲(Linus Torvalds)寫出來的，但是托瓦茲為何可以寫出Linux這個作業系統？
+          為什麼他要選擇386的電腦來開發？為什麼Linux的發展可以這麼迅速？又為什麼Linux是免費的？
+          以及目前為何有這麼多的Linux版本(distributions)呢？瞭解這些東西後，才能夠知道為何Linux可以免除專利軟體之爭，
+          並且瞭解到Linux為何可以同時在個人電腦與大型主機上面大放異彩！
+          所以，在實際進入Linux的世界前，就讓我們來談一談這些有趣的歷史故事吧！ ^_^ </td>
+      </tr>
+    </table>
+    <br />
+    <!-- 本文的連結區部分 -->
+    <div class="block1"> <span class="text_h1"> 1. <a href="#whatislinux">Linux是什麼</a><br />
+      <span class="text_h2"> 　　1.1 <a href="#whatislinux_os">Linux是什麼</a><br />
+        1.2 <a href="#whatislinux_unix">Linux之前，Unix的歷史</a><br />
+        1.3 <a href="#whatislinux_gnu">關於GNU計畫</a><br />
+        </span> 2. <a href="#torvalds">Torvalds的Linux發展</a><br />
+      <span class="text_h2"> 　　2.1 <a href="#torvalds_minix">與Minix之間</a><br />
+        2.2 <a href="#torvalds_multi">對386硬體的多工測試</a><br />
+        2.3 <a href="#torvalds_first">初次釋出Linux 0.02</a><br />
+        2.4 <a href="#torvalds_team">Linux的發展：虛擬團隊的產生</a><br />
+        2.5 <a href="#torvalds_version">Linux 的核心版本</a><br />
+        2.6 <a href="#torvalds_dist">Linux distributions</a><br />
+        </span> 3. <a href="#linuxpt">Linux的特色</a><br />
+      <span class="text_h2"> 　　3.1 <a href="#linuxpt_pt">Linux的特色</a><br />
+        3.2 <a href="#linuxpt_adv">Linux的優缺點</a><br />
+        3.3 <a href="#linuxpt_other">關於授權</a><br />
+        </span> 4. <a href="#hint">重點回顧</a><br />
+      5. <a href="#ex">本章習題</a><br />
+      6. <a href="#reference">參考資料與延伸閱讀</a><br />
+      <span class="text_h2"> 7. <a href="http://phorum.vbird.org/viewtopic.php?t=23871"
+	target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23871</a> </span> </span> </div>
+    <!-- 本文的正式部分 -->
+    <hr />
+    <a name="whatislinux" id="whatislinux"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux是什麼</span><br />
+    <div class="block1">
+      <p>我們知道Linux這玩意兒是在電腦上面運作的，所以說Linux就是一組軟體。問題是這個軟體是作業系統還是應用程式？
+        且Linux可以在哪些種類的電腦上面運作？而Linux源自哪裡？為什麼 Linux 還不用錢？這些我們都得來談一談先！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="whatislinux_os" id="whatislinux_os"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux是什麼</span><br />
+      <div class="block2">
+        <p>我們在<a href="/linux_basic/0105computers.php">第零章、計算機概論</a>裡面有提到過整個電腦系統的概念，
+          電腦是由一堆硬體所組成的，為了有效率的控制這些硬體資源，於是乎就有作業系統的產生了。
+          作業系統除了有效率的控制這些硬體資源的分配，並提供電腦運作所需要的功能(如網路功能)之外，
+          為了要提供程式設計師更容易開發軟體的環境，所以作業系統也會提供一整組系統呼叫介面來給軟體設計師開發用喔！</p>
+        <p>知道為什麼要講這些了嗎？嘿嘿！沒錯，因為<span class="text_import2">Linux就是一套作業系統</span>！如同下圖所示，
+          Linux就是核心與系統呼叫介面那兩層。至於應用程式算不算Linux呢？當然不算啦！這點要特別注意喔！</p>
+        <center>
+          <img src="0110whatislinux/os_01.gif" alt="作業系統的角色" 
+		title="作業系統的角色" border="0" /><br />
+          圖1.1.1、作業系統的角色<br />
+        </center>
+        <p>由上圖中我們可以看到其實核心與硬體的關係非常的強烈。早期的Linux是針對386來開發的，
+          由於Linux只是一套作業系統並不含有其他的應用程式，因此很多工程師在下載了 Linux
+          核心並且實際安裝之後，就只能看著電腦開始運作了！
+          接下來這些高級工程師為了自己的需求，再在Linux上面安裝他們所需要的軟體就是了。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> Torvalds先生在寫出Linux的時候，其實該核心僅能『驅動386所有的硬體』而已，
+                  所謂的『讓386電腦開始運作，並且等待使用者指令輸入』而已，事實上，
+                  當時能夠在Linux上面跑的軟體還很少呢！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>由於不同的硬體他的功能函數並不相同，例如IBM的Power CPU與Intel的x86架構就是不一樣！
+          所以同一套作業系統是無法在不同的硬體平台上面運作的！舉例來說，如果你想要讓x86上面跑的那套作業系統也能夠在Power 
+          CPU上運作時，就得要將該作業系統進行修改才行。如果能夠參考硬體的功能函數並據以修改你的作業系統程式碼，
+          那經過改版後的作業系統就能夠在另一個硬體平台上面運作了。
+          這個動作我們通常就稱為『<span class="text_import2">軟體移植</span>』了！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 請問Windows作業系統能否在蘋果公司的麥金塔電腦(MAC)上面安裝與運作？ </div>
+              答：
+              <div class="block2"> 由上面的說明中，我們知道硬體是由『核心』來控制的，而每種作業系統都有他自己的核心。
+                在2006年以前的蘋果電腦公司是請IBM公司幫忙開發硬體(所謂的Power CPU)，
+                而蘋果電腦公司則在該硬體架構上發展自家的作業系統(就是俗稱的麥金塔，MAC是也)。Windows則是開發在x86架構上的作業系統之一，
+                因此Windows是沒有辦法安裝到麥金塔電腦硬體上面的。<br />
+                <br />
+                不過，在2006年以後，蘋果電腦轉而請Intel設計其硬體架構，亦即其硬體架構已經轉為x86系統，
+                因此在2006年以後的蘋果電腦若使用x86架構時，其硬體則『可能』可以安裝Windows作業系統了。
+                不過，你可能需要自己想些方式來處理該硬體的相容性囉！ </div></td>
+          </tr>
+        </table>
+        <br />
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> Windows作業系統本來就是針對個人電腦x86架構的硬體去設計的，所以他當然只能在x86的個人電腦上面運作，
+                  在不同的平台當然就無法運行了。也就是說，每種作業系統都是在他專門的機器上面運行的喔！這點得要先瞭解。
+                  不過，Linux由於是Open Source的作業系統，所以他的程式碼可以被修改成適合在各種機器上面運行的，
+                  也就是說，Linux是具有『可移植性』，這可是很重要的一個功能喔！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>Linux提供了一個完整的作業系統當中最底層的硬體控制與資源管理的完整架構，
+          這個架構是沿襲Unix良好的傳統來的，所以相當的穩定而功能強大！此外，
+          由於這個優良的架構可以在目前的個人電腦(x86系統)上面跑，
+          所以很多的軟體開發者漸漸的將他們的工作心血移轉到這個架構上面，所以 Linux 作業系統也有很多的應用軟體啦！</p>
+        <p>雖然Linux僅是其核心與核心提供的工具，不過由於核心、核心工具與這些軟體開發者提供的軟體的整合，
+          使得Linux成為一個更完整的、功能強大的作業系統囉！約略瞭解Linux是何物之後，接下來，我們要談一談，
+          『<span class="text_import2">為什麼說Linux是很穩定的作業系統呢？他是如何來的？</span>』</p>
+      </div>
+      <hr />
+      <a name="whatislinux_unix" id="whatislinux_unix"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux之前，Unix的歷史</span><br />
+      <div class="block2">
+        <p>早在Linux出現之前的二十年(大約在1970 年代)，就有一個相當穩定而成熟的作業系統存在了！
+          那就是Linux的老大哥『Unix』是也！怎麼這麼說呢？他們這兩個傢伙有什麼關係呀？這裡就給他說一說囉！</p>
+        <p>眾所皆知的，<span class="text_import2">Linux的核心是由Linus Torvalds在1991年的時候給他開發出來的，</span> 並且丟到網路上提供大家下載，後來大家覺得這個小東西(Linux Kernel)相當的小而精巧，
+          所以慢慢的就有相當多的朋友投入這個小東西的研究領域裡面去了！
+          但是為什麼這的小東西這麼棒呢？又為什麼大家都可以免費的下載這個東西呢？
+          嗯！等鳥哥慢慢的唬xx....喔不！聽我慢慢的道來！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span 
+		class="text_import1">1969年以前：一個偉大的夢想--Bell,MIT與GE的『Multics』系統</span></li>
+        </ul>
+        <p>早期的電腦並不像現在的個人電腦一樣普遍，他可不是一般人碰的起的呢～
+          除非是軍事或者是高科技用途，或者是學術單位的學術研究，否則真的很難接觸到。
+          非但如此，早期的電腦架構還很難使用，除了運算速度並不快之外，操作介面也很困擾的！ <span class="text_import2">因為那個時候的輸入設備只有讀卡機、輸出設備只有印表機，
+            使用者也無法與作業系統互動(批次型作業系統)。</span></p>
+        <p>在那個時候，寫程式是件很可憐的事情，因為程式設計者，必須要將程式相關的資訊在讀卡紙上面打洞，
+          然後再將讀卡紙插入讀卡機來將資訊讀入主機中運算。光是這樣就很麻煩了，如果程式有個小地方寫錯，
+          哈哈！光是重新打卡就很慘，加上主機少，使用者眾多，光是等待，就耗去很多的時間了！</p>
+        <p>在那之後，由於硬體與作業系統的改良，使得後來可以使用鍵盤來進行資訊的輸入。
+          不過，在一間學校裡面，主機畢竟可能只有一部，如果多人等待使用，那怎麼辦？大家還是得要等待啊！
+          好在1960年代初期麻省理工學院(MIT)發展了所謂的：
+          『<span class="text_import2">相容分時系統(Compatible Time-Sharing System, CTSS)</span>』，
+          它可以讓大型主機透過提供數個終端機(terminal)以連線進入主機，來利用主機的資源進行運算工作。
+          架構有點像這樣：</p>
+        <a name="fig2" id="fig2"></a>
+        <center>
+          <img src="0110whatislinux/0110whatislinux_2.jpg" 
+		alt="早期主機與終端機的相關性圖示" title="早期主機與終端機的相關性圖示" border="1" /><br />
+          圖1.2.1、早期主機與終端機的相關性圖示<br />
+        </center>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 這個相容分時系統可以說是近代作業系統的始祖呢！他可以讓多個使用者在某一段時間內分別使用CPU的資源，
+                  感覺上你會覺得大家是同時使用該主機的資源！事實上，是CPU在每個使用者的工作之間進行切換，
+                  在當時，這可是個劃時代的技術喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>如此一來，無論主機在哪裡，只要在終端機前面進行輸入輸出的作業，就可利用主機提供的功能了。
+          不過，需要注意的是，此時終端機只具有輸入/輸出的功能，本身完全不具任何運算或者軟體安裝的能力。
+          而且，比較先進的主機大概也只能提供30個不到的終端機而已。</p>
+        <p>為了更加強化大型主機的功能，以讓主機的資源可以提供更多使用者來利用，所以在1965年前後，
+          由貝爾實驗室(Bell)、麻省理工學院(MIT)及奇異公司(GE, 或稱為通用電器)共同發起了Multics的計畫，
+          Multics計畫的目的是想要讓大型主機可以達成提供300個以上的終端機連線使用的目標。
+          不過，到了1969年前後，計畫進度落後，資金也短缺，所以該計畫雖然繼續在研究，但貝爾實驗室還是退出了該計畫的研究工作。
+          (註：Multics有複雜、多數的意思存在。)</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 最終Multics還是有成功的發展出他們的系統，完整的歷史說明可以參考： <a href="http://www.multicians.org/" target="_blank">http://www.multicians.org/</a>網站內容。
+                  Multics計畫雖然後來沒有受到很大的重視，但是他培養出來的人材是相當優秀的！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1969年：Ken Thompson的小型file server system</span></li>
+        </ul>
+        <p>在認為Multics計畫不可能成功之後，<a href="http://www.bell-labs.com/" 
+		target="_blank">貝爾研究室</a>就退出該計畫。不過，原本參與Multics計畫的人員中，已經從該計畫當中獲得一些點子， <a href="http://plan9.bell-labs.com/cm/cs/who/ken/index.html" target="_blank">Ken Thompson</a> 就是其中一位！</p>
+        <p>Thompson因為自己的需要，希望開發一個小小的作業系統以提供自己的需求。
+          在開發時，有一部DEC(Digital Equipment Corporation)公司推出的PDP-7剛好沒人使用，
+          於是他就準備針對這部主機進行作業系統核心程式的撰寫。本來Thompson應該是沒時間的(有家有小孩的宿命？)，
+          無巧不巧的是，在1969年八月份左右，剛好Thompson的妻兒去了美西探親，
+          於是他有了額外的一個月的時間好好的待在家將一些構想實現出來！</p>
+        <p>經過四個星期的奮鬥，他終於以組合語言(Assembler)寫出了一組核心程式，同時包括一些核心工具程式，
+          以及一個小小的檔案系統。那個系統就是<span class="text_import2">Unix</span>的原型！
+          當時Thompson將Multics龐大的複雜系統簡化了不少，於是同實驗室的朋友都戲稱這個系統為：Unics。(當時尚未有Unix的名稱)</p>
+        <p>Thompson 的這個檔案系統有兩個重要的概念，分別是：</p>
+        <ul>
+          <li><span class="text_import2">所有的程式或系統裝置都是檔案</span></li>
+          <li><span class="text_import2">不管建構編輯器還是附屬檔案，所寫的程式只有一個目的，且要有效的完成目標。</span></li>
+        </ul>
+        <p>這些概念在後來對於Linux的發展有相當重要的影響喔！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 套一句常聽到的廣告詞：『科技始終來自於人性』，當初Thompson會寫這套Unix核心程式，
+                  卻是想要移植一套名為『太空旅遊』的遊戲呢！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span 
+		class="text_import1">1973年：Unix的正式誕生，Ritchie等人以C語言寫出第一個正式Unix核心</span></li>
+        </ul>
+        <p>由於Thompson寫的那個作業系統實在太好用了，所以在貝爾實驗室內部廣為流傳，並且數度經過改版。
+          但是因為Unics本來是以組合語言寫成的，而如<a href="/linux_basic/0105computers.php">第零章計算機概論</a>談到的，
+          組合語言具有專一性，加上當時的電腦機器架構都不太相同，所以每次要安裝到不同的機器都得要重新編寫組合語言，真不方便！</p>
+        <p>後來Thompson與Ritchie合作想將Unics改以高階程式語言來撰寫。當時現成的高階程式語言有B語言。
+          但是由B語言所編譯出來的核心效能不是很好。後來<a href="http://cm.bell-labs.com/cm/cs/who/dmr/" 
+		target="_blank">Dennis Ritchie</a>將B語言重新改寫成C語言，再以C語言重新改寫與編譯Unics的核心，
+          最後正名與發行出Unix的正式版本！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 這群高級駭客實在很厲害！因為自己的需求來開發出這麼多好用的工具！
+                  C程式語言開發成功後，甚至一直沿用至今呢！你說厲不厲害啊！這個故事也告訴我們，不要小看自己的潛能喔！
+                  你想作的，但是現實生活中沒有的，就動手自己搞一個來玩玩吧！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>由於貝爾實驗室是隸屬於美國電信大廠<a href="http://www.att.com">AT&amp;T</a>公司的，
+          只是AT&amp;T當時忙於其他商業活動，對於Unix並不支持也不排斥。此外，Unix在這個時期的發展者都是貝爾實驗室的工程師，
+          這些工程師對於程式當然相當有研究，所以，Unix在此時當然是不容易被一般人所接受的！不過對於學術界的學者來說，
+          這個 Unix 真是學者們進行研究的福音！因為程式碼可改寫並且可作為學術研究之用嘛！</p>
+        <p>需要特別強調的是，由於Unix是以較高階的C語言寫的，相對於組合語言需要與硬體有密切的配合，
+          高階的C語言與硬體的相關性就沒有這麼大了！所以，<span 
+		class="text_import2">這個改變也使得Unix很容易被移植到不同的機器上面喔！</span><br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1977年：重要的Unix分支--BSD的誕生</span></li>
+        </ul>
+        <p>雖然貝爾屬於AT&amp;T，但是AT&amp;T此時對於Unix是採取較開放的態度，此外，Unix是以高階的C語言寫成的，
+          理論上是具有可移植性的！亦即只要取得Unix的原始碼，並且針對大型主機的特性加以修訂原有的原始碼(Source Code)，
+          就可能將Unix移植到另一部不同的主機上頭了。所以在1973年以後，Unix便得以與學術界合作開發！
+          最重要的接觸就是與加州柏克萊(Berkeley)大學的合作了。</p>
+        <p>柏克萊大學的Bill Joy在取得了Unix的核心原始碼後，著手修改成適合自己機器的版本，
+          並且同時增加了很多工具軟體與編譯程式，最終將它命名為<span class="text_import2">Berkeley Software 
+            Distribution (BSD)</span>。這個BSD是Unix很重要的一個分支，Bill Joy也是Unix業者『Sun(昇陽)』這家公司的創辦者！
+          Sun公司即是以BSD發展的核心進行自己的商業Unix版本的發展的。
+          (後來可以安裝在x86硬體架構上面FreeBSD即是BSD改版而來！)<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1979年：重要的 System V 架構與版權宣告</span></li>
+        </ul>
+        <p>由於Unix的高度可移植性與強大的效能，加上當時並沒有版權的糾紛，
+          所以讓很多商業公司開始了Unix作業系統的發展，例如AT&amp;T自家的System V、IBM的AIX以及HP與DEC等公司，
+          都有推出自家的主機搭配自己的Unix作業系統。</p>
+        <p>但是，如同我們前面提到的，<span class="text_import2">作業系統的核心(Kernel)必須要跟硬體配合，
+          以提供及控制硬體的資源進行良好的工作！</span>而在早期每一家生產電腦硬體的公司還沒有所謂的『協定』的概念，
+          所以每一個電腦公司出產的硬體自然就不相同囉！因此他們必須要為自己的電腦硬體開發合適的Unix系統。
+          例如在學術機構相當有名的Sun、Cray與HP就是這一種情況。
+          他們開發出來的Unix作業系統以及內含的相關軟體並沒有辦法在其他的硬體架構下工作的！
+          另外，由於沒有廠商針對個人電腦設計Unix系統，因此，在早期並沒有支援個人電腦的Unix作業系統的出現。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 如同相容分時系統的功能一般，Unix強調的是多人多工的環境！
+                  但早期的286個人電腦架構下的CPU是沒有能力達到多工的作業，因此，並沒有人對移植Unix到x86的電腦上有興趣。 </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>每一家公司自己出的Unix雖然在架構上面大同小異，但是卻真的僅能支援自身的硬體，
+          所以囉，<span class="text_import2">早先的Unix只能與伺服器(Server)或者是大型工作站(Workstation)劃上等號</span>！
+          但到了 1979 年時，AT&amp;T推出 System V 第七版 Unix 後，這個情況就有點改善了。
+          這一版最重要的特色是可以支援x86架構的個人電腦系統，也就是說 System V 可以在個人電腦上面安裝與運作了。</p>
+        <p>不過因為AT&amp;T由於商業的考量，以及在當時現實環境下的思考，於是將想Unix的版權收回去。因此，
+          AT&amp;T在1979年發行的第七版Unix中，特別提到了
+          『<span class="text_import2">不可對學生提供原始碼</span>』的嚴格限制！
+          同時，也造成Unix業界之間的緊張氣氛，並且也引爆了很多的商業糾紛～</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 目前被稱為純種的Unix指的就是System V以及BSD這兩套囉！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1984年之一：x86架構的Minix作業系統誕生</span></li>
+        </ul>
+        <p>關於1979年的版權聲明中，影響最大的當然就是學校教Unix核心原始碼相關學問的教授了！
+          想一想，如果沒有核心原始碼，那麼如何教導學生認識Unix呢？這問題對於Andrew 
+          Tanenbaum(譚寧邦)教授來說，實在是很傷腦筋的！不過，學校的課程還是得繼續啊！那怎麼辦？</p>
+        <p><span class="text_import2">既然1979年的Unix第七版可以在Intel的x86架構上面進行移植，
+          那麼是否意味著可以將Unix改寫並移植到x86上面了呢？</span>在這個想法上，
+          譚寧邦教授於是乎自己動手寫了Minix這個Unix Like的核心程式！
+          在撰寫的過程中，為了避免版權糾紛，譚寧邦完全不看Unix核心原始碼！
+          並且強調他的Minix必須能夠與Unix相容才行！譚寧邦在1984年開始撰寫核心程式，
+          到了1986年終於完成，並於次年出版Minix相關書籍，同時與新聞群組(BBS及News)相結合～</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 之所以稱為Minix的原因，是因為他是個Mini的Unix系統囉！^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>這個Minix版本比較有趣的地方是，他並不是完全免費的，無法在網路上提供下載！
+          必須要透過磁片/磁帶購買才行！雖然真的很便宜～不過，畢竟因為沒有在網路上流傳，
+          所以Minix的傳遞速度並沒有很快速！此外，購買時，隨磁片還會附上Minix的原始碼！
+          這意味著使用者可以學習Minix的核心程式設計概念喔！
+          (<span class="text_import2">這個特色對於Linux的啟始開發階段，可是有很大的關係喔！</span>)</p>
+        <p>此外，Minux作業系統的開發者僅有譚寧邦教授，因為學者很忙啊！加上譚寧邦始終認為Minix主要用在教育用途上面，
+          所以對於Minix是點到為止！沒錯，Minix是很受歡迎，不過，使用者的要求/需求的聲音可能就比較沒有辦法上升到比較高的地方了！
+          這樣說，你明白吧？^_^ <br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1984年之二：GNU計畫與FSF基金會的成立</span></li>
+        </ul>
+        <p>Richard Mathew Stallman(史托曼)在1984年發起的GNU計畫，對於現今的自由軟體風潮，
+          真有不可磨滅的地位！目前我們所使用得很多自由軟體，幾乎均直接或間接受益於GNU這個計畫呢！
+          那麼史托曼是何許人也？為何他會發起這個GNU計畫呢？</p>
+        <ul style="padding-left: 20px; list-style-type: circle">
+          <li><span class="text_import2">一個分享的環境：</span><br />
+            <br />
+            <a href="http://www.stallman.org" target="_blank">Richard Mathew Stallman</a>(生於1953年，
+            網路上自稱的ID為RMS)從小就很聰明！他在1971年的時候，進入駭客圈中相當出名的人工智慧實驗室(AI Lab.)，
+            這個時候的駭客專指電腦功力很強的人，而非破壞電腦的怪客(cracker)喔！<br />
+            <br />
+            當時的駭客圈對於軟體的著眼點幾乎都是在『分享』，所以並沒有專利方面的困擾！
+            這個特色對於史托曼的影響很大！不過，後來由於管理階層的問題，導致實驗室的優秀駭客離開該實驗室，
+            並且進入其他商業公司繼續發展優秀的軟體。但史托曼並不服輸，仍然持續在原來的實驗室開發新的程式與軟體。
+            後來，他發現到，自己一個人並無法完成所有的工作，於是想要成立一個開放的團體來共同努力！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">使用Unix開發階段：</span><br />
+            <br />
+            1983年以後，因為實驗室硬體的更換，使得史托曼無法繼續以原有的硬體與作業系統繼續自由程式的撰寫～
+            而且他進一步發現到，過去他所使用的Lisp作業系統，是麻省理工學院的專利軟體，
+            是無法共享的，這對於想要成立一個開放團體的史托曼是個阻礙。於是他便放棄了Lisp這個系統。
+            後來，他接觸到Unix這個系統，並且發現，Unix在理論與實際上，都可以在不同的機器間進行移植。雖然 Unix 依舊是專利軟體，
+            但至少 Unix 架構上還是比較開放的！於是他開始轉而使用Unix系統。<br />
+            <br />
+            因為Lisp與Unix是不同的系統，所以，他原本已經撰寫完畢的軟體是無法在Unix上面運行的！為此，
+            他就開始將軟體移植到Unix上面。並且，為了讓軟體可以在不同的平台上運作，
+            因此，史托曼將他發展的軟體均撰寫成可以移植的型態！也就是他都會將程式的原始碼公佈出來！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">GNU計畫的推展：</span><br />
+            <br />
+            1984年，史托曼開始<a href="http://www.gnu.org" target="_blank">GNU</a>計畫， <span class="text_import2">這個計畫的目的是：建立一個自由、開放的Unix作業系統(Free Unix)。</span> 但是建立一個作業系統談何容易啊！而且在當時的GNU是僅有自己一個人單打獨鬥的史托曼～
+            這實在太麻煩，但又不想放棄這個計畫，那可怎麼辦啊？<br />
+            <br />
+            聰明的史托曼乾脆反其道而行～『既然作業系統太複雜，我就先寫可以在Unix上面運行的小程式，這總可以了吧？』在這個想法上，
+            史托曼開始參考Unix上面現有的軟體，並依據這些軟體的作用開發出功能相同的軟體，且開發期間史托曼絕不看其他軟體的原始碼，
+            以避免吃上官司。後來一堆人知道免費的GNU軟體，並且實際使用後發現與原有的專利軟體也差不了太多，於是便轉而使用GNU軟體，
+            於是GNU計畫逐漸打開知名度。<br />
+            <br />
+            雖然GNU計畫漸漸打開知名度，但是能見度還是不夠。這時史托曼又想：不論是什麼軟體，
+            都得要進行編譯成為二進位檔案(binary program)後才能夠執行，如果能夠寫出一個不錯的編譯器，那不就是大家都需要的軟體了嗎？
+            因此他便開始撰寫C語言的編譯器，那就是現在相當有名的GNU C Compiler(gcc)！
+            這個點相當的重要！這是因為C語言編譯器版本眾多，但都是專利軟體，
+            如果他寫的C編譯器夠棒，效能夠佳，那麼將會大大的讓GNU計畫出現在眾人眼前！如果忘記啥是編譯器，
+            請回到<a href="/linux_basic/0105computers.php#program_mechin">第零章</a>去瞧瞧編譯程式吧！<br />
+            <br />
+            但開始撰寫GCC時並不順利，為此，他先轉而將他原先就已經寫過的Emacs編輯器寫成可以在Unix上面跑的軟體，並公布原始碼。
+            Emacs是一種程式編輯器，他可以在使用者撰寫程式的過程中就進行程式語法的檢驗，此一功能可以減少程式設計師除錯的時間！
+            因為Emacs太優秀了，因此，很多人便直接向他購買。<br />
+            <br />
+            此時網際網路尚未流行，所以，<span class="text_import2">史托曼便藉著Emacs以磁帶(tape)出售，賺了一點錢</span> ，進而開始全力撰寫其他軟體。並且成立<span class="text_import2">自由軟體基金會(FSF, 
+              Free Software Foundation)</span>，請更多工程師與志工撰寫軟體。終於還是完成了GCC，這比Emacs還更有幫助！
+            此外，他還撰寫了更多可以被呼叫的C函式庫(GNU C library)，以及可以被使用來操作作業系統的基本介面BASH shell！
+            這些都在1990年左右完成了！<br />
+            <br />
+            <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+              <table width="90%">
+                <tr>
+                  <td><b>Tips:</b><br />
+                    <span style="color : #009000"><font size="-1"> 如果純粹使用文字編輯器來編輯程式的話，那麼程式語法如果寫錯時，只能利用編譯時發生的錯誤訊息來修訂了，這樣實在很沒有效率。
+                      Emacs則是一個很棒的編輯器！注意！是編輯(editor)而非編譯(compiler)！
+                      他可以很快的立刻顯示出你寫入的語法可能有錯誤的地方，這對於程式設計師來說，
+                      實在是一個好到不能再好的工具了！所以才會這麼的受到歡迎啊！ </font></span></td>
+                  <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+                </tr>
+              </table>
+            </div>
+          </li>
+          <a name="gpl" id="gpl"></a>
+          <li><span class="text_import2">GNU的通用公共許可證：</span><br />
+            <br />
+            到了1985年，為了避免GNU所開發的自由軟體被其他人所利用而成為專利軟體，
+            所以他與律師草擬了有名的<span class="text_import2">通用公共許可證(General Public License, GPL)</span>，
+            並且稱呼他為<span class="text_import2">copyleft</span>(相對於專利軟體的copyright！)。
+            關於GPL的相關內容我們在下一個小節繼續談論，在這裡，必須要說明的是，
+            由於有GNU所開發的幾個重要軟體，如：<br />
+            <br />
+            <ul class="text_import2" style="list-style-type: square">
+              <li>Emacs</li>
+              <li>GNU C (GCC)</li>
+              <li>GNU C Library (glibc)</li>
+              <li>Bash shell</li>
+            </ul>
+            <br />
+            造成後來很多的軟體開發者可以藉由這些基礎的工具來進行程式開發！
+            進一步壯大了自由軟體團體！這是很重要的！不過，對於GNU的最初構想
+            『建立一個自由的Unix作業系統』來說，有這些優秀的程式是仍無法滿足，
+            因為，當下並沒有『自由的Unix核心』存在...所以這些軟體仍只能在那些有專利的 
+            Unix平台上工作～～一直到Linux的出現...更多的FSF開發的軟體可以參考如下網頁：<br />
+            <br />
+            <ul style="list-style-type: square">
+              <li><a href="https://www.fsf.org/resources" 
+		target="_blank">https://www.fsf.org/resources</a></li>
+            </ul>
+          </li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1988年：圖形介面XFree86計畫</span></li>
+        </ul>
+        <p>有鑑於圖形使用者介面(<span class="text_import2">Graphical User Interface, GUI</span>)
+          的需求日益加重，在1984年由MIT與其他協力廠商首次發表了X Window System
+          ，並且更在1988年成立了非營利性質的XFree86這個組織。所謂的XFree86其實是 <span class="text_import2">X Window System + Free + x86</span>的整合名稱呢！
+          而這個XFree86的GUI介面更在Linux的核心1.0版於1994年釋出時，整合於Linux作業系統當中！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 為什麼稱圖形使用者介面為X呢？因為由英文單字來看，Window的W接的就是X啦！意指Window的下一版就是了！
+                  需注意的是，X Window並不是X Window<b>s</b>喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">1991年：芬蘭大學生Linus Torvalds的一則簡訊</span></li>
+        </ul>
+        <p>到了1991年，芬蘭的赫爾辛基大學的Linus Torvalds在BBS上面貼了一則消息，
+          宣稱他以bash, gcc等工具寫了一個小小的核心程式，這個核心程式可以在Intel的386機器上面運作，
+          讓很多人很感興趣！從此開始了Linux不平凡的路程！</p>
+      </div>
+      <hr />
+      <a name="whatislinux_gnu" id="whatislinux_gnu"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關於GNU計畫</span><br />
+      <div class="block2">
+        <p>GNU計畫對於整個自由軟體來說是佔有非常重要的角色！底下我們就來談談這咚咚吧！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">自由軟體的活動：</span></li>
+        </ul>
+        <p>1984年創立GNU計畫與FSF基金會的Stallman先生認為，寫程式最大的快樂就是讓自己發展的良好的軟體讓大家來使用了！
+          而既然程式是想要分享給大家使用的，不過，每個人所使用的電腦軟硬體並不相同，
+          既然如此的話，那麼該程式的原始碼(Source code)就應該要同時釋出，
+          這樣才能方便大家修改而適用於每個人的電腦中呢！這個將原始碼連同軟體程式釋出的舉動，
+          就稱為自由軟體(Free Software)運動！</p>
+        <p>此外，史托曼同時認為，如果你將你程式的Source code分享出來時，若該程式是很優秀的，那麼將會有很多人使用，
+          而每個人對於該程式都可以查閱source code，無形之中，就會有一票人幫你除錯囉！
+          你的這支程式將會越來越壯大！越來越優秀呢！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">自由軟體的版權GNU GPL：</span></li>
+        </ul>
+        <p>而為了避免自己的開發出來的Open source自由軟體被拿去做成專利軟體，
+          於是Stallman同時將GNU與FSF發展出來的軟體，都掛上GPL的版權宣告～
+          這個FSF的核心觀念是『<span class="text_import2">版權制度是促進社會進步的手段，
+            版權本身不是自然權力。</span>』對於FSF有興趣或者對於GNU想要更深入的瞭解時，請參考<a 
+		href="http://www.cyut.edu.tw/~ckhung/" target="_blank">朝陽科技大學洪朝貴教授</a>的網站 <a href="http://people.ofset.org/~ckhung/a/c_83.php" 
+		target="_blank">http://people.ofset.org/~ckhung/a/c_83.php</a>，或直接到GNU去： <a href="http://www.gnu.org" target="_blank">http://www.gnu.org</a> 裡面有更為深入的解說！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 為什麼要稱為GNU呢？其實GNU是GNU's Not Unix的縮寫，意思是說，GNU並不是Unix啊！那麼GNU又是什麼呢？
+                  就是GNU's Not Unix嘛！.....如果你寫過程式就會知道，這個GNU = GNU's Not Unix可是無窮迴圈啊！忙碌～<br />
+                  <br />
+                  另外，什麼是Open Source呢？所謂的source是程式發展者寫出的原始程式碼，
+                  Open Source就是，軟體在發佈時，同時將作者的原始碼一起公布的意思！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">自由(Free)的真諦：</span></li>
+        </ul>
+        <p>那麼這個GPL(GNU General Public License, GPL)是什麼玩意兒？
+          為什麼要將自由軟體掛上GPL的『版權宣告』呢？這個版權宣告對於作者有何好處？
+          首先，Stallman對GPL一直是強調Free的，這個Free的意思是這樣的：</p>
+        <p><span class="text_import2">&quot;Free software&quot; is a matter of liberty, not price. 
+          To understand the concept, you should think of &quot;free speech&quot;, not &quot;free beer&quot;.  
+          &quot;Free software&quot; refers to the users' freedom to run, copy, distribute, 
+          study, change, and improve the software </span></p>
+        <p>大意是說，Free Software(自由軟體)是一種自由的權力，並非是『價格！』
+          舉例來說，你可以擁有自由呼吸的權力、你擁有自由發表言論的權力，
+          但是，這並不代表你可以到處喝『免費的啤酒！(free beer)』，也就是說， <span class="text_import2">自由軟體的重點並不是指『免費』的，而是指具有『自由度, freedom』的軟體</span>，
+          史托曼進一步說明了自由度的意義是：<span class="text_import2"> 使用者可以自由的執行、複製、再發行、學習、修改與強化自由軟體</span>。</p>
+        <p>這無疑是個好消息！因為如此一來，你所拿到的軟體可能原先只能在Unix上面跑，
+          但是經過原始碼的修改之後，你將可以拿他在Linux或者是Windows上面來跑！總之，
+          一個軟體掛上了GPL版權宣告之後，他自然就成了自由軟體！這個軟體就具有底下的特色：</p>
+        <ul class="text_import2" style="list-style-type: circle">
+          <li>取得軟體與原始碼：你可以根據自己的需求來執行這個自由軟體；</li>
+          <li>複製：你可以自由的複製該軟體；</li>
+          <li>修改：你可以將取得的原始碼進行程式修改工作，使之適合你的工作；</li>
+          <li>再發行：你可以將你修改過的程式，再度的自由發行，而不會與原先的撰寫者衝突；</li>
+          <li>回饋：你應該將你修改過的程式碼回饋於社群！</li>
+        </ul>
+        <p>但請特別留意，你所修改的任何一個自由軟體都不應該也不能這樣：</p>
+        <ul class="text_import2" style="list-style-type: circle">
+          <li>修改授權：你不能將一個GPL授權的自由軟體，在你修改後而將他取消GPL授權～</li>
+          <li>單純販賣：你不能單純的販賣自由軟體。</li>
+        </ul>
+        <p>也就是說，既然GPL是站在互助互利的角度上去開發的，你自然不應該將大家的成果佔為己有，
+          對吧！因此你當然不可以將一個GPL軟體的授權取消，即使你已經對該軟體進行大幅度的修改！
+          那麼自由軟體也不能販賣嗎？當然不是！還記得上一個小節裡面，
+          我們提到史托曼藉由販賣Emacs取得一些經費，讓自己生活不至於匱乏吧？是的！
+          自由軟體是可以販售的，不過，不可僅販售該軟體，應同時搭配售後服務與相關手冊～
+          這些可就需要工本費了呢！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">自由軟體與商業行為：</span></li>
+        </ul>
+        <p>很多人還是有疑問，目前不是有很多Linux開發商嗎？為何他們可以販售Linux這個GPL授權的軟體？
+          原因很簡單，因為他們大多都是販售『售後服務！』所以，他們所使用的自由軟體，
+          都可以在他們的網站上面下載！(當然，每個廠商他們自己開發的工具軟體就不是GPL的授權軟體了！)
+          但是，你可以購買他們的Linux光碟，如果你購買了光碟，他們會提供相關的手冊說明文件，
+          同時也會提供你數年不等的諮詢、售後服務、軟體升級與其他協力工作等等的附加價值！</p>
+        <p>所以說，目前自由軟體工作者，他們所賴以維生的，幾乎都是在『服務』這個領域呢！
+          畢竟自由軟體並不是每個人都會撰寫，有人有需要你的自由軟體時，他就會請求你的協助，
+          此時，你就可以透過服務來收費了！這樣來說， <span class="text_import2">自由軟體確實還是具有商業空間的喔！</span></p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 很多人對於GPL授權一直很疑惑，對於GPL的商業行為更是無法接受！
+                  關於這一點，鳥哥在這裡還是要再次的申明，GPL是可以從事商業行為的！
+                  而很多的作者也是藉由這些商業行為來得以取得生活所需，更進一步去發展更優秀的自由軟體！
+                  千萬不要聽到『商業』就排斥！這對於發展優良軟體的朋友來說，是不禮貌的！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>上面提到的大多是與使用者有關的項目，那麼 GPL 對於自由軟體的作者有何優點呢？大致的優點有這些：</p>
+        <ul style="list-style-type: circle">
+          <li>軟體安全性較佳；</li>
+          <li>軟體執行效能較佳；</li>
+          <li>軟體除錯時間較短；</li>
+          <li>貢獻的原始碼遠永都存在。</li>
+        </ul>
+        <p>這是因為既然是Open Source的自由軟體，那麼你的程式碼將會有很多人幫你查閱，
+          如此一來，程式的漏洞與程式的優化將會進展的很快！所以，在安全性與效能上面，
+          自由軟體一點都不輸給商業軟體喔！此外，因為GPL授權當中，修改者並不能修改授權，
+          因此，你如果曾經貢獻過程式碼，嘿嘿！你將名留青史呢！不錯吧！ ^_^</p>
+        <p>對於程式開發者來說，GPL實在是一個非常好的授權，因為大家可以互相學習對方的程式撰寫技巧，
+          而且自己寫的程式也有人可以幫忙除錯。那你會問啊，對於我們這些廣大的終端用戶，GPL有沒有什麼好處啊？有啊！當然有！
+          雖然終端用戶或許不會自己編譯程式碼或者是幫人家除錯，但是終端用戶使用的軟體絕大部分就是GPL的軟體，
+          全世界有一大票的工程師在幫你維護你的系統，這難道不是一件非常棒的事嗎？ ^_^</p>
+      </div>
+    </div>
+    <hr />
+    <a name="torvalds" id="torvalds"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Torvalds的Linux發展</span><br />
+    <div class="block1">
+      <p>我們前面一節當中，提到了Unix的歷史，也提到了Linux是由Torvalds這個芬蘭人所發明的。那麼為何托瓦茲可以發明Linux呢？
+        憑空想像而來的？還是有什麼淵源？這裡我們就來談一談囉！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="torvalds_minix" id="torvalds_minix"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">與Minix之間</span>
+      <div class="block2">
+        <p><a href="http://en.wikipedia.org/wiki/Linus_Torvalds"
+		target="_blank">Linus Torvalds</a>(托瓦茲, 1969年出生)的外祖父是赫爾辛基大學的統計學家，
+          他的外祖父為了讓自己的小孫子能夠學點東西，所以從小就將托瓦茲帶到身邊來管理一些微電腦。
+          在這個時期，托瓦茲接觸了組合語言(Assembly Language)，那是一種直接與晶片對談的程式語言，也就是所謂的低階語言。
+          必須要很瞭解硬體的架構，否則很難以組合語言撰寫程式的。</p>
+        <p>在1988年間，托瓦茲順利的進入了赫爾辛基大學，並選讀了電腦科學系。在就學期間，因為學業的需要與自己的興趣，
+          托瓦茲接觸到了Unix這個作業系統。當時整個赫爾辛基只有一部最新的Unix系統，同時僅提供16個終端機(terminal)。
+          還記得我們上一節剛剛提過的，早期的電腦僅有主機具有運算功能，terminal僅負責提供Input/Output而已。在這種情況下，
+          實在很難滿足托瓦茲的需求，因為.....光是等待使用Unix的時間，就很耗時～為此，他不禁想到：
+          『我何不自己搞一部Unix來玩？』不過，就如同Stallman當初的GNU計畫一樣，要寫核心程式，談何容易～</p>
+        <p>不過，幸運之神並未背離托瓦茲，因為不久之後，他就知道有一個類似Unix的系統，
+          並且與Unix完全相容，還可以在Intel 386機器上面跑的作業系統，
+          那就是我們上一節提過的，譚寧邦教授為了教育需要而撰寫的Minix系統！
+          他在購買了最新的Intel 386的個人電腦後，就立即安裝了Minix這個作業系統。
+          另外，上個小節當中也談到，Minix這個作業系統是有附上原始碼的，
+          所以托瓦茲也經由這個原始碼學習到了很多的核心程式設計的設計概念喔！</p>
+      </div>
+      <hr />
+      <a name="torvalds_multi" id="torvalds_multi"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">對386硬體的多工測試</span>
+      <div class="block2">
+        <p>事實上，托瓦茲對於個人電腦的CPU其實並不滿意，因為他之前碰的電腦都是工作站型的電腦，
+          這類電腦的CPU特色就是可以進行『多工處理』的能力。什麼是多工呢？理論上， <span class="text_import2">一個CPU在一個時間內僅能進行一個程式</span>，
+          那如果有兩個以上的程式同時出現到系統中呢？舉例來說，
+          你可以在現今的電腦中同時開啟兩個以上的辦公軟體，例如電子試算表與文書處理軟體。
+          這個同時開啟的動作代表著這兩個程式同時要交給CPU來處理～</p>
+        <p>啊！CPU一個時間點內僅能處理一個程式，那怎麼辦？沒關係，這個時候<span
+		class="text_import2">如果具有多工能力的CPU就會在不同的程式間切換</span>～
+          還記得前一章談到的CPU時脈吧？假設CPU時脈為1GHz的話，那表示CPU一秒鐘可以進行10<sup>9</sup>次工作。
+          假設CPU對每個程式都只進行1000次運作週期，然後就得要切換到下個程式的話，那麼CPU一秒鐘就能夠切換10<sup>6</sup>次呢！
+          (當然啦，切換工作這件事情也會花去一些CPU時間，不過這裡暫不討論)。這麼快的處理速度下，你會發現，
+          兩個程式感覺上幾乎是同步在進行啦！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 為什麼有的時候我同時開兩個檔案(假設為A, B檔案)所花的時間，
+                  要比開完A再去開B檔案的時間還要多？現在是否稍微可以理解？
+                  因為如果同時開啟的話，CPU就必須要在兩個工作之間不停的切換～
+                  而切換的動作還是會耗去一些CPU時間的！所以囉，同時啟用兩個以上的工作在一個CPU上，
+                  要比一個一個的執行還要耗時一點。這也是為何現在CPU開發商要整合兩個CPU於一個晶片中！
+                  也是為何在運作情況比較複雜的伺服器上，需要比較多的CPU負責的原因！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>早期Intel x86架構電腦不是很受重視的原因，就是因為x86的晶片對於多工的處理不佳，
+          CPU在不同的工作之間切換不是很順暢。但是這個情況在386電腦推出後，有很大的改善。
+          托瓦茲在得知新的386晶片的相關資訊後，他認為，以性能價格比的觀點來看，
+          Intel的386相當的便宜，所以在性能上也就稍微可以將就將就 ^_^。最終他就貸款去買了一部Intel的386來玩。</p>
+        <p>早期的電腦效能沒有現在這麼好，所以壓榨電腦效能就成了工程師的一項癖好！
+          托瓦茲本人早期是玩組合語言的，組合語言對於硬體有很密切的關係，托瓦茲自己也說：『我始終是個性能癖』^_^。
+          為了徹底發揮386的效能，於是托瓦茲花了不少時間在測試386機器上！
+          他的重要測試就是在測試386的多功效能。首先，他寫了三個小程式，一個程式會持續輸出A、一個會持續輸出B，
+          最後一個會將兩個程式進行切換。他將三個程式同時執行，結果，他看到螢幕上很順利的一直出現ABABAB......
+          他知道，他成功了！ ^_^</p>
+        <center>
+          <img src="0110whatislinux/abprogram.gif" alt="386電腦的多工測試" 
+		title="386電腦的多工測試" border="0" /><br />
+          圖2.2.1、386電腦的多工測試<br />
+        </center>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 要達到多工(multitasking)的環境，除了硬體(主要是CPU)需要能夠具有多工的特性外，作業系統也需要支援這個功能喔！
+                  一些不具有多工特性的作業系統，想要同時執行兩個程式是不可能的。除非先被執行的程式執行完畢，否則，
+                  後面的程式不可能被主動執行。<br />
+                  <br />
+                  至於多工的作業系統中，每個程式被執行時，都會有一個最大CPU使用時間，若該工作運作的時間超過這個CPU使用時間時，
+                  該工作就會先被丟出CPU的運作中，而再度的進入核心工作排程中等待下一次被CPU取用來運作。<br />
+                  <br />
+                  這有點像在開記者會啦，主持人(CPU)會問『誰要發問』？一群記者(工作程式)
+                  就會舉手(看誰的工作重要！)，先舉手的自然就被允許發問，問完之後，
+                  主持人又會問一次誰要發問，當然，所有人(包括剛剛那個記者)都可以舉手！
+                  如此一次一次的將工作給他完成啊！ ^_^
+                  多工的環境對於複雜的工作情況，幫助很大喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="torvalds_first" id="torvalds_first"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">初次釋出Linux 0.02</span>
+      <div class="block2">
+        <p>探索完了386的硬體之後，終於拿到Minix並且安裝在托瓦茲的386電腦上之後，托瓦茲跟BBS上面一堆工程師一樣，
+          他發現Minix雖然真的很棒，但是譚寧邦教授就是不願意進行功能的加強，導致一堆工程師在作業系統功能上面的欲求不滿！
+          這個時候年輕的托瓦茲就想：『既然如此，那我何不自己來改寫一個我想要的作業系統？』
+          於是他就開始了核心程式的撰寫了。</p>
+        <p>撰寫程式需要什麼呢？首先需要的是能夠進行工作的環境，再來則是可以將原始碼編譯成為可執行檔的編譯器。 <span class="text_import2">好在有GNU計畫提供的bash工作環境軟體以及gcc編譯器等自由軟體</span>，
+          讓托瓦茲得以順利的撰寫核心程式。他參考Minix的設計理念與書上的程式碼，然後仔細研究出386個人電腦的效能最佳化，
+          然後使用GNU的自由軟體將核心程式碼與386緊緊的結合在一起，最終寫出他所需要的核心程式。
+          而這個小玩意竟然真的可以在386上面順利的跑起來～還可以讀取Minix的檔案系統。
+          真是太好了！不過還不夠，他希望這個程式可以獲得大家的一些修改建議，
+          於是他便將這個核心放置在網路上提供大家下載，同時在BBS上面貼了一則消息：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+Hello everybody out there using minix-
+I'm doing a (free) operation system (just a hobby,
+won't be big and professional like gnu) for <u>386(486) AT clones</u>.
+
+I've currently ported <u>bash (1.08) and gcc (1.40)</u>, 
+and things seem to work. This implies that i'll get 
+something practical within a few months, and <u>I'd like to know 
+what features most people want. Any suggestions are welcome</u>, 
+but I won't promise I'll implement them :-) 
+    </pre></td>
+          </tr>
+        </table>
+        <p>他說，他完成了一個小小的作業系統，這個核心是用在386機器上的，
+          同時，他真的僅是好玩，並不是想要做一個跟GNU一樣大的計畫！
+          另外，他希望能夠得到更多人的建議與回饋來發展這個作業系統！這個概念跟Minix剛好背道而馳呢！
+          這則新聞引起很多人的注意，他們也去托瓦茲提供的網站上下載了這個核心來安裝。
+          有趣的是，因為托瓦茲放置核心的那個FTP網站的目錄為：Linux，
+          從此，大家便稱這個核心為Linux了。(請注意，此時的Linux就是那個kernel喔！
+          另外，托瓦茲所丟到該目錄下的第一個核心版本為0.02呢！)</p>
+        <p>同時，為了讓自己的Linux能夠相容於Unix系統，於是托瓦茲開始將一些能夠在Unix上面運作的軟體拿來在Linux上面跑。
+          不過，他發現到有很多的軟體無法在Linux這個核心上運作。這個時候他有兩種作法， <span class="text_import2">一種是修改軟體，讓該軟體可以在Linux上跑，
+            另一種則是修改Linux，讓Linux符合軟體能夠運作的規範！</span> 由於Linux希望能夠相容於Unix，於是托瓦茲選擇了第二個作法『修改Linux』！
+          為了讓所有的軟體都可以在Linux上執行，於是托瓦茲開始參考標準的<a href="http://en.wikipedia.org/wiki/POSIX"
+		target="_blank">POSIX</a>規範。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> POSIX是可攜式作業系統介面(Portable Operating System Interface)的縮寫，重點在規範核心與應用程式之間的介面，
+                  這是由美國電器與電子工程師學會(IEEE)所發佈的一項標準喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>這個正確的決定讓Linux在起步的時候體質就比別人優良～因為POSIX標準主要是針對Unix與一些軟體運行時候的標準規範，
+          只要依據這些標準規範來設計的核心與軟體，理論上，就可以搭配在一起執行了。
+          而Linux的發展就是依據這個POSIX的標準規範，Unix上面的軟體也是遵循這個規範來設計的，
+          如此一來，讓Linux很容易就與Unix相容共享互有的軟體了！同時，因為Linux直接放置在網路下，提供大家下載，
+          所以在流通的速度上相當的快！導致Linux的使用率大增！這些都是造成Linux大受歡迎的幾個重要因素呢！</p>
+      </div>
+      <hr />
+      <a name="torvalds_team" id="torvalds_team"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 的發展：虛擬團隊的產生</span>
+      <div class="block2">
+        <p>Linux能夠成功除了托瓦茲個人的理念與力量之外，其實還有個最重要的團隊！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">單一個人維護階段</span></li>
+        </ul>
+        <p>Linux雖然是托瓦茲發明的，而且內容還絕不會涉及專利軟體的版權問題。
+          不過，如果單靠托瓦茲自己一個人的話，那麼Linux要茁壯實在很困難～
+          因為一個人的力量是很有限的。好在托瓦茲選擇Linux的開發方式相當的務實！
+          首先，他將釋出的Linux核心放置在FTP上面，並請告知大家新的版本資訊，
+          等到使用者下載了這個核心並且安裝之後，如果發生問題，
+          或者是由於特殊需求亟需某些硬體的驅動程式，那麼這些使用者就會主動回報給托瓦茲。
+          在托瓦茲能夠解決的問題範圍內，他都能很快速的進行Linux核心的更新與除錯。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">廣大駭客志工加入階段</span></li>
+        </ul>
+        <p>不過，托瓦茲總是有些硬體無法取得的啊，那麼他當然無法幫助進行驅動程式的撰寫與相關軟體的改良。
+          這個時候，就會有些志工跳出來說：『這個硬體我有，我來幫忙寫相關的驅動程式。』
+          因為Linux的核心是Open Source的，駭客志工們很容易就能夠跟隨Linux的原本設計架構，
+          並且寫出相容的驅動程式或者軟體。志工們寫完的驅動程式與軟體托瓦茲是如何看待的呢？
+          首先，他將該驅動程式/軟體帶入核心中，並且加以測試。
+          只要測試可以運行，並且沒有什麼主要的大問題，那麼他就會很樂意的將志工們寫的程式碼加入核心中！</p>
+        <p>總之，托瓦茲是個很務實的人，對於Linux核心所欠缺的項目，他總是『先求有且能跑，
+          再求進一步改良』的心態！這讓Linux使用者與志工得到相當大的鼓勵！
+          因為Linux的進步太快了！使用者要求虛擬記憶體，結果不到一個星期推出的新版Linux就有了！
+          這不得不讓人佩服啊！</p>
+        <p>另外，<span class="text_import2">為因應這種隨時都有程式碼加入的狀況，於是Linux便逐漸發展成具有模組的功能</span>！
+          亦即是將某些功能獨立出於核心外，在需要的時候才載入到核心中。如此一來，
+          如果有新的硬體驅動程式或者其他協定的程式碼進來時，就可以模組化，
+          大大的增加了Linux核心的可維護能力！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 核心是一組程式，如果這組程式每次加入新的功能都得要重新編譯與改版的話會變成如何？
+                  想像一下，如果你只是換了顯示卡就得要重新安裝新的Windows作業系統，會不會傻眼？
+                  模組化之後，原本的核心程式不需要更動，你可以直接將他想成是『驅動程式』即可！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">核心功能細部分工發展階段</span></li>
+        </ul>
+        <p>後來，因為Linux核心加入了太多的功能，光靠托瓦茲一個人進行核心的實際測試並加入核心原始程式實在太費力～
+          結果，就有很多的朋友跳出來幫忙這個前置作業！例如考克斯(Alan Cox)、與崔迪(Stephen Tweedie)等等，
+          這些重要的副手會先將來自志工們的修補程式或者新功能的程式碼進行測試，
+          並且結果上傳給托瓦茲看，讓托瓦茲作最後核心加入的原始碼的選擇與整併！
+          這個分層負責的結果，讓Linux的發展更加的容易！</p>
+        <p>特別值得注意的是，這些托瓦茲的Linux發展副手，以及自願傳送修補程式的駭客志工，
+          其實都沒有見過面，而且彼此在地球的各個角落，大家群策群力的共同發展出現今的Linux，
+          我們稱這群人為虛擬團隊！而為了虛擬團隊資料的傳輸，於是Linux便成立的核心網站： <a href="http://www.kernel.org" target="_blank">http://www.kernel.org</a>！</p>
+        <p>而這群素未謀面的虛擬團隊們，在1994年終於完成的Linux的核心正式版！version 1.0。
+          這一版同時還加入了X Window System的支援呢！更於1996年完成了2.0版。此外，托瓦茲指明了企鵝為Linux的吉祥物。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 奇怪的是，托瓦茲是因為小時候去動物園被企鵝咬了一口念念不忘，
+                  而正式的2.0推出時，大家要他想一個吉祥物。他在想也想不到什麼動物的情況下，
+                  就將這個念念不忘的企鵝當成了Linux的吉祥物了...... </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>Linux由於托瓦茲是針對386寫的，跟386硬體的相關性很強，所以，
+          早期的Linux確實是不具有移植性的。不過，大家知道Open source的好處就是，
+          可以修改程式碼去適合作業的環境。因此，在1994年以後，Linux便被開發到很多的硬體上面去了！
+          目前除了x86之外，IBM、HP、Sun等等公司出的硬體也都有被Linux所支援呢！</p>
+      </div>
+      <hr />
+      <a name="torvalds_version" id="torvalds_version"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux的核心版本</span>
+      <div class="block2">
+        <p>Linux的核心版本編號有點類似如下的樣子：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+2.6.18-92.el5
+主版本.次版本.釋出版本-修改版本
+    </pre></td>
+          </tr>
+        </table>
+        <p>如前所述，因為對於Linux核心的開發者太多了，以致於造成Linux核心經常性的變動。
+          但對於一般家用電腦或企業關鍵應用的話，常變動的核心並不適合的。因此托瓦茲便將核心的發展趨勢分為兩股，
+          並根據這兩股核心的發展分別給予不同的核心編號，那就是：</p>
+        <ul>
+          <li><span class="text_import2">主、次版本為奇數</span>：發展中版本(development)<br />
+            如2.5.xx，這種核心版本主要用在測試與發展新功能，所以通常這種版本僅有核心開發工程師會使用。
+            如果有新增的核心程式碼，會加到這種版本當中，等到眾多工程師測試沒問題後，才加入下一版的穩定核心中；<br />
+            <br />
+          </li>
+          <li><span class="text_import2">主、次版本為偶數</span>：穩定版本(stable)<br />
+            如2.6.xx，等到核心功能發展成熟後會加到這類的版本中，主要用在一般家用電腦以及企業版本中。
+            重點在於提供使用者一個相對穩定的Linux作業環境平台。</li>
+        </ul>
+        <p>至於釋出版本則是在主、次版本架構不變的情況下，新增的功能累積到一定的程度後所新釋出的核心版本。
+          而由於Linux核心是使用GPL的授權，因此大家都能夠進行核心程式碼的修改。因此，如果你有針對某個版本的核心修改過部分的程式碼，
+          那麼那個被修改過的新的核心版本就可以加上所謂的修改版本了。</p>
+        <p>Linux核心版本與distribution (下個小節會談到)
+          的版本並不相同，很多朋友常常上網問到：『我的Linux是9.x版，請問....』之類的留言，
+          這是不對的提問方式，因為所謂的Linux版本指的應該是核心版本，
+          而目前最新的核心版本應該是2.6.30(2009/08) 才對，並不會有9.x的版本出現的。</p>
+        <p>妳常用的Linux系統則應該說明為distribution才對！因此，如果以CentOS這個distribution來說，
+          妳應該說：『我用的Linux是CentOS這個 distribution，版本為5.x 版，請問....』才對喔！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 當妳有任何問題想要在Linux論壇發言時，請務必仔細的說明妳的distribution版本，
+                  因為雖然各家distributions使用的都是Linux核心，不過每家distributions所選用的軟體以及他們自己發展的工具並不相同，
+                  多少還是有點差異，所以留言時得要先聲明distribution的版本才行喔！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="torvalds_dist" id="torvalds_dist"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux distributions</span>
+      <div class="block2">
+        <p>好了，經過上面的說明，我們知道了Linux其實就是一個作業系統最底層的核心及其提供的核心工具。
+          他是GNU GPL授權模式，所以，任何人均可取得原始碼與可執行這個核心程式，並且可以修改。
+          此外，因為Linux參考POSIX設計規範，於是相容於Unix作業系統，故亦可稱之為Unix Like的一種。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 鳥哥曾在上課的時候問過同學：『什麼是Unix Like啊』？可愛的同學們回答的答案是：『就是很喜歡(like)Unix啦！』
+                  囧rz...那個like是『很像』啦！所以Unix like是『很像Unix的作業系統』哩！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">可完整安裝的Linux發佈套件</span></li>
+        </ul>
+        <p>Linux的出現讓GNU計畫放下了心裡的一塊大石頭，因為GNU一直以來就是缺乏了核心程式，
+          導致他們的GNU自由軟體只能在其他的Unix上面跑。既然目前有Linux出現了，且 
+          Linux也用了很多的GNU相關軟體，所以<span class="text_import2">Stallman認為Linux的全名應該稱之為GNU/Linux呢</span>！
+          不管怎麼說，Linux實在很不錯，讓GNU軟體大多以Linux為主要作業系統來進行開發，
+          此外，很多其他的自由軟體團隊，例如sendmail, wu-ftp, apache等等也都有以Linux 
+          為開發測試平台的計畫出現！如此一來，Linux除了主要的核心程式外，可以在Linux 
+          上面運行的軟體也越來越多，如果有心，就能夠將一個完整的Linux作業系統搞定了！</p>
+        <p>雖然由Torvalds負責開發的Linux僅具有Kernel與Kernel提供的工具，
+          不過，如上所述，很多的軟體已經可以在Linux上面運作了，因此， <span class="text_import2">『Linux + 各種軟體』就可以完成一個相當完整的作業系統了</span>。
+          不過，要完成這樣的作業系統......還真難～
+          因為Linux早期都是由駭客工程師所開發維護的，他們並沒有考慮到一般使用者的能力......</p>
+        <p>為了讓使用者能夠接觸到Linux，於是很多的商業公司或非營利團體，
+          就將Linux Kernel(含tools)與可運行的軟體整合起來，加上自己具有創意的工具程式，
+          這個工具程式可以讓使用者以光碟/DVD或者透過網路直接安裝/管理Linux系統。<span class="text_import2"> 這個『Kernel + Softwares + Tools的可完整安裝』的咚咚，我們稱之為Linux distribution</span>，
+          一般中文翻譯成可完整安裝套件，或者Linux發佈商套件等。</p>
+        <center>
+          <img src="0110whatislinux/distribution.gif" alt="Linux可完整安裝發佈套件" 
+		title="Linux可完整安裝發佈套件" border="0" /><br />
+          圖2.5.1、Linux可完整安裝發佈套件<br />
+        </center>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 由於Linux核心是由駭客工程師寫的，要由原始碼安裝到x86電腦上面成為可以執行的binary檔案，
+                  這個過程可不是人人都會的～所以早期確實只有工程師對Linux有興趣。
+                  一直到一些社群與商業公司將Linux核心配合自由軟體，並提供完整的安裝程序，
+                  且製成光碟/DVD後，對於一般使用者來說，Linux才越來越具有吸引力！
+                  因為只要一直『下一步』就可以將Linux安裝完成啊！ ^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>由於GNU的GPL授權並非不能從事商業行為，於是很多商業公司便成立來販售Linux distribution。
+          而由於Linux的GPL版權宣告，因此，商業公司所販售的Linux distributions通常也都可以從Internet上面來下載的！
+          此外，如果你想要其他商業公司的服務，那麼直接向該公司購買光碟來安裝，也是一個很不錯的方式的！<br />
+          <br />
+        </p>
+        <a name="fhs" id="fhs"></a>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">各大Linux Distributions的主要異同：支援標準！</span></li>
+        </ul>
+        <p>不過，由於發展Linux distributions的社群與公司實在太多了，例如在台灣有名的Red Hat, SuSE, Ubuntu,
+          Fedora, Debian等等，所以很多人都很擔心，如此一來<span class="text_import2">每個distribution是否都不相同呢？</span> 這就不需要擔心了，因為每個Linux distributions使用的kernel都是<a href="http://www.kernel.org" 
+		target="_blank">http://www.kernel.org</a>所釋出的，而他們所選擇的軟體，幾乎都是目前很知名的軟體，重複性相當的高，
+          例如網頁伺服器的Apache，電子郵件伺服器的Postfix/sendmail，檔案伺服器的Samba等等。</p>
+        <p>此外，為了讓所有的Linux distributions開發不致於差異太大，且讓這些開發商在開發的時候有所依據，還有<span 
+		class="text_import2">Linux Standard Base (LSB)</span>等標準來規範開發者，以及目錄架構的<span 
+		class="text_import2">File system Hierarchy Standard (FHS)</span>標準規範！
+          唯一差別的，可能就是該開發者自家所開發出來的管理工具，以及套件管理的模式吧！
+          所以說，基本上，每個Linux distributions除了架構的嚴謹度與選擇的套件內容外，
+          其實差異並不太大啦！ ^_^ 。大家可以選擇自己喜好的distribution來安裝即可！</p>
+        <ul>
+          <li><a href="http://www.pathname.com/fhs/" target="_blank">FHS: http://www.pathname.com/fhs/</a></li>
+          <li><a href="http://www.linuxbase.org/" target="_blank">LSB: http://www.linuxbase.org/</a></li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 事實上鳥哥認為distributions主要分為兩大系統，一種是使用RPM方式安裝軟體的系統，包括Red Hat, Fedora, SuSE等都是這類；
+                  一種則是使用Debian的dpkg方式安裝軟體的系統，包括Debian, Ubuntu, B2D等等。 </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>底下列出幾個主要的Linux distributions發行者網址：</p>
+        <ul>
+          <li><a href="http://www.redhat.com" target="_blank">Red Hat: http://www.redhat.com</a></li>
+          <li><a href="http://fedoraproject.org/" target="_blank">Fedora: http://fedoraproject.org/</a></li>
+          <li><a href="http://www.mandriva.com/" target="_blank">Mandriva: http://www.mandriva.com</a></li>
+          <li><a href="http://www.novell.com/linux/" target="_blank">Novell SuSE: http://www.novell.com/linux/</a></li>
+          <li><a href="http://www.debian.org/" target="_blank">Debian: http://www.debian.org/</a></li>
+          <li><a href="http://www.slackware.com/" target="_blank">Slackware: http://www.slackware.com/</a></li>
+          <li><a href="http://www.gentoo.org/" target="_blank">Gentoo: http://www.gentoo.org/</a></li>
+          <li><a href="http://www.ubuntu.com/" target="_blank">Ubuntu: http://www.ubuntu.com/</a></li>
+          <li><a href="http://www.centos.org/" target="_blank">CentOS: http://www.centos.org/</a></li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 到底是要買商業版還是社群版的Linux distribution呢？如果是要裝在個人電腦上面做為桌上型電腦用的，建議使用社群版，
+                  包括Fedora, Ubuntu, OpenSuSE等等。如果是用在伺服器上面的，建議使用商業版本，包括Red Hat, SuSE等。
+                  這是因為社群版通常開發者會加入最新的軟體，這些軟體可能會有一些bug存在。至於商業版則是經過一段時間的磨合後，
+                  才將穩定的軟體放進去。<br />
+                  <br />
+                  舉例來說，Fedora兜出來的軟體套件經過一段時間的維護後，等到該軟體穩定到不容易發生錯誤後，
+                  Red Hat才將該軟體放到他們最新的釋出版本中。所以，Fedora的軟體比較經常改版，Red Hat的軟體就較少更版。 </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">Linux在台灣</span></li>
+        </ul>
+        <p>當然發行套件者不僅於此。但是值得大書特書的，是中文Linux的延伸計畫：CLE這個套件！
+          早期的Linux因為是工程師發展的，而這些工程師大多以英文語系的國家為主，
+          所以Linux對於國人的學習是比較困擾一點。後來由國人發起的CLE計畫： <a href="http://cle.linux.org.tw/" target="_blank">http://cle.linux.org.tw/</a> 開發很多的中文套件及翻譯了很多的英文文件，使得我們目前得以使用中文的Linux呢！
+          另外，目前正在開發中的還有台南縣臥龍小三等老師們發起的眾多自由軟體計畫，
+          真是造福很多的朋友啊！</p>
+        <ul>
+          <li><a href="http://freesf.tnc.edu.tw/index.php" 
+			target="_blank">自由軟體技術交流網： http://freesf.tnc.edu.tw/index.php</a></li>
+          <li><a href="http://b2d.tnc.edu.tw/" target="_blank">B2D: http://b2d.tnc.edu.tw/</a></li>
+        </ul>
+        此外，如果只想看看Linux的話，還可以選擇所謂的可光碟開機進入Linux的Live CD版本，
+        亦即是KNOPPIX這個Linux distributions呢！台灣也有阿里巴巴兄維護的中文Live CD喔！
+        <ul>
+          <li><a href="http://www.knoppix.net/" target="_blank">http://www.knoppix.net/</a></li>
+          <li><a href="http://knoppix.tnc.edu.tw/" target="_blank">中文 KNOPPIX: http://knoppix.tnc.edu.tw/</a></li>
+        </ul>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 對於沒有額外的硬碟或者是沒有額外的主機的朋友來說，KNOPPIX這個可以利用光碟開機而進入Linux作業系統的Live CD 
+                  真的是一個不錯的選擇！你只要下載了KNOPPIX的映象檔，然後將他燒錄成為CD，
+                  放入你主機的光碟機，並在BIOS內設定光碟為第一個開機選項，就可以使用Linux系統了呢！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        如果你還想要知道更多的Linux distributions的下載與使用資訊，可以參考：
+        <ul>
+          <li><a href="http://distrowatch.com/" target="_blank">http://distrowatch.com/</a></li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">選擇適合你的Linux distribution</span></li>
+        </ul>
+        <p>那我到底應該要選擇哪一個distributions？就如同我們上面提到的，其實每個distributions差異性並不大！
+          不過，由於套件管理的方式主要分為Debian的dpkg及Red Hat系統的RPM方式，
+          目前鳥哥的建議是，先學習以RPM套件管理為主的RHEL/Fedora/SuSE/CentOS等台灣使用者較多的版本，
+          這樣一來，發生問題時，可以提供解決的管道比較多。如果你已經接觸過Linux了，
+          還想要探討更嚴謹的Linux版本，那可以考慮使用Debian，如果你是以效能至上來考量，
+          那麼或許Gentoo是不錯的建議！</p>
+        <p>總之，版本很多，但是各版本差異其實不大，建議你一定要先選定一個版本後，
+          先徹頭徹尾的瞭解他，那再繼續玩其他的版本時，就可以很快的進入狀況。
+          鳥哥的網站僅提供一個版本，不過是以比較基礎的方式來介紹的，
+          因此，如果能夠熟練俺這個網站的話，呵呵！哪一個distributions對你來說，都不成問題啦！</p>
+        <p>不過，如果依據電腦主機的用途來分的話，在台灣鳥哥會這樣建議：</p>
+        <ul style="padding-left: 20px; ">
+          <li>用於企業環境：建議使用商業版本，例如Red Hat的RHEL或者是Novell的SuSE都是很不錯的選擇！
+            畢竟企業的環境強調的是永續的經營，你可不希望網管人員走了之後整個機房的主機都沒有人管理吧！
+            由於商業版本都會提供客戶服務，所以可以降低企業的風險喔！<br />
+            <br />
+          </li>
+          <li>用於個人或教學的伺服器環境：要是你的伺服器所在環境如果當機還不會造成太大的問題的話，
+            加上你的環境是在教學的場合當中時(就是說，唔！經費不足的環境啦！)那麼可以使用『號稱』完全相容商業版RHEL的CentOS。
+            因為CentOS是抓RHEL的原始碼來重新兜起來的一個Linux distribution，所以號稱相容於RHEL。
+            這一版的軟體完全與RHEL相同，在改版的幅度較小，適合於伺服器系統的環境；<br />
+            <br />
+          </li>
+          <li>用於個人的桌上型電腦：想要嘗鮮嗎？建議使用很炫的Fedora/Ubuntu等Desktop(桌面環境)使用的版本！
+            如果不想要安裝Linux的話，那麼Fedora或CentOS也有推出Live CD了！也很容易學習喔！</li>
+        </ul>
+      </div>
+    </div>
+    <hr />
+    <a name="linuxpt" id="linuxpt"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux的特色</span><br />
+    <div class="block1">
+      <p>Linux是Torvalds先生所開發出來的，基於GPL的版權宣告之下，可以在x86的架構下運作，也可以被移植到其他的大型主機上面。
+        由於開發的相關理念與相容的問題，因此，我們也可以稱Linux為Unix Like作業系統的一種。</p>
+      <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+        <table width="90%">
+          <tr>
+            <td><b>Tips:</b><br />
+              <span style="color : #009000"><font size="-1"> 其實Unix-Like可以說是目前伺服器類型的作業系統的統稱啦！
+                因為，不論是FreeBSD, BSD, Sun Unix, HP Unix, 
+                Red Hat Linux, Mandrake Linux等等，都是由同一個祖先Thompson所寫的『Unix』來的，
+                因此，這些咚咚都被統稱為Unix-Like的作業系統囉！ </font></span></td>
+            <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+          </tr>
+        </table>
+      </div>
+      <hr />
+      <a name="linuxpt_pt" id="linuxpt_pt"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux的特色</span>
+      <div class="block2">
+        <p>那麼這個系統有什麼特異功能呢？簡單的說：</p>
+        <ul style="padding-left: 20px; ">
+          <li><span class="text_import2">自由與開放的使用與學習環境</span>：<br />
+            <br />
+            由於Linux是基於<span class="text_import2">GPL</span>的授權之下，因此他是自由軟體，
+            也就是任何人都可以自由的使用或者是修改其中的原始碼的意思！
+            這種<span class="text_import2">開放性架構</span>對科學界來說是相當重要的！
+            因為很多的工程師由於特殊的需求，常常需要修改系統的原始碼，
+            使該系統可以符合自己的需求！而這個開放性的架構將可以滿足各不同需求的工程師！
+            因此當然就有可能越來越流行囉！以鳥哥來說，目前環境工程界的空氣品質模式最新版 <a href="http://www.cmascenter.org/" target="_blank">Models-3/CMAQ</a> 就是以Linux為基準平台設計的呢！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">配備需求低廉</span>：<br />
+            <br />
+            Linux可以支援個人電腦的x86架構，系統資源不必像早先的Unix系統那般，僅適合於單一公司所出產的設備！
+            單就這一點來看，就可以造成很大的流行囉！不過，如果你想要在Linux下執行X Window系統，
+            那麼硬體的等級就不能太低了！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">核心功能強大而穩定</span>：<br />
+            <br />
+            而且由於Linux功能並不會輸給一些大型的Unix工作站，因此，近年來越來越多的公司或者是團體、
+            個人投入這一個作業系統的開發與整合工作！例如IBM與昇陽公司都有推出x86的Linux伺服器呢！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">獨立作業</span>：<br />
+            <br />
+            另外，由於很多的軟體套件逐漸被這套作業系統拿來使用，而很多套件軟體也都在
+            Linux這個作業系統上面進行發展與測試，因此，Linux近來已經可以獨力完成幾乎所有的工作站或伺服器的服務了，例如
+            Web, Mail, Proxy, FTP.....。</li>
+        </ul>
+        <p>目前Linux已經是相當成熟的一套作業系統囉！而且不耗資源又可以自由取得！呵呵，
+          可以說造成微軟相當大的壓力呀！此外，由於他的系統硬體要求很低，
+          加上目前很多的人由於『<span class="text_import2">Intel 的陰謀</span>』而造成手邊有相當多的淘汰掉的硬體配備，
+          Linux在這些被淘汰的硬體中就可以執行的相當的順暢與穩定！因此也造成相當多朋友的關注囉！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 呵呵！開玩笑的，因為<a href="http://www.big5.tomshardware.com/" 
+		target="_blank">Tom的硬體評論 (http://www.big5.tomshardware.com/)</a> 網站常常這樣取笑Intel的說！呵！很好笑！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>這也是造成Linux成為最近幾年來最受矚目的作業系統之一，如前所述，
+          他會受到矚目的原因主要是因為他是『free』的，就是可以自由取得的作業系統啦！
+          然後他是開放性的系統，也就是你可以隨時的取得程式的原始碼，這對於程式開發工程師是很重要的！
+          而且，雖然他是Free的自由軟體，不過功能卻很強大！另外，
+          Linux對於硬體的需求是很低的，這一點更造成它流行的主因，因為硬體的汰換率太快了，
+          所以很多人手邊都有一些很少在用的零件，這些零件組一組就可以用來跑Linux了， <span class="text_import2">反正做一個工作站又不用使用到螢幕(只要主機就可以囉)</span>，因此Linux就越來越流行囉！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 也就是因為Linux具有 1.硬體需求低、 2.架構開放、 3.系統穩定性及保密性功能夠強、 
+                  4.完全免費，所以造成一些所謂『反微軟聯盟』的程式設計高手不斷的開發新軟體！以與Microsoft進行抗衡！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="linuxpt_adv" id="linuxpt_adv"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux的優缺點</span>
+      <div class="block2">
+        <p>那幹嘛要使用Linux做為我們的主機系統呢？這是因為Linux有底下這些優點：</p>
+        <ul style="padding-left: 20px;">
+          <li><span class="text_import2">穩定的系統</span>：<br />
+            Linux本來就是基於Unix概念而發展出來的作業系統，因此，Linux具有與Unix系統相似的的程式介面跟操作方式，
+            當然也繼承了Unix穩定並且有效率的特點。常聽到安裝Linux的主機連續運做一年以上而不曾當機、
+            不必關機是稀鬆平常的事；<br />
+            <br />
+          </li>
+          <li><span class="text_import2">免費或少許費用</span>：<br />
+            由於Linux是基於GPL授權下的產物，因此任何人皆可以自由取得Linux，
+            至於一些『<span class="text_import2">安裝套件</span>』的發行者，
+            他們發行的安裝光碟也僅需要些許費用即可獲得！不同於Unix需要負擔龐大的版權費用，當然也不同於微軟需要一而再、
+            再而三的更新你的系統，並且繳納大量費用囉！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">安全性、漏洞的快速修補</span>：<br />
+            如果你常玩網路的話，那麼你最常聽到的應該是『<span class="text_import2">沒有絕對安全的主機</span>』！
+            沒錯！不過Linux由於支援者日眾，有相當多的熱心團體、個人參與其中的開發，
+            因此可以隨時獲得最新的安全資訊，並給予隨時的更新，亦即是具有相對的較安全！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">多工、多使用者</span>：<br />
+            與Windows系統不同的，Linux主機上可以同時允許多人上線來工作，
+            並且資源的分配較為公平，比起Windows的單人多工系統要穩定的多囉！
+            這個多人多工可是Unix-Like上面相當好的一個功能，怎麼說呢？你可以在一部
+            Linux主機上面規劃出不同等級的使用者，而且每個使用者登入系統時的工作環境都可以不相同，
+            此外，還可以允許不同的使用者在同一個時間登入主機，以同時使用主機的資源。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">使用者與群組的規劃</span>：<br />
+            在Linux的機器中，檔案的屬性可以分為『可讀、可寫、可執行』
+            等參數來定義一個檔案的適用性，此外，這些屬性還可以分為三個種類，
+            分別是『檔案擁有者、檔案所屬群組、其他非擁有者與群組者』。
+            這對於專案計畫或者其他計畫開發者具有相當良好的系統保密性。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">相對比較不耗資源的系統</span>：<br />
+            Linux只要一部P-III以上等級的電腦就可以安裝並且使用愉快囉！還不需要到P-4或AMD K8	
+            等級的電腦呢！不過，如果你要架設的是屬於大型的主機（服務上百人以上的主機系統），
+            那麼就需要比較好一點的機器了。不過，目前市面上任何一款個人電腦均可以達到這一個要求囉！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">適合需要小核心程式的嵌入式系統</span>：<br />
+            由於Linux只要幾百K不到的程式碼就可以完整的驅動整個電腦硬體並成為一個完整的作業系統，
+            因此相當適合於目前家電或者是小電子用品的作業系統呢！那就是當紅炸子雞『嵌入式』系統啦！
+            Linux真的是很適合例如手機、數位相機、PDA、家電用品等等的微電腦作業系統呢！ ^_^<br />
+            <br />
+          </li>
+          <li><span class="text_import2">整合度佳且多樣的圖形使用者介面(GUI)</span>：<br />
+            自從1994年Linux 1.0後就加入的X Window系統，在眾多駭客的努力之下終於與Linux有高度整合，
+            且主要的繪圖卡公司(Intel, NVidia, ATI等)都有針對Linux推出最新的驅動程式，
+            因此Linux的GUI已經有長足的進步了！另外，Linux環境下的圖形介面不只有一種呢！
+            包括大家耳熟能詳的<a href="http://www.kde.org/"
+		target="_blank">KDE(http://www.kde.org/)</a>以及<a href="http://www.gnome.org/"
+		target="_blakn">GNOME(http://www.gnome.org)</a>都是很常見的！</li>
+        </ul>
+        <p>反正Linux好處說不完啦！不過雖然Linux具有這樣多的好處，但是他先天上有一個足以致命的地方，
+          使他的普及率受到很大的限制，就是Linux需要使用『指令列』的終端機模式進行系統的管理！
+          雖然近年來有很多的圖形介面開發使用在Linux上面，但畢竟要熟悉Linux還是以指令列來使用是比較好的，
+          因此要接受Linux的玩家必須比較要能熟悉對電腦下指令的行為，而不是用滑鼠點一點icon就行了！
+          Linux 還可以改進的地方：</p>
+        <ul style="padding-left: 20px">
+          <li><span class="text_import2">沒有特定的支援廠商</span>：<br />
+            因為在Linux上面的所有套件幾乎都是自由軟體，而每個自由軟體的開發者可能並不是公司團體，
+            而是非營利性質的團體。如此一來，在你Linux主機上面的軟體若發生問題，該如何是好？
+            好在由於目前Linux商業界的整合還不錯，目前在台灣比較具名的Red Hat與SuSE 
+            均有設立了服務點。你可以經由這個服務點來直接向他們購買/諮詢相關的軟硬體問題呢！
+            不過，如果你並非選擇有專門商業公司的Linux distributions時？怎麼辦？
+            沒有專人到府服務呢～這點倒是還不需要太擔心，
+            因為拜網路風行之賜，你要問的問題幾乎在網路上都可以找到答案喔！看你有沒有用心去找就是了！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">遊戲的支援度不足：</span><br />
+            在現代這個時候，敢說你們家的桌上型電腦裡面完全沒有遊戲的小朋友應該不多了！
+            遊戲軟體也是個應用程式，所以它與作業系統的關係就相當密切了。
+            可惜的是目前很多遊戲開發商並沒有在Linux平台上面開發大型遊戲，這間接導致Linux無法進入一般家庭說。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">專業軟體的支援度不足：</span><br />
+            這是鳥哥到學校教書後才發現的一件事，目前很多專業繪圖軟體公司所推出的專業軟體並不支援Linux作業系統，
+            這讓同學很難在不同的平台上面操作相同的軟體！唉！很傷腦筋～<br />
+            <br />
+          </li>
+          <li><span class="text_import2">教育訓練作的還不夠好</span>：<br />
+            如果能夠在國小就教導小朋友使用自由軟體，那麼長大自然就會使用自由軟體了！
+            在台灣目前政策方面還是相當的搖擺不定，希望未來能夠給自由軟體一些機會。</li>
+        </ul>
+        <p>老實說，這些缺點絕大部分都不是Linux本身的問題，倒是一些政策面與商業方面的考量，才是最大的困擾。
+          不過，Linux與其他的作業系統一樣，就是一個工具而已！希望大家能夠在快樂中學習到Linux的精髓啦！^_^</p>
+      </div>
+      <hr />
+      <a name="linuxpt_other" id="linuxpt_other"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關於授權</span>
+      <div class="block2">
+        <p>現在市面上有好多的軟體，有的是自由軟體，有的是專利軟體。有的專利軟體免費，有的自由軟體要錢～
+          啊！好煩啊！怎麼分辨這些東西？其實，鳥哥並不是律師，對於法律也不十分懂，不過，
+          還是有幾個授權模式可以來談一談～<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">Open Source (開放源碼)</li>
+        </ul>
+        <p>軟體以Open Source的方式釋出時，表示除了可執行的軟體本身外，一定伴隨著原始碼的釋出喔！通常Open 
+          Source的軟體有幾個好處：</p>
+        <ol>
+          <li>程式設計師通常會等到程式成熟之後才會釋出(免得被笑, ^_^)，所以通常程式在雛形的時候，就已經具有相當的優良體質； <br />
+            <br />
+          </li>
+          <li>Open Source的精神，相信當程式原設計人將程式原始碼釋出之後，其他的程式設計師接受這份原始碼之後，
+            由於需要將程式改成自己所需的樣式，所以會經由本身的所學來加以改良，並從中加以改良與除蟲，
+            所以程式的debug功能會比傳統的close source來的快！<br />
+            <br />
+          </li>
+          <li>由於程式是伴隨原始碼的，因此，系統將會不易存在鮮為人知的木馬程式或一些安全漏洞，
+            相對而言，會比較更加的安全！</li>
+        </ol>
+        <p>Open source的代表授權為GNU的GPL授權及BSD等等，底下列出知名的Open Source授權網頁：</p>
+        <ul>
+          <li><span class="text_import2">GNU General Public License</span>：<br />
+            <a href="http://www.gnu.org/licenses/licenses.html#GPL"
+		target="_blank">http://www.gnu.org/licenses/licenses.html#GPL</a><br />
+            目前有version 2, version 3兩種版本，Linux使用的是version 2這一版。
+            鳥哥也有收集一份GPL version 2 的中文化條文，您可以參考：<a href="/linux_basic/1010appendix_A.php"
+		target="_blank">http://linux.vbird.org/linux_basic/1010appendix_A.php</a><br />
+            <br />
+          </li>
+          <li><span class="text_import2">Berkeley Software Distribution (BSD)</span>：<br />
+            <a href="http://en.wikipedia.org/wiki/BSD_license"
+		target="_blank">http://en.wikipedia.org/wiki/BSD_license</a><br />
+            使用BSD source code最常接觸到的就是BSD授權模式了！這個授權模式其實與GPL很類似，
+            而其精神也與Open Source相呼應呢！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Apache License, Version 2.0</span>：<br />
+            <a href="http://www.apache.org/licenses/LICENSE-2.0"
+		target="_blank">http://www.apache.org/licenses/LICENSE-2.0</a><br />
+            Apache是一種網頁伺服器軟體，這個軟體的發佈方式也是使用Open source的。只是在apache的授權中規定，
+            如果想要重新發佈此軟體時(如果你有修改過該軟體)，軟體的名稱依舊需要定名為Apache才行！</li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">Close Source</li>
+        </ul>
+        <p>相對於Open Source的軟體會釋出原始法，Close source的程式則僅推出可執行的二進位程式(binary program)而已。
+          這種軟體的優點是有專人維護，你不需要去更動他；缺點則是靈活度大打折扣，使用者無法變更該程式成為自己想要的樣式！
+          此外，若有木馬程式或者安全漏洞，將會花上相當長的一段時間來除錯！這也是所謂專利軟體(copyright)常見的軟體出售方式。</p>
+        <p>雖然專利軟體常常代表就是需要花錢去購買，不過有些專利軟體還是可以免費提供大眾使用的！
+          免費的專利軟體代表的授權模式有：</p>
+        <ul>
+          <li><span class="text_import2">Freeware</span>：<br />
+            <a href="http://en.wikipedia.org/wiki/Freeware"
+		target="_blank">http://en.wikipedia.org/wiki/Freeware</a><br />
+            不同於Free software，Freeware為『免費軟體』而非『自由軟體！』雖然它是免費的軟體，但是不見得要公布其原始碼，
+            端看釋出者的意見囉！這個東西與Open Source畢竟是不太相同的東西喔！此外，目前很多標榜免費軟體的程式很多都有小問題！
+            例如假藉免費軟體的名義，實施使用者資料竊取的目的！
+            所以『<span class="text_import2">來路不明的軟體請勿安裝</span>！』<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Shareware</span>：<br />
+            <a href="http://en.wikipedia.org/wiki/Shareware"
+		target="_blank">http://en.wikipedia.org/wiki/Shareware</a><br />
+            共享軟體這個名詞就有趣了！與免費軟體有點類似的是，Shareware在使用初期，它也是免費的，但是，
+            到了所謂的『試用期限』之後，你就必須要選擇『付費後繼續使用』或者『將它移除』的宿命～
+            通常，這些共享軟體都會自行撰寫失效程式，讓你在試用期限之後就無法使用該軟體。</li>
+        </ul>
+      </div>
+    </div>
+    <hr />
+    <a name="hint" id="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+    <div class="block1">
+      <ul class="text_import2">
+        <li>電腦主要以二進位作為單位，而目前常用的磁碟容量單位為bytes，其單位換算為1Byte = 8bits，
+          其他的以1024為其倍數，如 1GByte=1024MBytes等等。</li>
+        <li>作業系統(Operation System)主要在管理與驅動硬體，因此必須要能夠管理記憶體、管理裝置、
+          負責行程管理以及系統呼叫等等。因此，只要能夠讓硬體準備妥當(Ready)的情況，
+          就是一個陽春的作業系統了。</li>
+        <li>最陽春的作業系統僅在驅動與管理硬體，而要使用硬體時，就得需要透過應用軟體或者是殼程式(shell)
+          的功能，來呼叫作業系統操縱硬體工作。因此，目前稱為作業系統的，
+          除了上述功能外，通常已經包含了日常工作所需要的應用軟體在內了。</li>
+        <li>Unix的前身是由貝爾實驗室(Bell lab.)的Ken Thompson利用組合語言寫成的，
+          後來在1971-1973年間由Dennis Ritchie以C程式語言進行改寫，才稱為Unix。</li>
+        <li>1977年由Bill Joy釋出BSD (Berkeley Software Distribution)，這些稱為Unix-like的作業系統。</li>
+        <li>1984年由Andrew Tannenbaum製作出Minix作業系統，該系統可以提供原始碼以及軟體；</li>
+        <li>1984年由Richard Stallman提倡GNU計畫，倡導自由軟體(Free software)，
+          強調其軟體可以『自由的取得、複製、修改與再發行』，並規範出GPL授權模式，
+          任何GPL(General Public License)軟體均不可單純僅販賣其軟體，也不可修改軟體授權。</li>
+        <li>1991年由芬蘭人Linus Torvalds開發出Linux作業系統。簡而言之，Linux成功的地方主要在於：
+          Minix(Unix), GNU, Internet, POSIX 及虛擬團隊的產生。</li>
+        <li>Linux本身就是個最陽春的作業系統，其開發網站設立在<a href="http://www.kernel.org"
+		target="_blank">http://www.kernel.org</a>，我們亦稱Linux作業系統最底層的資料為『核心(Kernel)』。</li>
+        <li>目前Linux核心的發展分為兩種版本，分別是穩定版本的偶數版，如2.6.X，適合於商業與家用環境使用；
+          一種是發展中版本如2.5.X 版，適合開發特殊功能的環境。</li>
+        <li>Linux distributions的組成含有：『Linux Kernel + Free Software + Documentations(Tools) +
+          可完整安裝的程序』所製成的一套完整的系統。</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="ex" id="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+    <div class="block1"> (要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看) <br />
+      實作題部分：
+      <ul>
+        <li>請依據本章內容的說明，下載 Fedora 最新版本的 Live CD ，並將該 Live CD 燒錄成為光碟 (或 DVD) 後，
+          調整你的主機 BIOS 成為使用光碟機開機，在開機時放入剛剛燒錄的 Live CD ，使用該光碟機開機。在開機後你應該能夠進入系統。
+          請進入該系統，嘗試打開終端機、瀏覽器等，並嘗試操作一下該系統。由於該系統並不會影響到你的硬碟資料，
+          請儘量玩玩！<br />
+          <br />
+        </li>
+        <li>承上題，打開終端機並且輸入『 uname -r 』這個指令，出現的核心版本為何？是穩定還是發展中版本？<br />
+          <br />
+        </li>
+        <li>請上網找出目前 Linux 核心的最新穩定版與發展中版本的版本號碼，請註明查詢的日期與版本的對應。<br />
+          <br />
+        </li>
+        <li>請上網找出 Linux 的吉祥物企鵝的名字，以及最原始的圖檔畫面。(提示：請前往 http://www.linux.org 查閱)<br />
+          <br />
+        </li>
+      </ul>
+      簡答題部分：
+      <ul>
+        <li>你在你的主機上面安裝了一張網路卡，但是開機之後，系統卻無法使用，你確定網路卡是好的，那麼可能的問題出在哪裡？該如何解決？
+          <div class="blockex"> 因為所有的硬體都沒有問題，所以，可能出問題的地方在於系統的核心(kernel)
+            不支援這張網路卡。解決的方法，(1)到網路卡的開發商網站，(2)下載支援你主機作業系統的驅動程式，
+            (3)安裝網路卡驅動程式後，就可以使用了。 </div>
+        </li>
+        <li>我在一部主機上面安裝Windows作業系統時，並且安裝了顯示卡的驅動程式，他是沒有問題的。但是安裝Linux時，卻無法完整的顯示整個X 
+          Window。請問，我可不可以將Windows上面的顯示卡驅動程式拿來安裝在Linux上？
+          <div class="blockex"> 不行！因為核心不同，針對硬體所寫的驅動程式也會不相同，編譯器也不同，當然，驅動程式也無法在兩個作業系統間相容。
+            這也是為何開發商在他們的網站上面，都會同時提供許多不同作業系統的驅動程式之故。 </div>
+        </li>
+        <li>一個作業系統至少要能夠完整的控制整個硬體，請問，作業系統應該要控制硬體的哪些單元？
+          <div class="blockex"> 根據硬體的運作，以及資料在主機上面的運算情況與寫入/讀取情況，我們知道至少要能夠控制：
+            (1)input/output crontrol, (2)device control, (3)process management, (4)file management. 等等！ </div>
+        </li>
+        <li>一個GBytes的硬碟空間，等於幾個KBytes？
+          <div class="blockex"> 1GBytes = 1024 MBytes * 1024 KBytes/MBytes = 1048576 KBytes </div>
+        </li>
+        <li>我在Windows上面玩的遊戲，可不可以拿到Linux去玩？
+          <div class="blockex"> 當然不行！因為遊戲也是一個應用程式 (application)，他必須要使用到核心所提供的工具來開發他的遊戲，
+            所以這個遊戲是不可在不同的平台間運作的。除非這個遊戲已經進行了移植。 </div>
+        </li>
+        <li>Linux本身僅是一個核心與相關的核心工具而已，不過，他已經可以驅動所有的硬體，
+          所以，可以算是一個很陽春的作業系統了。經過其他應用程式的開發之後，被整合成為Linux 
+          distribitions。請問眾多的distributions之間，有何異同？
+          <div class="blockex"> 相同：(1)同樣使用 http://www.kernel.org 所釋出的核心； (2)支援同樣的標準，如 FHS、LSB 等；
+            (3)使用幾乎相同的自由軟體 (例如 GNU 裡面的 gcc/glibc/vi/apache/bind/sendmail... )； 
+            (4)幾乎相同的操作介面 (例如均使用 bash/KDE/GNOME 等等)。<br />
+            不同：使用的 kernel 與各軟體的版本可能會不同；各開發商加入的應用工具不同，使用的套件管理模式不同(dpkg 與 RPM) </div>
+        </li>
+        <li>Unix 是誰寫出來的？ GNU 計畫是誰發起的？
+          <div class="blockex"> Unix 是 Ken Thompson 寫的，1973 年再由 Dennis Ritchie 以 C 語言改寫成功。
+            至於 GNU 與 FSF 則是 Richard Stallman 發起的。 </div>
+        </li>
+        <li>GNU 的全名為何？他主要由那個基金會支持？
+          <div class="blockex"> GNU 是 GNU is Not Unix 的簡寫，是個無窮迴圈！
+            另外，這個計畫是由自由軟體基金會 (Free Software Foundation, FSF) 所支持的！
+            兩者都是由 Stallman 先生所發起的！ </div>
+        </li>
+        <li>何謂多人 ( Multi-user ) 多工 ( Multitask )？
+          <div class="blockex"> Multiuser 指的是 Linux 允許多人同時連上主機之外，每個使用者皆有其各人的使用環境，並且可以同時使用系統的資源！<br />
+            Multitask 指的是多工環境，在 Linux 系統下， CPU 與其他例如網路資源可以同時進行多項工作， 
+            Linux 最大的特色之一即在於其多工時，資源分配較為平均！ </div>
+        </li>
+        <li>簡單說明 GNU General Public License ( GPL ) 與 Open Source 的精神：
+          <div class="blockex"> 1. GPL 的授權之軟體，乃為自由軟體（Free software），任何人皆可擁有他；
+            2. 開發 GPL 的團體(或商業企業)可以經由該軟體的服務來取得服務的費用；
+            3. 經過 GPL 授權的軟體，其屬於 Open source 的情況，所以應該公布其原始碼；
+            4. 任何人皆可修改經由 GPL 授權過的軟體，使符合自己的需求；
+            5. 經過修改過後 Open source 應該回饋給 Linux 社群。 </div>
+        </li>
+        <li>什麼是 POSIX ?為何說 Linux 使用 POSIX 對於發展有很好的影響？
+          <div class="blockex"> POSIX 是一種標準規範，主要針對在 Unix 作業系統上面跑的程式來進行規範。
+            若你的作業系統符合 POSIX ，則符合 POSIX 的程式就可以在你的作業系統上面運作。
+            Linux 由於支援 POSIX ，因此很多 Unix 上的程式可以直接在 Linux 上運作，
+            因此程式的移植相當簡易！也讓大家容易轉換平台，提升 Linux 的使用率。 </div>
+        </li>
+        <li>Linux 的發展主要分為哪兩種核心版本？
+          <div class="blockex"> 主要分為奇數的發展中版本(develop)，如 2.5 ，及偶數的穩定版本，如 2.6 。 </div>
+        </li>
+        <li>簡單說明 Linux 成功的因素？
+          <div class="blockex"> 1. 藉由 Minix 作業系統開發的 Unix like ，沒有版權的糾紛；<br />
+            2. 藉助於 GNU 計畫所提供的各項工具軟體， gcc/bash 等；<br />
+            3. 藉由 Internet 廣為流傳；<br />
+            4. 藉由支持 POSIX 標準，讓核心能夠適合所有軟體的開發；<br />
+            5. 托瓦茲強調務實，虛擬團隊的自然形成！ </div>
+        </li>
+      </ul>
+    </div>
+    <hr />
+    <a name="reference" id="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+    <div class="block1">
+      <ul>
+        <li>Multics計畫網站：<a href="http://www.multicians.org/"
+		target="_blank">http://www.multicians.org/</a>。</li>
+        <li>葛林穆迪著，杜默譯，『Linux傳奇』，時報文化出版企業。<br />
+          書本介紹：<a href="http://findbook.tw/book/9789571333632/basic"
+		target="_blank">http://findbook.tw/book/9789571333632/basic</a></li>
+        <li>網路農夫，2001，Unix簡史：<br />
+          <a href="http://netlab.cse.yzu.edu.tw/~statue/freebsd/docs/csh/"
+		target="_blank">http://netlab.cse.yzu.edu.tw/~statue/freebsd/docs/csh/</a></li>
+        <li>Ken Thompson的個人網站：<a href="http://plan9.bell-labs.com/cm/cs/who/ken/index.html"
+		target="_blank">http://plan9.bell-labs.com/cm/cs/who/ken/index.html</a></li>
+        <li>Dennis Ritchie的個人網站： <a href="http://cm.bell-labs.com/cm/cs/who/dmr/"
+		target="_blank">http://cm.bell-labs.com/cm/cs/who/dmr/</a></li>
+        <li>Richard Stallman的個人網站： <a href="http://www.stallman.org/"
+		target="_blank">http://www.stallman.org/</a></li>
+        <li>GNU計畫： <a href="http://www.gnu.org" target="_blank">http://www.gnu.org</a></li>
+        <li>XFree86的網站：<a href="http://www.xfree86.org/" target="_blank">http://www.xfree86.org/</a></li>
+        <li>洪朝貴老師的GNU/FSF介紹： <a href="http://people.ofset.org/~ckhung/a/c_83.php"
+		target="_blank">http://people.ofset.org/~ckhung/a/c_83.php</a></li>
+        <li>維基百科對Linus Torvalds的介紹：<a href="http://en.wikipedia.org/wiki/Linus_Torvalds"
+		target="_blank">http://en.wikipedia.org/wiki/Linus_Torvalds</a>。</li>
+        <li>POSIX的相關說明：<br />
+          維基百科：<a href="http://en.wikipedia.org/wiki/POSIX" target="_blank">http://en.wikipedia.org/wiki/POSIX</a><br />
+          IEEE POSIX標準：<a href="http://standards.ieee.org/regauth/posix/"
+		target="_blank">http://standards.ieee.org/regauth/posix/</a></li>
+      </ul>
+    </div>
+    <hr />
+    <span class="text_history"> 2002/06/25：第一次完成<br />
+      2003/01/26：重新修訂，加入一些歷史事件、重新編排與加入 FAQ<br />
+      2003/02/28：加入百資以及 distrowatch 兩個網站的推薦！<br />
+      2005/05/31：舊有的資料放於 <a href="0110whatislinux/0110whatislinux.php">此處</a><br />
+      2005/06/02：做了大幅度的改版，很多資料參考了網路農夫及 Linux 傳奇等書籍，建議大家要多看看網路農夫的大作喔！<br />
+      2005/06/08：將原本的 binary / compiler / Emacs 的地方再說明一下！比較容易瞭解那是什麼！順便加入習題<br />
+      2005/07/21：網路農夫的網站結束了～真傷心～只好提供網路農夫之前發表的文章連結了！<br />
+      2005/08/03：感謝網友 babab 的來信告知，修訂了國家高速網路中心網址：http://www.nchc.org.tw<br />
+      2005/10/24：經由網友的回報，洪朝貴老師已經調職到樹德大學，因此整個連結內容已作修訂。<br />
+      2006/05/31：加入了重點回顧的項目啦！<br />
+      2006/06/06：感謝網友 &quot;Warren Hsieh&quot; 兄的提醒，由於麥金塔在 2006 年後使用 Intel 的 x86 硬體架構，故 
+      Windows 是可能可以在上面安裝的！<br />
+      2008/07/23：因為加入了計算機概論的章節，所以本文做了挺大幅度的修改！原本針對FC4的版本請點選<a 
+	href="0110whatislinux/0110whatislinux-fc4.php">這裡</a>。<br />
+      2007/07/26：將整份文章重新校閱過，修訂一些文辭，也將格式調整為適合的XHTML了！<br />
+      2007/07/29：將主、次核心版本加強說明！<br />
+      2009/08/05：移除最後一小節的標準，將FHS與LSB向前挪到distribution解釋中。拿掉伺服器、工作站、終端機的說明。<br />
+      </span>
+    <hr />
+    <br />    <br /></td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

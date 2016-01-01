@@ -1,0 +1,2426 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- SAMBA 伺服器</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0370samba.htm">
+    <span class="text_head0"><span class="text_head_en">SAMBA </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0370samba.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/12/29</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在一般的區域網路中 (LAN) 如果都是 Windows 電腦，那麼使用『網路上的芳鄰』這個功能，就可以讓不同的 Windows
+	電腦分享彼此的檔案囉！但萬一這個 LAN 裡面有個 Linux 主機時，我怎麼讓
+	Linux 也加入這個 Windows 電腦當中的『網路上的芳鄰』呢？也就是說，讓 Windows
+	電腦可以透過『網路上的芳鄰』來存取 Linux 主機上面的檔案！呵呵！那就是 SAMBA
+	這個伺服器的主要目的了！SAMBA 是很有用的一個伺服器，他可以讓您的 Linux
+	剎那間成為一個檔案伺服器 (File Server)，並提供整個 LAN 裡面的 Windows
+	很簡單的就可以對 Linux 主機進行檔案的存取動作。不僅如此， SAMBA 也可以讓
+	Linux 上面的印表機成為印表機伺服器 (Printer Server) ，鳥哥個人覺得， SAMBA
+	對於整個 LAN 的貢獻真的是很大！那麼就趕緊來玩一玩吧！ ^_^
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#theory">什麼是 SAMBA ？</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#theory_source">SAMBA 的發展歷史與名稱的由來</a><br />
+	　　2.2 <a href="#theory_using">SAMBA 常見的應用</a><br />
+	　　2.3 <a href="#theory_netbios">SMB 使用的 NetBIOS 通訊協定</a><br />
+	　　2.4 <a href="#theory_daemons">SAMBA 使用的 daemons</a><br />
+	　　2.5 <a href="#theory_connect">連線模式的介紹 (peer/peer, domain model)</a><br />
+	</span>
+3. <a href="#server">SAMBA 伺服器的基礎設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#server_pkg">Samba 所需套件及其套件結構</a><br />
+	　　3.2 <a href="#server_smb.conf">基礎設定流程與 smb.conf 的主要規劃</a>：<br />
+	　　　　<a href="#server_smb.conf_global">主機整體參數</a>, 
+		<a href="#server_smb.conf_dir">分享目錄參數</a>, 
+		<a href="#server_smb.conf_var">變數特性</a><br />
+	　　3.3 <a href="#server_share">沒有密碼的 smb.conf 設定(純測試)</a> (<a href="#lmhosts">lmhosts</a>,
+		<a href="#testparm">testparm</a>,
+		<a href="#smbclient_l">smbclient</a>)<br />
+	　　3.4 <a href="#server_user">安全等級為使用者的工作群組設定</a> (<a href="#smbpasswd">smbpasswd</a>)<br />
+	　　3.5 <a href="#server_printer">設定成為印表機伺服器 (CUPS 系統)</a> (<a href="#cupsaddsmb">cupsaddsmb</a>)<br />
+	　　3.6 <a href="#server_security">安全性管理</a>： <a href="#security_iptables">iptables</a>, 
+		<a href="#security_smb.conf">smb.conf 設定值</a>, <a href="#security_quota">Quota</a>,
+		<a href="#security_backup">關於備份</a><br />
+	　　3.7 <a href="#server_plan">主機安裝時的規劃與中文磁區掛載</a><br />
+	</span>
+4. <a href="#client">Samba 用戶端軟體功能</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#client_win">Windows 系統的使用</a>： <a href="#client_win_fire">WinXP 防火牆</a>,
+		<a href="#client_win_445"> port 445</a><br />
+	　　4.2 <a href="#client_linux">Linux 系統的使用</a>： <a href="#smbclient">smbclient</a>,
+		<a href="#smbmount">smbmount</a>, <a href="#nmblookup">nmblookup</a>,
+		<a href="#smbstatus">smbstatus</a><br />
+	</span>
+5. <a href="#other">伺服器進階管理</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#other_pdc">讓 Samba 管理網域使用者：PDC</a><br />
+	　　5.2 <a href="#other_faq">問題克服</a><br />
+	　　5.3 <a href="#other_smbpasswd">使用者修改自己的密碼</a><br />
+	　　5.4 <a href="#other_acl">利用 ACL 配合單一使用者時的控管</a><br />
+	</span>
+6. <a href="#review">重點回顧</a><br />
+7. <a href="#ex">課後練習</a><br />
+8. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+9. <a href="http://phorum.vbird.org/viewtopic.htm?p=118976"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=118976</a><br />
+</span>
+
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	這一章的主要目的為介紹在不同的平台上面利用同樣的協定來進行檔案的傳輸，
+	其實主要就是讓 Linux 與 Windows 主機之間能彼此透過『網路上的芳鄰』這個方式來分享檔案，
+	而最主要的目的就是當你的區域網路內辦公用的主機大多是 Windows 系統時，
+	可以透過網芳來存取 Linux 主機上面的資源，讓你不覺得有任何不一樣！
+	而閱讀之前你至少需要有底下的一些基礎概念：<br />
+	<ul>
+	<li><a href="0110network_basic.htm">網路基礎</a>是不能少的，尤其是 Samba 用到很多埠口；
+	<li><a href="0120intranet.htm">區域網路架構的設定</a>也是要瞭解的啊！
+	<li><a href="../linux_basic/0610hardware.htm#cups">印表機的設定與使用</a>也不能忘記吶！
+	</ul>
+</div>
+
+
+<hr /><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是 SAMBA ？</span><br />
+<div class=block1>
+	在這個章節中，我們要教大家跳的是熱情有勁的<span class=text_import2>巴西 SAMBA 舞蹈</span>.....
+	喔不～搞錯了～是要向大家介紹 <span class=text_import2>SAMBA</span> 這個好用的伺服器啦！咦！怪了！
+	怎麼伺服器的名稱會使用 SAMBA 呢？還真是怪怪的呢！那麼這個 SAMBA 伺服器的功能是什麼呢？另外，
+	他最早是經由什麼樣的想法而開發出來的呢？呵呵！底下就讓我們慢慢的談一談吧！<br /><br />
+
+	<hr /><a NAME="theory_source"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">SAMBA 的發展歷史與名稱的由來</span><br />
+	<div class=block2>
+		在早期的網路世界當中，檔案資料在不同主機之間的傳輸大多是使用 <a href="0410vsftpd.htm">FTP</a> 
+		這個好用的伺服器軟體來進行傳送。不過使用 FTP 傳輸檔案卻有個小小的問題，
+		<span class=text_import2>那就是您無法直接修改主機上面的檔案資料</span>！也就是說，您想要更改 
+		Linux 主機上面的某個檔案時，你必須要將該檔案自伺服器上下載下來後才能修改。
+		也因此該檔案在伺服器與用戶端都會存在。這個時候，萬一如果有一天您修改了某個檔案，
+		卻忘記將資料上傳回主機，那麼等過了一陣子之後，呵呵，您如何知道那個檔案才是最新的？<br /><br />
+
+		<li><span class=text_import1>讓檔案在兩部主機之間直接修改</span></li>
+		<div class=block2>
+		既然有這樣的問題，那麼好吧，我可不可以在用戶端的機器上面直接取用 server 上面的檔案，
+		如果可以在用戶端直接進行 Server 端檔案的存取，那麼我在用戶端就不需要存在該檔案資料囉，也就是說，
+		我只要有 Server 上面的檔案資料存在就可以啦！有沒有這樣的檔案系統啊 (File System)！
+		很高興的是，前面我們已經提過的 <a href="0330nfs.htm">Network File System, NFS</a> 
+		就是這樣的檔案系統之一啦！我只要在用戶端將 Server 所提供分享的目錄掛載進來，
+		那麼在用戶端的機器上面就可以直接取用 Server 上的檔案資料囉，而且，
+		<span class=text_import2>該資料就像是我用戶端上面的 partition 一般</span>，真是好用！<br /><br />
+
+		而除了可以讓 Unix Like 的機器互相分享檔案的 NFS 伺服器之外，在微軟 (Microsoft) 
+		作業系統上面也有類似的檔案系統，那就是 <span class=text_import2>Common Internet File System, 
+		CIFS</span> 這個咚咚啦！CIFS 最簡單的想法就是目前常見的『<span class=text_import2>網路上的芳鄰</span>』咯！ 
+		Windows 系統的電腦可以透過桌面上『網路上的芳鄰』來分享別人所提供的檔案資料哩！真是方便。
+		不過，NFS 僅能讓 Unix 機器溝通， CIFS 只能讓 Windows 機器溝通。傷腦筋，那麼有沒有讓 
+		Windows 與 Unix-Like 這兩個不同的平台相互分享檔案資料的檔案系統呢？<br /><br />
+		</div>
+
+		<li><span class=text_import1>利用封包偵測逆向工程發展的 SMB Server</span></li>
+		<div class=block2>
+		在 1991 年一個名叫 Andrew Tridgwell 的大學生就有這樣的困擾，他手上有三部機器，分別是跑 DOS 
+		的個人電腦、DEC公司的 Digital Unix 系統以及 Sun 的 Unix 系統。在當時， DEC 公司有發展出一套稱為 
+		PATHWORKS 的軟體，這套軟體可以用來分享 DEC 的 Unix 與個人電腦的 DOS 這兩個作業系統的檔案資料，可惜讓 
+		Tridgwell 覺得較困擾的是，Sun 的 Unix 無法藉由這個軟體來達到資料分享的目的。<br /><br />
+
+		這個時候 Tridgwell 就想說：『<span class=text_import2>咦！既然這兩部系統可以相互溝通，沒道理 Sun 
+		就必需這麼苦命吧？可不可以將這兩部系統的運作原理找出來，然後讓 Sun 這部機器也能夠分享檔案資料呢？</span>』，
+		為了解決這樣的的問題，他老兄就自行寫了個 program 去偵測當 DOS 與 DEC 的 Unix 
+		系統在進行資料分享傳送時所使用到的通訊協定資訊，然後將這些重要的資訊擷取下來，
+		並且基於上述所找到的通訊協定而開發出Server Message Block (SMB) 這個檔案系統，而就是這套 SMB 
+		軟體就能夠讓 Unix 與 DOS 互相的分享資料囉！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		再次的給他強調一次，在 Unix Like 上面可以分享檔案資料的 file system 是 NFS，那麼在 Windows 
+		上面使用的『網路上的芳鄰』所使用的檔案系統則稱為 Common Internet File System, CIFS
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<li><span class=text_import1>取名 SAMBA 的主因 ^_^</span></li>
+		<div class=block2>
+		既然寫成了軟體，想一想，總是需要註冊一下商標吧！因此 Tridgwell 就去申請了 SMBServer 
+		(Server Message Block 的簡寫) 這個名字來做為他撰寫的這個軟體的商標，可惜的是，因為 SMB 
+		是沒有意義的文字，因此沒有辦法達成註冊。既然如此的話，那麼能不能在字典裡面找到相關的字詞可以做為商標來註冊呢？
+		翻了老半天，呵呵！這個 <span class=text_import2><b>S</b>A<b>MB</b>A</span> 剛好含有 SMB ，
+		又是熱情有勁的拉丁舞蹈的名稱，不然就用這個名字來做為商標好了！
+		這成為我們今天所使用的 SAMBA 的名稱由來啦！ ^_^
+		</div>
+	</div>
+
+	<hr /><a NAME="theory_using"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">SAMBA 常見的應用</span><br />
+	<div class=block2>
+		由上面說明的 SAMBA 發展緣由，您就應該不難知道咯， SAMBA 最初發展的主要目就是要用來溝通 Windows 與 
+		Unix Like 這兩個不同的作業平台，那麼 SAMBA 可以進行哪些動作呢？<br />
+		<ul><span class=text_import2>
+		<li>分享檔案與印表機服務；
+		<li>可以提供使用者登入 SAMBA 主機時的身份認證，以提供不同身份者的個別資料；
+		<li>可以進行 Windows 網路上的主機名稱解析 (NetBIOS name)
+		<li>可以進行裝置的分享 (例如 Zip, CDROM...)
+		</span></ul>
+
+		底下我們來談幾個 SAMBA 伺服器的應用實例吧！<br /><br />
+
+		<li><span class=text_import1>利用軟體直接編修 WWW 主機上面的網頁資料</span></li>
+		<div class=block2>
+		相信很多人都是利用個人電腦將網頁製作完畢之後，再以類似 FTP 之類的服務將網頁上傳到 WWW 主機的，
+		但這樣有個困擾，那就是同時在用戶端與 WWW 主機上頭都有一份網頁資料，常常會忘記哪一份是最新的，
+		最麻煩的是，有時候下載下來的檔案已經經過好多修改了，卻在下次的 FTP 作業，不小心又下載一次舊資料，
+		結果將已經修改過的資料覆蓋過去～天吶！又要重寫一遍.....真是討厭！<br /><br />
+
+		如果你有安裝 SAMBA 伺服器的設定的話，那麼透過『網芳』的功能，直接連線遠端伺服器所提供的目錄，
+		如此一來你可以直接在你的個人電腦上面修改主機的檔案資料，只有一份正確的資料而已喔！
+		這就有點像是『線上編修』呢，一修改完成，在 Internet 上面可以立刻檢驗，方便的很吶！<br /><br />
+		</div>
+
+		<li><span class=text_import1>做成可直接連線的檔案伺服器</span></li>
+		<div class=block2>
+		在鳥哥實驗室中，由於電腦數量不多，研究生常常會使用到不同的電腦 (因為大家都得搶沒有人用的電腦啊！)
+		，此外，也常常有研究生拿自己的 NoteBook 來工作，因此，有些團隊的資料就分散在各個電腦當中，使用上相當的不方便。
+		這個時候，鳥哥就使用 SAMBA 將硬碟空間分享出來，由於使用者要登入 SAMBA 這個伺服器主機時需要輸入使用者資料 
+		(帳號與密碼)，而不同的登入者會取得不一樣的目錄資源，所以可以避免自己的資料在公用電腦上面被窺視，
+		此外，在不同的公用電腦上面都可以登入 SAMBA 主機，資料的使用上面真是相當的棒啊！<br /><br />
+		</div>
+
+		<li><span class=text_import1>印表機伺服器</span></li>
+		<div class=block2>
+		SAMBA 除了分享檔案系統外，也可以分享印表機喔，鳥哥的研究室好幾部電腦就是直接以 Linux 
+		分享的印表機來印製報告的。您會說『啊 Windows 也可以辦的到啊！沒有什麼了不起的！』是啊。
+		但是因為 Linux 做為伺服器主機時，鳥哥認為 Linux 畢竟還是比較穩定一點，可以 24 
+		小時且全年無休的努力工作吶。此外，因為目前透過『網路上的芳鄰』來攻擊區域網路的 Windows 
+		作業系統的電腦病毒實在是太多了，防不勝防， Linux 對於這樣的攻擊並沒有很大的影響 
+		(因為常見的攻擊手法均針對 Windows 而來～)，所以也比較安全一些說～<br /><br />
+		</div>
+
+		SAMBA 的應用挺廣泛的，尤其對於區域網路內的電腦來說，更是一項不可多得的好用的伺服器，
+		雖然或許你會說，SAMBA 的功能不過是模仿 Windows 的網芳以及 AD 相關的軟體，
+		那我直接使用 Windows 不就 OK 了？可惜的是， <span class=text_import2>Windows XP 對於網芳的連線限制依版本而有所不同，
+		以企業常見的專業版 (Professional) 來說，他僅能提供最多同時十個連線到網芳的連線能力</span>，這.....不太夠用吧！
+		所以囉，SAMBA 穩定、可靠又沒有限制連線數，值得學習吧！^_^！更多的應用您可以自行發掘吶！<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_netbios"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">SMB 使用的 NetBIOS 通訊協定</span><br />
+	<div class=block2>
+		事實上，<a href="0330nfs.htm">就像 NFS 是架構在 RPC Server 上面</a>一樣， SAMBA 
+		這個檔案系統是架構在 <span class=text_import2>NetBIOS (Network Basic Input/Output System, NetBIOS)</span>
+		這個通訊協定上面所開發出來的。既然如此，我們當然就要瞭解一下 NetBIOS 囉！<br /><br />
+
+		最早 IBM 發展出 NetBIOS 的目的僅是要讓區域網路內少數電腦進行網路連結的一個通訊協定而已，
+		所以考慮的角度並不是針對大型網路，因此，這個 <span class=text_import2>NetBIOS 是無法跨路由的 
+		(Router / Gateway)</span>。這個 NetBIOS 在區域網路內實在是很好用，
+		所以微軟的網路架構就使用了這個咚咚來進行溝通的吶！而 SAMBA 最早發展的時候，其實是想要讓 Linux 
+		系統可以加入 Windows 的系統當中來分享使用彼此的檔案資料的，所以當然 SAMBA 就架構在 NetBIOS 發展出來囉。<br /><br />
+
+		不過 NetBIOS 是無法跨路由的，因此使用 NetBIOS 發展起來的伺服器理論上也是無法跨越路由的呢！
+		那麼該伺服器的使用範圍不就受限相當的多了？好在，我們還有所謂的 <span class=text_import2>NetBIOS over 
+		TCP/IP</span> 的技術呢！這是什麼樣的技術啊？<br /><br />
+
+		舉個例子來說好了，我們知道 TCP/IP 是目前網路連接的基本協定，現在我們將 NetBIOS 想成是一封明信片，
+		這個明信片只能讓您自己欣賞而已，如果今天我們要將這個明信片送到遠方的朋友那邊時！就需要透過郵件系統 
+		(例如郵局啦、國際快遞啦等等的) 來傳送了！這個 TCP/IP 就可以視為郵件傳遞系統啦！透過這個 
+		NetBIOS over TCP/IP 的技術，我們就可以跨路由的使用 SAMBA 伺服器所提供的功能咯！
+		當然啦，目前 SAMBA 還是比較廣泛的使用在 LAN 裡面說。<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		或許您會發現在 Windows 網路設定裡面常常看到 NetBEUI 這個咚咚，那是什麼呢？那個是 NetBIOS Extened 
+		User Interface 的簡寫，也是 IBM 在 NetBIOS 發展出來之後的改良版本。雖然這兩者的技術不太相同，
+		不過，我們只要知道一些簡單的概念就可以了！所以，在這裡我們不針對 NetBEUI 來介紹。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a NAME="theory_daemons"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">SAMBA 使用的 daemons</span><br />
+	<div class=block2>
+		NetBIOS 當初發展時就著眼在區域網路內的快速資料交流，而因為是定義在區域網路內，因此他並沒有使用類似 
+		TCP/IP 之類的傳輸協定，也就不需要 IP 的設定。如此一來資料如何在兩部主機之間交流呢？
+		其實主機在 NetBIOS 協定當中的定義為使用『NetBIOS Name』，每一部主機必須要有不同的 NetBIOS Name 才行，
+		而檔案資料就是在不同的 NetBIOS name 之間溝通囉！我們以一個網芳的設定來作簡單的說明好了：<br />
+
+		<ol>
+		<li><span class=text_import1>取得對方主機的 NetBIOS name 定位該主機所在：</span><br />
+		當我們想要登入某部 Windows 主機使用他所提供的檔案資料時，必需要加入該 Windows 主機的群組 
+		(Workgroup)，並且我們的機器也必需要設定一個主機名稱，注意喔，這個主機名稱跟 Hostname 
+		是不一樣的，因為這個主機名稱是架構在 NetBIOS 協定上的，我們可以簡單的稱呼他為 
+		<span class=text_import2>NetBIOS Name 好了。在同一個群組當中，NetBIOS Name 必需要是獨一無二的喔！</span></li><br />
+
+		<li><span class=text_import1>利用對方給予權限存取可用資源：</span><br />
+		在我們找到該主機名稱後，是否能登入該對方主機或者是取用對方主機所提供的資源，
+		還要看對方 Windows 主機有沒有提供我們使用的權限吶！所以，並不是登入該 Windows 
+		主機之後我們就可以無限制的取用該主機的檔案資源了。也就是說，如果對方主機允許你登入，
+		但是卻沒有開放任何資源讓您取用，呵呵，登入主機也無法查看對方的硬碟裡面的資料的啦！
+		</ol>
+
+		我們的 SAMBA 則是透過兩支服務來控制這兩個步驟，分別是：<br />
+
+		<ul><span class=text_import2>
+		<li>nmbd ：這個 daemon 是用來管理工作群組啦、NetBIOS name 啦等等的解析。
+		主要利用 UDP 協定開啟 port 137, 138 來負責名稱解析的任務；</li><br />
+		<li>smbd ：這個 daemon 的主要功能就是用來管理 SAMBA 主機分享的目錄、檔案與印表機等等。
+		主要利用可靠的 TCP 協定來傳輸資料，開放的埠口為 139 及 445(不一定存在) 。
+		</span></ul>
+
+		所以囉， SAMBA 每次啟動至少都需要有這兩個 daemons 喔！這可不要忘記囉！ ^_^而當我們啟動了 SAMBA 
+		之後，主機系統就會啟動 137, 138, 139 三個 port ，且同時會有 UDP/TCP 的監聽服務喔！這可不要忘記了！
+		因為後面設定防火牆的時候，還會使用到這三個 port 的呢！
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_connect"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">連線模式的介紹 
+	(peer/peer, domain model)</span><br />
+	<div class=block2>
+		SAMBA 主機的應用相當的廣泛，而且可以依照不同的網域連線與使用者帳號、密碼的控管方式不同，
+		來加以不同的類別應用，例如最常見的 Workgroup 及 Domain 兩種方式的連線模式呢！
+		底下我們就是要來談一談這兩種最常見的區域網路的連線模式 peer/peer 及domain model。<br /><br />
+
+		<li><span class=text_import1>peer/peer (Workgroup model)：</span></li>
+		<div class=block2>
+		peer 有同等、同輩的意思存在，那麼 peer/peer 由字面上的解釋來看，當然就是同等地位的 PC 
+		架構了！這是什麼意思呢？簡單的來說，在區域網路裡面的所有 PC 均可以在自己的電腦上面管理自己的帳號與密碼，
+		同時每一部電腦也都具有獨力可以執行各項軟體的能力，只是藉由網路將各個 PC 連結在一起而已的一個架構，
+		所以，每一部機器都是可以獨立運作的喔！<br /><br />
+
+		這樣的架構在目前小型辦公室裡面是最常見的。例如辦公室裡面有十個人，每個人桌上可能都安裝有一套 Windows 
+		作業系統的個人電腦，而這十部電腦都可以獨立進行辦公室軟體的執行啊、獨立上網啊、獨立玩遊戲啊等等的，
+		因為這十部電腦都可以獨立運作，所以不會有一部電腦關掉，其他的電腦就無法工作的情況發生，這就是 peer/peer 
+		的典型架構。<br /><br />
+
+		以下圖的架構為例，在這樣的架構下，假設 A 君寫了一個報告書，而 B 君想要以網路直接取用這個報告書時，他就必須要知道 
+		A 君使用的電腦的帳號與密碼，並且 A 君必須要在 PC A 上面啟用 Windows 的『資源分享(或者是共用)』之後，才能夠讓 
+		B 君連線進入喔 (此時 PC A 為 Server) ！而且， A 君可以隨時依照自己的喜好來更改自己的帳號與密碼，而不受 
+		B 君的影響，不過， B 君就得要取得 A 君同意取得新的帳號與密碼後，才能夠登入 PC A 喔！反過來說，同樣的， 
+		A 要取得 B 的資料時，同樣需要取得 PC B 的帳號與密碼後，才能夠順利登入啊 (此時 PC A 為 Client 喔)！因為 
+		PC A, PC B, PC C 的角色與地位都同時可以為 Client 與 Server ，所以就是 peer/peer 的架構了！<br /><br />
+
+		<a name="fig_01"></a><center><img SRC="0370samba/peer-peer.jpg"
+		title="Peer/Peer 的連線模式"
+		alt="Peer/Peer 的連線模式"><br />
+		圖一、Peer/Peer 的連線模式</center><br />
+
+		生活周遭中，哪裡看到的這種 peer/peer 的架構呢？想起來了嗎？沒錯！就是藉由 Windows 
+		的『網路上的芳鄰』所達成的『工作群組(workgroup)』的架構，那就是典型的 peer/peer 架構啦！所以， 
+		peer/peer 也可以直接說成 workgroup 的連線架構喔。 <br /><br />
+
+		使用 peer/peer 的架構的好處，是每部電腦均可以獨立運作，而不受他人的影響！不過，
+		缺點就是當整個網域內的所有人員都要進行資料分享時，光是知道所有電腦裡面的帳號與密碼，就會很傷腦筋了！
+		所以， Peer/Peer 的架構是比較適合 <span class=text_import2>(1)小型的網域，或者是 
+		(2)沒有需要常常進行檔案資料分享的網路環境，或者是 
+		(3)每個使用者都獨自擁有該電腦的擁有權(就是說，該電腦是使用者的，而不是公用的啦！)</span>
+		而，如果該單位的所有 PC 均是公有的，而且您需要統一控管整個網域裡面的帳號與密碼的話，那就得使用底下的 
+		domain models 了！<br /><br />
+		</div>
+
+		<li><span class=text_import1>domain model</span></li>
+		<div class=block2>
+		假設今天您服務的單位有 10 部電腦，但是您的單位有 20 個員工，這也就是說，這 20 個員工輪流搶著用這 10 
+		部電腦。如果每部電腦都如同 peer/peer 的架構時，那麼每部電腦都需要輸入這 20 
+		個員工的帳號與密碼來提供他們登入喔，而且，今天假如有個員工想要變更自己的密碼時，就需要到 
+		10 台電腦上面進行密碼變更的作業！否則他就必須要記得這 10 部電腦裡面，那一部電腦是記憶那一個密碼.....好煩那～<br /><br />
+
+		如果上述是這樣的情況，使用 peer/peer 架構就不是一個好方法了！這個時候就需要藉由 domain model 
+		來達成您的需求啦！所謂的 domain model 概念其實也很簡單，既然使用電腦資源需要帳號與密碼，
+		那麼我將所有的帳號與密碼都放置在一部主控電腦 (<span class=text_import2>Primary Domain Controller, PDC</span>) 
+		上面，在我的網域裡面，任何人想要使用任何電腦時，都需要在螢幕前方輸入帳號與密碼，然後通通藉由 PDC 
+		主機的辨識後，才給予適當的使用權限，也就是說，不同的身份還具有不一樣的電腦資源使用權限就是了！
+		例如底下的圖示：<br /><br />
+
+		<a name="fig_02"></a><center><img SRC="0370samba/domain.jpg"
+		title="domain model 的連線模式"
+		alt="domain model 的連線模式"><br />
+		圖二、domain model 的連線模式</center><br />
+
+		PDC 主機控管整個網域裡面的各個機器 (PC A ~ PC D) 的帳號與密碼的資訊，假如今天有個使用者帳號名稱為 
+		Ken ，且密碼為 mypasswd 時，他不論使用哪一部電腦 (PC A ~ PC D) 只要在螢幕前方輸入 ken 
+		與他的密碼，則該機器會先到 PDC 上面查驗是否有 ken ，以及 ken 的密碼，並且 PDC 主機會給予 ken 
+		這個使用者相關的電腦資源使用權限。當 ken 在任何一部主機上面登入成功後，他就可以使用相關的電腦資源了！<br /><br />
+
+		這樣的架構比較適合人來人往的企業架構，當系統管理員要控管新進人員的電腦資源使用權時，可以直接針對 PDC 
+		來修改就好了，不需要每一部主機都去修修改改的，對於系統管理員來說，這樣的架構在控管帳號資源上，當然是比較簡單的啦！
+		<br /><br />
+		</div>
+
+		各種架構適用的環境與適用的人都不相同，並沒有那個是最好啦！請依照您的工作環境來選擇連線的模式囉！當然， SAMBA 
+		可以達到上述兩種模式的啦！底下我們會分別來介紹喔！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">SAMBA 伺服器的基礎設定</span><br />
+<div class=block1>
+	SAMBA 這個套件幾乎在所有的 Linux distributions 上面都有提供，因為即使你的 Linux 僅做為個人桌上型電腦使用時，
+	你依舊可能會需要連線到遠端的 Windows 的網芳的，那個時候就得要 samba 提供的用戶端軟體功能囉！
+	因此你只要直接安裝系統上面提供的預設 samba 版本即可。底下我們會先介紹 samba 伺服器，然後在介紹用戶端功能喔！<br /><br />
+
+	<hr /><a NAME="server_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Samba 所需套件及其套件結構</span><br />
+	<div class=block2>
+		目前常見的 samba 版本為 3.x 版，舊版的 2.x 版在設定上有點不一樣，因此在進入設定前請先確認你的 samba 版本。
+		咱們的 CentOS 4.x 提供的是 Samba 3.x 的版本。那麼你需要什麼套件呢？基本上有這些：<br />
+
+		<ul>
+		<li><span class=text_import1>samba</span>：<br />
+		這個套件主要包含了 SAMBA 的主要 daemon 檔案 (smbd 及 nmbd)、 SAMBA 的文件檔 
+		(document)、以及其他與 SAMBA 相關的 logrotate 設定檔及開機預設選項檔案等；</li><br />
+		<li><span class=text_import1>samba-common</span>：<br />
+		這個套件則主要提供了 SAMBA 的主要設定檔 (smb.conf) 、 smb.conf 
+		語法檢驗的測試程式 (testparm)等等；</li><br />
+		<li><span class=text_import1>samba-client</span>：<br />
+		這個套件則提供了當 Linux 做為 SAMBA Client 端時，所需要的工具指令，例如掛載 SAMBA 
+		檔案格式的執行檔 smbmount 等等。
+		</ul>
+
+		這三個套件你都得要安裝才行喔！如果尚未安裝的話，看是要由原版光碟去安裝，還是使用 yum 都可以啦！
+		安裝完畢之後，你可以依序察看一下 Samba 的套件結構喔！與他相關的檔案基本上有這些東西：<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/samba/smb.conf</span>：<br />
+		smb.conf 是 Samba 的主要設定檔名，如果你的 distribution 的 SAMBA 設定檔不在 /etc/samba/ 目錄當中，
+		那麼你應該使用 locate 或 find 等方式將他找出來就好啦。基本上，咱們的 Samba 就僅有這個設定檔而已，
+		且這個設定檔本身就是很詳細的說明文件了，請用 vi 去查閱他吧！這個檔案主要在設定工作群組、
+		NetBIOS 名稱以及分享的目錄等相關設定，我們後續要介紹的都是這個檔案而已啦！</li><br />
+
+		<li><span class=text_import1>/etc/samba/lmhosts</span>：<br />
+		這個檔案的主要目的在<span class=text_import2>對應 NetBIOS name 與該主機名稱的 IP</span> ，事實上他有點像是 
+		/etc/hosts 的功能！只不過這個 lmhosts 對應的主機名稱是 NetBIOS name 喔！不要跟 /etc/hosts 搞混了！由於目前 
+		SAMBA 的功能越來越強大，所以通常只要您一啟動 SAMBA 時，他就能自己捉到 LAN 裡面的相關電腦的 NetBIOS name 
+		對應 IP 的資訊，因此這個檔案通常可以不用設定了！</li><br />
+
+		<li><span class=text_import1>/etc/samba/smbpasswd</span>：<br />
+		這個檔案<span class=text_import2>預設並不存在啦！他是 SAMBA 預設的使用者密碼對應表</span>。當我們設定的 
+		SAMBA 伺服器是較為嚴密的，需要使用者輸入帳號與密碼後才能登入的狀態時，使用者的密碼預設就是放置在這裡咯 
+		(<span class=text_vbird>當然囉，您可以自行在 smb.conf 裡面設定密碼放置的地方及密碼檔名，
+		不過我們這裡都以預設的狀態來說明</span>) 。比較需要注意的是，這個檔案因為包含了使用者的密碼，
+		當然權限方面要較為注意啦！這個檔案的擁有者需要是 root ，且權限設定為 600 才行喔！</li><br />
+
+		<li><span class=text_import1>/etc/samba/smbusers</span>：<br />
+		由於 Windows 與 Unix-like 在管理員與訪客的帳號名稱不一致，分別為 administrator 及 root，
+		為了對應這兩者之間的帳號關係，可以使用這個檔案來設定。不過這個檔案的使用必須要經由 smb.conf
+		內的『 username map 』設定項目來啟動才行。</li><br />
+
+		<li><span class=text_import1>testparm</span>：<br />
+		這個指令主要在檢驗 samba 設定檔 smb.conf 的語法正確與否，當你編輯過 smb.conf 時，請務必使用這個指令來檢查一次，
+		避免因為打字錯誤引起的困擾啊！</li><br />
+
+		<li><span class=text_import1>smbd, nmbd</span>：<br />
+		前幾個小節曾經提過的兩個主要 daemon 就在這裡！</li><br />
+
+		<li><span class=text_import1>smbstatus</span>：<br />
+		列出目前的 SMB server 的狀態，也是很有用途的一個指令啦！</li><br />
+
+		<li><span class=text_import1>smbpasswd</span>：<br />
+		如果您的 SAMBA 設定的較為嚴格，需要規定使用者的帳號與密碼，那麼那個密碼檔案的建立就需要使用 smbpasswd 
+		來建置才可以的喔！所以這個指令與建立 SAMBA 的密碼有關咯！</li><br />
+
+		<li><span class=text_import1>smbclient</span>：<br />
+		當你的 Linux 主機想要藉由『網路上的芳鄰』的功能來查看別台電腦所分享出來的目錄與裝置時，就可以使用 smbclient 
+		來查看啦！這個指令也可以使用在自己的 SAMBA 主機上面，用來查看是否設定成功哩！</li><br />
+
+		<li><span class=text_import1>smbmount</span>：<br />
+		在 Windows 上面我們可以設定『網路磁碟機』來連接到自己的主機上面，同樣的，在 Linux 上面，我們可以透過 smbmount 
+		來將遠端主機分享的檔案與目錄掛載到自己的 Linux 主機上面哪！不過，其實我們也可以直接使用 mount 
+		這個指令來進行同樣的功能就是了。</li><br />
+
+		<li><span class=text_import1>nmblookup</span>：<br />
+		有點類似 nslookup 啦！重點在查出 NetBIOS name 就是了。</li><br />
+
+		<li><span class=text_import1>smbtree</span>：<br />
+		這玩意就有點像 Windows 系統的網路上的芳鄰顯示的結果，可以顯示類似『靠近我的電腦』之類的資料，
+		能夠查到工作群組與電腦名稱的樹狀目錄分佈圖，有趣吧！</li><br />
+
+		<li><span class=text_import1>/usr/share/doc/samba-&lt;版本&gt;</span>：<br />
+		這個目錄包含了 SAMBA 的所有相關的技術手冊喔！也就是說，當您安裝好了 SAMBA 之後，您的系統裡面就已經含有相當豐富而完整的 
+		SAMBA 使用手冊了！值得高興吧！ ^_^，所以，趕緊自行參考喔！</li>
+		</ul>
+
+		大致的套件結構就是這樣，底下就準備來講一個簡單的案例吧！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="server_smb.conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">基礎設定流程與 smb.conf 
+	的主要規劃</span><br />
+	<div class=block2>
+		既然 Samba 是要加入 Windows 的網芳當中，所以他的設定方式應該是要與網芳差不多才是。所以我們先來聊一聊
+		Windows 的一些設定方法再說。在早期 Windows 的網芳設定真是很簡單，不過也因為太簡單，
+		所以產生的安全問題可是相當的麻煩的。後來在 Windows XP 的 sp2 (服務包第二版) 加入了很多的預設防火牆機制，
+		因此使用網芳的預設限制常常會是這樣的：<br />
+		<ul><span class=text_import2>
+		<li>主機與主機之間必須要在同一個網域當中 (否則需要修改 Windows 預設防火牆)；
+		<li>最好設定為同一工作群組；
+		<li>主機的名稱不可相同 (NetBIOS name)；
+		<li>專業版 Windows XP 最多僅能提供同時十個用戶連線到網芳。
+		</span></ul>
+
+		當你的 Windows 主機群符合上述的條件後，就很容易處理網芳分享的工作啦！分享的步驟是這樣的：<br />
+		<ol>
+		<li>叫出檔案總管，然後在要分享的目錄、磁碟或裝置 (如印表機) 上面按下右鍵，選擇『共用』，然後就能夠設定好分享的資料了；
+		<li>最好建立一組給用戶使用的帳號與密碼，讓其他主機的使用者可以透過該帳號密碼連線進入網芳；
+		</ol>
+
+		真是有夠簡單的！那麼 Samba 怎麼設定啊？也是很簡單，依據上述的限制以及流程你可以這樣想像：<br />
+		<ol><span class=text_import2>
+		<li>在 smb.conf 當中設定好工作群組、NetBIOS 主機名、密碼使用狀態等等與主機相關的資訊；
+		<li>在 smb.conf 內設定好預計要分享的目錄或裝置以及可供使用的使用者資料；
+		<li>根據步驟 2 的設定，在 Linux 檔案系統當中建立好分享出去的檔案或裝置的使用權限；
+		<li>根據步驟 2 的設定，以 smbpasswd 建立起使用者的帳號及密碼
+		<li>啟動 Samba 的 smbd, nmbd 服務，開始運轉哩！
+		</span></ol>
+
+		瞧！根據上面的流程，其實我們最需要知道的就是 smb.conf 這個設定檔的資訊就是了。
+		所以首先我們就要來介紹一下這個檔案的設定方式囉！這個檔案其實可以分為兩部份來看，
+		一個是主機資訊部分，在 smb.conf 當中以 [global] 作為設定的依據；另一個則是分享的資訊，
+		以個別的目錄名稱為依據。你要先知道的是：<span class=text_import2>在 smb.conf 當中，
+		井字號與分號 (# 跟 ;) 都是註解符號</span>！底下咱們就來談談這個咚咚吧！<br /><br />
+
+		<a name="server_smb.conf_global"></a>
+		<hr /><li><span class=text_import1>主機整體參數</span></li>
+		<div class=block2>
+		在 smb.conf 這個設定檔當中的設定有點像底下這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_say># 會有很多加上 # 或 ; 的註解說明，你也可以自行加上來提醒自己相關設定</span>
+<span class=term_write>[global]
+   參數項目 = 設定內容
+   ....
+
+[分享資源名稱]
+   參數項目 = 設定內容
+   ....</span>
+</pre></td></tr></table>
+
+		在 global 當中的就是一些主機的整體參數了，包括工作群組、主機的 NetBIOS 名稱、字元編碼的顯示、登錄檔的設定、
+		是否使用密碼以及使用密碼驗證的機制等等，都是在這個 [global] 項目中設定的。至於 [分享資源名稱] 
+		則是針對你開放的目錄來進權限方面的設定，包括誰可以瀏覽該目錄、是否可以讀寫等等參數。
+		在 [global] 部分關於主機名稱資訊方面的參數主要有：<br />
+
+		<ul>
+		<li><span class=text_import2>workgroup = 工作群組的名稱</span>：注意，主機群要相同；
+		<li><span class=text_import2>netbios name = 主機的 NetBIOS 名稱</span>啊，每部主機均不同；
+		<li><span class=text_import2>server string = 主機的簡易說明</span>，這個隨便寫即可。
+		</ul>
+
+		另外，過去常常讓使用者心生不滿的語系顯示問題方面，您務必要清楚的知道的是，
+		<span class=text_import2>SAMBA 主機上面的資料 (例如 mount 磁碟分割槽的參數以及原本的資料編碼), 
+		SAMBA 伺服器顯示的語系, Windows 用戶端顯示的語系, Windows 用戶端連上 SAMBA 的軟體</span> 都需要符合設定值才行！
+		在新版的 3.x 上面有數個提供這些語系轉換的設定喔，如下所示：<br />
+
+		<ul>
+		<li><span class=text_import2>display charset = 自己伺服器上面的顯示編碼</span>，
+		例如你在終端機時所查閱的編碼資訊。一般來說，與底下的 unix charset 會相同。
+		<li><span class=text_import2>unix charset = 在 Linux 伺服器上面所使用的編碼</span>，一般來說就是 i18n 的編碼囉！
+		所以你必須要參考 /etc/sysconfig/i18n 內的『預設』編碼。
+		<li><span class=text_import2>dos charset = 就是 Windows 用戶端的編碼了！</span>
+		一般來說我們的繁體中文 Windows 使用的是 big5 編碼，這個編碼在 Samba 內的格式被稱為『 cp950 』喔！
+		</ul>
+
+		關於語系編碼，建議您參考一下討論區的這一篇：<br />
+		<ul><a href="http://phorum.vbird.org/viewtopic.htm?t=22001"
+		target="_blank">http://phorum.vbird.org/viewtopic.htm?t=22001</a></ul>
+		我們的網友 eyesblue 寫得太好了！所以建議大家直接前往查閱即可！除此之外，還有登錄檔方面的資訊，
+		包括這些參數：<br />
+
+		<ul><span class=text_import2>
+		<li>log file = 登錄檔放置的檔案，檔名可能會使用變數處理；
+		<li>max log size = 登錄檔最大僅能到多少 Kbytes ，若大於該數字，則會被 rotate 掉。
+		</span></ul>
+
+		還有跟密碼有關的參數，包括這幾個：<br />
+
+		<ul>
+		<li><span class=text_import2>security = user, server, domain, share</span> 四選一，這四個設定值分別代表：
+			<ul>
+			<li><span class=text_import2>user</span> ：使用 SAMBA 本身的密碼資料庫，密碼資料庫與底下的 smb passwd file 有關；
+			<li><span class=text_import2>share</span>：分享的資料不需要密碼即可分享；
+			<li><span class=text_import2>server, domain</span>：使用外部主機的密碼，亦即 SAMBA 是用戶端之意，如果設定這個項目，
+			你還得要提供『password server = IP』的設定值才行；
+			</ul>
+		<li><span class=text_import2>encrypt passwords = Yes 代表密碼要加密</span>，注意那個 passwords 要有 s 才對！
+		<li><span class=text_import2>smb passwd file = 密碼放置的檔案，通常是 /etc/samba/smbpasswd 。</span>
+		</ul>
+		事實上 Samba 的密碼方面設定值很多喔，包括你還可以利用 samba 來修改 /etc/passwd 裡頭的人物的密碼呢！
+		不過這個時候就得需要『 unix password sync 』以及『 passwd program  』這兩個參數值的幫忙了。
+		我們這裡先談比較簡單的，其他進階的部分可以 man smb.conf 去進行搜尋查閱喔！ ^_^<br /><br />
+		</div>
+
+		<a name="server_smb.conf_dir"></a>
+		<hr /><li><span class=text_import1>分享目錄參數</span></li>
+		<div class=block2>
+		在目錄參數部分，主要有底下這幾個常見的參數喔：<br />
+		<ul>
+		<li><span class=text_import2>[分享名稱]</span> ：這個分享名稱很重要，他是一個『代號』而已。
+		舉例來說，你在 Windows 當中使用『共用』來分享網芳時，假設你將『D:\game』分享出來，
+		系統不是還會要你輸入一個『在網路上面的名稱』嗎？假設你輸入『My_Games』這個名稱好了，
+		那麼未來大家在網芳看到的這個資料夾 (D:\game) 名稱其實是『\\你的IP\My_Games』啦！
+		<li><span class=text_import2>comment</span> ：這個目錄的說明！
+		<li><span class=text_import2>path</span> ：在網芳中顯示的名稱 [分享名稱] 中，所實際進入的 Linux 檔案系統。
+		也就是說，在網芳當中看到的是 [分享] 的名稱，而實際操作的檔案系統則是在 path 裡頭所設定的。
+		<li><span class=text_import2>read only</span>：是否唯讀？
+		<li><span class=text_import2>public</span> ：是否讓所有可以登入的使用者看到這個項目？
+		<li><span class=text_import2>writable</span> ：是否可以寫入？這裡需要注意一下喔！那個 read only 與 writable 
+		不是兩個蠻相似的設定值嗎？如果 writable 在這裡設定為 no ，亦即不可寫入，那跟 read only 
+		不就互相抵觸了！那個才是正確的設定？答案是：<span class=text_import2>最後出現的那個設定值為主要的設定！</span>
+		<li><span class=text_import2>create mode 與 directory mode</span> 都與權限有關的咯！
+		<li><span class=text_import2>valid users = 使用者</span>，這個項目可以指定能夠進入到此資源的特定使用者。
+		</ul>
+
+		因為分享的資源主要與 Linux 系統的檔案權限有關，因此裡頭的設定參數多與權限有關。<br /><br />
+		</div>
+
+		<a name="server_smb.conf_var"></a>
+		<hr /><li><span class=text_import1>變數特性</span></li>
+		<div class=block2>
+		為了簡化設定值，Samba 提供很多不同的變數給我們來使用，主要有底下這幾個變數喔：<br />
+		<ul>
+		<li><span class=text_import2>%S</span>：取代目前的設定項目值，所謂的『設定項目值』就是在 [分享] 裡面的內容！
+		舉例來說，例如底下的設定範例：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[homes]
+   valid users = %S
+   ....
+</pre></td></tr></table>
+
+		因為 valid users 是允許的登入者，設定為 %S 表示任何可登入的使用者都能夠登入的意思～今天如果 dmtsai
+		這個使用者登入之後，那個 [homes] 就會自動的變成了 [dmtsai] 了！這樣可以明白了嗎？
+		%S 的用意就是在替換掉目前 [ ] 裡面的內容啦！</li><br />
+
+		<li><span class=text_import2>%m</span>：代表 Client 端的 NetBIOS  主機名稱喔！
+		<li><span class=text_import2>%M</span>：代表 Client 端的 Internet 主機名稱喔！就是 HOSTNAME。
+		<li><span class=text_import2>%L</span>：代表 SAMBA 主機的 NetBIOS 主機名稱。
+		<li><span class=text_import2>%H</span>：代表使用者的家目錄。
+		<li><span class=text_import2>%U</span>：代表目前登入的使用者的使用者名稱
+		<li><span class=text_import2>%g</span>：代表登入的使用者的群組名稱。
+		<li><span class=text_import2>%h</span>：代表目前這部 SAMBA 主機的 HOSTNAME 喔！注意是 hostname 不是 NetBIOS name 喔！
+		<li><span class=text_import2>%I</span>：代表 Client 的 IP 咯。
+		<li><span class=text_import2>%T</span>：代表目前的日期與時間
+		</ul>
+		至於相關的變數運用，我們會在底下的設定當中略做介紹喔！<br /><br />
+		</div>
+
+		以上就是在 smb.conf 上頭常看到的幾種設定項目，相信初次接觸 Samba 的朋友，看到上頭寫的資料肯定是一頭霧水的！
+		我們底下用幾個小範例來實際的介紹 smb.conf 的設定後，您就會知道這些參數如何應用了！
+		記得，<span class=text_import2>看完底下的下範例後，要回來再將這些參數的意義瞧一瞧，
+		而且若有其他額外的參數須知，務必自行 man smb.conf 喔！</span>重要的很！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_share"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">沒有密碼的 smb.conf 設定(純測試)</span><br />
+	<div class=block2>
+		瞎密？不需要密碼就能夠使用 SAMBA 主機所提供的目錄資源？真假？沒錯啦，可以達到的。
+		不過，因為不需要密碼就能夠登入，雖然你可以設定權限成為唯讀，讓使用者可以『瞧瞧而已』，
+		但是畢竟比較危險，因為如果你不小心將重要資料放置到該分享的目錄當中，豈不危險？
+		所以盡量不要這樣設定。不過，我們還是得介紹一下啦！先說明一下我們的設定需求：<br /><br />
+
+		<li><span class=text_import1>主機預計設定的參數狀況：</span></li>
+		<ul>
+		<li>在 LAN 內所有的網芳主機工作群組 (workgroup) 為： vbirdhouse
+		<li>這部 Linux 主機 (Samba 服務) 的 NetBIOS 名稱為： vbirdserver
+		<li>使用者登入層級設定為： share
+		<li>僅分享 /tmp 這個目錄而已，且取名為： temp
+		<li>Linux 主機的編碼格式假設為萬國碼 (Unicode, 亦即 utf8)
+		<li>用戶端為中文 Windows ，在用戶端的軟體也使用 big5 的編碼
+		</ul>
+
+		底下就開始依序來進行 samba 的設定吧！<br /><br />
+
+		<a name=lmhosts></a>
+		<hr /><li><span class=text_import1>1. 設定 lmhosts 檔案內容 (optional)：</span></li>
+		<div class=block2>
+		我們前面談到 NetBIOS 名稱可以由廣播的方式自動取得，而 NetBIOS 也可以透過區域網路內經由一部主控電腦來管理，
+		此外，你也可以利用自己主機當中的 lmhosts 這個設定檔來進行 NetBIOS 與 IP 的對應，
+		讓 NetBIOS  與 TCP/IP 可以對應上關係吶！一般來說，這個檔案是可以不必設定的，因為可以經由廣播的方式取得對應的嘛！
+		不過，某些時刻確實可以設定一下，免除一些額外的搜尋時間說。我的區網中電腦名稱與 IP 是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/lmhosts</span>
+<span class=term_write>127.0.0.1       localhost
+192.168.1.254   vbirdserver
+192.168.1.21    vbirdcpu2
+192.168.1.11    vbirdcpu1</span>
+<span class=term_say># 這個檔案的內容很簡單，與 /etc/hosts 很類似，左邊是 IP 右邊是主機名稱。
+# 只是主機名稱必須符合 NetBIOS name 的標準，包括：
+# 主機名稱不要超過 15 個字元，不要含有特殊字元等等。
+# 亦可使用 man lmhosts 來查閱喔！</span>
+</pre></td></tr></table>
+
+		鳥哥區網內常用的有三部主機，除了 Linux 這部機器外，還有兩部個人電腦，我將這幾部電腦的 NetBIOS name
+		寫到這個檔案當中，可以免除 Samba 自己去搜尋囉！而再次強調，這個名稱是 NetBIOS name 而非 HOSTNAME 喔！<br />
+		</div>
+
+		<hr /><li><span class=text_import1>2. 檢查語系資料</span></li>
+		<div class=block2>
+		過去朋友們在進行 SAMBA 的設定時，最容易發生錯誤的地方就是在中文檔名部分，
+		絕大部分的朋友只要使用了中文檔名，常常會發生一些問題，就是無法順利的上傳下載，
+		或者是原先的中文檔名上傳後，卻變成奇怪的亂碼檔名。<br /><br />
+
+		為了解決這個問題，你必須要知道幾個項目：<br />
+		<ul><span class=text_import2>
+		<li>原始檔案 (你要分享的檔案) 編碼的格式為何？一般來說，中文 Windows  的編碼預設為 Big5 ；
+		<li>這個檔案放置在 Linux 上，則這部 Linux 的預設語系編碼為何？這與 /etc/sysconfig/i18n 有關；
+		<li>在 Samba 上頭的顯示編碼為何？一般來說與上述的 Linux 預設編碼相同即可；
+		<li>在用戶端連接到 Samba 主機的軟體之語系編碼為何？如果是中文 Windows 作業系統，預設為 Big5。
+		</span></ul>
+		你的語系資料必須要在上面這幾個環境中進行轉換，因此如果你的用戶端連上 Samba 的軟體編碼為 Big5 ，
+		你的 Samba 使用的語系也是 Big5 ，但是 Linux 主機卻預設僅支援 utf8 的編碼時，而你的 smb.conf 
+		又沒有設定好，此時資料傳輸就會發生一些錯誤，因此你就會看到很多亂碼檔名了。<br /><br />
+
+		所以，你至少得要知道你的 Linux 語系編碼為何？在 Red Hat 系統 (含我們的 CentOS) 可以查閱 /etc/sysconfig/i18n 這個檔案，
+		如下所示為鳥哥的 i18n ：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/sysconfig/i18n</span>
+LANG="en_US.UTF-8"  <span class=term_say>&lt;==這才是你需要注意的地方！</span>
+SUPPORTED="zh_HK.UTF-8:zh_HK:zh:zh_CN.UTF-8:zh_CN:zh:zh_SG.UTF-8:
+zh_SG:zh:zh_TW.UTF-8:zh_TW:zh:en_US.UTF-8:en_US:en"
+SYSFONT="latarcyrheb-sun16"
+</pre></td></tr></table>
+
+		由上頭看起來，鳥哥預設的語系編碼為 en_US.UTF-8，不過尚有支援 zh_TW 這樣的中文編碼。
+		先假設鳥哥的編碼為萬國碼 (Unicode) 好了。知道了之後就能夠開始處理 smb.conf 囉！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>3. 設定 smb.conf 設定檔</span></li>
+		<div class=block2>
+		在這個例子當中我們僅分享 /tmp 這個目錄而已，而且假設這個分享出來的目錄是可讀寫的，
+		另外，我們並沒有分享印表機喔！而在 smb.conf 當中的註解符號可以是『 # 』也可以是『 ; 』喔！要注意！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/samba</span>
+[root@linux samba]# <span class=term_command>cp smb.conf smb.conf.raw</span>  <span class=term_say>&lt;==先備份再說！</span>
+[root@linux samba]# <span class=term_command>vi smb.conf</span>
+<span class=term_say># 先設定好主機方面的參數</span>
+<span class=term_write>[global]
+        <span class=term_say># 與主機名稱有關的設定資訊</span>
+        workgroup     = vbirdhouse
+        netbios name  = vbirdserver
+        server string = This is vbird's samba server
+
+        <span class=term_say># 與語系方面有關的設定項目喔，為何如此設定請參考前面的說明</span>
+        unix charset    = utf8
+        display charset = utf8
+        dos charset     = cp950
+
+        <span class=term_say># 與登錄檔有關的設定項目，注意變數 (%m)</span>
+        log file = /var/log/samba/%m.log
+        max log size = 50
+
+        <span class=term_say># 這裡才是與密碼有關的設定項目哩！</span>
+        security = share
+
+        <span class=term_say># 其他預設存在的項目</span>
+        socket options = TCP_NODELAY SO_RCVBUF=8192 SO_SNDBUF=8192
+        dns proxy = no
+        template shell = /bin/false
+        winbind use default domain = no
+
+<span class=term_say># 底下則是針對 /tmp 的設定而來的！可瀏覽且可寫入喔！</span>
+[temp]
+        comment   = Temporary file space
+        path      = /tmp
+        read only = no
+        public    = yes</span>
+</pre></td></tr></table>
+
+		請您特別留意，在原本的 smb.conf 上面就已經有很多預設值了，這些預設值如果你不知道他的用途，
+		盡量保留預設值，也可以使用 man smb.conf 去查詢該預設值的意義。舉例來說， CentOS 4.x 的 smb.conf  
+		預設有針對 server/client 的封包傳遞項目設定值的 socket options ，也有針對 Windows NT 及 Unix 系統的帳號對應之
+		idmap uid 之類的設定值，這些設定值在大型的區網架構會使用到，在我們僅有一兩部 Linux samba 伺服器的環境下....
+		應該是可以不予理會的啦！<br /><br />
+		</div>
+
+		<a name="testparm"></a><hr /><li><span class=text_import1>4. 用 testparm 查閱 smb.conf 的語法設定正確性</span></li>
+		<div class=block2>
+		在啟動 samba 之前，我們務必要瞭解到 smb.conf 裡面語法是否正確，檢驗的方式使用 testparm 這個指令即可。
+		測試方式如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>testparm</span>
+<span class=term_say>參數：
+-v ：查閱完整的參數設定，連同預設值也會顯示出來喔！</span>
+
+[root@linux ~]# <span class=term_command>testparm</span>
+Load smb config files from /etc/samba/smb.conf
+Processing section "[temp]"   <span class=term_say>&lt;==這個地方可以仔細看看，如果有問題會在這邊顯示</span>
+Loaded services file OK.
+Server role: ROLE_STANDALONE
+Press enter to see a dump of your service definitions <span class=term_say>&lt;==請按 [Enter] 按鍵</span>
+
+# Global parameters
+[global]
+        dos charset = cp950
+        display charset = utf8
+        workgroup = VBIRDHOUSE
+        netbios name = VBIRDSERVER
+        server string = This is vbird's samba server
+        security = SHARE
+        log file = /var/log/samba/%m.log
+        max log size = 50
+        socket options = TCP_NODELAY SO_RCVBUF=8192 SO_SNDBUF=8192
+        dns proxy = No
+
+[temp]
+        comment = Temporary file space
+        path = /tmp
+        read only = No
+        guest ok = Yes
+</pre></td></tr></table>
+
+		上頭是語法驗證與各個項目的列出，如果你下達 testparm 卻出現如下畫面那就是有問題：<br />
+
+<table class="term"><tr><td class="term"><pre>
+Unknown parameter encountered: "linux charset" <span class=term_say>&lt;==錯誤的設定</span>
+Ignoring unknown parameter "linux charset"
+Processing section "[temp]"
+Loaded services file OK.
+Server role: ROLE_STANDALONE
+Press enter to see a dump of your service definitions
+</pre></td></tr></table>
+
+		如果發現上述的錯誤，這表示你的 smb.conf 有個 linux charset 的設定參數，不過 smb.conf 其實是不支援這個參數的。
+		可能的問題是 samba 2.x 與 samba 3.x  有一些項目的支援已經不存在了，所以你使用舊版的 2.x 設定檔來 3.x 
+		上頭執行時，就會出現問題。此外，『打字錯誤』也是很常見的一個問題吶！趕緊測試一下語法先，
+		然後根據 smb.conf 有的項目去進行修改吧。<br /><br />
+
+		如果你想要瞭解 samba 的所有設定 (包括沒有在 smb.conf 裡頭設定的預設值)，可以使用 testparm -v 來作詳細的輸出，
+		資料相當的豐富，透過這個您也可以知道你的主機環境設定為何呢！ ^_^<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>5. 啟動與觀察</span></li>
+		<div class=block2>
+		啟動實在太簡單了，利用預設的 CentOS 啟動方式來處理即可。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/smb start</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address      Foreign Address  State   PID/Program name
+tcp        0      0 0.0.0.0:139        0.0.0.0:*        LISTEN  10338/smbd
+tcp        0      0 0.0.0.0:445        0.0.0.0:*        LISTEN  10338/smbd
+udp        0      0 192.168.1.254:137  0.0.0.0:*                10343/nmbd
+udp        0      0 0.0.0.0:137        0.0.0.0:*                10343/nmbd
+udp        0      0 192.168.1.254:138  0.0.0.0:*                10343/nmbd
+udp        0      0 0.0.0.0:138        0.0.0.0:*                10343/nmbd
+</pre></td></tr></table>
+
+		特別注意，在 Samba (網芳) 當中預設會啟動多個埠口，這包括資料傳輸的 TCP 埠口 (139, 445)，
+		以及進行 NetBIOS 名稱解析之類工作的 UDP 埠口 (137, 138)，所以你才會看到很多資料的。
+		那麼能否僅支援 139 這個必要的埠口，關閉 445 呢？可以啊～透過 testparm -v 的觀察，
+		可以發現『 smb ports = 445 139 』這個設定值指定兩個埠口的，因此你可以在 smb.conf 增加這個設定值，
+		並改為 smb ports = 139 即可。不過，建議先保留預設值啦！<br /><br />
+		</div>
+
+		<a name="smbclient_l"></a><hr /><li><span class=text_import1>6. 用戶端的觀察</span></li>
+		<div class=block2>
+		關於用戶端的觀察我們會在後續進行介紹。在這裡僅是說明如何確定我們的 Samba 設定與服務有順利的在運作。
+		我們可以在本機上透過 smbclient 這支程式來處理，他的基本語法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbclient -L [//主機或IP] [-U 使用者帳號]</span>
+<span class=term_say>參數：
+-L ：僅查閱後面接的主機所提供分享的目錄資源；
+-U ：以後面接的這個帳號來嘗試取得該主機的可使用資源</span>
+</pre></td></tr></table>
+
+		由於在這個範例當中我們並沒有規範使用者的安全等級，所以必須要使用 -U 這個參數。
+		因此你可以這樣看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbclient -L //127.0.0.1 </span>
+Password:  <span class=term_say>&lt;==這裡按一下 [Enter] 吧！</span>
+Domain=[VBIRDHOUSE] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Sharename   Type  Comment
+    ---------   ----  -------
+    temp        Disk  Temporary file space
+    IPC$        IPC   IPC Service (This is vbird's samba server)
+    ADMIN$      IPC   IPC Service (This is vbird's samba server)
+Domain=[VBIRDHOUSE] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Server           Comment
+    ---------        -------
+    VBIRDSERVER      This is vbird's samba server
+
+    Workgroup        Master
+    ---------        -------
+    VBIRDHOUSE       VBIRDSERVER
+</pre></td></tr></table>
+
+		上表輸出的資訊當中，分享的目錄資源 (Sharename) 就是在 smb.conf 當中設定的 [temp] 名稱囉！
+		因此在這裡的意思是：<span class=text_import2>任何人都可以進入 //127.0.0.1/temp 這個目錄當中，
+		而這個目錄在 Linux 系統其實是 /tmp 目錄。</span>至於那個 IPC$ 及 ADMIN$ 則是為了要應付 Windows 
+		環境所必須要存在的項目就是了。<br /><br />
+		</div>
+
+		基本上，到此為止咱們就設定好一個簡單的不需要密碼即可登入的 Samba 主機了！
+		你可以先行到<a href="#client">用戶端軟體功能</a>的部分進行掛載測試。
+		底下我們則預計以簡易的需要密碼才能夠登入 Samba 的方式來設計一個範例吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">安全等級為使用者的工作群組設定</span><br />
+	<div class=block2>
+		設定一部不需密碼即可登入的 Samba server 是非常簡單的，不過，
+		您總不希望某些有機密性質的資料放在不設防的網芳中讓大家查閱吧？
+		舉例來說，你總不希望你的家目錄被人家隨意瀏覽吧？家目錄內可能有你自己的情書呢！^_^<br /><br />
+
+		那怎麼辦？沒關係，我們可以透過 Samba 主機提供的認證方式來進行使用者權限的給予，
+		也就是說，你在用戶端連線到主機時，必須要輸入正確的帳號與密碼後，才能夠登入 Samba 主機查閱到你自己的資料！
+		那會不會很難啊？不會啦！ Samba 本身就提供一個小程式來幫助我們處理密碼的建立了，
+		整個流程還不太難。比較重要的是<span class=text_import2>Samba 使用者帳號必須要存在於 Linux 系統當中 (/etc/passwd)，
+		但是 Samba 的密碼與 Unix 的密碼檔案並不相同。</span>這就比較有點小麻煩～
+		沒關係，就讓我們依樣畫葫蘆來處理一下這個部分的設定吧！<br /><br />
+
+		<li><span class=text_import1>主機預計分享的資源狀態</span></li>
+		<ul>
+		<li>剛剛<a href="#server_share">前一個免密碼時的 smb.conf</a> 設定繼續保留；
+		<li>針對 NetBIOS name 的解析方式依序由 lmhosts, broadcast 及 host 來進行解析；
+		<li>安全等級提升為 user 等級；
+		<li>密碼檔案放置到 /etc/samba/smbpasswd 這個檔案當中；
+		<li>密碼必須要加密；
+		<li>每個可使用 samba 的使用者擁有自己的家目錄之外， users 這個群組的使用者可以進入 /home/public 目錄中，
+		且在該目錄下 users 這個群組的所有人可具有寫入的權限喔！
+		</ul>
+
+		好了，開始一步步的處理吧！<br /><br />
+
+		<hr /><li><span class=text_import1>1. 設定 lmhosts</span></li>
+		<div class=block2>
+		這部分與<a href="#lmhosts">前一小節的設定</a>相同，請自行前往查閱喔！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>2. 開始設定 smb.conf 檔案</span></li>
+		<div class=block2>
+		在這個範例的設定檔當中，我們會新增幾個參數，新增的參數部分會用特殊字體圈起來，
+		引用之前參數的部分則為一般字體。請交互參考看看囉：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/smb.conf</span>
+[global]
+        workgroup     = vbirdhouse
+        netbios name  = vbirdserver
+        server string = This is vbird's samba server
+        unix charset    = utf8
+        display charset = utf8
+        dos charset     = cp950
+        log file = /var/log/samba/%m.log
+        max log size = 50
+        socket options = TCP_NODELAY SO_RCVBUF=8192 SO_SNDBUF=8192
+        dns proxy = no
+        template shell = /bin/false
+        winbind use default domain = no
+
+<span class=term_say>        # 與密碼有關的設定項目，包括密碼檔案所在與加密與否喔！</span>
+<span class=term_write>        security = user
+        encrypt passwords = yes
+        smb passwd file = /etc/samba/smbpasswd
+
+<span class=term_say>        # 與 NetBIOS name 名稱解析有關的設定</span>
+        name resolve order = lmhosts bcast host
+
+<span class=term_say># 新增的每個使用者家目錄及群組用戶哩！</span>
+[homes]
+        comment = Home directories
+        browseable = no
+        writable = yes
+        valid users = %S
+        create mode = 0664
+        directory mode = 0775
+[public]
+        comment = the user groups work directory
+        path = /home/public
+        public = yes
+        writable = yes
+        valid users = @users</span>
+[temp]
+        comment   = Temporary file space
+        path      = /tmp
+        read only = no
+        public    = yes
+</pre></td></tr></table>
+
+		<span class=text_import1>[global] 部分</span><br />
+		在新增的資料部分，主要是與密碼檔案有關啦！包括安全等級設定為使用本機的密碼驗證，亦即是『 security = user 』
+		那個項目，而且加上了密碼加密。至於 Samba 使用的密碼檔預設就是 /etc/samba/smbpasswd 這個，
+		為了增加自己的記憶，乾脆直接寫到 smb.conf 當中即可。<br /><br />
+
+		至於那個『 name resolve order 』就有趣了！他說明的是『這部 Samba 主機針對 NetBIOS name 的解析方式』，
+		主要的解析方式有幾種：<br />
+		<ul>
+		<li>lmhosts：直接以 lmhosts 這個檔案的內容來對照；
+		<li>wins：利用一部可管理 Windows 網芳的主控電腦來紀錄，本 Samba 主機向該部主機 (wins server) 要求 NetBIOS 
+		名稱解析結果；
+		<li>host：透過 /etc/hosts 或者是 NIS, DNS 等方式來處理 NetBIOS name 的結果；
+		<li>bcast：在區網中直接透過 NetBIOS 的廣播功能處理，亦即是向所有 Samba 主機介面的同一網域主機發出名稱解析的需求，
+		舉例來說咱們的 Samba 主機為 192.168.1.254/24 ，則以 bcast 解析 NetBIOS name 時，我們的伺服器會主動向
+		192.168.1.0/24 發送出解析封包的要求啊。
+		</ul>
+		我們修改了預設值，讓 Samba 僅透過 lmhosts, bcast 及 host 的方式進行主機名稱的解析啊！<br /><br />
+
+		<span class=text_import1>[homes] 部分</span><br />
+		至於新增的目錄方面，[homes] 是個比較特殊的分享名稱，他代表 Linux 主機上頭的使用者家目錄。
+		我們知道 [homes] 代表的是分享目錄的資源名稱，
+		但你總不希望使用 Samba 時找到的資源分享名稱為 //127.0.0.1/homes 吧？
+		所以才會有『 valid users = %S 』這個設定值，那個 %S 代表擁有可登入 Samba 的所有使用者，
+		且當他登入後，那個 [homes] 會變成 [帳號] ，
+		請至前一小節的<a href="#server_smb.conf_var">變數</a>部分查詢相關的說明。而且使用者的家目錄是除了使用者本人外，
+		並不會開放給其他人瀏覽的喔 (browseable = no)，<a name="20070412"></a>另外他的 umask 為 
+		002，因為建立新檔 (create mode) 預設權限為
+		0664 ，而建立新目錄 (directory mode) 則為 0775 之故。<br /><br />
+
+		<span class=text_import1>[public] 部分</span><br />
+		另一個新增的分享資源比較有趣，我們命名為 [public] ，指向的目錄為 /home/public ，
+		有趣的地方在於使用的 valid users = @users 這個設定項目，<span class=text_import2>加上 @ 
+		之後的名稱代表著群組之意</span>，意思是說，在 Linux 主機上面可使用 Samba 的帳號中，只要該帳號支援 users 這個群組，
+		那麼理論上他就能夠進入 /home/public 目錄進行存取的權限。<span class=text_import2>不過能否順利的存取檔案還與
+		Linux 最底層的檔案權限有關</span>。且任何人均可查閱到我們的主機有提供 [public] 這個分享資源 (public = 
+		yes 之故)。<br /><br />
+
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />在上面的這個設定檔當中有提到分享出 /home/public 這個目錄，
+請問這個目錄的權限應該如何設定才是符合我們 Samba 案例的要求？<br />
+答：<ul>
+	在這個案例當中我們提到任何具有 users 群組的使用者都能夠完整的存取 /home/public ，
+	所以這個目錄的群組應該屬於 users ，且權限至少需為 770 才行。如果 /home/public 預設不存在時，
+	應該要如此建立：<br />
+
+<table class="term" style="width:400"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir /home/public</span>
+[root@linux ~]# <span class=term_command>chgrp users /home/public</span>
+[root@linux ~]# <span class=term_command>chmod 770 /home/public</span>
+</pre></td></tr></table>
+	這樣當屬於 users 群組的使用者進入到此目錄後，才能夠進行讀寫的功能。
+</ul>
+</td></tr></table><br />
+		</div>
+
+		<a name=smbpasswd></a>
+		<hr /><li><span class=text_import1>3. 設定可使用 Samba 的帳號與密碼</span></li>
+		<div class=block2>
+		設定使用者帳號是很重要的一環，因為設定錯誤的話，當然也就任何人都沒有辦法登入的！
+		在這裡我們必須先要說明一下 Linux 的檔案系統與 SAMBA 設定的使用者登入權限的相關性！<br />
+		<ul><span class=text_import2>
+		<li>在 Linux 這個系統下，任何程序都需要取得 UID 與 GID (User ID 與 Group ID) 
+		的身份之後，才能夠擁有該身份的權限，也才能夠適當的進行存取檔案等動作！</li><br />
+		<li>關於 Linux 這個系統的 UID 與 GID 與帳號的相對關係，一般記錄在 /etc/passwd 當中，當然也能透過 NIS, 
+		ldap 等方式來取對應；</li><br />
+		<li>SAMBA 僅只是 Linux 底下的一套軟體，使用 SAMBA 來進行 Linux 檔案系統時，還是需要以 Linux 
+		系統下的 UID 與 GID 為準則！
+		</span></ul>
+
+		如果上面這幾點說明您沒有問題了，現在就來看一下當我們在 Windows 電腦上面以網路上的芳鄰來連接 
+		Linux 並且進行資料的存取時，會是怎樣的一個情況呢？<br />
+
+		<ul><span class=text_import2>我們需要透過 SAMBA 所提供的功能來進行 Linux 的存取，而 Linux 
+		的存取是需要取得 Linux 系統上面的 UID 與 GID 的，因此，我們登入 SAMBA 主機時，所利用 SAMBA 
+		取得的其實是 Linux 系統裡面的相關帳號！這也就是說，<b>在 SAMBA 上面的使用者帳號，必須要是 
+		Linux 帳號中的一個！</b></span></ul>
+
+		所以說，在不考慮 NIS 或 LDAP 等其他帳號的驗證方式，單純以 Linux 本機帳號 (/etc/passwd) 作為身份驗證時，
+		<span class=text_import2>在 Samba 主機所提供可登入的帳號名稱，必須要存在於 /etc/passwd 當中！</span>
+		這是一個很重要的概念！例如你要先有 dmtsai 在 /etc/passwd 當中後，才能將 dmtsai
+		加入 Samba 的使用者當中。這都是很基本的帳號權限概念，如果您覺得這裡閱讀方面有問題，
+		若不考慮鳥哥的解釋不良，表示你必須要回去讀讀基礎篇了～ ^_^<br /><br />
+
+		好了，假設我的機器裡面已經有 dmtsai, nikky, tang 等三人，不過我只想要讓 dmtsai 及 nikky 使用 SAMBA 而已的話，
+		那麼如何將這兩個使用者加入帳號密碼管理檔案 /etc/samba/smbpasswd 當中呢？很簡單的啦！這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先確認密碼檔是否存在</span>
+[root@linux ~]# <span class=term_command>ls -l /etc/samba/smbpasswd</span>
+<span class=term_write>-rw-------  1 root root</span> 104 Dec 25 23:13 /etc/samba/smbpasswd
+<span class=term_say># 注意啊！要這樣的權限才可以喔！如果你的 Linux 沒有這個檔案，請自行建立。</span>
+
+<span class=term_hd>2. smbpasswd 指令功能</span>
+[root@linux ~]# <span class=term_command>smbpasswd [-adem] username</span>
+<span class=term_say>參數說明：
+   : 如果都沒有加上任何一個參數，例如『 smbpasswd dmtsai 』時，這表示：
+     修改 SAMBA 密碼檔 (/etc/samba/smbpasswd) 裡面的 dmtsai 這個帳號的密碼！
+     也就是說，密碼檔裡面已經存在一個 dmtsai 的帳號了！
+-a : 在 smbpasswd 密碼檔裡面新增一個使用者
+-d : 讓在 smbpasswd 密碼檔裡面的某個帳號的使用者暫時無法使用 SAMBA
+     當多了 -d 的參數時，在 smbpasswd 裡面某個欄位會多出一個 D 的參數，
+     代表該帳號目前無法使用喔！
+-e : 與 -d 參數相反，讓某個帳號恢復使用！
+-m : 該 username 為機器代碼 (Machine Account)，這個與 domain model 有關！</span>
+
+<span class=term_hd>2.1 開始新增使用者吧！</span>
+[root@linux ~]# <span class=term_command>smbpasswd -a dmtsai</span>
+New SMB password: <span class=term_say>&lt;==在這裡輸入密碼！這個密碼不一定要與 /etc/shadow 相同</span>
+Retype new SMB password: <span class=term_say>&lt;==再輸入一次</span>
+Added user dmtsai.
+
+[root@linux ~]# <span class=term_command>cat /etc/samba/smbpasswd</span>
+dmtsai:501:1B0F61E20F8F2D11AAD3B435B51404EE:F7EDDB3F55CC5DB1FE00D7F755028491:
+[U          ]:LCT-4590969D:
+<span class=term_say># 上面的資料為同一行的資料喔！資料為加密過的！</span>
+
+<span class=term_hd>2.2 如果要暫時拒絕一個使用者的登入，可以這樣做：</span>
+[root@linux ~]# <span class=term_command>smbpasswd -d dmtsai</span>
+[root@linux ~]# <span class=term_command>cat /etc/samba/smbpasswd</span>
+dmtsai:501:1B0F61E20F8F2D11AAD3B435B51404EE:F7EDDB3F55CC5DB1FE00D7F755028491:
+[<span class=term_write>D</span>U         ]:LCT-4590969D:
+<span class=term_say># 就是這個 D ！代表的就是暫時 disable 囉！</span>
+[root@linux ~]# <span class=term_command>smbpasswd -e dmtsai</span>
+</pre></td></tr></table>
+
+		接下來你可以透過相同的方式來新增 nikky 這個使用者的 Samba 密碼，那這兩個人就能夠使用 Samba 囉。
+		然後我們就能夠開始準備來重新啟動 Samba 並且測試看看囉！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>4. 重新啟動 Samba 並測試</span></li>
+		<div class=block2>
+		在經過重新啟動後，我們所進行的修訂才會生效。然後使用 smbclient 來檢查看看，是否不同身份會有不一樣的瀏覽結果呢？
+		趕緊看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>testparm</span>
+<span class=term_say># 這個動作很重要！每次都要進行！確認你的語法無誤後再開始！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/smb restart</span>
+
+[root@linux ~]# <span class=term_command>smbclient -L //127.0.0.1</span>
+Password:                   <span class=term_say>&lt;==直接按下 [Enter] 即可。</span>
+Anonymous login successful  <span class=term_say>&lt;==是匿名登入喔！</span>
+Domain=[VBIRDHOUSE] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Sharename   Type  Comment
+    ---------   ----  -------
+<span class=term_write>    public      Disk  the user groups work directory
+    temp        Disk  Temporary file space</span>
+    IPC$        IPC   IPC Service (This is vbird's samba server)
+    ADMIN$      IPC   IPC Service (This is vbird's samba server)
+
+[root@linux ~]# <span class=term_command>smbclient -L //127.0.0.1 -U dmtsai</span>
+Password: <span class=term_say>&lt;==輸入 dmtsai 在 smbpasswd 檔案中所建立的密碼喔！</span>
+Domain=[VBIRDSERVER] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Sharename   Type  Comment
+    ---------   ----  -------
+    public      Disk  the user groups work directory
+    temp        Disk  Temporary file space
+    IPC$        IPC   IPC Service (This is vbird's samba server)
+    ADMIN$      IPC   IPC Service (This is vbird's samba server)
+<span class=term_write>    dmtsai      Disk  Home directories</span>
+</pre></td></tr></table>
+
+		由上表我們可以發現，經由不同的身份登入可以取得不一樣的瀏覽資料，
+		所以在使用上面需要特別留意喔！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>5. 關於權限的再說明</span></li>
+		<div class=block2>
+		有的時候你會發現，明明在 smb.conf 當中已經設定了 writable 可寫入，使用者登入的身份也沒有問題，
+		為啥就是無法寫入呢？是否是伺服器設定哪裡還有問題啊？非也非也！主要的問題常常是來自於 Linux 檔案系統的權限啦！<br /><br />
+
+		舉上面的例子來說好了，我們在 smb.conf 當中設定 [public] 為可寫入，亦即 /home/public 是可寫入的。
+		假設 dmtsai 屬於 users 這個群組，因此以 dmtsai 登入 SAMBA 伺服器後，對於 /home/public 
+		應該是具有可以讀寫的能力的！但是，如果你以 root 的身份建立 /home/public 卻又忘記修改權限的話，
+		此時 /home/public 是無法讓 users 這個群組寫入的，因此 dmtsai 這個使用者當然不具有寫入的能力。
+		這樣說，瞭解鳥哥想要說啥了嗎？注意注意喔！ ^_^<br /><br />
+		</div>
+
+		上面的設定案例應該蠻足以提供一般家庭用的環境中進行設定了！如果您還要擴充分享的目錄與能夠登入的使用者，
+		可以這樣做：<br />
+		<ul>
+		<li>利用編輯 smb.conf 來多開放其他的目錄，並且特別注意 Linux 在該目錄下的權限喔！請使用 chown 與 chmod 吧！
+		<li>利用 smbpasswd 來新增其他使用者到 /etc/samba/smbpasswd 裡面去，如果該帳號並沒有出現在 
+		/etc/passwd 裡面，請先以 useradd 新增該帳號；
+		<li>不論進行完任何的設定，請先以 testparm 進行確認，之後以 /etc/init.d/smb restart 來重新啟動！
+		</ul>
+
+		事實上，SAMBA 的一般用途就是在這個連線的模式中！多使用 SAMBA 來分享您的資源吧！鳥哥都是使用 SAMBA 
+		來做為遠端伺服器與我的工作機互通有無的重要媒介說～<br /><br />
+	</div>
+
+	<hr /><a NAME="server_printer"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定成為印表機伺服器 (CUPS 系統)</span><br />
+	<div class=block2>
+		剛剛上面的說明大部分都是針對磁碟與目錄的分享來進行 SAMBA 的設定，那麼 SAMBA 
+		有沒有可能分享出裝置呢？舉個例子來說，例如那個我們在辦公室都會用到的印表機呢？如果說，能夠讓我們辦公室的 
+		File Server 同時提供印表機列印的功能，如此一來，藉由 Linux 這個作業系統可以 24 
+		小時開機的穩定功能，我們就可以隨時進行列印囉！所以，底下我們就以 SAMBA 
+		進行印表機列印功能的提供者的角度，來介紹這個 smb.conf 的設定喔！<br /><br />
+
+		在 Linux 底下進行列印的工具很多，不過我們這裡要介紹的僅有目前較廣為流行的 CUPS (Common Unix Printing System) 這一個。
+		詳細的 CUPS 安裝設定方法我們已經在<a href="../linux_basic/0610hardware.htm#cups">基礎篇的 CUPS</a> 章節當中提過，
+		所以這裡我們不再詳細說明，僅介紹大致的處理流程就是了。如果你需要較早期的 LPRng 列印系統的話，
+		建議可以參考底下的資料喔：<br />
+		<ul>
+		<li>依瑪貓的列印文件：<a href="http://www.imacat.idv.tw/tech/lnxprint.html" 
+			target="_blank">http://www.imacat.idv.tw/tech/lnxprint.html</a></li>
+		<li>鳥哥的 LPRng 簡介：<a href="0370samba/0370samba.htm#server_printer_lprng"
+			target="_blank">http://linux.vbird.org0370samba/0370samba.htm</a></li>
+		</ul>
+
+		底下就來談一談一般常見的流程說明吧：<br /><br />
+
+		<hr /><li><span class=text_import1>1 安裝印表機與確定啟動</span></li>
+		<div class=block2>
+		再次說明，並不是所有的印表機都被 Linux 所支援的，所以當你想要連結一部印表機到 Linux 系統上頭時，
+		請務必到 <a href="http://www.linuxprinting.org/printer_list.cgi" 
+		target="_blank">http://www.linuxprinting.org/printer_list.cgi</a> 上頭去看看是否有被支援喔！
+		如果沒有被支援，那就換一部印表機吧！不要進行垂死的掙扎了....<br /><br />
+
+		如果你的印表機連接埠為使用 USB 或者是平行序列埠的話，那麼當你連接上印表機後，
+		可以利用底下的方式測試看看是否成功的連接上了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>echo "Hello printer" > /dev/lp0    </span> <span class=term_say>&lt;==平行序列埠</span>
+[root@linux ~]# <span class=term_command>echo "Hello printer" > /dev/usb/lp0</span> <span class=term_say>&lt;==USB 埠</span>
+</pre></td></tr></table>
+
+		如果印表機有回應，這表示 OK 的啦！你可以進行底下的工作了。如果你的印表機為網路印表機呢？
+		就是說印表機有 IP 的情況下，那麼該印表機就不需要加入 Samba 啦！因為該印表機本身就可以直接提供用戶端連接，
+		根本不必透過 Samba 來提供網路連線的嘛！當然啦，如果你有特殊需求，
+		將網路印表機加入 Samba server 來提供給網芳中的其他用戶，也是可以的啦！底下直接來看看如何使用 CUPS 吧。<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>2. 設定 CUPS 的印表機</span></li>
+		<div class=block2>
+		請先確認你的 CUPS 已經安裝妥當了，原則上，你必須要有底下兩個套件存在才行：<br />
+		<ul>
+		<li>cups-libs
+		<li>cups
+		</ul>
+		接下來我們可以開始設定 CUPS 了！設定的原則是這樣的：<br />
+		<ul>
+		<li>我需要讓 192.168.1.0/24 這個網域可以使用印表機
+		<li>我需要讓 192.168.1.0/24 及 127.0.0.0/8 可以管理 CUPS 系統
+		</ul>
+
+		然後開始這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/cups/cupsd.conf</span>
+<span class=term_say># 底下這個項目在控制誰可以使用 CUPS 系統，約在 772 行左右，
+# 找到這些資料並增加一筆記錄：</span>
+&lt;Location />
+Order Deny,Allow
+Deny From All
+Allow From 127.0.0.1
+<span class=term_write>Allow From 192.168.1.0/24</span>
+&lt;/Location>
+
+<span class=term_say># 底下的項目則在設定誰可以登入 CUPS 系統的管理介面？
+# 約在 830 行左右，找到這些資料並進行一些細部修改：</span>
+&lt;Location /admin>
+<span class=term_write>#AuthType Basic
+#AuthClass System</span>
+Order Deny,Allow
+Deny From All
+Allow From 127.0.0.1
+<span class=term_write>Allow From 192.168.1.0/24</span>
+&lt;/Location>
+
+<span class=term_say># 在最後一行的地方加上這一句</span>
+<span class=term_write>Listen 0.0.0.0:631</span>
+<span class=term_say># 上面在設定一個不需要密碼即可登入的管理環境，是個很粗糙的介面，
+# 建議您自行處理一下認證問題，請<a href="../linux_basic/0610hardware.htm#cups">參考基礎篇</a>的說明。</span>
+</pre></td></tr></table>
+
+		另外，為了要進行 Windows 相關軟體所傳來的列印資料，所以我們還需要對 CUPS 作一些額外的設定，
+		過程也是很簡單的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/cups/mime.convs</span>
+<span class=term_say># 大概在最後幾行的地方，找到這一行，將註解拿掉！</span>
+<span class=term_write>application/octet-stream   application/vnd.cups-raw   0   -</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/cups/mime.types</span>
+<span class=term_say># 同樣也是在最後面幾行的地方，也是將註解拿掉即可！</span>
+<span class=term_write>application/octet-stream</span>
+</pre></td></tr></table>
+
+		設定完畢後就可以開始來啟動 cups 系統，可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/cups start</span>
+[root@linux ~]# <span class=term_command>netstat -tunlp | grep '631'</span>
+tcp 0  0 0.0.0.0:631     0.0.0.0:*    LISTEN   18271/cupsd
+udp 0  0 0.0.0.0:631     0.0.0.0:*             18271/cupsd
+</pre></td></tr></table>
+
+		那個 631 的埠口就是 CUPS 所啟動的啦！然後我們可以開始設定印表機了！
+		由於 CUPS 支援很多不同的印表機連接埠，每種連接埠都不一樣，常見的有：<br />
+		<ul><span class=text_import2>
+		<li>USB 連接埠： usb:/dev/usb/lp0
+		<li>平行序列埠： parallel:/dev/lp0
+		<li>網路印表機： ipp://ip/印表機型號
+		<li>網路芳鄰印表機： smb://user:password@host/printer
+		</span></ul>
+
+		假設我們的 Samba 上頭接了一部 usb 連線的印表機，而我要將這部印表機取名為 hplaser2300 時，
+		你可以使用瀏覽器連接到 Samba 主機上頭，必須注意到網址喔：<br /><br />
+
+		<a name="fig_03"></a><center><img SRC="0370samba/cups_01.png"
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖三、CUPS 的管理介面示意圖</center><br />
+
+		如上圖三所示，先在網址列的地方務必要輸入埠口才行！然後按下箭頭『 2 』所指的地方，
+		亦即是『Manage Printer』之後再按下『Add printer』的按鈕，就會出現如下畫面，
+		記得要填寫正確的資料喔！<br /><br />
+
+		<a name="fig_04"></a><center><img SRC="0370samba/cups_02.png" border=1
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖四、CUPS 的管理介面示意圖</center><br />
+
+		然後如下圖所示，選擇正確的裝置所在處！我們假設使用的是 USB 的印表機連接埠：<br /><br />
+
+		<a name="fig_05"></a><center><img SRC="0370samba/cups_03.png" border=1
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖五、CUPS 的管理介面示意圖</center><br />
+
+		之後就是選擇正確的型號囉，假設這部印表機為 HP 所出產的：<br /><br />
+
+		<a name="fig_06"></a><center><img SRC="0370samba/cups_04.png" border=1
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖六、CUPS 的管理介面示意圖</center><br />
+
+		選擇標準的雷射印表機驅動程式吧！<br /><br />
+
+		<a name="fig_07"></a><center><img SRC="0370samba/cups_05.png" border=1
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖七、CUPS 的管理介面示意圖</center><br />
+
+		最後都成功後，就會找到如下所示的畫面了。<br /><br />
+
+		<a name="fig_08"></a><center><img SRC="0370samba/cups_06.png"
+		title="CUPS 的管理介面示意圖"
+		alt="CUPS 的管理介面示意圖"><br />
+		圖八、CUPS 的管理介面示意圖</center><br />
+
+		到此為止我們可以假設你的 CUPS 已經有一部印表機存在了，即使該印表機目前無法工作，
+		但是就是有一部印表機嘛！^_^！接下來看看如何將他連結到咱們的 Samba 伺服器中吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>3. 在 smb.conf 當中加入印表機的支援</span></li>
+		<div class=block2>
+		然後開始告訴 Samba 將這部印表機給他分享出去吧！你需要這樣處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/smb.conf</span>
+[global]
+        <span class=term_say>.....其他省略.....
+        # 這裡列出的則是印表機相關的資料啊！</span>
+        <span class=term_write>printcap name = cups
+        load printers = yes
+        printing      = cups
+[printers]                             <span class=term_say>&lt;==這個分享的資源名稱一定是 printers</span>
+        comment     = All Printers
+        printable   = yes              <span class=term_say>&lt;==可以進行列印的功能</span>
+        browsable   = yes              <span class=term_say>&lt;==可以讓其他人瀏覽</span>
+        public      = yes
+        valid users = @users dmtsai    <span class=term_say>&lt;==可使用的人員有這些</span>
+        path        = /var/spool/samba <span class=term_say>&lt;==列印佇列的地方，暫存資料</span>
+        printer admin = dmtsai<span>         <span class=term_say>&lt;==這是印表機管理員！需要可使用 SAMBA 者</span>
+        <span class=term_say>.....其他省略.....</span>
+</pre></td></tr></table>
+
+		基本上透過這樣的設定你的 Samba 就能夠順利的提供印表機的服務了！
+		不過可惜的是，<span class=text_import2>Windows 用戶端依舊得要安裝印表機的驅動程式才能夠使用 Samba 所提供的印表機</span>，
+		此時真是麻煩兼討厭啊～有沒有可能讓 Samba 主動的提供驅動程式給使用者，這樣一來用戶端就不需要額外去找驅動程式囉！
+		是可以的，透過 Samba 3.x 即可處理！<br /><br />
+
+		或許你會想，印表機的型號這麼多，那麼 Linux 該如何提供這些印表機的驅動程式啊？豈不麻煩？
+		還好啦， <span class=text_import2>CUPS 主要是透過利用 Postscript 的列印語言與印表機溝通的，因此用戶端只要取得 postscript
+		的驅動程式他們就能夠使用咱們的 Samba 伺服器所提供的印表機了</span>！如此一來，
+		不論印表機的型號為何，只要他們能夠支援 Postscript 的列印格式，OK 搞定！而且 CUPS
+		官網本身就有提供 CUPS 的 Postscript 驅動程式囉！可以到底下的連結去下載：<br />
+
+		<ul>
+		<li>支援多種 CUPS 版本：<a href="http://ftp.easysw.com/pub/cups/windows/"
+		target="_blank">http://ftp.easysw.com/pub/cups/windows/</a>
+		<li>支援 CUPS 1.2 以上版本：<a href="http://www.cups.org/windows/software.htm"
+		target="_blank">http://www.cups.org/windows/software.htm</a></li></ul>
+
+		由於 CentOS 4.x 使用的是 1.1.x 版本，所以鳥哥下載的是 cups-samba-5.0rc3.tar.gz 這個檔案，
+		接下來我們要將這個檔案解壓縮，然後將相關的程式給他安裝到正確的目錄去。
+		不過您得要注意的是，除了這個驅動程式外，要支援 Windows 2000/xp 的用戶端，
+		你還得到 Windows XP 的底下目錄去下載幾個檔案：<br />
+
+		<ul><span class=text_import2>C:\WINDOWS\system32\spool\drivers\w32x86\3</span></ul>
+
+		裡面的 PS 開頭的檔案通通下載下來，應該有四個檔案的，請將他複製成為小寫的檔案，並且放置到你 Samba 主機上的
+		/usr/share/cups/drivers/ 目錄下，然後將 cups-samba-5.0rc3.tar.gz 解壓縮後執行 ./cups-samba.install 檔案，
+		就能夠將驅動程式通通安裝到 /usr/share/cups/drivers/ 目錄下了！這就是基本的驅動程式說！
+		在鳥哥的這個目錄底下至少含有這幾個檔案就是了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ll /usr/share/cups/drivers</span>
+-r--r--r--  1 root root  14234 Sep 24  2002 cups5.hlp
+-r--r--r--  1 root root 280268 Jan  4  2004 cupsdrv5.dll
+-r--r--r--  1 root root 219540 Jan  4  2004 cupsui5.dll
+-rw-r--r--  1 root root 129024 Dec 27 14:18 ps5ui.dll
+-rw-r--r--  1 root root 455168 Dec 27 14:18 pscript5.dll
+-rw-r--r--  1 root root  27568 Dec 27 14:18 pscript.hlp
+-rw-r--r--  1 root root 792644 Dec 27 14:18 pscript.ntf
+</pre></td></tr></table>
+
+		上述的檔案鳥哥將他打包成為一個檔案了，你可以在底下的連結下載：<br />
+
+		<ul><a href="0370samba/cups-samba-windows.tgz">http://linux.vbird.org0370samba/cups-samba-windows.tgz</a>
+		</ul>
+
+		不過您得注意，這個檔案內的 Windows 資料是由 Windows XP 上面捉來的，所以對於 Windows 98/ME 是沒有作用的。
+		您得自行上網查閱相關的資料下載方式喔。
+		接下來我們必須要在 smb.conf 裡面增加一筆新的分享資料，這個分享資料必須是 [print$] 名稱才行！
+		有點類似這樣啦：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/smb.conf</span>
+<span class=term_write>        <span class=term_say>.....其他省略.....</span>
+[print$]
+        comment    = Printer drivers
+        path       = /etc/samba/drivers  <span class=term_say>&lt;==存放印表機驅動程式的目錄</span>
+        browseable = yes
+        read only  = yes
+        write list = dmtsai</span>              <span class=term_say>&lt;==這個驅動程式的管理員</span>
+        <span class=term_say>.....其他省略.....</span>
+
+[root@linux ~]# <span class=term_command>mkdir /etc/samba/drivers</span>
+[root@linux ~]# <span class=term_command>chown dmtsai /etc/samba/drivers</span>
+<span class=term_say># 因為我們將印表機管理員以及驅動程式管理員的身份設定為 dmtsai 這個使用者，
+# 因此存放的目錄也要改變一下權限才行吶！</span>
+
+[root@linux ~]# <span class=term_command>testparm               </span>  <span class=term_say>&lt;==測試語法</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/smb restart</span>  <span class=term_say>&lt;==重新啟動</span>
+
+[root@linux ~]# <span class=term_command>smbclient -L //127.0.0.1 -U dmtsai</span>
+Password: <span class=term_say>&lt;==輸入密碼先</span>
+Domain=[VBIRDSERVER] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Sharename    Type      Comment
+    ---------    ----      -------
+    print$       Disk      Printer drivers
+    hplaser2300  Printer   HP Laser Jet 2300 printer
+<span class=term_say># 瞧！有看到一部印表機以及驅動程式所在的分享資料囉！</span>
+</pre></td></tr></table>
+
+		<a name="cupsaddsmb"></a>
+		現在我們的要告知 Samba 說，我們的 CUPS 可提供 Windows 2000/XP 用戶端的驅動程式，
+		所以用戶不需要自行設定他們的驅動程式哩！要由 cups 告知 Samba 是由 cupsaddsmb 這個指令來搞定的，
+		整個指令的執行很簡單的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cupsaddsmb -H [SAMBA 主機名] -h [CUPS 主機名] \</span>
+>  <span class=term_command> -a -v -U [使用者帳號]</span>
+<span class=term_say>參數：
+-H ：後續接的是 Samba 主機名，本機的話可以直接用 localhost 即可；
+-h ：後續接的為 CUPS 的主機名，同樣的可使用 localhost 即可；
+-a ：搜尋所有可用的印表機；
+-v ：列出更多的資訊；
+-U ：印表機管理員</span>
+
+<span class=term_hd>範例：利用前面的說明將印表機驅動程式掛上 SAMBA</span>
+[root@linux ~]# <span class=term_command>cupsaddsmb -H localhost -U dmtsai -a -v</span>
+Password for dmtsai required to access localhost via SAMBA: <span class=term_say>&lt;==輸入 dmtsai 密碼</span>
+<span class=term_say># 這裡會閃過很多的訊息，說明已經安裝了某些資訊，底下鳥哥僅列出簡單的訊息而已。</span>
+putting file /usr/share/cups/drivers/pscript5.dll as 
+\W32X86/pscript5.dll (1438.5 kb/s) (average 1342.5 kb/s)
+
+Printer Driver hplaser2300 successfully installed.
+
+Succesfully set hplaser2300 to driver hplaser2300.
+
+[root@linux ~]# <span class=term_command>ll /etc/samba/drivers</span>
+drwxr-xr-x  3 dmtsai dmtsai 4096 Dec 27 14:40 W32X86
+</pre></td></tr></table>
+
+		最後在驅動程式的存放目錄會多出一個 W32X86 的目錄，你可以查詢一下該目錄的內容，
+		那就是預計要給用戶端使用的驅動程式啦！這樣就搞定了！不過，為了將所有的資料通通驅動，
+		建議您將 CUPS 及 SAMBA 通通重新啟動吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/cups restart</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/smb restart</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>4. 一些問題的克服：</span></li>
+		<div class=block2>
+		如果一切順利的話，你在 Windows 用戶端應該可以順利的連接到印表機囉！
+		開心吧！不過，如果你曾經印錯資料，那麼該如何進入 Linux 的 Samba 主機將該資料移除呢？
+		你最好知道底下的幾個指令，關於這些指令的進階用法則請自行給他 man man 看了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>lpstat -a</span>
+hplaser2300 accepting requests since Jan 01 00:00
+<span class=term_say># 列出所有可用的印表機狀態</span>
+
+[root@linux ~]# <span class=term_command>lpq</span>
+hplaser2300 is ready
+no entries
+<span class=term_say># 列出印表機的工作，若有列印工作存在時，會如下所示：</span>
+hplaser2300 is ready and printing
+Rank    Owner   Job  File(s)                 Total Size
+active  dmtsai   5   smbprn.00000003 測試頁  42954752 bytes
+
+[root@linux ~]# <span class=term_command>lprm all</span>
+<span class=term_say># 移除所有等待中的列印工作！</span>
+</pre></td></tr></table>
+		</div>
+
+		列印工作就是這樣進行的啦！趕緊試看看吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_security"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">安全性管理</span><br />
+	<div class=block2>
+		使用 SAMBA 其實是有一定程度的危險性的，這是因為很多網路攻擊的蠕蟲就是透過 NetBIOS 來攻擊的！
+		因此，在架設好了 SAMBA 之後，請記得將權限方面的工作做好！權限方面的工作除了 smb.conf 內的設定外，
+		Linux 檔案系統的 r, w, x 權限也是相當重要的喔！我們底下就簡單的介紹一下一些基本的安全性管理吧！<br /><br />
+
+		<a name=security_iptables></a>
+		<hr /><li><span class=text_import1>利用 iptables 來管理</span></li>
+		<div class=block2>
+		最簡單的管理登入 SAMBA 的方法就是透過 iptables 啦！詳細的說明我們已經在
+		<a href="0250simple_firewall.htm">防火牆</a>章節當中提過了，所以這裡不在詳加說明。
+		要知道的是，如果你僅要針對底下的範圍開放 Samba 時，可以這樣想：<br />
+		<ul>
+		<li>僅針對 192.168.1.0/24 這個網域開放 SAMBA；
+		<li>SAMBA 的 port 有 137~139 tcp/udp；
+		<li>SAMBA 主機的網路卡為 eth0
+		</ul>
+
+		所以 iptables.rule 規則當中應該要加入這幾項：<br />
+
+<table class="term"><tr><td class="term"><pre>
+iptables -A INPUT -p tcp -i eth0 -s 192.168.1.0/24 --dport 139     -j ACCEPT
+iptables -A INPUT -p udp -i eth0 -s 192.168.1.0/24 --dport 137:138 -j ACCEPT
+</pre></td></tr></table>
+
+		當然啦！這是很簡單很簡單的防火牆規則，您必須要依據您的環境自行修改 (通常修改那個 192.168.1.0/24 網段即可！)
+		。除了 iptables 必須要開放之外，您還需要將管制 daemon 是否能夠進出的 TCP Wrappers 開放才行吶！如果萬一您看到 
+		/etc/hosts.deny 裡面多了這一行： <br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/hosts.deny</span>
+ALL : ALL
+</pre></td></tr></table>
+
+		不要懷疑，很可能會造成不只 SAMBA 不能動作而已～連其他的 daemon 都可能會無法動作呢！所以，請將這一行拿掉吧！
+		或者是將適合的 daemon 開放在 /etc/hosts.allow 檔案裡面喔！<br /><br />
+		</div>
+
+		<a name=security_smb.conf></a>
+		<hr /><li><span class=text_import1>smb.conf 的設定值</span></li>
+		<div class=block2>
+		事實上 Samba 已經有許多防火牆機制啦！那就是 hosts allow 及 hosts deny 這兩個參數。
+		通常我們只要使用 hosts allow 即可，那麼沒有寫入這個設定項目的其他來源就會被拒絕連線的！
+		舉例來說，如果你只想要讓本機、192.168.1.11, 192.168.1.21 使用 SAMBA 而已，那麼可以這樣寫：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/smb.conf</span>
+[global]
+        <span class=term_say># 跟安全有關</span>
+        <span class=term_write>hosts allow = 127. 192.168.1.11 192.168.1.21
+	smb ports = 139</span>
+</pre></td></tr></table>
+
+		如此一來不但只有數部主機可以登入我們的 SAMBA 伺服器，而且 Samba 只能以標準的 port 139 來連結，
+		關閉 Windows 常用且有點問題的 port 445 呢！這樣會比較好一些啦！
+		未來如果還有人想要連結你的 Samba 時，將他加入 hosts allow 後面即可！
+		不難吧！ ^_^<br /><br />
+		</div>
+
+		<a name=security_quota></a>
+		<hr /><li><span class=text_import1>利用 Quota 限制使用者空間使用</span></li>
+		<div class=block2>
+		quota 是磁碟配額限制的一個 daemon ，您可以依據不同的使用者來加以限制他們能夠使用的硬碟空間，
+		前提是『<span class=text_import2>該磁碟空間必須是一個獨立的 partition</span> 』才行，不建議針對根目錄
+		『 / 』進行 quota ！這也是為什麼我們在主機規劃時特別建議大家獨立出一個 partition 
+		來進行硬碟規劃的原因！關於 quota 的詳細用法在『
+		<a href="../linux_basic/0420quota.htm">鳥哥的 Linux 私房菜--基礎學習篇</a>』裡面已經談得很清楚了，
+		這裡我們不再詳談！只給大家來做個練習就是了！ <br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />在規劃主機的時候，我將 /dev/hda2 獨立一個 partition 給 /home 這個目錄，現在想要規劃 
+quota 針對 dmtsai 這個使用者進行磁碟配額的限制，他的 hardlimit 為 50mb 而 softlimit 為 40mb ，請問整個動作應該如何進行？ <br />
+答：<ol>
+	<li>編輯修改 /etc/fstab ，使得 /dev/hda2 這個 partition 成為如下模樣：<br />
+	<pre>/dev/hda2 /home  ext3  defaults,usrquota,grpquota 1 1</pre>
+	修改完畢之後，請千萬記得使用 mount -a 查詢看看有沒有設定錯誤 (上面總共只有六個欄位喔！)，
+	這個動作如果發生錯誤，那麼請記得再次的進行 /etc/fstab 的修改！請特別留意啊！因為寫錯的話，
+		很容易造成無法正常開機的窘境！</li><br />
+
+	<li>上述動作確定沒有問題之後，請重新開機啟動 quota 的支援：<br />
+	<pre>sync; sync; sync; reboot</pre></li>
+
+	<li>執行底下的指令，建立 quota 所需要的設定檔案：<br />
+	<pre>quotacheck -avug</pre>
+	特別注意，如果上述的動作發生『找不到設定檔』的意思的訊息時，您可以這樣做：<br />
+	<pre>touch /home/aquota.user; touch /home/aquota.group</pre>
+	然後再進行一次 quotacheck 即可！</li><br />
+
+	<li>啟動 quota 囉：<br />
+	<pre>quotaon -av</pre>
+
+	<li>設定 bird 的磁碟配額：<pre>edquota -u dmtsai
+Disk quotas for user dmtsai (uid 501):
+Filesystem   blocks    soft  hard inodes  soft  hard 
+/dev/hdb2        32  40000  50000     8     0     0</pre>因為我們只針對硬碟空間，不針對 inode 
+做限制，所以只要前面的數字修訂即可！請注意，數字的單位為 kbytes ！
+</ol>
+</td></tr></table><br />
+		</div>
+
+		<a name=security_backup></a>
+		<hr /><li><span class=text_import1>關於備份</span></li>
+		<div class=block2>
+		跟 SAMBA 最有關的當然就是使用者的資訊囉！所以，您應該要備份的就是使用者的資料，以及 
+		Samba 相關的設定資料了！比較相關的有幾個咚咚：<br />
+
+		<ul>
+		<li>/etc (因為含有 /etc/passwd 以及 /etc/samba 裡面的資料，所以建議可以全部給他備份下來 )
+		<li>/home (還是可以察看一下，是否有其他非必要的！不過，一般來說，都會是備份的個人資料比較多啦！)
+		<li>其他由 smb.conf 裡面設定開放的目錄。</ul>
+
+		無論如何，備份還是挺重要的！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="server_plan"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機安裝時的規劃與中文磁區掛載</span><br />
+	<div class=block2>
+		現在您知道 Samba 伺服器的功能是用來作為檔案伺服器的，每個使用者都可以擁有家目錄，
+		並透過網芳的功能來連結到 Samba 伺服器中。這就有個問題啦，那就是你的使用者如果太多，
+		並且將他們的重要資料都放到這部 Samba 主機上頭的話，那肯定 /home 未來會有點不足啊！
+		所以 /home 所在的磁碟或許可以使用大一點的硬碟，或者使用磁碟陣列，使用 
+		<a href="../linux_basic/0610hardware.htm#lvm">LVM</a> 也是個不錯的方案。
+		底下為簡單的思考方向：<br />
+
+		<ul>
+		<li>在安裝 Linux 的時候，建議不需要安裝 X Window ；
+		<li>在規劃 Linux 時，/home 最好獨立出一個 partition ，而且硬碟空間最好能夠大一些；
+		<li>/home 獨立出來的 partition 可以單獨進行 quota 的作業，以規範每個使用者能夠使用的最大硬碟容量；
+		<li>由於 SAMBA 可以做為印表機伺服器，所以建議印表機可以直接連接在 Linux 主機的列印埠 (LPT1, USB...)；
+		<li>由於 SAMBA 一般來說都僅針對內部 (LAN) 主機進行開放，所以，可能的話 SAMBA 主機直接使用內部保留 IP 
+		來設定即可，當然啦， SAMBA 是否使用 private IP 還得視您的整個網域的 IP 網段的特性來規劃。
+		以鳥哥研究室來說，因為實驗室所有電腦的 IP 都是 Public IP，那麼 SAMBA 如果使用 
+		Private IP ，當然大家都無法連接上啊！ ^_^
+		<li>如果您的 SAMBA 主機使用 Public IP 時，請特別留意規範好防火牆的設定，盡量僅讓 LAN 
+		內的電腦可以連線進來即可，不要對 Internet 開放喔！
+		</ul>
+
+		另外，如果你的 Samba 伺服器需要掛載含有中文的 partition 時，譬如說你將原本 Windows XP 的 FAT32 檔案系統挪到
+		Linux 系統下，此時如果用一般模式來掛載該分割槽時，一些中文檔名可能會無法被順利的列印出來。
+		這個時候你就得需要這樣做了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+mount -t vfat -o iocharset=big5,codepage=950 /dev/hd[a-d][1-16] /mount/point
+</pre></td></tr></table>
+
+		其中 iocharset 指的是本機的語系編碼方式， codepage 則與遠端軟體有關。因為我們是在本機進行掛載，
+		所以實際上使用 iocharset 這個參數即可啦！更多說明則請看下節的用戶端設定部分囉！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="client"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Samba 用戶端軟體功能</span><br />
+<div class=block1>
+	現在你已經架設好了 Samba 伺服器啦！有伺服器當然要有用戶端來使用才是好的伺服器嘛！不然要這個伺服器幹嘛？
+	而我們假設區域網路內有 Windows/Linux 系統，這兩種系統都是透過 NetBIOS over TCP/IP 來連上 Samba 主機的，
+	在設定之前你必須要知道的有幾件事：<br />
+	<ul>
+	<li>在區網內的主機最好具有相同的工作群組，且具有不同的主機名稱；
+	<li>Windows XP pro. 最多僅能允許十個用戶同時連接到網芳；
+	<li>你可以在網芳當中看到的通常是相同群組的主機；
+	<li>可以使用『搜尋』-->『電腦』-->『輸入 IP』來查到 Samba 主機；
+	<li>Windows 的網芳預設僅有同一網域的主機才能登入！
+	</ul>
+	接下來咱們就分別依照 Windows XP 及 Linux 系統來做說明吧！<br /><br />
+
+	<hr /><a NAME="client_win"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Windows 系統的使用</span><br />
+	<div class=block2>
+		在 Windows 上面的搜尋實在挺簡單的，你有好幾種方法可以處理：<br />
+		<ul>
+		<li>打開『檔案總管』，『網路上的芳鄰』、『整個網路』、『Microsoft Windows Network』
+		就能看到屬於您群組的所有電腦主機了！</li><br />
+		<li>『開始』、『搜尋』、『檔案或資料夾』、『電腦或人員』、『網路上的電腦』，
+		然後在出現的方框當中填寫正確的 IP ，按下『搜尋』即可！
+		這個方法可以適用於不在同一個群組當中的網路主機喔！
+		</ul>
+
+		舉例來說，如果想要連接到我們的 Samba 主機的話，而又不知到這部 Samba 主機的 NetBIOS name ，
+		那利用搜尋的結果會有點類似如下的圖示：<br ><br />
+
+		<a name="fig_09"></a><center><img SRC="0370samba/client_winxp_01.png"
+		title="Windows XP 用戶端搜尋示意圖"
+		alt="Windows XP 用戶端搜尋示意圖"><br />
+		圖九、Windows XP 用戶端搜尋示意圖</center><br />
+
+		上圖九中先在左側的地方輸入正確的 IP 後，按下搜尋，如果一切順利的話那麼右上方就會出現這部 Samba 主機的說明了。
+		雙擊一下該主機名稱，就會出現右下方的項目！瞧！那就是我們所設定的幾個基本項目的啦！真是好高興！
+		然後你就可以開始進入相對應的目錄進行資料的存取了，就這麼簡單。
+		如果是印表機的話，那麼你將滑鼠移動到印表機的上方，按下右鍵後可以選擇『連線』的項目，
+		如下所示：<br /><br />
+
+		<a name="fig_10"></a><center><img SRC="0370samba/client_winxp_02.png" border=1
+		title="Windows XP 用戶端連線印表機示意圖"
+		alt="Windows XP 用戶端連線印表機示意圖"><br />
+		圖十、Windows XP 用戶端連線印表機示意圖</center><br />
+
+		如果一切順利的話，嘿嘿！你就可以在點選『開始』、『設定』、『印表機和傳真』後所出現的視窗看到這部印表機囉！
+		真是好棒吶！ ^_^<br /><br />
+
+		<a name="client_win_fire"></a>
+		<hr /><li><span class=text_import1>讓 Windows 系統的網芳支援不同網域的 IP 連線</span></li>
+		<div class=block2>
+		由於 Windows XP sp2 這個作業系統版本預設的防火牆僅開放相同網域的 IP 來源使用本機的網芳資料，
+		所以如果是不同的網域想要使用時，預設是無法穿透 Windows 防火牆的。此時你可以修改一下防火牆的設定啊！
+		請叫出控制台，然後點選『Windows 防火牆』就會出現如下的圖示了：<br /><br />
+
+		<a name="fig_11"></a><center><img SRC="0370samba/client_winxp_03.png" border=1
+		title="Windows XP 伺服器防火牆示意圖"
+		alt="Windows XP 伺服器防火牆示意圖"><br />
+		圖十一、Windows XP 伺服器防火牆示意圖</center><br />
+
+		按照上圖的說明，依序點選『例外』、『檔案及印表機共用』、『編輯』後，
+		就會出現該防火牆機制所管理的埠口以及可連線的網域，如下圖所示：<br /><br />
+
+		<a name="fig_12"></a><center><img SRC="0370samba/client_winxp_04.png" border=1
+		title="Windows XP 伺服器防火牆示意圖"
+		alt="Windows XP 伺服器防火牆示意圖"><br />
+		圖十二、Windows XP 伺服器防火牆示意圖</center><br />
+
+		你可以將四組埠口通通改變成你所需要的 IP 來源，或者是將他設定為任何電腦都能連線。
+		不過，鳥哥不建議喔！可以參考底下的作法：<br /><br />
+
+		<a name="fig_13"></a><center><img SRC="0370samba/client_winxp_05.png" border=1
+		title="Windows XP 伺服器防火牆示意圖"
+		alt="Windows XP 伺服器防火牆示意圖"><br />
+		圖十三、Windows XP 伺服器防火牆示意圖</center><br />
+
+		選擇自訂的方式來設定能夠使用你 Windows 網芳資料的來源 IP 或網段即可，然後確定之後即可處理吶！
+		這樣一來，及時我們的 Linux 不與 Windows 同在一個網域中，也能夠登入 Windows 存取網芳資料哩。<br /><br />
+		</div>
+
+		<a name="client_win_445"></a>
+		<hr /><li><span class=text_import1>透過 port 445 的特殊登入方式</span></li>
+		<div class=block2>
+		如果你知道 Samba 主機有分享出 port 445 ，並且他已經分享了某個目錄時，舉例來說，
+		我們的 192.168.1.254 有分享出 public 這個分享資源名稱時，那麼這個目錄的完整寫法為：『
+		\\192.168.1.254\public 』，我們可以透過『開始』、『執行』來處理這個玩意兒！
+		如下所示：<br /><br />
+
+		<a name="fig_14"></a><center><img SRC="0370samba/client_winxp_06.png" border=1
+		title="Windows XP 透過 port 445 連線"
+		alt="Windows XP 透過 port 445 連線"><br />
+		圖十四、Windows XP 透過 port 445 連線</center><br />
+
+		如果可以登入的話就會順利登入，否則就會彈出一個要你輸入帳號密碼的視窗，輸入正確的資料即可！
+		呼呼！真過癮～除此之外，我們還可以登入別人 Windows 主機的 C 或 D 槽喔！寫法則變成這樣：<br />
+		<ul><span class=text_import2>\\192.168.1.21\c$</span></ul>
+		所以說，怕了吧！俺還真害怕～所以啊，Samba 沒必要時，那個 port 445 應該是可以關閉的吧！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="client_linux"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 系統的使用</span><br />
+	<div class=block2>
+		咱們的 Samba 有提供 Linux 網芳的用戶端功能喔！也就是說 Linux 可以掛載 Samba 主機也能掛載 Windows 提供的網芳啦！
+		主要是透過 smbclient 來觀察，再以 smbmount 或 mount 來掛載磁區哩。先來介紹一下 smbclient 這個指令吧：<br />
+
+<a name="smbclient"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 關於查詢的功能</span>
+[root@linux ~]# <span class=term_command>smbclient -L //[IP|hostname] [-U username]</span>
+[root@linux ~]# <span class=term_command>smbclient -L //127.0.0.1 -U dmtsai</span>
+Password:
+Domain=[VBIRDSERVER] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+<span class=term_say>....分享的資源輸出省略....</span>
+Domain=[VBIRDSERVER] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+
+    Server           Comment
+    ---------        -------
+
+    Workgroup        Master
+    ---------        -------
+<span class=term_write>    VBIRDGRP         VBIRD_OP_2
+    VBIRDHOUSE       VBIRDSERVER</span>
+<span class=term_say># 從這裡可以知道在目前網域當中有多少個工作群組與主要的名稱解析主機</span>
+</pre></td></tr></table>
+
+		除了這個先前用過的查詢功能之外，我們可以這樣簡易使用網芳的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>2. 利用類似 FTP 的方式登入遠端主機</span>
+[root@linux ~]# <span class=term_command>smbclient '//[IP|hostname]/資源名稱' [-U username]</span>
+<span class=term_say># 意思是使用某個帳號來直接登入某部主機的某個分享資源，舉例如下：</span>
+[root@linux ~]# <span class=term_command>smbclient '//127.0.0.1/dmtsai' -U dmtsai</span>
+Password:
+Domain=[VBIRDSERVER] OS=[Unix] Server=[Samba 3.0.10-1.4E.9]
+smb: \> <span class=term_command>dir</span>
+<span class=term_say># 在 smb 底下其實就是在 //127.0.0.1/dmtsai 這個目錄底下啦！所以，
+# 我們可以使用 dir, get, put 等常用的 ftp 指令來進行資料傳輸了！
+?   :列出所有可以用的指令，常用！
+cd  :變換到遠端主機的目錄
+del :殺掉某個檔案
+lcd :變換本機端的目錄
+ls  :察看目前所在目錄的檔案
+dir :與 ls 相同
+get :下載單一檔案
+mget:下載大量檔案
+mput:上傳大量檔案
+put :上傳單一檔案
+rm  :刪除檔案
+# 其他的指令用法請參考 man smbclient 喔！</span>
+</pre></td></tr></table>
+
+		事實上，使用 smbclient 一點也不方便，因為使用的是 ftp 的功能語法，有點怪怪的～能不能像 Windows 
+		那樣，可以直接連線網路磁碟機啊？這當然沒有問題！不過就需要藉由 smbmount 來協助了！smbmount 
+		可以將遠端主機分享出來的目錄整個給他 mount 到本機的 mount point (某個目錄)，如此一來，
+		遠端主機的目錄就好像在我們本機的一個 partition 一樣喔！可以直接執行複製、編輯等動作！這可就好用的多了！
+		底下我們來談一談怎麼用這個 smbmount 吧！<br />
+
+<a name="smbmount"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbmount //IP/分享資源 /掛載點 [-o options]</span>
+<span class=term_say>參數：
+-o 後面接的參數 (options) 常用的有底下這些：
+   username=你的登入帳號：例如 username=dmtsai
+   password=你的登入密碼：需要與上面 username 相對應啊！
+   iocharset=本機的語系編碼方式，如 big5 或 utf8 等等；
+   codepage=遠端主機的語系編碼方式，例如繁體中文為cp950</span>
+
+<span class=term_hd>範例一：以 dmtsai 的身份將其家目錄掛載至 /mnt/samba 中</span>
+[root@linux ~]# <span class=term_command>smbmount //127.0.0.1/dmtsai /mnt/samba</span>
+> <span class=term_command>-o username=dmtsai,password=pw_test,codepage=cp950</span>
+[root@linux ~]# <span class=term_command>df</span>
+//127.0.0.1/dmtsai  20161024  3088896  17072128  16% /mnt/samba
+</pre></td></tr></table>
+
+		經由 smbmount 的動作，我們就可以輕易的將遠端分享出來的咚咚給他掛載到自己 Linux 
+		本機上面！好用的很～事實上，原本 mount 這個指令如果有支援 smbfs 的話，
+		那也就可以直接掛載網路上的芳鄰分享出來的目錄了！例如上面的例子當中，我們也可以這樣下達指令：<br />
+
+<table class="term"><tr><td class="term"><pre>
+mount -t smbfs //127.0.0.1/dmtsai /mnt/samba \
+-o username=dmtsai,password=pw_test,codepage=cp950,iocharset=big5
+</pre></td></tr></table>
+
+		更詳細的 mount 用法，請 man mount 或者看考『鳥哥的 Linux 私房菜 -- 基礎學習篇』的內容喔！ ^_^<br /><br />
+
+		<a name=nmblookup></a>
+		<hr /><li><span class=text_import1>查詢 NetBIOS name 與 IP 及其他相關資訊：</span></li>
+		<div class=block2>
+		現在我們可以透過一些 NetBIOS 相關的功能來取得 NetBIOS name ，不過，如果你還想要知道這個 NetBIOS name 的其他資訊時，
+		例如 IP、分享的資源等等，那可以使用 nmblookup 這個指令來搞定即可。他是這麼使用的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nmblookup [-S] [-U wins IP] [-A IP] name</span>
+<span class=term_say>參數：
+-S ：除了查詢 name 的 IP 之外，亦會找出該主機的分享資源與 MAC 等；
+-U ：後面一般可接 Windows 的主要名稱管理伺服器的 IP ，可與 -R 互用；
+-R ：與 -U 互用，以 Wins 伺服器來查詢某個 Netbios name；
+-A ：相對於其他的參數， -A 後面可接 IP ，藉 IP 來找出相對的 NetBIOS 資料；</span>
+
+<span class=term_hd>範例一：藉由本機找出 vbirdserver 這部主機的 IP 位址</span>
+[root@linux ~]# <span class=term_command>nmblookup -U localhost vbirdserver</span>
+querying vbirdserver on 127.0.0.1
+192.168.1.254 vbirdserver<00>
+
+<span class=term_hd>範例二：找出 vbirdserver 的 MAC 與 IP 等資訊：</span>
+[root@linux ~]# <span class=term_command>nmblookup -S vbirdserver</span>
+querying vbirdserver on 192.168.1.255
+192.168.1.254 vbirdserver&lt;00>
+Looking up status of 192.168.1.254
+        VBIRDSERVER     &lt;00> -         B &lt;ACTIVE>
+        ..__MSBROWSE__. &lt;01> - &lt;GROUP> B &lt;ACTIVE>
+        VBIRDHOUSE      &lt;1e> - &lt;GROUP> B &lt;ACTIVE>
+
+        MAC Address = 00-00-00-00-00-00 <span class=term_say>&lt;==因為是本機資料，所以 MAC 會成為這樣</span>
+</pre></td></tr></table>
+		</div>
+
+		<a name="smbstatus"></a>
+		<hr /><li><span class=text_import1>利用 smbstatus 觀察 SAMBA 的狀態</span></li>
+		<div class=block2>
+		如果想要查閱目前 SAMBA 有多人人來連線且哪些資源分享已經被使用的話，可以這樣看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbstatus [-pS] [-u username]</span>
+<span class=term_say>參數：
+-p ：列出已經使用 SAMBA 連線的程序 PID ；
+-S ：列出已經被使用的資源分享狀態；
+-u ：只列出某個使用者相關的分享資料</span>
+
+<span class=term_hd>範例一：列出目前主機完整的 Samba 狀態</span>
+[root@linux ~]# <span class=term_command>smbstatus</span>
+Samba version 3.0.10-1.4E.9
+PID     Username      Group         Machine
+-------------------------------------------------------------------
+ 4973   dmtsai        dmtsai        127.0.0.1    (127.0.0.1)
+<span class=term_say># 上面列出的是與 PID 有關的資訊，可用 smbstatus -p 單純列出</span>
+
+Service      pid     machine       Connected at
+-------------------------------------------------------
+dmtsai        4973   127.0.0.1     Thu Dec 28 10:58:36 2006
+<span class=term_say># 上面列出的則是分享資源，那個 Service 就是分享的目錄。</span>
+</pre></td></tr></table>
+
+		你可以透過這個小程式來瞭解到目前有多少人使用你的 SAMBA 的啦！<br />
+		</div>
+	</div>
+</div>
+
+
+<hr /><a NAME="other"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">伺服器進階管理</span><br />
+<div class=block1>
+	除了前面提到的幾個資訊之外，在這裡我們也來談談如何讓你的 Samba 作更多的事情！
+	包括將 Windows 使用者的家目錄放到 Samba 上頭呢！^_^<br /><br />
+
+	<hr /><a NAME="other_pdc"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">讓 Samba 管理網域使用者：PDC</span><br />
+	<div class=block2>
+		前面介紹的內容都是屬於 Peer/Peer 的連線狀況，也就是 Samba 伺服器與 Windows 用戶端其實是平等地位的啦！
+		所以 Windows 用戶端需要知道 Samba 伺服器內的帳號密碼資料後，才能夠順利的使用 Samba 的資源。
+		不過，這樣的方式在較大型一些的區域網路環境可能就會有點困擾，例如學校的環境。<br /><br />
+
+		舉例來說，如果你有一個電腦教室裡面有 50 部 Windows XP Pro. 的個人電腦，由於電腦教室大家都會使用，
+		因此裡面這 50 部個人電腦有使用還原精靈，也就是每次電腦重新開機後整個作業系統就會還原成原本的樣子。
+		但我們知道使用者總是需要有個人家目錄吧？他們總不希望這次的工作在重新開機後就失去了～
+		所以我們可以利用一部主機來讓他們儲存資料啊！那就是 Primary Domain Controller (PDC) 主機囉。<br /><br />
+
+		其實 Samba PDC 的作用很簡單，就是讓 Samba PDC 成為整個區域網路的領域管理員 (domain controller)，
+		然後讓 Windows 主機加入這個領域，未來使用者利用 Windows 登入時，Windows 會前往 PDC 伺服器取得使用者的帳號密碼，
+		同時 PDC 還會傳送使用者的重要資料到那部 Windows 個人電腦上，而 Windows 電腦上的使用者登出時，
+		該使用者修改過的資料也會回傳給 PDC ，如此一來不管這個使用者在哪一部個人電腦上面登入，
+		他都能夠取得正確的個人資料！很棒的作用吧！<br /><br />
+
+		PDC 是個很複雜的環境，他可以達到的功能相當的多，而且密碼的驗證也不必在同一部 PDC 主機上面，
+		不過這裡我們不談那麼複雜的東西，只是做一個簡單的練習，因此底下的這部 PDC 使用自己的密碼來進行驗證，
+		並且也管理自己所分享出去的資源囉！整個基本的設定流程應該是這樣的：<br />
+		<ul>
+		<li>設定好 PDC 主機的 TCP/IP 與 Windows 主機的網路，這個你應該已知如何處理了；
+		<li>設定 PDC 的角色定位，因為 PDC 管理自己的密碼，所以 security = user
+		<li>PDC 最好擁有整個網域的名稱解析權力，亦即成為主要的名稱解析器；
+		<li>需有 netlogon 資源分享，提供 windows 2000/XP pro. 用戶端的登入之用；
+		<li>由於 Windows 需讀入個人設定檔，預設目錄為 profile，Linux 系統需預先設定此目錄；
+		<li>增加 PDC 上的使用者帳號以及機器代碼 (machine account) 等等
+		<li>在 Windows 2000/XP pro. 個人電腦上設定成為 PDC 的用戶端。
+		</ul>
+		底下咱們就來依序處理處理先！<br /><br />
+
+		<hr /><li><span class=text_import1>0. 設定 lmhosts 或 /etc/hosts 對應 Netbios 與 IP</span></li>
+		<div class=block2>
+		由於我們的 Samba 即將成為整個網域的名稱解析者，因此你最好將整個網域的 NetBIOS name 與 IP
+		的對應寫入此這個檔案當中。當然啦，如果你的網域 IP 的取得為 DHCP ，那這個檔案就不要寫了吧！
+		以我們這個案例為例，這個檔案的內容應該是：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/lmhosts</span>
+<span class=term_write>127.0.0.1       localhost
+192.168.1.254   vbirdserver
+192.168.1.21    vbirdcpu2
+192.168.1.11    vbirdcpu1</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>1. 設定 smb.conf 成為具有 PDC 的能力</span></li>
+		<div class=block2>
+		假設我們要讓 PDC 用戶端登入時可以取得他自己的家目錄，那麼需要這樣處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/samba/smb.conf</span>
+[global]
+        <span class=term_write>workgroup         = vbirdhouse
+        netbios name      = vbirdserver</span>
+        server string     = This is vbird's samba server
+        unix charset      = utf8
+        display charset   = utf8
+        dos charset       = cp950
+        log file          = /var/log/samba/%m.log
+        max log size      = 50
+        socket options    = TCP_NODELAY SO_RCVBUF=8192 SO_SNDBUF=8192
+        dns proxy         = no
+        template shell    = /bin/false
+        winbind use default domain = no
+        security          = user
+        encrypt passwords = yes
+        smb passwd file   = /etc/samba/smbpasswd
+        printcap name     = cups
+        load printers     = yes
+        printing          = cups
+
+        <span class=term_say># 與 PDC 有關的一些設定值：
+        # 底下幾個設定值處理成為本區域網路內的主要名稱解析器</span>
+        <span class=term_write>preferred master = yes
+        domain master    = yes
+        local master     = yes
+        wins support     = yes
+        <span class=term_say># 作業系統 (OS) 等級越高才能成為主網域的控制者，一般 NT 為 32,
+        # Windows 2000 為 64 ，所以這裡我們設定高一點，但不可超過 255</span>
+        os level = 200
+        <span class=term_say># 底下則是設定能否利用 PDC 登入，且登入需要進行哪些動作：</span>
+        domain logons = yes
+        logon drive   = K:          <span class=term_say>&lt;==登入後家目錄掛載成 Windows 哪一槽</span>
+        logon script  = startup.bat <span class=term_say>&lt;==每個使用者登入後會自動執行的程式</span>
+        time server   = yes         <span class=term_say>&lt;==自動調整 Windows 時間與 Samba 同步</span>
+        admin users   = root        <span class=term_say>&lt;==預設的管理員帳號！預設為 root 
+# 因為鳥哥不喜歡在 Samba 當中使用 root ，所以這裡你也可以指定成其他帳號。</span>
+
+<span class=term_say># 這個在指定登入者能夠進行的工作，裡面主要是具有許多執行程式：</span>
+[netlogon]  <span class=term_say>&lt;==與前面的 logon script 有關，該程式放置在這裡</span>
+   comment         = Network Logon Service
+   path            = /home/samba/netlogon  <span class=term_say>&lt;==你要自己主動建立此目錄</span>
+   writable        = no
+   write list      = root
+   follow symlinks = yes
+   guest ok        = yes</span>
+
+[homes]
+        comment = Home directories
+        browseable = no
+        writable = yes
+        valid users = %S
+        create mode = 0664
+        directory mode = 0775
+[temp]
+        comment   = Temporary file space
+        path      = /tmp
+        read only = no
+        public    = yes
+
+[root@linux ~]# <span class=term_command>testparm</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/smb restart</span>
+</pre></td></tr></table>
+
+		上面的設定有幾個地方比較有趣一點：<br />
+		<ul>
+		<li><span class=text_import2>time server</span>：要使 Samba 與 Windows 主機的時間同步，使用這個項目；
+		<li><span class=text_import2>logon script</span>：當使用者以 Windows 用戶端登入後，Samba 可以提供一支批次檔，
+		讓使用者去設定好他們自己的目錄配置。整個配置的內容記錄在 startup.bat 當中。
+		你要注意的是，這個 startup.bat 檔名可以隨意更改，不過他必須要放置到 [netlogon] 所指定的目錄內；
+		<li><span class=text_import2>logon drive</span>：那麼這個家目錄要掛載到那個分割槽？
+		在 Windows 底下大多以 C, D, E... 做為磁碟的代號，你這裡可以指定一下家目錄要放置成為那個磁碟代號；
+		<li><span class=text_import2>admin users</span>：指定這個 Samba PDC 的管理員身份。
+		<li><span class=text_import2>[netlogon]</span>：指定利用網路登入時首先去查詢的目錄資源。
+		</ul>
+		</div>
+
+		<hr /><li><span class=text_import1>2. 建立所需要的目錄與檔案</span></li>
+		<div class=block2>
+		先來建立 [netlogon] 內所需要的資料好了，那就是一個目錄：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir -p /home/samba/netlogon</span>
+</pre></td></tr></table>
+
+		接下來我們還得要建立允許使用者執行的檔案，就是那個 startup.bat 才行！
+		注意一下，我們這裡假設使用者家目錄為 K 槽，而 Samba 額外分享的 temp 則為 L 槽，
+		那你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /home/samba/netlogon/startup.bat</span>
+<span class=term_write>net time \\vbirdserver /set /yes
+net use K: /home
+net use L: \\vbirdserver\temp</span>
+<span class=term_say># 這個檔案的格式為：net use [device:] [directory]</span>
+
+<span class=term_say># 再將該檔案轉成 DOS 的斷行格式才行！因為是提供給 Windows  系統嘛！</span>
+[root@linux ~]# <span class=term_command>unix2dos /home/samba/netlogon/startup.bat</span>
+[root@linux ~]# <span class=term_command>cat -A /home/samba/netlogon/startup.bat</span>
+net time \\vbirdserver /set /yes<span class=term_write>^M$</span>
+net use K: /home<span class=term_write>^M$</span>
+net use L: \\vbirdserver\temp<span class=term_write>^M$</span>
+<span class=term_say># 瞧見嗎？會多出個奇怪的 ^M 符號，那就是 Windows 斷行字元。</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>3. 建立使用者</span></li>
+		<div class=block2>
+		在 Samba 裡面建立使用者就是利用 smbpasswd 這個指令而已，我們已經建立過，所以這裡不再說明。
+		但是由於我們需要 root 這個帳號來管理 PDC 與 Windows 用戶端之間連線建立時所需要的權限，
+		所以你必須要建立起這個使用者才行。建立的方法很簡單，直接這樣做吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbpasswd -a root</span>
+</pre></td></tr></table>
+
+		另外，我們都知道 Windows XP pro. 的使用者設定檔會被放置到『 C:\Documents and Settings\使用者帳號 』目錄中，
+		在該目錄底下會有類似桌面、我的最愛、應用程式設定、啟動、我的文件夾啊等等的，
+		這些東西會放置到 Samba PDC 的哪裡去備份啊？其實是放置到：<br />
+		<ul><span class=text_import2>/home/使用者帳號/profile/</span></ul>
+		目錄下的，該目錄預設會被主動的建立起來，不過偶而會有一些權限錯誤的問題～傷腦筋～
+		所以你可以預先處理該目錄，以 chmod 或 chown 來改變成該使用者可以存取的權限。
+		另外，為了避免困擾，對於新增的使用者而言，你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mkdir /etc/skel/profile</span>
+</pre></td></tr></table>
+
+		那以後新增的使用者都有可以存放來自 Windows 的特殊設定檔目錄喔！比較好管理囉～
+		當然啦，使用 useradd 新增使用者後，記得也要使用 smbpasswd -a username 來讓該使用者可以使用 Samba 喔！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>4. 建立機器碼帳號</span></li>
+		<div class=block2>
+		由於 PDC 會針對 Windows 用戶端的主機名稱 (NetBIOS name) 進行主機帳號檢查，
+		所以我們也要為用戶端的主機名稱進行帳號的設定。咦！啥是主機帳號？
+		一般使用者帳號是英文或數字，<span class=text_import2>主機帳號則在該帳號最後面加上一個錢字號『$』即可</span>！
+		舉例來說， vbirdcpu2 這部主機可設定的帳號名稱為 vbirdcpu2$。<br /><br />
+
+		而我們知道要使用 smbpasswd 增加的使用者必須要在 /etc/passwd 當中，
+		因此要建立這個帳號你就得要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>useradd -M -s /sbin/nologin -d /dev/null vbirdcpu2$</span>
+[root@linux ~]# <span class=term_command>useradd -M -s /sbin/nologin -d /dev/null vbirdcpu1$</span>
+</pre></td></tr></table>
+
+		會增加 -M -s -d 等參數的原因是因為不想要讓這個帳號具有可以登入的權限，
+		因此將這個主機帳號設定的比較怪一點～ ^_^～接下來讓 Samba 知道這個帳號是主機帳號，
+		所以你應該要這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>smbpasswd -a -m vbirdcpu1$</span>
+[root@linux ~]# <span class=term_command>smbpasswd -a -m vbirdcpu2$</span>
+</pre></td></tr></table>
+
+		這樣便加入主機帳號囉！而我們的 Samba PDC 也就可以透過『主機帳號』來判斷 Windows 用戶端能否連上來，
+		若連接上 PDC 與 Windows 用戶端後，接下來一般使用者帳號就可以在 windows 用戶端登入了！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>5. Windows XP Pro. 用戶端的連線與登入</span></li>
+		<div class=block2>
+		請注意，底下的方法僅是用於 Windows 2000, Windows XP 專業版 (Pro.)，一般的 Windows XP home 版本是不支援的！
+		如果你用戶端的主機是隨機版的 Windows XP ，通常是 Windows XP home ，那底下的方法可能就無法適用囉！
+		要連接上 Samba PDC 的過程也是挺簡單的，你可以這樣做：<br />
+
+		<ol type="A">
+		<li><span class=text_import2>確認 windows 用戶端的網域與主機名稱</span><br /><br />
+		首先我們必須要確認 Windows 用戶端的工作群組與主機名稱跟咱們的 Samba PDC 相同，
+		確認的方式在區域網路裡面已經提過了，這裡在強調一次。將滑鼠移動到『我的電腦』上面，按下右鍵，
+		選擇『內容』，然後點選『電腦名稱』，會出現如下圖示：<br /><br />
+
+		<a name="fig_15"></a><center><img SRC="0370samba/pdc_winxp_01.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖十五、Windows 用戶端連上 PDC 的方式</center><br />
+
+		如上圖所示，你要先確認箭頭 1 處指的主機名稱與工作群組，在我們這個案例當中的工作群組為 vbirdhouse，
+		這部 Windows 主機的 NetBIOS 名稱則為 vbirdcpu2 喔！如果不對的話，請按下『變更』來設定，
+		並且重新開機。重新開機完畢後再到圖十五的畫面當中，按下箭頭 2 所指的網路識別處。<br /><br />
+
+		<li><span class=text_import2>設定主機名稱與網域名稱</span><br /><br />
+		接下來我們要設定這部 Windows XP pro. 要連結到區域網路上的哪部 PDC 上面，
+		亦即是處理主機帳號以及 Samba PDC 負責的網域 (domain) 啦！
+		在圖十五按下『網路識別』後，分別在出現的視窗當中選擇：<br /><br />
+		<span class=text_import2>1. 下一步；<br />
+		2. 這台電腦是公司網路的一部份，而且我在工作時用來連線到其他電腦(T)<br />
+		3. 我的公司使用一或多個網域的網路(C)<br />
+		4. 下一步</span><br /><br />
+		然後就會出現如下的視窗：<br /><br />
+
+		<a name="fig_16"></a><center><img SRC="0370samba/pdc_winxp_02.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖十六、Windows 用戶端連上 PDC 的方式</center><br />
+
+		請依序填寫 Samba 主機上面的管理員帳號與密碼，要注意這個密碼是記錄於 /etc/samba/smbpasswd
+		中的那個，可不是 /etc/shadow 喔！別搞混了～這是 Samba 主機的設定呢。
+		輸入之後按下一步吧，通常都會出現找不到正確主機的畫面，如下所示：<br /><br />
+
+		<a name="fig_17"></a><center><img SRC="0370samba/pdc_winxp_03.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖十七、Windows 用戶端連上 PDC 的方式</center><br />
+
+		鳥哥也覺得很奇怪，老是告訴我找不到！不過沒有關係，這裡我們依舊再填一次主機的 NetBIOS name 以及群組名稱，
+		如上圖所示，然後繼續按下一步，就會出現如下的畫面啦：<br /><br />
+
+		<a name="fig_18"></a><center><img SRC="0370samba/pdc_winxp_04.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖十八、Windows 用戶端連上 PDC 的方式</center><br />
+
+		這次就給他輸入正確的管理員帳號與密碼，記得最後面的網域就是工作群組名稱，別寫錯了。
+		處理完畢後給他按下確定吧！然後就會出現如下畫面：<br /><br />
+
+		<a name="fig_19"></a><center><img SRC="0370samba/pdc_winxp_05.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖十九、Windows 用戶端連上 PDC 的方式</center><br />
+
+		恭喜您，這就表示已經連接上 Samba PDC 囉！我們希望所有的使用者都直接由 Samba PDC 控管，所以這裡請填寫
+		『此時不新增使用者』吧！按下一步去。<br /><br />
+
+		<li><span class=text_import2>如果發生錯誤情況</span><br /><br />
+		如果老是發生錯誤訊息為『使用的帳戶是電腦帳戶。請使用您的通用使用者帳戶或本機使用者帳戶來存取這台伺服器』時，
+		你可以這樣做的：<br /><br />
+		<ul>
+		<li>先察看一下 /var/log/samba 裡面的登錄檔資訊，尤其是 vbirdcpu2.log 關於這部主機的資訊吶；
+		<li>如果還是無法解決，可以在 lmhosts 裡面增加 vbirdcpu2 的 IP 與主機名稱的對應，然後將 samba 
+		整個關掉『/etc/init.d/smb stop』，等待一段時間讓 NetBIOS 的名稱解析時間逾時，再重新啟動 
+		samba 『/etc/init.d/smb start』，然後再重新做一次輸入 root 的密碼那個動作
+		</ul><br />
+		在鳥哥嘗試過的案例中，上面第二個步驟挺有效的！不過，還是得要察看 /var/log/samba 裡面的登錄資訊才行喔！<br /><br />
+
+		<li><span class=text_import2>重新開機並以新的網域名稱登入</span><br /><br />
+		在圖十九之後請重新開機，開機後整個畫面會有點類似這樣：<br /><br />
+
+		<a name="fig_20"></a><center><img SRC="0370samba/pdc_winxp_07.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖二十、Windows 用戶端連上 PDC 的方式</center><br />
+
+		請輸入你在 Samba PDC 上面擁有的帳號與密碼，當然啦，上圖中最底下的選項最重要！
+		現在這部 Windows 主機可以使用他自己的帳號登入，也可以透過 Samba 主機來登入喔！
+		粉不錯啦！ ^_^<br /><br />
+
+		<li><span class=text_import2>觀察使用者的家目錄與設定檔</span><br /><br />
+		如果你可以順利登入的話，打開檔案總管後應該可以看到類似下方的畫面：<br /><br />
+
+		<a name="fig_21"></a><center><img SRC="0370samba/pdc_winxp_08.png"
+		title="Windows 用戶端連上 PDC 的方式"
+		alt="Windows 用戶端連上 PDC 的方式"><br />
+		圖二十一、Windows 用戶端連上 PDC 的方式</center><br />
+
+		呵呵！該連上的通通連結上來囉！你也可以在自己的家目錄 (K 槽) 新增移除資料的！是否很不錯啊！ ^_^！
+		而當你登出之後，你在 Windows 桌面上頭所進行的各項個人化設定通通會被移動到 /home/dmtsai/profile 當中喔！
+		如果不相信的話，請自行前往 Samba 主機上頭瞧一瞧就知道了。<br /><br />
+
+		<li><span class=text_import2>一些使用上面的技巧</span><br /><br />
+		雖然 PDC 很好用，不過你要注意的是，每次你使用 PDC 上頭的帳號登入 Windows 用戶端主機時，
+		<span class=text_import2>Windows 主機會由 /home/username/profile/ 當中載入所需要的資料，
+		並暫時啟動一個資料夾在 C:\Documents and Settings\username 當中，如果你的家目錄下的 profile 資料太多時，
+		光是傳輸就會花去很多時間的！</span><br /><br />
+
+		所以，你應該將一些檔案資料放置到你的家目錄下，亦即 K 槽當中，盡量不要使用 Windows 預設的『我的文件夾』，
+		因為『我的文件夾』會將資料移動到 /home/username/profile/My Documents 目錄下，同樣的，
+		儲存到桌面的資料會被放置到 /home/username/profile/桌面 目錄中，那樣在登入與登出時會花去很多時間喔！
+		這個小地方也要注意的呢！ ^_^<br />
+		</ol>
+		</div>
+
+		好了，關於 SAMBA 的 PDC 作法我們就談到這裡，還有更多的資訊您可以前往這個章節最後面的參考資料所列出的網址去查閱，
+		因為還有很多的作法吶！事實上，鳥哥覺得在一個網域當中，如果有多部的 Windows NT 主機，例如 Windows 2000/XP pro.
+		這一類的比較穩定的個人使用桌面版本時，使用 PDC 就很有用了！因為 Windows 2000/XP pro. 
+		也是一個多人的作業系統，不像 Windows 98 是單人的作業系統。所以，當使用 Windows 2000/XP pro. 
+		而無法登入 PDC 時，您是無法使用 Windows 2000/XP pro. 上面的任何的資訊的。
+		但是在 Windows 98 上面若無法正確的登入，您仍然具有該電腦的主控權喔！<br /><br />
+
+		另外，設定 Windows 用戶端之前，請先確認你的 Windows 是什麼版本？
+		上述的動作對於 Windows XP 家用版 (Home) 是沒有作用的！請先確認才行喔！<br /><br />
+	</div>
+
+	<hr /><a NAME="other_faq"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">問題克服</span><br />
+	<div class=block2>
+		通常我們在設定 SAMBA 的時候，如果是以 Workgroup 的方式來進行 smb.conf 
+		的設定時，幾乎很容易就可以設定成功了！並沒有什麼很困難的步驟。不過，萬一還是無法成功的設定起來，
+		請務必察看登錄檔，也就是在 /var/log/samba 裡面的資料！在這裡面的資料當中，您會發現：咦！
+		怎麼這麼多檔案啊！因為我們在 smb.conf 裡面設定了： <br />
+		<ul><span class=text_import2>log file = /var/log/samba/%m.log</span></ul>
+		那個 %m 是指 Client 的 NetBIOS Name 的意思，所以，當有個 vbirdcpu2 的主機來登入我們的 vbirdserver 
+		主機時，那麼登入的資訊就會被紀錄在 /var/log/samba/vbirdcpu2.log 檔案喔！而如果萬一來源 IP 
+		並沒有 Netbios name 的時候，那麼很可能是一些錯誤訊息，這些錯誤訊息就會被紀錄到 log.smbd, log.nmbd 
+		裡面去了！所以，如果您要察看某部電腦連上您的 SAMBA 主機發生了什麼問題時，特別要留意這個登錄檔的形式喔！<br /><br />
+
+		另外，如果您的 SAMBA 明明已經啟動完成了，卻偏偏老是無法成功，又無法查出問題時，建議先關閉 Samba 
+		一陣子，再重新啟動：<br />
+
+		<ul><span class=text_import2>/etc/init.d/smb stop</span></ul>
+
+		在我的案例當中，確實有幾次是因為 PID 與 NetBIOS 的問題，導致整個 SAMBA 怪怪的～所以完整的關閉之後，
+		經過一陣子的短暫時間，再重新啟動，應該就可以恢復正常了！<br /><br />
+
+		還有，萬一您在進行寫入的動作時，老是發現『您沒有相關寫入的權限！』，不要懷疑，幾乎可以確定是 
+		Permission 的問題，也就是 Linux 的權限與 SAMBA 開放的權限並不相符合！無論如何，您必須要瞭解能不能寫入 
+		Linux 磁碟，看的是 PID 的權限與 Linxu 檔案系統是否吻合，而那個 smb.conf 裡面設定的相關權限只是在 
+		SAMBA 運作過程當中『預計』要給使用者的權限而已，並不能取代真正的 Linux 權限喔！所以，萬一真的發現該問題存在，
+		請登入 Linux 系統，查驗一下該對應的目錄的 permission 吧！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="other_smbpasswd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者修改 samba 密碼</span><br />
+	<div class=block2>
+		有個問題是，我們知道使用者可以透過 passwd 修改 /etc/shadow 內的密碼，那麼使用者可否修改 samba 在
+		/etc/samba/smbpasswd 內的密碼呢？可以啊！直接輸入 smbpasswd 就能夠修改自己的密碼了！
+		非常簡單吧～不過，如果想要讓 /etc/shadow 與 /etc/samba/smbpasswd 同步的話，
+		那就得要動點手腳了～您可以參考底下這兩個連結來處理呢。<br />
+
+		<ul>
+		<li><a href="http://moto.debian.org.tw/viewtopic.htm?t=7732&"
+		target="_blank">http://moto.debian.org.tw/viewtopic.htm?t=7732&</a>
+		<li><a href="http://de.samba.org/samba/docs/using_samba/ch09.html"
+		target="_blank">http://de.samba.org/samba/docs/using_samba/ch09.html</a>
+		</ul>
+
+	</div>
+
+	<hr /><a NAME="other_acl"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 ACL 配合單一使用者時的控管</span><br />
+	<div class=block2>
+		想像一個案例，如果你是學校的網管人員，有個兼任老師向您申請帳號，主要是要在很多班級內取得同學的專題資料。
+		因為該老師是兼任的，您或許擔心一不小心該教師就將同學的辛苦資料給銷毀，倒不是教師們故意的，
+		而是很多時候....不熟嘛！這個時候如果你將該老師加入同學的群組，然後偏偏同學們所在的目錄是群組可寫入的話，
+		那麼該教師就能夠擁有可讀寫的權限了，也就容易造成一些莫名的災難～<br /><br />
+
+		那該怎麼辦？其實可以透過 ACL 來管理某個目錄的單一使用者權限啦！所以說，
+		權限的管理不必透過 smb.conf 的設定，只要透過 ACL 來管理就能夠達到你所需要的目的了。
+		關於 ACL 的說明我們在前面的<a href="0240network-secure-1.htm#acl">認識網路安全</a>當中已經提過了，
+		這裡不再囉唆，請自行前往查閱吶！ ^_^<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>Samba 名稱的由來是因為需包含沒有意義的 SMB server 之故；
+	<li>SAMBA 可以讓 Linux 與 Windows 直接進行檔案系統的使用；
+	<li>SAMBA 是由 Andrew Tridgwell 在 1991 年的時候利用不同平台所發展出來的；
+	<li>SAMBA 主要架構在 NetBIOS 上發展的，且以 NetBIOS over TCP/IP 克服 NetBIOS 無法跨路由的問題；
+
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>一般來說， SAMBA 使用的設定檔放置在哪裡？檔名為何？</li>
+	<div class=block2><font color=white size=-1>
+		使用的檔名為 smb.conf ，通常會放置在 /etc/samba/smb.conf 裡面，不過，最好可以使用 rpm -qc packagename 來查詢！ 
+	</font></div>
+
+	<li>哪一個指令可以用來判斷 smb.conf 這個設定檔的正確性？</li>
+	<div class=block2><font color=white size=-1>
+		當我們修改完 smb.conf 之後，記得要以 testparm 來進行 samba 的確認！
+	</font></div>
+
+	<li>哪一個指令可以用來察看 SAMBA 主機分享出什麼目錄？</li>
+	<div class=block2><font color=white size=-1>
+		利用 smbclient 即可：『smbclient -L NetBiosName -U username 』！
+	</font></div>
+
+	<li>smbmount 的功能為何？</li>
+	<div class=block2><font color=white size=-1>
+		在 Linux 系統上面，將 Windows 的網路上的芳鄰，或者是 Linux 的 SAMBA 所提供分享的資源掛載到自己的系統下！
+	</font></div>
+
+	<li>我今天使用 smbpasswd 去新增一位使用者 badbird，讓他可以登入我的 Linux SAMBA
+		主機，但是無論如何就是無法新增。您認為原因可能是什麼？</li>
+	<div class=block2><font color=white size=-1>
+		由於 Samba 使用者的資訊必須要存在於 /etc/passwd 裡面，既然無法新增，應該先確認 badbird 
+		這個使用者已經存在於 Linux 系統當中了！如果還是無法新增，則需要查閱 smb.conf 的設定，看看是否 
+		/etc/samba/smbpasswd 這個密碼檔案不存在？
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>man 5 smb.conf</li>
+	<li>Study Area ：<a href="http://www.study-area.org/linux/servers/linux_samba.htm" 
+		target="_blank">http://www.study-area.org/linux/servers/linux_samba.htm</a></li>
+	<li>電子書 Using Samba：<a href="http://de.samba.org/samba/docs/using_samba/ch00.html" 
+		target="_blank">http://de.samba.org/samba/docs/using_samba/ch00.html</a></li>
+	<li>Samba PDC HOWTO: <a href="http://us5.samba.org/samba/docs/man/Samba-HOWTO-Collection/samba-pdc.html" 
+		target="_blank">http://us5.samba.org/samba/docs/man/Samba-HOWTO-Collection/samba-pdc.html</a></li>
+	<li>SAMBA 官方網站：<a href="http://www.samba.org/" target="_blank">http://www.samba.org/</a></li>
+	<li>楊錦昌老師的 SAMBA 密技：<a href="http://apt.nc.hcc.edu.tw/web/student_server_FC1.htm#samba" 
+		target="_blank">http://apt.nc.hcc.edu.tw/web/student_server_FC1.htm#samba</a></li>
+	<li>依瑪貓的列印文件：<a href="http://www.imacat.idv.tw/tech/lnxprint.html" 
+		target="_blank">http://www.imacat.idv.tw/tech/lnxprint.html</a></li>
+	<li>Gentoo Linux 的 Samba 文件：<a href="http://www.gentoo.org/doc/zh_tw/quick-samba-howto.xml"
+		target="_blank">http://www.gentoo.org/doc/zh_tw/quick-samba-howto.xml</a></li>
+	<li>cupsaddsmb 用法：<a href="http://www.enterprisenetworkingplanet.com/netsysm/article.htm/3621876"
+		target="_blank">http://www.enterprisenetworkingplanet.com/netsysm/article.htm/3621876</a></li>
+	<li>下載 CUPS-windows 的網站：<a href="http://ftp.easysw.com/pub/cups/windows/"
+		target="_blank">http://ftp.easysw.com/pub/cups/windows/</a></li>
+	<li>eyesblue 在討論區針對語系的說明：<a href="http://phorum.vbird.org/viewtopic.htm?t=22001"
+		target="_blank">http://phorum.vbird.org/viewtopic.htm?t=22001</a></li>
+	<li>testparm -v</li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2001/09/17：好久以前曾經完成的一項任務 ^_^<br />
+2003/07/26：將 2001/09/17 所寫的內容做了大幅度的修訂，增加原理以及更多的設定項目！<br />
+2003/09/10：將 <a href="#server_domain_server">PDC</a> 部分補充的更完整，因為加入了個人化的 Profiles 
+	在 /home/samba/profiles 當中了！同時加入課後練習喔<br />
+2003/09/30：加入了 <a href="#server_printer_cups">CUPS</a> 印表機的支援！<br />
+2005/10/17：Samba 2.2 在中文編碼上面與最新的 samba 3.0.x 版本不同。請參考： 
+<a href="http://phorum.vbird.org/viewtopic.htm?t=22001">中文編碼</a> 網友的詳細說明喔！<br />
+2006/12/20：將舊的文章移動到 <a href="0370samba/0370samba.htm">此處</a><br />
+2006/12/29：終於寫完了 Samba 了！將 PDC 改寫，很多亂亂的地方都改掉了～<br />
+2007/04/12：原本對 homes 的說明中，那個 <a href="#20070412">umask 應該是 002</a> ，原先的 022 是錯的！<br />
+</span>
+<hr><span class="text_date">2003/07/26以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0370samba.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

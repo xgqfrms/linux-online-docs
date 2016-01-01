@@ -1,0 +1,2249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718"><!-- 本文的檔頭部分 -->
+    <div style="text-align:center">  <span class="text_head0">第五章、首次登入與線上求助<span class="text_head_en"> man page</span></span><br />
+    </div>
+    <div style="text-align:right"> <span class="text_history">最近更新日期：2009/08/17</span> </div>
+    <!-- 本文的檔頭部分 -->
+    <table class="head1" summary="排版：文章檔頭的說明">
+      <tr>
+        <td class="head1"> 終於可以開始使用Linux這個有趣的系統了！由於Linux系統使用了非同步的磁碟/記憶體資料傳輸模式，同時又是個多人多工的環境，
+          所以你不能隨便的不正常關機，關機有一定的程序喔！錯誤的關機方法可能會造成磁碟資料的損毀呢！
+          此外，Linux有多種不同的操作方式，圖形介面與文字介面的操作有何不同？
+          我們能否在文字介面取得大量的指令說明，而不需要硬背某些指令的選項與參數等等。這都是這一章要來介紹的呢！ </td>
+      </tr>
+    </table>
+    <br />
+    <!-- 本文的連結區部分 -->
+    <div class="block1"> <span class="text_h1"> 1. <a href="#start">首次登入系統</a><br />
+      <span class="text_h2"> 　　1.1 <a href="#start_startx">首次登入CentOS 5.x圖形介面</a><br />
+        1.2 <a href="#start_gnome">GNOME的操作與登出</a><br />
+        1.3 <a href="#start_kde">KDE的操作與登出</a><br />
+        1.4 <a href="#start_x_cmd">X Window與文字模式的切換</a><br />
+        1.5 <a href="#start_cmd">在終端介面登入linux</a><br />
+        </span> 2. <a href="#cmd">文字模式下指令的下達</a><br />
+      <span class="text_h2"> 　　2.1 <a href="#cmd_cmd">開始下達指令</a>, <a href="#cmd_cmd_lang">語系的支援</a><br />
+        2.2 <a href="#cmd_basic">基礎指令的操作</a>, <a href="#date">date</a>, <a href="#cal">cal</a>, <a href="#bc">bc</a><br />
+        2.3 <a href="#cmd_hkey">重要的幾個熱鍵[Tab], [ctrl]-c, [ctrl]-d</a><br />
+        2.4 <a href="#cmd_err">錯誤訊息的查看</a><br />
+        </span> 3. <a href="#manual">Linux系統的線上求助man page與info page</a><br />
+      <span class="text_h2"> 　　3.1 <a href="#manual_man">man page</a><br />
+        3.2 <a href="#manual_info">info page</a><br />
+        3.3 <a href="#manual_docs">其他有用的文件(documents)</a><br />
+        </span> 4. <a href="#nano">超簡單文書編輯器： nano</a><br />
+      5. <a href="#shutdown_pc">正確的關機方法</a>: <a href="#sync">sync</a>, <a href="#shutdown">shutdown</a>, <a href="#reboot">reboot, halt, poweroff</a>, <a href="#init">init</a><br />
+      6. <a href="#shoot">開機過程的問題排解</a><br />
+      7. <a href="#hint">重點回顧</a><br />
+      8. <a href="#ex">本章習題</a><br />
+      9. <a href="#reference">參考資料與延伸閱讀</a><br />
+      <span class="text_h2"> 10. <a href="http://phorum.vbird.org/viewtopic.php?t=23877"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23877</a> </span> </span> </div>
+    <!-- 本文的正式部分 -->
+    <hr />
+    <a name="start" id="start"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">首次登入系統</span><br />
+    <div class="block1">
+      <p>登入系統有這麼難嗎？並不難啊！雖然說是這樣說，然而很多人第一次登入Linux的感覺都是『<span 
+	class="text_import2">接下來我要幹啥？</span>』如果是以圖形介面登入的話，或許還有很多好玩的事物，
+        但要是以文字介面登入的話，面對著一片黑壓壓的螢幕，還真不曉得要幹嘛呢！為了讓大家更瞭解如何正確的使用Linux，
+        正確的登入與離開系統還是需要說明的！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="start_startx" id="start_startx"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">首次登入CentOS 5.x圖形介面</span><br />
+      <div class="block2">
+        <p>開機就開機呀！怎麼還有所謂的登入與離開呀？不是開機就能夠用電腦了嗎？
+          開什麼玩笑，在Linux系統中由於是多人多工的環境，所以系統隨時都有很多任務在進行，因此正確的開關機可是很重要的！
+          不正常的關機可能會導致檔案系統錯亂，造成資料的毀損呢！這也是為什麼通常我們的<span 
+		class="text_import2">Linux主機都會加掛一個不斷電系統</span>囉！</p>
+        <p>如果在<a href="/linux_basic/0157installcentos5.php">第四章</a>一切都順利的將CentOS 5.x完成安裝並且重新開機後，
+          應該就會出現如下的等待登入的圖形畫面才對。畫面的左上方是CentOS 5的distribution說明，
+          而1號箭頭所指處的四個文字則是可以改變工作環境的地方，2號箭頭說明今天的日期/時間與主機名稱(www.vbird.tsai)，
+          3號箭頭就是我們可以使用帳號登入的輸入框框囉。</p>
+        <a name="fig1.1.1" id="fig1.1.1"></a>
+        <center>
+          <img src="0160startlinux/xlogin_01.jpg" 
+		alt="X等待登入的畫面" 
+		title="X等待登入的畫面" border="1" /><br />
+          圖1.1.1、X等待登入的畫面<br />
+        </center>
+        <p>讓我們來瞭解一下上圖1號箭頭所指的那四個功能吧！先點選一下『語言』按鈕，你會發現螢幕出現很多可以選擇的語系資料！
+          鳥哥擷取部分畫面如下所示。在下圖中你可以選擇不同的中文或者是其他語言，等一下你登入後，
+          螢幕就會顯示你所選擇的語系畫面了。不過要注意的是，如果你選擇的語系的軟體檔案並沒有被安裝，
+          那麼登入系統後就會出現很多亂碼啊！如下圖所示，鳥哥先選擇台灣的繁體中文，然後按下『改變語言』按鈕即可。</p>
+        <a name="fig1.1.2" id="fig1.1.2"></a>
+        <center>
+          <img src="0160startlinux/xlogin_02.jpg" 
+		alt="選擇語系的畫面" 
+		title="選擇語系的畫面" border="1" /><br />
+          圖1.1.2、選擇語系的畫面<br />
+        </center>
+        <p>接下來讓我們按一下『作業階段』按鈕吧！按下作業階段後螢幕就會出現如下的畫面。
+          所謂的<span class="text_import2">作業階段指的是你可以使用不同的圖形介面來操作整個Linux系統。</span> 這個圖形介面並不是只有將桌面背景更改而已，而是整個顯示、控制、管理、圖形軟體都不相同了！
+          非常的好玩！目前CentOS 5.x預設至少就提供GNOME/KDE這兩種圖形介面(我們稱為視窗管理員, Window Manager, <a href="#ps1">註1</a>)。
+          如下圖所示。CentOS 5.x預設使用的是GNOME這個玩意兒，如果你沒有改變的話，那等一下就會登入GNOME的圖形介面囉。</p>
+        <center>
+          <img src="0160startlinux/xlogin_03.jpg" 
+		alt="更改作業階段的視窗示意圖" 
+		title="更改作業階段的視窗示意圖" border="1" /><br />
+          圖1.1.3、更改作業階段的視窗示意圖<br />
+        </center>
+        <p>接下來準備要登入啦！我們在經過第四章的安裝過程後，理論上現在會有兩個可用的帳號，以鳥哥的安裝為例，
+          我有root及vbird兩個可用的帳號喔！那第四章我們也說過，最好不要使用root啦！因此，
+          鳥哥就在<a href="#fig1.1.1">圖1.1.1</a>的地方開始用vbird來登入了，如下所示，記得輸入完畢後要按『Enter』喔！</p>
+        <center>
+          <img src="0160startlinux/xlogin_04.jpg" 
+		alt="輸入使用者帳號的地方" 
+		title="輸入使用者帳號的地方" border="1" /><br />
+          圖1.1.4、輸入使用者帳號的地方<br />
+        </center>
+        <p>接著系統會要你輸入密碼，此時請在密碼欄填入該帳號的密碼！在你輸入密碼時該欄位會顯示黑點來取代！
+          這是為了保密啦！輸入完畢後請按下『Enter』開始登入囉！</p>
+        <center>
+          <img src="0160startlinux/xlogin_05.jpg" 
+		alt="輸入密碼的示意圖" 
+		title="輸入密碼的示意圖" border="1" /><br />
+          圖1.1.5、輸入密碼的示意圖<br />
+        </center>
+        <p>由於鳥哥在<a href="#fig1.1.2">圖1.1.2</a>曾經修改過語系資料，因此系統就會詢問你，
+          是否要將剛剛的設定變更成為預設值？還是只有這次登入才使用呢？你可以按下『成為預設值』，
+          讓你這次的決定套用到未來的操作喔！OK！讓我們開始來玩一玩GNOME這個預設的視窗管理員吧！</p>
+        <center>
+          <img src="0160startlinux/xlogin_06.jpg" 
+		alt="詢問是否將設定值更改為預設值的視窗" 
+		title="詢問是否將設定值更改為預設值的視窗" border="1" /><br />
+          圖1.1.6、詢問是否將設定值更改為預設值的視窗<br />
+        </center>
+      </div>
+      <hr />
+      <a name="start_gnome" id="start_gnome"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">GNOME的操作與登出</span><br />
+      <div class="block2">
+        <p>終於給他看到圖形介面啦！真是很開心吧！如下圖所示，整個GNOME的視窗大約分為三個部分：</p>
+        <ul>
+          <li><span class="text_import1">上方工作列(control panel)</span><br />
+            上半部有應用程式、位置與系統及快捷鍵的地方，可以看成是工作列，你可以使用滑鼠在1號箭頭處 (應用程式) 點擊一下，
+            就會有更多的程式集出現！然後移動滑鼠就能夠使用各個軟體了。至於3號箭頭所指的地方，就是系統時間與聲音調整。
+            另外，在3號箭頭的左邊不是有個打X的符號嗎？那個是CentOS 5.x的線上更新系統(update)。由於我們尚未連上Internet，
+            所以這邊就會顯示X喔。<br />
+            <br />
+          </li>
+          <li><span class="text_import1">桌面</span><br />
+            整個畫面中央就是桌面啦！在桌面上預設有三個小按鈕，例如箭頭2所指的就是檔案總管。你可以使用滑鼠連擊兩下就能夠打開該功能。
+            其實電腦與個人資料夾都是檔案總管啦！如果有執行各種程式，程式的顯示也都是在桌面位置喔。<br />
+            <br />
+          </li>
+          <li><span class="text_import1">下方工作列</span><br />
+            下方工作列的目的是將各工作顯示在這裡，可以方便使用者點選之用。其中4號箭頭所指處為將所有工作最小化隱藏，
+            至於5號箭頭處指的那四個玩意兒，就是四個虛擬桌面(Virtual Desktop)了！GNOME提供四個桌面給使用者操作，
+            你可以在那四個桌面隨便點一點，看看有啥不同！尤其是當你有執行不同的程式時，就會發現他的功能啦！ ^_^</li>
+        </ul>
+        <center>
+          <img src="0160startlinux/gnome_01.jpg" 
+		alt="GNOME的視窗畫面示意圖" 
+		title="GNOME的視窗畫面示意圖" border="1" /><br />
+          圖1.2.1、GNOME的視窗畫面示意圖<br />
+        </center>
+        <p>Linux桌面的使用方法幾乎跟Windows一模一樣，你可以在桌面上按下右鍵就可以有額外的選單出現；
+          你也可以直接按下桌面上的『個人資料夾』，就會出現類似Windows的『檔案總管』的檔案/目錄管理視窗，
+          裡面則出現你自己的工作目錄；好了，讓我們點擊一下『應用程式』那個按鈕吧！看看下拉式選單中有什麼軟體可用！
+          如下圖所示。你要注意的是，因為我們的Linux尚未連上Internet，所以線上更新系統會有警告訊息(2號箭頭處)，
+          請你將他關閉吧！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 關於『個人資料夾』的內容，記得我們之前說過Linux是多人多工的作業系統吧？
+                  每個人都會有自己的『工作目錄』，這個目錄是使用者可以完全掌控的，
+                  所以就稱為『使用者個人家目錄』了。一般來說，家目錄都在/home底下，
+                  以鳥哥這次的登入為例，我的帳號是vbird，那麼我的家目錄就應該在/home/vbird/囉！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <center>
+          <img src="0160startlinux/gnome_02.jpg" 
+		alt="應用程式的下拉式選單示意圖" 
+		title="應用程式的下拉式選單示意圖" border="1" /><br />
+          圖1.2.2、應用程式的下拉式選單示意圖<br />
+        </center>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 那個線上升級的按鈕不是不重要喔！而是因為我們尚未連上Internet所以這裡才先將他略過的。
+                  你的系統穩不穩定、安不安全與這個玩意兒相關性可大了！千萬別小看他囉！
+                  有興趣的朋友可以到google先搜尋一下yum這個機制來看看先！ ^_^
+                  因為你的Linux尚未線上更新過，所以先不要連上Internet喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">使用檔案總管</li>
+        </ul>
+        <p>首先我們來瞭解一下常用的GNOME檔案總管要怎麼用？要說明的是，GNOME的檔案總管其實稱為『鸚鵡螺(Nautilus)』，
+          只是我們比較習慣稱呼檔案總管就是了。^_^。當你在桌面中點選『個人資料夾』就會出現如下圖示。 <span class="text_import2">預設鸚鵡螺是用小圖示來顯示檔案，而且隱藏檔也沒有顯示出來呢！
+            所以你只會看到一個檔案</span>。注意1號箭頭所指的地方，你可以按下那個小按鈕來切換到不同的目錄去喔！</p>
+        <center>
+          <img src="0160startlinux/gnome_03_1.jpg" 
+		alt="鸚鵡螺檔案總管的預設顯示畫面" 
+		title="鸚鵡螺檔案總管的預設顯示畫面" border="1" /><br />
+          圖1.2.3、鸚鵡螺檔案總管的預設顯示畫面<br />
+        </center>
+        <p>鳥哥還是比較喜歡清單式的將所有資料都列出來，所以我們的設定需要修正一下。
+          請在上圖中按下『編輯』點選『偏好設定』後，會出現如下圖示，請將箭頭所在處的兩個地方修訂一下，
+          包括以清單顯示及顯示隱藏檔喔！填完就按下右下角的『關閉』即可。</p>
+        <center>
+          <img src="0160startlinux/gnome_03_2.jpg" 
+		alt="鸚鵡螺檔案總管的偏好設定視窗" 
+		title="鸚鵡螺檔案總管的偏好設定視窗" border="1" /><br />
+          圖1.2.4、鸚鵡螺檔案總管的偏好設定視窗<br />
+        </center>
+        <p>將原本的畫面關閉再重開一個檔案總管，請如下圖所示，按下『顯示』選擇『顯示隱藏檔』及『以清單方式顯示』後，
+          就可以發現到好多檔案囉！<span class="text_import2">什麼是隱藏檔呢？其實檔名開頭為小數點『.』的，
+            那個檔案就是隱藏檔了。</span>所以在如下圖的畫面中，你會看到多出來的檔案檔名都是小數點開頭的！</p>
+        <center>
+          <img src="0160startlinux/gnome_03_3.jpg" 
+		alt="家目錄下的隱藏檔資料" 
+		title="家目錄下的隱藏檔資料" border="1" /><br />
+          圖1.2.5、家目錄下的隱藏檔資料<br />
+        </center>
+        <p>除了自己的家目錄之外，你可以在上圖的左下角『vbird』處點一下，然後選擇根目錄(/)，就會出現如下圖示。
+          1號箭頭告訴我們，這個vbird帳號無法登入該目錄，所以有個紅色的禁止圖示；如果想要查閱某目錄的內容，
+          如2號箭頭所指處，你可以點一下三角形的圖示，就能夠將該目錄內的資料捉出來了；最後，如同3號箭頭所指的，
+          如果是出現紙張的圖示，代表那是個檔案而不是目錄囉！</p>
+        <center>
+          <img src="0160startlinux/gnome_03_4.jpg" 
+		alt="鸚鵡螺檔案總管的目錄/檔案顯示情況" 
+		title="鸚鵡螺檔案總管的目錄/檔案顯示情況" border="1" /><br />
+          圖1.2.6、鸚鵡螺檔案總管的目錄/檔案顯示情況<br />
+        </center>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">中文輸入法</li>
+        </ul>
+        <p>在CentOS 5.x當中所使用的中文輸入法為SCIM軟體，<span 
+		class="text_import2">你要啟動SCIM很簡單，只要叫出任何一個能夠輸入文字的軟體，
+          然後按下『Ctrl』+『Space(空白鍵)』就能夠呼叫出來了</span>！以下圖為例，鳥哥執行『附屬應用程式』內的『文字編輯』軟體，
+          然後按下[ctrl]+[space]就出現下圖。然後點一下圖中的箭頭所指處，你就會看到很多輸入法了！
+          比較有趣的是那個『<span class="text_import2">新酷音』輸入法</span>，
+          其實那就是大家常用的新注音啦！可以自動挑字的輸入法！不錯用喔！</p>
+        <center>
+          <img src="0160startlinux/gnome_07.jpg" 
+		alt="SCIM中文輸入法呼叫示意圖" 
+		title="SCIM中文輸入法呼叫示意圖" border="1" /><br />
+          圖1.2.7、SCIM中文輸入法呼叫示意圖<br />
+        </center>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">登出GNOME</li>
+        </ul>
+        <p>如果你沒有想要繼續玩X Window了，那就登出吧！如何登出呢？如下圖所示，點選『系統』內的『登出』即可。
+          要記得的是，登出前最好將所有不需要的程式都關閉了再登出啊！</p>
+        <center>
+          <img src="0160startlinux/gnome_08.jpg" 
+		alt="登出GNOME的按鈕" 
+		title="登出GNOME的按鈕" border="1" /><br />
+          圖1.2.8、登出GNOME的按鈕<br />
+        </center>
+        <p>會有一個確認視窗跑出來給我們確認一下，就給他點選『登出』吧！</p>
+        <center>
+          <img src="0160startlinux/gnome_09.jpg" 
+		alt="登出GNOME的確認視窗" 
+		title="登出GNOME的確認視窗" border="1" /><br />
+          圖1.2.9、登出GNOME的確認視窗<br />
+        </center>
+        <p>請注意喔，<span class="text_import2">登出並不是關機！</span>只是讓你的帳號離開系統而已喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">其他練習</li>
+        </ul>
+        <p>底下的例題請大家自行參考並且實作一下喔！題目很簡單，所以鳥哥就不額外抓圖了！</p>
+        <ul>
+          <li>如何在上方工作列中新增其他的圖示(icons)，讓操作更方便？請嘗試新增終端機圖示；</li>
+          <li>嘗試瀏覽一下/etc這個目錄內，有哪些檔案/目錄存在；</li>
+          <li>請將/etc/crontab這個檔案『複製』到你的家目錄中；</li>
+          <li>請修改四個Virtual Desktop的底色圖案，讓他們都不相同；</li>
+          <li>嘗試修改螢幕解析度；</li>
+        </ul>
+      </div>
+      <hr />
+      <a name="start_kde" id="start_kde"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">KDE的操作與登出</span><br />
+      <div class="block2">
+        <p>玩過了GNOME之後，接下來讓我們來瞭解一下KDE這個也是很常見的視窗管理程式吧！
+          請回到<a href="#fig1.1.1">圖1.1.1</a>中，在按下『作業階段』後請選擇KDE，然後輸入你的帳號密碼來登入KDE的環境。
+          登入後的預設畫面如下所示：</p>
+        <center>
+          <img src="0160startlinux/kde_01.jpg" 
+		alt="KDE登入後的預設畫面" 
+		title="KDE登入後的預設畫面" border="1" /><br />
+          圖1.3.1、KDE登入後的預設畫面<br />
+        </center>
+        <p>上圖中的箭頭所指處的功能說明如下：</p>
+        <ul>
+          <li>桌面：上圖中整個藍色畫面就是桌面。而一號箭頭指的地方，一開始僅有垃圾桶而已，你可以自行增加其他的快速按鈕在桌面！
+            當有工作被執行時，該工作就是顯示在這個桌面的區域中；<br />
+            <br />
+          </li>
+          <li>工作列快捷鍵：2號箭頭指的地方就是KDE的K選單！你給他按一下該選單就會出現更多的選項功能。
+            感覺上就是開始功能表囉！至於K選單的右邊還有很多的快捷按鈕，你可以自行點選看看；<br />
+            <br />
+          </li>
+          <li>虛擬桌面：3號箭頭所指的就是虛擬桌面。與GNOME相似的，CentOS的KDE也提供四個虛擬桌面。
+            你可以在各個桌面分別放置不同的底圖哩！自己玩看看吧！<br />
+            <br />
+          </li>
+          <li>工作列：4號箭頭處，當你有執行任何工作時，該工作的圖示就會顯示到這個地方。<br />
+            <br />
+          </li>
+          <li>小時鐘：5號箭頭所指的地方就是目前的時間。預設是數位時鐘，你可以將他改為圓形的小時鐘喔！<br />
+          </li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">KDE內的檔案管理</li>
+        </ul>
+        <p>同樣的，得先來瞭解一下檔案管理的軟體啊！<span class="text_import2">在GNOME檔案總管稱為鸚鵡螺，
+          在KDE檔案總管稱為『Konqueror, 征服家』。</span>你可以按下『K選單』然後選擇『家目錄』，如下所示：</p>
+        <center>
+          <img src="0160startlinux/kde_01_1.jpg" 
+		alt="開啟征服家的方式之一"  title="開啟征服家的方式之一" border="1" /><br />
+          圖1.3.2、開啟征服家的方式之一<br />
+        </center>
+        <p>啟動征服家預設會出現如下圖所示的畫面：</p>
+        <center>
+          <img src="0160startlinux/kde_02.jpg" 
+		alt="KDE的征服家顯示檔案資料圖示" 
+		title="KDE的征服家顯示檔案資料圖示" border="1" /><br />
+          圖1.3.3、KDE的征服家顯示檔案資料圖示<br />
+        </center>
+        <p>如上圖所示為征服家的預設顯示情況。畫面的左邊有點類似目錄的列表，右邊則是檔案詳細的資訊。
+          而征服家可以讓妳僅選擇使用者可以隨意應用的家目錄 (2號箭頭處) 或者是整個系統的檔案資訊 (1號箭頭處)。
+          征服家預設顯示的是家目錄啦。3號箭頭處指出該目錄內有哪些資訊，4號箭頭則是詳細的檔案參數啦。
+          接下來請點選『Root資料夾』吧！讓我們瞧瞧整個檔案系統有些什麼東西？</p>
+        <center>
+          <img src="0160startlinux/kde_03.jpg" 
+		alt="根目錄資料的顯示" 
+		title="根目錄資料的顯示" border="1" /><br />
+          圖1.3.4、根目錄資料的顯示<br />
+        </center>
+        <p>如上圖所示，當你點選Root資料夾，並且按下/etc那個資料夾後，畫面右邊就會出現/etc資料夾的檔案內容了。
+          一開始檔案是以小圖示來顯示，如果你按下清單圖示，就是上圖中3號箭頭處，那就會出現詳細的檔案資料了。
+          如下圖所示：</p>
+        <center>
+          <img src="0160startlinux/kde_04.jpg" 
+		alt="檔案資料的詳細清單顯示" 
+		title="檔案資料的詳細清單顯示" border="1" /><br />
+          圖1.3.5、檔案資料的詳細清單顯示<br />
+        </center>
+        <p>如上圖所示，按下2號箭頭處讓加號 (+) 展開，妳就能夠看到更詳細的檔案資料。然後拉動4號箭頭處的移動鈕，
+          你就能夠看到3號箭頭處的更詳細的資訊，包括檔案大小、類型、更動時間、所屬使用者與群組等參數資料。
+          其他更詳細的資料就請自己玩玩吧！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">登出KDE或關機</li>
+        </ul>
+        <p>如果不想要玩KDE了，請按下『K選單』，然後選擇『登出』功能，就會出現如下圖示：</p>
+        <center>
+          <img src="0160startlinux/kde_05.jpg" 
+		alt="KDE的登出畫面示意圖" 
+		title="KDE的登出畫面示意圖" border="1" /><br />
+          圖1.3.6、KDE的登出畫面示意圖<br />
+        </center>
+        <p>如上圖所示，畫面最上方的『vbird』指的是你的帳號，如果你使用不同的帳號登入，這裡就會有不同的帳號名稱。
+          至於畫面中的三個按鈕功能為：</p>
+        <ul>
+          <li>『關閉目前的工作階段』：就是登出而已，會回到<a href="#fig1.1.1">圖1.1.1</a>等待登入的畫面；</li>
+          <li>『關閉電腦』：就是關機的功能；</li>
+          <li>『重新啟動電腦』：就是重新開機的功能！</li>
+        </ul>
+        <p>至於更多的X window相關的使用技巧，以及相關的軟體應用，鳥哥這裡就不多說了，
+          因為鳥哥著重在Linux作業系統的基礎應用以及網路伺服器的應用啊！ ^_^ 如果你還真的有興趣，
+          建議你可以前往楊老師的網站上看看喔！<a href="http://apt.nc.hcc.edu.tw/docs/FC3_X/"
+		target="_blank">http://apt.nc.hcc.edu.tw/docs/FC3_X/</a> 。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">其他練習</li>
+        </ul>
+        <ul>
+          <li>由『K選單』--&gt;『尋找檔案/資料夾』啟動搜尋，並找尋檔名為 crontab 的檔案在哪裡？</li>
+          <li>工作列的最右方原本是數字形態的時鐘，請將他改為圖形顯示的時鐘；</li>
+          <li>如何叫出控制台？控制台的『區域性』裡面的『鍵盤配置』有何用處？</li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">重新啟動X Window的快速按鈕</li>
+        </ul>
+        <p>一般來說，我們是可以手動來直接修改X Window的設定檔的，不過，修改完成之後的設定項目並不會立刻被載入，
+          必須要重新啟動X才行(特別注意，不是重新開機，而是重新啟動X！) 。那麼如何重新啟動X呢？
+          最簡單的方法就是：</p>
+        <ul class="text_import2">
+          <li>直接登出，然後再重新登入即可；</li>
+          <li>在X的畫面中直接按下<b>[Alt] + [Ctrl] + [Backspace]</b></li>
+        </ul>
+        <p>第二個方法比較有趣，[backspace]是倒退鍵，你按下三個按鈕後X Window立刻會被重新啟動。
+          如果你的X Window因為不明原因導致有點問題時，也可以利用這個方法來重新啟動X喔！^_^</p>
+      </div>
+      <hr />
+      <a name="start_x_cmd" id="start_x_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X window與文字模式的切換</span><br />
+      <div class="block2">
+        <p>我們前面一直談到的是X Window的視窗管理員環境，那麼在這裡面有沒有純文字介面的環境啊？
+          當然有啊！但是，要怎麼切換X Window與文字模式呢？注意喔，通常我們也稱文字模式為<span 
+		class="text_import2">終端機介面, terminal 或 console</span>喔！<span 
+		class="text_import2">Linux預設的情況下會提供六個Terminal來讓使用者登入，
+            切換的方式為使用：<b>[Ctrl] + [Alt] + [F1]~[F6]</b>的組合按鈕。</span></p>
+        <p>那這六個終端介面如何命名呢，<span class="text_import2">系統會將[F1] ~ [F6]命名為tty1 ~ tty6的操作介面環境</span>。
+          也就是說，當你按下[crtl] + [Alt] + [F1]這三個組合按鈕時 (按著[ctrl]與[Alt]不放，再按下[F1]功能鍵)，
+          就會進入到tty1的terminal介面中了。同樣的[F2]就是tty2囉！那麼如何回到剛剛的X視窗介面呢？很簡單啊！按下[Ctrl] + 
+          [Alt] + [F7]就可以了！我們整理一下登入的環境如下：</p>
+        <ul class="text_import2">
+          <li>[Ctrl] + [Alt] + [F1] ~ [F6]&nbsp; ：文字介面登入 tty1 ~ tty6 終端機；</li>
+          <li>[Ctrl] + [Alt] + [F7]&nbsp;&nbsp; ：圖形介面桌面。</li>
+        </ul>
+        <p>在Linux預設的登入模式中，主要分為兩種，一種是<span class="text_import2">僅有純文字介面(所謂的執行等級run 
+          level 3)的登入環境</span>，在這種環境中你可以有tty1~tty6的終端介面，但是並沒有圖形視窗介面的環境喔。
+          另一種則是<span class="text_import2">圖形介面的登入環境(所謂的執行等級run level 
+            5)</span>，這也是我們<a href="/linux_basic/0157installcentos5.php">第四章</a>安裝妥當後的預設環境！
+          在這個環境中你就具有tty1~tty7了！其中的tty7就是開機完成後的預設等待登入的圖形環境！</p>
+        <p>如果你是以純文字環境啟動Linux的，預設的tty7是沒有東西的！萬一如此的話，那要怎麼啟動X視窗畫面呢？
+          你可以在tty1~tty6的任意一個終端介面使用你的帳號登入後(登入的方法下一小節會介紹)，
+          然後下達如下的指令即可：</p>
+        <a name="startx" id="startx"></a>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">startx</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>不過startx這個指令並非萬靈丹，你要讓startx生效至少需要底下這幾件事情的配合：</p>
+        <ul>
+          <li>你的tty7並沒有其他的視窗軟體正在運作(tty7必須是空出來的)；</li>
+          <li>你必須要已經安裝了X Window system，並且X server是能夠順利啟動的；</li>
+          <li>你最好要有視窗管理員，例如GNOME/KDE或者是陽春的TWM等；</li>
+          <li>啟動X所必須要的服務，例如字型伺服器(X Font Server, xfs)必須要先啟動。</li>
+        </ul>
+        <p>剛剛我們談到的Linux啟動時可以選擇純文字或者是視窗環境，也談到了執行等級(run level)這東西！
+          Linux預設提供了七個Run level給我們使用，其中最常用到的就是run level 3與run level 5這兩者了。
+          如果你想要讓Linux在下次開機時使用純文字環境(run level 3)來登入， <span class="text_import2">只要修訂一下/etc/inittab這個檔案的內容</span>，就能夠在下次重新開機時生效了！
+          因為我們尚未提到<a href="/linux_basic/0310vi.php">vi</a>以及<a 
+		href="/linux_basic/0510osloader.php">開機過程的詳細資訊</a>，
+          所以啊，這部分得到系統管理員篇幅的時候再說明！別擔心，再仔細的看下去吧！</p>
+      </div>
+      <hr />
+      <a name="start_cmd" id="start_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">在終端介面登入linux</span><br />
+      <div class="block2">
+        <p>剛剛你如果有按下[Ctrl] + [Alt] + [F1]就可以來到tty1的登入畫面，而如果你是使用純文字介面(其實是run 
+          level 3)啟動Linux主機的話，那麼預設就是會來到tty1這個環境中。這個環境的等待登入的畫面有點像這樣：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+CentOS release 5.3 (Final)
+Kernel 2.6.18-128.el5 on an i686
+
+www login: <span class="term_command">vbird</span>
+Password:
+[vbird@www ~]$ _
+
+    </pre></td>
+          </tr>
+        </table>
+        <p>上面顯示的內容是這樣的：</p>
+        <ol>
+          <li><span class="text_import2">CentOS release 5.3 (Final)</span>：<br />
+            顯示Linux 
+            distribution的名稱(CentOS)與版本(5.3)；<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Kernel 2.6.18-128.el5 on an i686</span>：<br />
+            顯示核心的版本為2.6.18-128.el5，
+            且目前這部主機的硬體等級為i686。如果是使用x86_64的Linux版本且安裝到64位元的PC，那你的硬體等級就會是『X86_64』喔！ <br />
+            <br />
+          </li>
+          <li><span class="text_import2">www login:</span>：<br />
+            那個www是你的主機名稱。我們在第四章安裝時有填寫主機名稱為：
+            www.vbird.tsai，主機名稱的顯示通常只取第一個小數點前的字母，所以就成為www啦！至於login:則是一支可以讓我們登入的程式。
+            你可以在login:後面輸入你的帳號。以鳥哥為例，我輸入的就是第四章建立的vbird那個帳號啦！
+            當然囉，你也可以使用root這個帳號來登入的。不過『root』這個帳號代表在Linux系統下無窮的權力，
+            所以盡量不要使用root帳號來登入啦！ <br />
+            <br />
+          </li>
+          <li><span class="text_import2">Password:</span>：<br />
+            這一行則在第三行的vbird輸入後才會出現，要你輸入密碼囉！
+            請注意，在輸入密碼的時候，螢幕上面『<span class="text_import2">不會顯示任何的字樣！</span>』，
+            所以不要以為你的鍵盤壞掉去！很多初學者一開始到這裡都會拼命的問！啊我的鍵盤怎麼不能用... <br />
+            <br />
+          </li>
+          <li><span class="text_import2">[vbird@www ~]$ _</span>：<br />
+            這一行則是正確登入之後才顯示的訊息，
+            最左邊的vbird顯示的是『目前使用者的帳號』，而@之後接的www則是『主機名稱』，至於最右邊的~則指的是
+            『目前所在的目錄』，那個$則是我們常常講的『提示字元』啦！</li>
+        </ol>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 那個 ~ 符號代表的是『使用者的家目錄』的意思，他是個『變數！』
+                  這相關的意義我們會在後續的章節依序介紹到。舉例來說，root的家目錄在/root，
+                  所以 ~ 就代表/root的意思。而vbird的家目錄在/home/vbird，
+                  所以如果你以vbird登入時，他看到的 ~ 就會等於/home/vbird喔！<br />
+                  <br />
+                  至於提示字元方面，在Linux當中，預設root的提示字元為 # ，而一般身份使用者的提示字元為 $ 。<br />
+                  <br />
+                  還有，上面的第一、第二行的內容其實是來自於/etc/issue這個檔案喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>好了這樣就是登入主機了！很快樂吧！耶～</p>
+        <p>另外，再次強調，在Linux系統下最好常使用一般帳號來登入即可，所以上例中鳥哥是以自己的帳號vbird來登入的。
+          因為系統管理員帳號(root)具有無窮大的權力，例如他可以刪除任何一個檔案或目錄。因此若你以root身份登入Linux系統，
+          一個不小心下錯指令，這個時候可不是『欲哭無淚』就能夠解決的了問題的～</p>
+        <p>因此，一個稱職的網路/系統管理人員，通常都會具有兩個帳號，平時以自己的一般帳號來使用Linux主機的任何資源，
+          有需要動用到系統功能修訂時，才會轉換身份成為root呢！所以，<span 
+		class="text_import2">鳥哥強烈建議你建立一個普通的帳號來供自己平時使用喔！</span> 更詳細的帳號訊息，我們會在後續的『<a href="/linux_basic/0410accountmanager.php">第十四章帳號管理</a>』再次提及！
+          這裡先有概念即可！</p>
+        <p>那麼如何離開系統呢？其實應該說『登出Linux』才對！登出很簡單，直接這樣做：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">exit</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>就能夠登出Linux了。但是請注意：『<span class="text_import2">離開系統並不是關機</span>！』
+          基本上，Linux本身已經有相當多的工作在進行，你的登入也僅是其中的一個『工作』而已，
+          所以當你離開時，這次這個登入的工作就停止了，但此時Linux其他的工作是還是繼續在進行的！
+          本章後面我們再來提如何正確的關機，這裡先建立起這個概念即可！</p>
+      </div>
+    </div>
+    <hr />
+    <a name="cmd" id="cmd"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">文字模式下指令的下達</span>
+    <div class="block1">
+      <p>其實我們都是透過『程式』在跟系統作溝通的，本章上面提到的視窗管理員或文字模式都是一組或一隻程式在負責我們所想要完成的指令。
+        文字模式登入後所取得的程式被稱為殼(Shell)，這是因為這支程式負責最外面跟使用者(我們)溝通，所以才被戲稱為殼程式！
+        更多與作業系統及殼程式的相關性可以參考<a href="/linux_basic/0105computers.php#program_os">第零章、計算機概論</a>內的說明。</p>
+      <p>我們Linux的殼程式就是厲害的bash這一支！關於更多的bash我們在第三篇再來介紹。現在讓我們來練一練打字吧！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="cmd_cmd" id="cmd_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開始下達指令</span><br />
+      <div class="block2">
+        <p>其實整個指令下達的方式很簡單，你只要記得幾個重要的概念就可以了。
+          舉例來說，你可以這樣下達指令的：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">command [-options] parameter1 parameter2 ...</span>
+<span class="term_note">                  指令     選項      參數(1)    參數(2)</span>
+<span class="term_say">說明：
+0. 一行指令中第一個輸入的部分絕對是『指令(command)』或『可執行檔案』
+1. command 為指令的名稱，例如變換路徑的指令為 cd 等等；
+2. 中刮號[]並不存在於實際的指令中，而加入選項設定時，通常選項前會帶 - 號，
+   例如 -h；有時候會使用選項的完整全名，則選項前帶有 -- 符號，例如 --help；
+3. parameter1 parameter2.. 為依附在選項後面的參數，或者是 command 的參數； 
+4. 指令, 選項, 參數等這幾個咚咚中間以空格來區分，不論空幾格 shell 都視為一格； 
+5. 按下[Enter]按鍵後，該指令就立即執行。[Enter]按鍵代表著一行指令的開始啟動。
+6. 指令太長的時候，可以使用反斜線 (\) 來跳脫[Enter]符號，使指令連續到下一行。
+   注意！反斜線後就立刻接特殊字符，才能跳脫！
+其他：
+a. 在 Linux 系統中，<b>英文大小寫字母是不一樣的</b>。舉例來說， cd 與 CD 並不同。
+b. 更多的介紹等到<a href="/linux_basic/0320bash.php">第十一章 bash</a> 時，再來詳述。</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>注意到上面的說明當中，『<span class="text_import2">第一個被輸入的資料絕對是指令或者是可執行的檔案</span>』！
+          這個是很重要的概念喔！還有，按下[Enter]鍵表示要開始執行此一命令的意思。我們來實際操作一下：
+          以ls這個『指令』列出『自己家目錄(~)』下的『所有隱藏檔與相關的檔案屬性』，
+          要達成上述的要求需要加入 -al 這樣的選項，所以：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">ls -al ~</span>
+[vbird@www ~]$ <span class="term_command">ls           -al   ~</span>
+[vbird@www ~]$ <span class="term_command">ls -a  -l ~</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>上面這三個指令的下達方式是一模一樣的執行結果喔！為什麼？請參考上面的說明吧！
+          關於更詳細的文字模式使用方式，我們會在<a href="/linux_basic/0320bash.php">第十一章認識BASH</a>再來強調喔！
+          此外，<span class="text_import2">請特別留意，在Linux的環境中，
+            『大小寫字母是不一樣的東西！』</span>也就是說，<span class="text_import2">在Linux底下，
+              VBird與vbird這兩個檔案是『完全不一樣的』檔案呢</span>！所以，
+          你在下達指令的時候千萬要注意到指令是大寫還是小寫。例如當輸入底下這個指令的時候，看看有什麼現象：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">date</span>  <span class="term_note">&lt;==結果顯示日期與時間</span>
+
+[vbird@www ~]$ <span class="term_command">Date</span>  <span class="term_note">&lt;==結果顯示找不到指令</span>
+[vbird@www ~]$ <span class="term_command">DATE</span>  <span class="term_note">&lt;==結果顯示找不到指令</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>很好玩吧！<span class="text_import2">只是改變小寫成為大寫而已，該指令就變的不存在了！</span> 因此，請千萬記得這個狀態呦！<br />
+          <br />
+        </p>
+        <a name="cmd_cmd_lang" id="cmd_cmd_lang"></a>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">語系的支援</li>
+        </ul>
+        <p>另外，很多時候你會發現，<span class="text_import2">咦！怎麼我輸入指令之後顯示的結果的是亂碼？</span> 這跟鳥哥說的不一樣啊！呵呵！不要緊張～我們前面提到過，Linux是可以支援多國語系的，若可能的話，
+          螢幕的訊息是會以該支援語系來輸出的。但是，我們的終端機介面(terminal)在預設的情況下，
+          無法支援以中文編碼輸出資料的。這個時候，我們就得將支援語系改為英文，才能夠以英文顯示出正確的訊息。
+          那怎麼做呢？你可以這樣做：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+<span class="term_hd">1. 顯示目前所支援的語系</span>
+
+[vbird@www ~]$ <span class="term_command">echo $LANG</span>
+zh_TW.UTF-8
+<span class="term_say"># 上面的意思是說，目前的語系(LANG)為zh_TW.UTF-8，亦即台灣繁體中文的萬國碼</span>
+
+<span class="term_hd">2. 修改語系成為英文語系</span>
+[vbird@www ~]$ <span class="term_command">LANG=en_US</span>
+<span class="term_say"># 注意到上面的指令中沒有空白字元，且英文語系為en_US才對喔！</span>
+[vbird@www ~]$ <span class="term_command">echo $LANG</span>
+
+en_US
+<span class="term_say"># 再次確認一下，結果出現，確實是en_US這個英文語系！</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>注意一下，那個『LANG=en_US』是連續輸入的，等號兩邊並沒有空白字元喔！
+          這樣一來，就能夠在『這次的登入』察看英文訊息囉！為什麼說是『這次的登入』呢？
+          因為，如果你登出Linux後，剛剛下達的指令就沒有用啦！ ^_^，這個我們會在<a 
+		href="/linux_basic/0320bash.php">第十一章</a>再好好聊一聊的！好囉，底下我們來練習一下一些簡單的指令，
+          好讓你可以瞭解指令下達方式的模式：</p>
+      </div>
+      <hr />
+      <a name="cmd_basic" id="cmd_basic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">基礎指令的操作</span><br />
+      <div class="block2">
+        <p>底下我們立刻來操作幾個簡單的指令看看囉！</p>
+        <ul class="text_import2">
+          <li>顯示日期與時間的指令： date</li>
+          <li>顯示日曆的指令： cal</li>
+          <li>簡單好用的計算機： bc</li>
+        </ul>
+        <br />
+        <a name="date" id="date"></a>
+        <hr />
+        <span class="text_h2">1. 顯示日期的指令： date</span><br />
+        <div class="block2">
+          <p>如果在文字介面中想要知道目前Linux系統的時間，那麼就直接在指令列模式輸入date即可顯示：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">date</span>
+Mon Aug 17 17:02:52 CST 2009
+    </pre></td>
+            </tr>
+          </table>
+          <p>上面顯示的是：星期一, 八月十七日, 17:02 分, 52秒，在 2009 年的 CST 時區！台灣在CST時區中啦！
+            請趕快動手做做看呦！好了，那麼如果我想要讓這個程式顯示出『2009/08/17』這樣的日期顯示方式呢？
+            那麼就使用date的格式化輸出功能吧！</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">date +%Y/%m/%d</span>
+2009/08/17
+[vbird@www ~]$ <span class="term_command">date +%H:%M</span>
+17:04
+    </pre></td>
+            </tr>
+          </table>
+          <p>那個『+%Y%m%d』就是date指令的一些參數功能啦！很好玩吧！那你問我，
+            鳥哥怎麼知道這些參數的啊？要背起來嗎？當然不必啦！底下再告訴你怎麼查這些參數囉！</p>
+          <p><span class="text_import2">從上面的例子當中我們也可以知道，指令之後的選項除了前面帶有減號『-』之外，某些特殊情況下，
+            選項或參數前面也會帶有正號『+』的情況</span>！這部份可不要輕易的忘記了呢！</p>
+        </div>
+        <a name="cal" id="cal"></a>
+        <hr />
+        <span class="text_h2">2. 顯示日曆的指令： cal</span><br />
+        <div class="block2">
+          <p>那如果我想要列出目前這個月份的月曆呢？呵呵！直接給他下達cal即可！</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">cal</span>
+     August 2009
+Su Mo Tu We Th Fr Sa
+                   1
+ 2  3  4  5  6  7  8
+ 9 10 11 12 13 14 15
+16 <span class="term_white">17</span> 18 19 20 21 22
+23 24 25 26 27 28 29
+30 31
+    </pre></td>
+            </tr>
+          </table>
+          <p>除了本月的日曆之外，連同今日所在處都會有反白的顯示呢！真有趣！cal 
+            (calendar)這個指令可以做的事情還很多，例如你可以顯示整年的月曆情況：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+
+[vbird@www ~]$ <span class="term_command">cal 2009</span>
+                               2009
+
+       January               February                 March
+Su Mo Tu We Th Fr Sa   Su Mo Tu We Th Fr Sa   Su Mo Tu We Th Fr Sa
+             1  2  3    1  2  3  4  5  6  7    1  2  3  4  5  6  7
+ 4  5  6  7  8  9 10    8  9 10 11 12 13 14    8  9 10 11 12 13 14
+11 12 13 14 15 16 17   15 16 17 18 19 20 21   15 16 17 18 19 20 21
+18 19 20 21 22 23 24   22 23 24 25 26 27 28   22 23 24 25 26 27 28
+25 26 27 28 29 30 31                          29 30 31
+
+        April                   May                   June
+Su Mo Tu We Th Fr Sa   Su Mo Tu We Th Fr Sa   Su Mo Tu We Th Fr Sa
+          1  2  3  4                   1  2       1  2  3  4  5  6
+ 5  6  7  8  9 10 11    3  4  5  6  7  8  9    7  8  9 10 11 12 13
+12 13 14 15 16 17 18   10 11 12 13 14 15 16   14 15 16 17 18 19 20
+19 20 21 22 23 24 25   17 18 19 20 21 22 23   21 22 23 24 25 26 27
+26 27 28 29 30         24 25 26 27 28 29 30   28 29 30
+                       31
+<span class="term_say">....(以下省略)....</span>
+    </pre></td>
+            </tr>
+          </table>
+          <p>基本上cal這個指令可以接的語法為：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">cal [month] [year]</span>
+
+    </pre></td>
+            </tr>
+          </table>
+          <p>所以，如果我想要知道2009年10月的月曆，可以直接下達：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">cal 10 2009</span>
+    October 2009
+Su Mo Tu We Th Fr Sa
+             1  2  3
+ 4  5  6  7  8  9 10
+11 12 13 14 15 16 17
+18 19 20 21 22 23 24
+25 26 27 28 29 30 31
+    </pre></td>
+            </tr>
+          </table>
+          <p>那請問今年有沒有13月啊？來測試一下這個指令的正確性吧！下達下列指令看看：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">cal 13 2009</span>
+cal: illegal month value: use 1-12
+    </pre></td>
+            </tr>
+          </table>
+          <p>cal竟然會告訴我們『錯誤的月份，請使用1-12』這樣的資訊呢！所以，
+            未來你可以很輕易的就以cal來取得日曆上面的日期囉！簡直就是萬年曆啦！ ^_^。
+            另外，由這個cal指令的練習我們也可以知道，<span class="text_import2">某些指令有特殊的參數存在，
+              若輸入錯誤的參數，則該指令會有錯誤訊息的提示，透過這個提示我們可以藉以瞭解指令下達錯誤之處。</span> 這個練習的結果請牢記在心中喔！</p>
+        </div>
+        <a name="bc" id="bc"></a>
+        <hr />
+        <span class="text_h2">3. 簡單好用的計算機： bc</span><br />
+        <div class="block2">
+          <p>如果在文字模式當中，突然想要作一些簡單的加減乘除，偏偏手邊又沒有計算機！這個時候要筆算嗎？
+            不需要啦！我們的Linux有提供一支計算程式，那就是bc喔。你在指令列輸入bc後，螢幕會顯示出版本資訊，
+            之後就進入到等待指示的階段。如下所示：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">bc</span>
+bc 1.06
+Copyright 1991-1994, 1997, 1998, 2000 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'.
+_ <span class="term_note">&lt;==這個時候，游標會停留在這裡等待你的輸入</span>
+
+    </pre></td>
+            </tr>
+          </table>
+          <p>事實上，我們是『<span class="text_import2">進入到bc這個軟體的工作環境當中</span>』了！
+            就好像我們在Windows裡面使用『小算盤』一樣！所以，我們底下嘗試輸入的資料，
+            都是在bc程式當中在進行運算的動作。所以囉，<span class="text_import2">你輸入的資料當然就得要符合bc的要求才行</span>！
+            在基本的bc計算機操作之前，先告知幾個使用的運算子好了：</p>
+          <ul style="font-family:'細明體'; color: #000088">
+            <li>+  加法</li>
+            <li>-  減法</li>
+            <li>*  乘法</li>
+            <li>/  除法</li>
+            <li>^  指數</li>
+            <li>%  餘數</li>
+          </ul>
+          <p>好！讓我們來使用bc計算一些咚咚吧！</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">bc</span>
+bc 1.06
+Copyright 1991-1994, 1997, 1998, 2000 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'.
+<span class="term_command">1+2+3+4</span>  <span class="term_note">&lt;==只有加法時</span>
+10
+<span class="term_command">7-8+3</span>
+2
+<span class="term_command">10*52</span>
+520
+<span class="term_command">10%3</span>     <span class="term_note">&lt;==計算『餘數』</span>
+
+1
+<span class="term_command">10^2</span>
+100
+<span class="term_command">10/100</span>   <span class="term_note">&lt;==這個最奇怪！不是應該是 0.1 嗎？</span>
+0
+<span class="term_command">quit</span>     <span class="term_note">&lt;==離開 bc 這個計算器</span>
+    </pre></td>
+            </tr>
+          </table>
+          <p>在上表當中，粗體字表示輸入的資料，而在每個粗體字的底下就是輸出的結果。
+            咦！每個計算都還算正確，怎麼10/100會變成0呢？這是<span 
+		class="text_import2">因為bc預設僅輸出整數，如果要輸出小數點下位數，那麼就必須要執行
+              scale=number ，那個number就是小數點位數</span>，例如：</p>
+          <table class="term">
+            <tr>
+              <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">bc</span>
+bc 1.06
+Copyright 1991-1994, 1997, 1998, 2000 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'.
+<span class="term_command">scale=3</span>     <span class="term_note">&lt;==沒錯！就是這裡！！</span>
+<span class="term_command">1/3</span>
+.333
+<span class="term_command">340/2349</span>
+.144
+<span class="term_command">quit</span>
+
+    </pre></td>
+            </tr>
+          </table>
+          <p>注意啊！要離開bc回到命令提示字元時，務必要輸入『quit』來離開bc的軟體環境喔！
+            好了！就是這樣子啦！簡單的很吧！以後你可以輕輕鬆鬆的進行加減乘除啦！</p>
+          <p>從上面的練習我們大概可以知道在指令列模式裡面下達指令時，會有兩種主要的情況：</p>
+          <ul class="text_import2">
+            <li>一種是該指令會直接顯示結果然後回到命令提示字元等待下一個指令的輸入；</li>
+            <li>一種是進入到該指令的環境，直到結束該指令才回到命令提示字元的環境。</li>
+          </ul>
+          <p>我們以一個簡單的圖示來說明：</p>
+          <center>
+            <img src="0160startlinux/command.gif" alt="指令下達的環境" 
+		title="指令下達的環境" border="0" /><br />
+            圖2.2.1、指令下達的環境，上圖為直接顯示結果，下圖為進入軟體功能<br />
+          </center>
+          <p>如圖2.2.1所示，上方指令下達後立即顯示訊息且立刻回到命令提示字元的環境。
+            如果有進入軟體功能的環境(例如上面的bc軟體)，那麼就得要使用該軟體的結束指令
+            (例如在bc環境中輸入quit)才能夠回到命令提示字元中！那你怎麼知道你是否在命令提示字元的環境呢？
+            很簡單！<span class="text_import2">你只要看到游標是在『[vbird@www ~]$』這種提示字元後面，
+              那就是等待輸入指令的環境了。</span>很容易判斷吧！不過初學者還是很容易忘記啦！</p>
+        </div>
+      </div>
+      <hr />
+      <a name="cmd_hkey" id="cmd_hkey"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">重要的幾個熱鍵[Tab], 
+        [ctrl]-c, [ctrl]-d</span><br />
+      <div class="block2">
+        <p>在繼續後面章節的學習之前，這裡很需要跟大家再來報告一件事，那就是我們的文字模式裡頭具有很多的功能組合鍵，
+          這些按鍵可以輔助我們進行指令的編寫與程式的中斷呢！這幾個按鍵請大家務必要記住的！很重要喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">[Tab]按鍵</li>
+        </ul>
+        <p>[Tab]按鍵就是在鍵盤的大寫燈切換按鍵([Caps Lock])上面的那個按鍵！在各種Unix-Like的Shell當中，
+          這個[Tab]按鍵算是Linux的Bash shell最棒的功能之一了！他具有『命令補全』與『檔案補齊』的功能喔！
+          重點是，可以避免我們打錯指令或檔案名稱呢！很棒吧！但是[Tab]按鍵在不同的地方輸入，會有不一樣的結果喔！
+          我們舉下面的例子來說明。上一小節我們不是提到 cal 這個指令嗎？如果我在指令列輸入	ca 再按兩次 [tab] 按鍵，
+          會出現什麼訊息？</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">ca[tab][tab]</span>    <span class="term_note">&lt;==[tab]按鍵是緊接在 a 字母後面！</span>
+cadaver             callgrind_control   capifax             card
+cal                 cameratopam         capifaxrcvd         case
+caller              cancel              capiinfo            cat
+callgrind_annotate  cancel.cups         captoinfo           catchsegv
+<span class="term_say"># 上面的 [tab] 指的是『按下那個tab鍵』，不是要你輸入中括號內的tab啦！</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>發現什麼事？所有以ca為開頭的指令都被顯示出來啦！很不錯吧！那如果你輸入『ls -al 
+          ~/.bash』再加兩個[tab]會出現什麼？</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">ls -al ~/.bash[tab][tab]</span>
+.bash_history  .bash_logout   .bash_profile  .bashrc
+    </pre></td>
+          </tr>
+        </table>
+        <p>咦！在該目錄下面所有以 .bash 為開頭的檔案名稱都會被顯示出來了呢！注意看上面兩個例子喔，
+          我們按[tab]按鍵的地方如果是在command(第一個輸入的資料)後面時，他就代表著
+          『命令補全』，如果是接在第二個字以後的，就會變成『檔案補齊』的功能了！總結一下：</p>
+        <ul class="text_import2">
+          <li>[Tab] 接在一串指令的第一個字的後面，則為命令補全；</li>
+          <li>[Tab] 接在一串指令的第二個字以後時，則為『檔案補齊』！</li>
+        </ul>
+        <p>善用 [tab] 按鍵真的是個很好的習慣！<span class="text_import2">可以讓你避免掉很多輸入錯誤的機會！</span><br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">[Ctrl]-c 按鍵</li>
+        </ul>
+        <p>如果你在Linux底下輸入了錯誤的指令或參數，有的時候這個指令或程式會在系統底下『跑不停』這個時候怎麼辦？別擔心，
+          如果你想讓當前的程式『停掉』的話，可以輸入：[Ctrl]與c按鍵(<span 
+		class="text_import2">先按著[Ctrl]不放，且再按下c按鍵，是組合按鍵</span>)，
+          那就是<span class="text_import2">中斷目前程式</span>的按鍵啦！舉例來說，如果你輸入了『find 
+          /』這個指令時，系統會開始跑一些東西(先不要理會這個指令串的意義)，此時你給他按下
+          [Ctrl]-c 組合按鍵，嘿嘿！是否立刻發現這個指令串被終止了！就是這樣的意思啦！</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">find /</span>
+<span class="term_say">....(一堆東西都省略)....
+# 此時螢幕會很花，你看不到命令提示字元的！直接按下[ctrl]-c即可！</span>
+[vbird@www ~]$ <span class="term_note">&lt;==此時提示字元就會回來了！find程式就被中斷！</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>不過你應該要注意的是，這個組合鍵是可以將正在運作中的指令中斷的，
+          如果你正在運作比較重要的指令，可別急著使用這個組合按鍵喔！ ^_^<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">[Ctrl]-d 按鍵</li>
+        </ul>
+        <p>那麼[Ctrl]-d是什麼呢？就是[Ctrl]與d按鍵的組合啊！這個組合按鍵通常代表著：
+          『<span class="text_import2">鍵盤輸入結束(End Of File, EOF 或 End Of Input)</span>』的意思！
+          另外，他也可以用來取代exit的輸入呢！例如<span 
+		class="text_import2">你想要直接離開文字介面，可以直接按下[Ctrl]-d就能夠直接離開了(相當於輸入exit啊！)</span>。</p>
+        <p>總之，在Linux底下，文字介面的功能是很強悍的！要多多的學習他，而要學習他的基礎要訣就是...多使用、多熟悉啦！</p>
+      </div>
+      <hr />
+      <a name="cmd_err" id="cmd_err"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">錯誤訊息的察看</span><br />
+      <div class="block2">
+        <p>萬一我下達了錯誤的指令怎麼辦？不要緊呀！你可以<span 
+		class="text_import2">藉由螢幕上面顯示的錯誤訊息來瞭解你的問題點</span>，
+          那就很容易知道如何改善這個錯誤訊息囉！舉個例子來說，假如想執行date卻因為大小寫打錯成為DATE時，
+          這個錯誤的訊息是這樣顯示的：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">DATE</span>
+-bash: DATE: command not found
+    </pre></td>
+          </tr>
+        </table>
+        <p>上面那個<span class="text_import2">bash:</span>表示的是我們的Shell的名稱，
+          本小節一開始就談到過Linux的預設殼程式就是bash囉！
+          那麼上面的例子說明了bash有錯誤，什麼錯誤呢？bash告訴你：</p>
+        <blockquote><span class="text_import2">DATE: command not found</span></blockquote>
+        <p>字面上的意思是說『指令找不到』，那個指令呢？就是DATE這個指令啦！
+          所以說，系統上面可能並沒有DATE這個指令囉！就是這麼簡單！通常出現『command not found』的可能原因為：</p>
+        <ul class="text_import2">
+          <li>這個指令不存在，因為該軟體沒有安裝之故。解決方法就是安裝該軟體；</li>
+          <li>這個指令所在的目錄目前的用戶並沒有將他加入指令搜尋路徑中，請參考bash的PATH說明；</li>
+          <li>很簡單！因為你打錯字！</li>
+        </ul>
+        <p>另外常見的錯誤就是我們曾經看過的例子，如下所示：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">cal 13 2009</span>
+cal: illegal month value: use 1-12
+    </pre></td>
+          </tr>
+        </table>
+        <p>螢幕會告訴我們錯誤的訊息啦！照著螢幕的訊息去處理即可解決你的錯誤啦！是否很簡單啊！
+          因此，以後如果出現了問題，螢幕上的訊息真的是很重要的呢！不要忽略了他呦！</p>
+      </div>
+      <p>介紹這幾個指令讓你玩一玩先，更詳細的指令操作方法我們會在第三篇的時候再進行介紹！
+        現在讓我們來想一想，萬一我在操作date這個指令的時候，手邊又沒有這本書，我要怎麼知道要如何加那些奇怪的參數，
+        好讓輸出的結果符合我想要的輸出格式呢？嘿嘿！到下一節鳥哥來告訴你怎麼辦吧！</p>
+    </div>
+    <hr />
+    <a name="manual" id="manual"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux系統的線上求助man page與info page</span><br />
+    <div class="block1">
+      <p>先來瞭解一下Linux有多少指令呢？在文字模式下，你可以直接按下兩個[Tab]按鍵，看看總共有多少指令可以讓你用？</p>
+      <table class="term">
+        <tr>
+          <td class="term"><pre>
+
+[vbird@www ~]$ <span class="term_note">&lt;==在這裡不要輸入任何字元，直接輸入兩次[tab]按鍵</span>
+Display all 2450 possibilities? (y or n) <span class="term_note">&lt;==如果不想要看，按 n 離開</span>
+    </pre></td>
+        </tr>
+      </table>
+      <p>如上所示，鳥哥安裝的這個系統中，少說也有2000多個以上的指令可以讓vbird這個帳號使用。
+        那在Linux裡面到底要不要背『指令』啊？可以啊！你背啊！這種事，鳥哥這個『忘性』特佳的老人家實在是背不起來
+        @_@ ～當然啦，有的時候為了要考試(例如一些認證考試等等的)還是需要背一些重要的指令與選項的！
+        不過，鳥哥主要還是以理解『<span class="text_import2">在什麼情況下，應該要使用哪方面的指令</span>』為準的！</p>
+      <p>既然鳥哥說不需要背指令，那麼我們如何知道每個指令的詳細用法？還有，某些設定檔的內容到底是什麼？
+        這個可就不需要擔心了！因為在Linux上開發的軟體大多數都是自由軟體，而這些軟體的開發者為了讓大家能夠瞭解指令的用法，
+        都會自行製作很多的文件，而這些文件也可以直接在線上就能夠輕易的被使用者查詢出來喔！很不賴吧！
+        這根本就是『線上說明文件』嘛！哈哈！沒錯！確實如此。我們底下就來談一談，Linux到底有多少的線上文件資料呢？<br />
+        <br />
+      </p>
+      <hr />
+      <a name="manual_man" id="manual_man"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">man page</span><br />
+      <div class="block2">
+        <p>嗄？不知道怎麼使用date這個指令？嘿嘿！不要擔心，我們Linux上面的線上求助系統已經都幫你想好要怎麼辦了，
+          所以你只要使用簡單的方法去尋找一下說明的內容，馬上就清清楚楚的知道該指令的用法了！怎麼看呢？就是找男人(man) 
+          呀！喔！不是啦！<span class="text_import2">這個man是manual(操作說明)的簡寫啦</span>！只要下達：『man 
+          date』 馬上就會有清楚的說明出現在你面前喔！如下所示：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">LANG=&quot;en&quot;</span>
+<span class="term_say"># 還記得這個咚咚的用意吧？前面提過了，是為了『語系』的需要啊！下達過一次即可！</span>
+
+[vbird@www ~]$ <span class="term_command">man date</span>
+DATE<u>(1)</u>                          User Commands                         DATE(1)
+<span class="term_say"># 請注意上面這個括號內的數字</span>
+NAME  <span class="term_note">&lt;==這個指令的完整全名，如下所示為date且說明簡單用途為設定與顯示日期/時間</span>
+       date - print or set the system date and time
+
+SYNOPSIS  <span class="term_note">&lt;==這個指令的基本語法如下所示</span>
+
+       date [OPTION]... [+FORMAT]
+       date [-u|--utc|--universal] [MMDDhhmm[[CC]YY][.ss]]
+
+DESCRIPTION  <span class="term_note">&lt;==詳細說明剛剛語法談到的選項與參數的用法</span>
+       Display  the  current  time  in  the given FORMAT, or set the system
+       date.
+
+       -d, --date=STRING  <span class="term_note">&lt;==左邊-d為短選項名稱，右邊--date為完整選項名稱</span>
+              display time described by STRING, not 'now'
+
+       -f, --file=DATEFILE
+              like --date once for each line of DATEFILE
+
+       -r, --reference=FILE
+              display the last modification time of FILE
+<span class="term_say">....(中間省略)....</span>
+       <span class="term_say"># 找到了！底下就是格式化輸出的詳細資料！</span>
+       FORMAT controls the output.  The only valid option  for  the  second
+       form  specifies  Coordinated  Universal Time.  Interpreted sequences
+       are:
+
+       %%     a literal %
+
+       %a     locale's abbreviated weekday name (e.g., Sun)
+
+       %A     locale's full weekday name (e.g., Sunday)
+
+<span class="term_say">....(中間省略)....</span>
+ENVIRONMENT  <span class="term_note">&lt;==與這個指令相關的環境參數有如下的說明</span>
+       TZ     Specifies the timezone, unless  overridden  by  command  line
+              parameters.   If  neither  is  specified,  the  setting  from
+              /etc/localtime is used.
+
+AUTHOR  <span class="term_note">&lt;==這個指令的作者啦！</span>
+       Written by David MacKenzie.
+
+REPORTING BUGS  <span class="term_note">&lt;==有問題請留言給底下的email的意思！</span>
+       Report bugs to &lt;bug-coreutils@gnu.org&gt;.
+
+COPYRIGHT  <span class="term_note">&lt;==受到著作權法的保護！用的就是 GPL 了！</span>
+
+       Copyright ? 2006 Free Software Foundation, Inc.
+       This is free software.  You may redistribute copies of it under  the
+       terms      of      the      GNU      General      Public     License
+       &lt;http://www.gnu.org/licenses/gpl.html&gt;.  There is  NO  WARRANTY,  to
+       the extent permitted by law.
+
+SEE ALSO  <span class="term_note">&lt;==這個重要，你還可以從哪裡查到與date相關的說明文件之意</span>
+       The  full  documentation for date is maintained as a Texinfo manual.
+       If the info and date programs are properly installed at  your  site,
+       the command
+
+              info date
+
+       should give you access to the complete manual.
+
+date 5.97                          May 2006                            DATE(1)
+    </pre></td>
+          </tr>
+        </table>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 進入man指令的功能後，你可以按下『空白鍵』往下翻頁，可以按下『 q 』按鍵來離開man的環境。
+                  更多在man指令下的功能，本小節後面會談到的！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>看(鳥哥沒罵人！)馬上就知道一大堆的用法了！如此一來，不就可以知道date的相關選項與參數了嗎？真方便！
+          而<span class="text_import2">出現的這個螢幕畫面，我們稱呼他為man page</span>，
+          你可以在裡頭查詢他的用法與相關的參數說明。如果仔細一點來看這個man page的話，你會發現幾個有趣的東西。</p>
+        <p>首先，在上個表格的第一行，你可以看到的是：『DATE(1)』，DATE我們知道是指令的名稱，
+          那麼(1)代表什麼呢？他代表的是『一般使用者可使用的指令』的意思！咦！還有這個用意啊！呵呵！
+          沒錯～在查詢資料的後面的數字是有意義的喔！他可以幫助我們瞭解或者是直接查詢相關的資料。
+          常見的幾個數字的意義是這樣的：</p>
+        <table width="600" border="1" bgcolor="lightyellow" cellspacing="0" cellpadding="5">
+          <tr align="center" bgcolor="lightblue">
+            <td width="50">代號</td>
+            <td>代表內容</td>
+          </tr>
+          <tr class="text_import2">
+            <td align="center">1</td>
+            <td>使用者在shell環境中可以操作的指令或可執行檔</td>
+          </tr>
+          <tr>
+            <td align="center">2</td>
+            <td>系統核心可呼叫的函數與工具等</td>
+          </tr>
+          <tr>
+            <td align="center">3</td>
+            <td>一些常用的函數(function)與函式庫(library)，大部分為C的函式庫(libc)</td>
+          </tr>
+          <tr>
+            <td align="center">4</td>
+            <td>裝置檔案的說明，通常在/dev下的檔案</td>
+          </tr>
+          <tr class="text_import2">
+            <td align="center">5</td>
+            <td>設定檔或者是某些檔案的格式</td>
+          </tr>
+          <tr>
+            <td align="center">6</td>
+            <td>遊戲(games)</td>
+          </tr>
+          <tr>
+            <td align="center">7</td>
+            <td>慣例與協定等，例如Linux檔案系統、網路協定、ASCII code等等的說明</td>
+          </tr>
+          <tr class="text_import2">
+            <td align="center">8</td>
+            <td>系統管理員可用的管理指令</td>
+          </tr>
+          <tr>
+            <td align="center">9</td>
+            <td>跟kernel有關的文件</td>
+          </tr>
+        </table>
+        <br />
+        <p>上述的表格內容可以使用『man 7 man』來更詳細的取得說明。透過這張表格的說明，
+          未來你如果使用man page在察看某些資料時，就會知道該指令/檔案所代表的基本意義是什麼了。
+          舉例來說，如果你下達了『man null』時，會出現的第一行是：『NULL(4)』，對照一下上面的數字意義，
+          嘿嘿！原來null這個玩意兒竟然是一個『裝置檔案』呢！很容易瞭解了吧！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 上表中的1, 5, 8這三個號碼特別重要，也請讀者要將這三個數字所代表的意義背下來喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>再來，man page的內容也分成好幾個部分來加以介紹該指令呢！就是上頭man date那個表格內，
+          以NAME作為開始介紹，最後還有個SEE ALSO來作為結束。基本上，man page大致分成底下這幾個部分：</p>
+        <table width="600" border="1" bgcolor="lightyellow" cellspacing="0" cellpadding="5">
+          <tr align="center" bgcolor="lightblue">
+            <td>代號</td>
+            <td>內容說明</td>
+          </tr>
+          <tr>
+            <td>NAME</td>
+            <td>簡短的指令、資料名稱說明</td>
+          </tr>
+          <tr>
+            <td>SYNOPSIS</td>
+            <td>簡短的指令下達語法(syntax)簡介</td>
+          </tr>
+          <tr>
+            <td>DESCRIPTION</td>
+            <td>較為完整的說明，這部分最好仔細看看！</td>
+          </tr>
+          <tr>
+            <td>OPTIONS</td>
+            <td>針對 SYNOPSIS 部分中，有列舉的所有可用的選項說明</td>
+          </tr>
+          <tr>
+            <td>COMMANDS</td>
+            <td>當這個程式(軟體)在執行的時候，可以在此程式(軟體)中下達的指令</td>
+          </tr>
+          <tr>
+            <td>FILES</td>
+            <td>這個程式或資料所使用或參考或連結到的某些檔案</td>
+          </tr>
+          <tr>
+            <td>SEE ALSO</td>
+            <td>可以參考的，跟這個指令或資料有相關的其他說明！</td>
+          </tr>
+          <tr>
+            <td>EXAMPLE</td>
+            <td>一些可以參考的範例</td>
+          </tr>
+          <tr>
+            <td>BUGS</td>
+            <td>是否有相關的臭蟲！</td>
+          </tr>
+        </table>
+        <br />
+        <p>有時候除了這些外，還可能會看到Authors與Copyright等，不過也有很多時候僅有NAME與DESCRIPTION等部分。
+          通常鳥哥在查詢某個資料時是這樣來查閱的：</p>
+        <ol>
+          <li>先察看NAME的項目，約略看一下這個資料的意思；</li>
+          <li>再詳看一下DESCRIPTION，這個部分會提到很多相關的資料與使用時機，從這個地方可以學到很多小細節呢；</li>
+          <li>而如果這個指令其實很熟悉了(例如上面的date)，那麼鳥哥主要就是查詢關於OPTIONS的部分了！
+            可以知道每個選項的意義，這樣就可以下達比較細部的指令內容呢！</li>
+          <li>最後，鳥哥會再看一下，跟這個資料有關的還有哪些東西可以使用的？舉例來說，上面的SEE 
+            ALSO就告知我們還可以利用『info coreutils date』來進一步查閱資料；</li>
+          <li>某些說明內容還會列舉有關的檔案(FILES 部分)來提供我們參考！這些都是很有幫助的！</li>
+        </ol>
+        <p>大致上瞭解了man page的內容後，那麼在man page當中我還可以利用哪些按鍵來幫忙查閱呢？首先，
+          如果要向下翻頁的話，可以按下鍵盤的空白鍵，也可以使用[Page Up]與[Page Down]來翻頁呢！同時，如果你知道某些關鍵字的話，
+          那麼可以在任何時候輸入『/word』，來主動搜尋關鍵字！例如在上面的搜尋當中，我輸入了『/date』會變成怎樣？</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+DATE(1)                          User Commands                         DATE(1)
+
+NAME
+       date - print or set the system date and time
+
+SYNOPSIS
+       date [OPTION]... [+FORMAT]
+       date [-u|--utc|--universal] [MMDDhhmm[[CC]YY][.ss]]
+
+DESCRIPTION
+       Display  the  current  time  in  the given FORMAT, or set the system date.
+
+<span class="term_say">....(中間省略)....</span>
+
+<span class="term_command">/date</span> <span class="term_note">&lt;==只要按下/，游標就會跑到這個地方來，你就可以開始輸入搜尋字串咯</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>看到了嗎，<span class="text_import2">當你按下『/』之後，游標就會移動到螢幕的最下面一行，
+          並等待你輸入搜尋的字串</span>了。此時，輸入date後，man page就會開始搜尋跟date有關的字串，
+          並且移動到該區域呢！很方便吧！最後，如果要離開man page時，直接按下『 q 』就能夠離開了。
+          我們將一些在man page常用的按鍵給他整理整理：</p>
+        <table width="600" bgcolor="lightyellow" cellspacing="0" cellpadding="5" border="1">
+          <tr bgcolor="lightblue" align="center">
+            <td width="100">按鍵</td>
+            <td>進行工作</td>
+          </tr>
+          <tr>
+            <td>空白鍵</td>
+            <td>向下翻一頁</td>
+          </tr>
+          <tr>
+            <td>[Page Down]</td>
+            <td>向下翻一頁</td>
+          </tr>
+          <tr>
+            <td>[Page Up]</td>
+            <td>向上翻一頁</td>
+          </tr>
+          <tr>
+            <td>[Home]</td>
+            <td>去到第一頁</td>
+          </tr>
+          <tr>
+            <td>[End]</td>
+            <td>去到最後一頁</td>
+          </tr>
+          <tr>
+            <td>/string</td>
+            <td>向『下』搜尋 string 這個字串，如果要搜尋 vbird 的話，就輸入 /vbird </td>
+          </tr>
+          <tr>
+            <td>?string</td>
+            <td>向『上』搜尋 string 這個字串</td>
+          </tr>
+          <tr>
+            <td>n, N</td>
+            <td>利用 / 或 ? 來搜尋字串時，可以用 n 來繼續下一個搜尋 (不論是 / 或 ?)
+              ，可以利用 N 來進行『反向』搜尋。舉例來說，我以 /vbird 搜尋 vbird 字串，
+              那麼可以 n 繼續往下查詢，用 N 往上查詢。若以 ?vbird 向上查詢 vbird 字串，
+              那我可以用 n 繼續『向上』查詢，用 N 反向查詢。</td>
+          </tr>
+          <tr>
+            <td>q</td>
+            <td>結束這次的 man page</td>
+          </tr>
+        </table>
+        <p>要注意喔！<span class="text_import2">上面的按鍵是在man page的畫面當中才能使用的！</span> 比較有趣的是那個搜尋啦！我們可以往下或者是往上搜尋某個字串，例如要在man page內搜尋vbird這個字串，
+          可以輸入 /vbird 或者是 ?vbird ，只不過一個是往下而一個是往上來搜尋的。而要 <span class="text_import2">重複搜尋</span> 某個字串時，可以使用 n 或者是 N 來動作即可呢！
+          很方便吧！^_^</p>
+        <p>既然有man page，自然就是因為有一些文件資料，所以才能夠以man page讀出來囉！那麼這些man 
+          page的資料 放在哪裡呢？不同的distribution通常可能有點差異性，不過，通常是放在<span 
+		class="text_import2">/usr/share/man</span>這個目錄裡頭，然而，我們可以透過修改他的man 
+          page搜尋路徑來改善這個目錄的問題！<span class="text_import2">修改/etc/man.config 
+            (有的版本為man.conf或manpath.conf)</span>即可囉！至於更多的關於man的訊息你可以使用『 man
+          man 』來查詢呦！關於更詳細的設定，我們會在<a href="/linux_basic/0320bash.php#man">第十一章 bash</a> 當中繼續的說明喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">搜尋特定指令/檔案的man page說明文件</li>
+        </ul>
+        <p>在某些情況下，你可能知道要使用某些特定的指令或者是修改某些特定的設定檔，但是偏偏忘記了該指令的完整名稱。
+          有些時候則是你只記得該指令的部分關鍵字。這個時候你要如何查出來你所想要知道的man page呢？
+          我們以底下的幾個例子來說明man這個指令有用的地方喔！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 你可否查出來，系統中還有哪些跟『man』這個指令有關的說明文件呢？ </div>
+              答：
+              <div class="block2"> 你可以使用底下的指令來查詢一下：<br />
+                <table class="term">
+                  <tr>
+                    <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">man -f man</span>
+
+man                  (1)  - format and display the on-line manual pages
+man                  (7)  - macros to format man pages
+man.config [man]     (5)  - configuration data for man
+  </pre></td>
+                  </tr>
+                </table>
+                使用 -f 這個選項就可以取得更多與man相關的資訊，而上面這個結果當中也有提示了 (數字) 的內容，
+                舉例來說，第二行的『 man (7) 』表示有個man (7)的說明文件存在喔！但是卻有個man (1)存在啊！
+                那當我們下達『 man man 』的時候，到底是找到哪一個說明檔呢？
+                其實，你可以指定不同的文件的，舉例來說，上表當中的兩個 man 你可以這樣將他的文件叫出來：<br />
+                <table class="term">
+                  <tr>
+                    <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">man 1 man</span>  <span class="term_note">&lt;==這裡是用 man(1) 的文件資料</span>
+[vbird@www ~]$ <span class="term_command">man 7 man</span>  <span class="term_note">&lt;==這裡是用 man(7) 的文件資料</span>
+</pre></td>
+                  </tr>
+                </table>
+                你可以自行將上面兩個指令輸入一次看看，就知道，兩個指令輸出的結果是不同的。
+                那個1, 7就是分別取出在man page裡面關於1與7相關資料的文件檔案囉！
+                好了，那麼萬一我真的忘記了下達數字，只有輸入『 man man 』時，那麼取出的資料到底是1還是7啊？
+                這個就跟搜尋的順序有關了。搜尋的順序是記錄在/etc/man.conf這個設定檔當中， <span class="text_import2">先搜尋到的那個說明檔，就會先被顯示出來！</span> 一般來說，通常會先找到數字較小的那個啦！因為排序的關係啊！所以， man man 會跟 man 1 man 結果相同！ </div></td>
+          </tr>
+        </table>
+        <br />
+        <p>除此之外，我們還可以利用『關鍵字』找到更多的說明文件資料喔！什麼是關鍵字呢？
+          從上面的『man -f man』輸出的結果中，我們知道其實輸出的資料是：</p>
+        <ul>
+          <li>左邊部分：指令(或檔案)以及該指令所代表的意義(就是那個數字)；</li>
+          <li>右邊部分：這個指令的簡易說明，例如上述的『-macros to format man pages』</li>
+        </ul>
+        <p>當使用『man -f 指令』時，man只會找資料中的左邊那個指令(或檔案)的完整名稱，有一點不同都不行！
+          但如果我想要找的是『關鍵字』呢？也就是說，我想要同時找上面說的兩個地方的內容，只要該內容有關鍵字存在，
+          不需要完全相同的指令(或檔案)就能夠找到時，該怎麼辦？請看下個範例囉！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 找出系統的說明檔中，只要有man這個關鍵字就將該說明列出來。 </div>
+              答：
+              <div class="block2">
+                <table class="term">
+                  <tr>
+                    <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">man -k man</span>
+
+. [builtins]         (1)  - bash built-in com<span class="term_write">man</span>ds, see bash(1)
+.TP 15 php [php]     (1)  - PHP Com<span class="term_write">man</span>d Line Interface 'CLI'
+<span class="term_say">....(中間省略)....</span>
+zshall               (1)  - the Z shell meta-<span class="term_write">man</span> page
+zshbuiltins          (1)  - zsh built-in com<span class="term_write">man</span>ds
+zshzle               (1)  - zsh com<span class="term_write">man</span>d line editor
+</pre></td>
+                  </tr>
+                </table>
+                看到了吧！很多對吧！因為這個是利用關鍵字將說明文件裡面只要含有man那個字眼的(不見得是完整字串)
+                就將他取出來！很方便吧！ ^_^(上面的結果有特殊字體的顯示是為了方便讀者查看，
+                實際的輸出結果並不會有特別的顏色顯示喔！) </div></td>
+          </tr>
+        </table>
+        <br />
+        <p>事實上，還有兩個指令與man page有關呢！而這兩個指令是man的簡略寫法說～就是這兩個：</p>
+        <a name="whatis" id="whatis"></a>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">whatis  [指令或者是資料]</span>   <span class="term_note">&lt;==相當於 man -f [指令或者是資料]</span>
+[vbird@www ~]$ <span class="term_command">apropos [指令或者是資料]</span>   <span class="term_note">&lt;==相當於 man -k [指令或者是資料]</span>
+
+    </pre></td>
+          </tr>
+        </table>
+        <p>而要注意的是，這兩個特殊指令要能使用，必須要有建立 whatis 資料庫才行！這個資料庫的建立需要以
+          root 的身份下達如下的指令：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">makewhatis</span>
+    </pre></td>
+          </tr>
+        </table>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 一般來說，鳥哥是真的不會去背指令的，只會去記住幾個常見的指令而已。那麼鳥哥是怎麼找到所需要的指令呢？
+                  舉例來說，列印的相關指令，鳥哥其實僅記得 lp (line print)而已。那我就由 man lp 開始，去找相關的說明，
+                  然後，再以 lp[tab][tab] 找到任何以 lp 為開頭的指令，找到我認為可能有點相關的指令後，
+                  再以 man 去查詢指令的用法！呵呵！所以，如果是實際在管理 Linux ，
+                  那麼真的只要記得幾個很重要的指令即可，其他需要的，嘿嘿！努力的找男人(man)吧！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="manual_info" id="manual_info"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">info page</span><br />
+      <div class="block2">
+        <p>在所有的Unix Like系統當中，都可以利用 man 來查詢指令或者是相關檔案的用法；
+          但是，在Linux裡面則又額外提供了一種線上求助的方法，那就是利用info這個好用的傢伙啦！</p>
+        <p>基本上，info與man的用途其實差不多，都是用來查詢指令的用法或者是檔案的格式。但是與man 
+          page一口氣輸出一堆資訊不同的是，<span class="text_import2">info 
+            page則是將文件資料拆成一個一個的段落，每個段落用自己的頁面來撰寫，
+            並且在各個頁面中還有類似網頁的『超連結』來跳到各不同的頁面中，每個獨立的頁面也被稱為一個節點(node)</span>。
+          所以，你可以將info page想成是文字模式的網頁顯示資料啦！</p>
+        <p>不過你要查詢的目標資料的說明文件必須要以info的格式來寫成才能夠使用info的特殊功能(例如超連結)。
+          而這個支援info指令的文件預設是放置在<span class="text_import2">/usr/share/info/</span>這個目錄當中的。
+          舉例來說，info這個指令的說明文件有寫成info格式，所以，你使用『 info info 』可以得到如下的畫面：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">info info</span>
+File: info.info,  <span class="term_write">Node</span>: Top,  <span class="term_write">Next</span>: Getting Started,  <span class="term_write">Up</span>: (dir)
+
+Info: An Introduction
+*********************
+
+The GNU Project distributes most of its on-line manuals in the &quot;Info
+format&quot;, which you read using an &quot;Info reader&quot;.  You are probably using
+an Info reader to read this now.
+
+<span class="term_say">....(中間省略)....</span>
+
+   To read about expert-level Info commands, type `n' twice.  This
+brings you to `Info for Experts', skipping over the `Getting Started'
+chapter.
+* Menu:
+
+
+<span class="term_write">*</span> Getting Started::             Getting started using an Info reader.
+<span class="term_write">*</span> Expert Info::                 Info commands for experts.
+<span class="term_write">*</span> Creating an Info File::       How to make your own Info file.
+<span class="term_write">*</span> Index::                       An index of topics, commands, and variables.
+
+<span class="term_white">--zz-Info: (info.info.gz)Top, 29 lines --Top------------------------------</span>
+Welcome to Info version 4.8. Type ? for help, m for menu item.
+    </pre></td>
+          </tr>
+        </table>
+        <p>仔細的看到上面這個顯示的結果，裡面的第一行顯示了很多的資訊喔！第一行裡面的資料意義為：</p>
+        <ul>
+          <li><span class="text_import2">File</span>：代表這個info page的資料是來自info.info檔案所提供的；</li>
+          <li><span class="text_import2">Node</span>：代表目前的這個頁面是屬於Top節點。
+            意思是info.info內含有很多資訊，而Top僅是info.info檔案內的一個節點內容而已；</li>
+          <li><span class="text_import2">Next</span>：下一個節點的名稱為Getting Started，你也可以按『N』到下個節點去；</li>
+          <li><span class="text_import2">Up</span>：回到上一層的節點總攬畫面，你也可以按下『U』回到上一層；</li>
+          <li><span class="text_import2">Prev</span>：前一個節點。但由於Top是info.info的第一個節點，所以上面沒有前一個節點的資訊。</li>
+        </ul>
+        <p>從第一行你可以知道這個節點的內容、來源與相關連結的資訊。更有用的資訊是，<span 
+		class="text_import2">你可以透過直接按下N, P, U來去到下一個、上一個與上一層的節點(node)</span>！非常的方便！
+          第一行之後就是針對這個節點的說明。在上表的範例中，第二行以後的說明就是針對info.info內的Top這個節點所做的。</p>
+        <p>再來，你也會看到有『Menu』那個咚咚吧！底下共分為四小節，分別是Getting Started等等的，我們<span 
+		class="text_import2">可以使用上下左右按鍵來將游標移動到該文字或者『 * 』上面，按下Enter</span>，
+          就可以前往該小節了！另外，<span class="text_import2">也可以按下[Tab]按鍵，就可以快速的將游標在上表的畫面中的node間移動</span>，
+          真的是非常的方便好用。如果將info.info內的各個節點串在一起並繪製成圖表的話，情況有點像底下這樣：</p>
+        <center>
+          <img src="0160startlinux/info.gif" alt="info page各說明文件相關性的示意圖" 
+		title="info page各說明文件相關性的示意圖" border="0" /><br />
+          圖3.2.1、info page各說明文件相關性的示意圖<br />
+        </center>
+        <p>如同上圖所示，info的說明文件將內容分成多個node，並且每個node都有定位與連結。
+          在各連結之間還可以具有類似『超連結』的快速按鈕，可以透過[tab]鍵在各個超連結間移動。
+          也可以使用U,P,N來在各個階層與相關連結中顯示！非常的不錯用啦！
+          至於在info page當中可以使用的按鍵，可以整理成這樣：</p>
+        <table width="600" bgcolor="lightyellow" cellspacing="0" cellpadding="5" border="1">
+          <tr bgcolor="lightblue" align="center">
+            <td width="100">按鍵</td>
+            <td>進行工作</td>
+          </tr>
+          <tr>
+            <td>空白鍵</td>
+            <td>向下翻一頁</td>
+          </tr>
+          <tr>
+            <td>[Page Down]</td>
+            <td>向下翻一頁</td>
+          </tr>
+          <tr>
+            <td>[Page Up]</td>
+            <td>向上翻一頁</td>
+          </tr>
+          <tr>
+            <td>[tab]</td>
+            <td>在 node 之間移動，有 node 的地方，通常會以 * 顯示。</td>
+          </tr>
+          <tr>
+            <td>[Enter]</td>
+            <td>當游標在 node 上面時，按下 Enter 可以進入該 node 。</td>
+          </tr>
+          <tr>
+            <td>b</td>
+            <td>移動游標到該 info 畫面當中的第一個 node 處</td>
+          </tr>
+          <tr>
+            <td>e</td>
+            <td>移動游標到該 info 畫面當中的最後一個 node 處</td>
+          </tr>
+          <tr>
+            <td>n</td>
+            <td>前往下一個 node 處</td>
+          </tr>
+          <tr>
+            <td>p</td>
+            <td>前往上一個 node 處</td>
+          </tr>
+          <tr>
+            <td>u</td>
+            <td>向上移動一層</td>
+          </tr>
+          <tr>
+            <td>s(/)</td>
+            <td>在 info page 當中進行搜尋</td>
+          </tr>
+          <tr>
+            <td>h</td>
+            <td>顯示求助選單</td>
+          </tr>
+          <tr>
+            <td>?</td>
+            <td>指令一覽表</td>
+          </tr>
+          <tr>
+            <td>q</td>
+            <td>結束這次的 info page</td>
+          </tr>
+        </table>
+        <p>info page是只有Linux上面才有的產物，而且易讀性增強很多～不過查詢的指令說明要具有info 
+          page功能的話，得用info page的格式來寫成線上求助文件才行！我們CentOS 5將info 
+          page的文件放置到<span class="text_import2">/usr/share/info/</span>目錄中！至於非以info 
+          page格式寫成的說明文件(就是man page)，雖然也能夠使用info來顯示，不過其結果就會跟man相同。
+          舉例來說，你可以下達『info man』就知道結果了！ ^_^</p>
+      </div>
+      <hr />
+      <a name="manual_docs" id="manual_docs"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">其他有用的文件(documents)</span><br />
+      <div class="block2">
+        <p>剛剛前面說，一般而言，指令或者軟體製作者，都會將自己的指令或者是軟體的說明製作成『線上說明文件』！
+          但是，畢竟不是每個咚咚都需要做成線上說明文件的，還有相當多的說明需要額外的文件！此時，這個所謂的
+          How-To(如何做的意思)就很重要啦！還有，某些軟體不只告訴你『如何做』，
+          還會有一些相關的原理會說明呢。</p>
+        <p>那麼這些說明文件要擺在哪裡呢？哈哈！就是擺在<span 
+		class="text_import2">/usr/share/doc</span>這個目錄啦！所以說，你只要到這個目錄底下，
+          就會發現好多好多的說明文件檔啦！還不需要到網路上面找資料呢！厲害吧！^_^
+          舉例來說，你想要知道這一版的CentOS相關的各項資訊，可以直接到底下的目錄去瞧瞧：</p>
+        <ul>
+          <li class="text_import2">/usr/share/doc/centos-release-notes-5.3/</li>
+        </ul>
+        <p>那如果想要知道本章講過多次的<a href="/linux_basic/0320bash.php">bash</a>是什麼，則可以到/usr/share/doc/bash-3.2/
+          這個目錄中去瀏覽一番！很多東西呦！而且/usr/share/doc這個目錄下的資料主要是以套件(packages)為主的，
+          例如GCC這個套件的相關資訊在/usr/share/doc/gcc-xxx(那個xxx表示版本的意思！)。
+          未來可得多多查閱這個目錄喔！ ^_^</p>
+      </div>
+      <p>總結上面的三個咚咚(man, info, /usr/share/doc/)，請記住喔：</p>
+      <ul>
+        <li>在文字介面下，有任何你不知道的指令或檔案格式這種玩意兒，但是你想要瞭解他，請趕快使用man或者是info來查詢！</li>
+        <li>而如果你想要架設一些其他的服務，或想要利用一整組軟體來達成某項功能時，請趕快到/usr/share/doc
+          底下查一查有沒有該服務的說明檔喔！</li>
+        <li>另外，再次的強調，因為Linux畢竟是外國人發明的，所以中文文件確實是比較少的！
+          但是不要害怕，拿本英文字典在身邊吧！隨時查閱！不要害怕英文喔！</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="nano" id="nano"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">超簡單文書編輯器： nano</span><br />
+    <div class="block1">
+      <p>在Linux系統當中有非常多的文書編輯器存在，其中最重要的就是後續章節我們會談到的<a 
+	href="/linux_basic/0310vi.php">vi</a>這傢伙！
+        不過其實還有很多不錯用的文書編輯器存在的！在這裡我們就介紹一下簡單的nano這一支文書編輯器來玩玩先！</p>
+      <p>nano的使用其實很簡單，你可以直接加上檔名就能夠開啟一個舊檔或新檔！底下我們就來開啟一個名為test.txt的檔名來看看：</p>
+      <table class="term">
+        <tr>
+          <td class="term"><pre>
+[vbird@www ~]$ <span class="term_command">nano text.txt</span>
+
+<span class="term_say"># 不管text.txt存不存在都沒有關係！存在就開啟舊檔，不存在就開啟新檔</span>
+
+<span class="term_white">  GNU nano 1.3.12          File: text.txt                        </span>
+
+<span class="term_white"> </span>  <span class="term_note">&lt;==這個是游標所在處</span>
+
+
+
+
+
+
+                           <span class="term_white">[ New File ]</span>
+<span class="term_white">^G</span> Get Help<span class="term_white">^O</span> WriteOut<span class="term_white">^R</span> Read Fil<span class="term_white">^Y</span> Prev Pag<span class="term_white">^K</span> Cut Text<span class="term_white">^C</span> Cur Pos
+
+<span class="term_white">^X</span> Exit    <span class="term_white">^J</span> Justify <span class="term_white">^W</span> Where Is<span class="term_white">^V</span> Next Pag<span class="term_white">^U</span> UnCut Te<span class="term_white">^T</span> To Spell
+
+<span class="term_say"># 上面兩行是指令說明列，其中^代表的是[ctrl]的意思</span>
+    </pre></td>
+        </tr>
+      </table>
+      <p>如上圖所示，你可以看到第一行反白的部分，那僅是在宣告nano的版本與檔名(File: text.txt)而已。
+        之後你會看到最底下的三行，分別是檔案的狀態(New File)與兩行指令說明列。指令說明列反白的部分就是組合鍵，
+        接的則是該組合鍵的功能。那個指數符號(^)代表的是鍵盤的[Ctrl]按鍵啦！底下先來說說比較重要的幾個組合按鍵：</p>
+      <ul>
+        <li><span class="text_import2">[ctrl]-G</span>：取得線上說明(help)，很有用的！</li>
+        <li><span class="text_import2">[ctrl]-X</span>：離開naon軟體，若有修改過檔案會提示是否需要儲存喔！</li>
+        <li><span class="text_import2">[ctrl]-O</span>：儲存檔案，若你有權限的話就能夠儲存檔案了；</li>
+        <li><span class="text_import2">[ctrl]-R</span>：從其他檔案讀入資料，可以將某個檔案的內容貼在本檔案中；</li>
+        <li><span class="text_import2">[ctrl]-W</span>：搜尋字串，這個也是很有幫助的指令喔！</li>
+        <li><span class="text_import2">[ctrl]-C</span>：說明目前游標所在處的行數與列數等資訊；</li>
+        <li><span class="text_import2">[ctrl]-_</span>：可以直接輸入行號，讓游標快速移動到該行；</li>
+        <li><span class="text_import2">[alt]-Y</span>：校正語法功能開啟或關閉(按一下開、再按一下關)</li>
+        <li><span class="text_import2">[alt]-M</span>：可以支援滑鼠來移動游標的功能</li>
+      </ul>
+      <p>比較常見的功能是這些，如果你想要取得更完整的說明，可以在nano的畫面中按下[ctrl]-G或者是[F1]按鍵，
+        就能夠顯示出完整的naon內指令說明了。好了，請你在上述的畫面中隨便輸入許多字，
+        輸入完畢之後就儲存後離開，如下所示：</p>
+      <table class="term">
+        <tr>
+          <td class="term"><pre>
+<span class="term_white">  GNU nano 1.3.12          File: text.txt                        </span>
+
+<span class="term_write">Type some words in this nano editor program.
+You can use [ctrl] plus some keywords to go to some functions.
+Hello every one.
+Bye bye.</span>
+<span class="term_white"> </span>  <span class="term_note">&lt;==這個是由標所在處</span>
+
+                           <span class="term_white">[ New File ]</span>
+<span class="term_white">^G</span> Get Help<span class="term_white">^O</span> WriteOut<span class="term_white">^R</span> Read Fil<span class="term_white">^Y</span> Prev Pag<span class="term_white">^K</span> Cut Text<span class="term_white">^C</span> Cur Pos
+
+<span class="term_white">^X</span> Exit    <span class="term_white">^J</span> Justify <span class="term_white">^W</span> Where Is<span class="term_white">^V</span> Next Pag<span class="term_white">^U</span> UnCut Te<span class="term_white">^T</span> To Spell
+
+    </pre></td>
+        </tr>
+      </table>
+      <p>此時按下[crtl]-X會出現類似下面的畫面：</p>
+      <table class="term">
+        <tr>
+          <td class="term"><pre>
+<span class="term_white">  GNU nano 1.3.12          File: text.txt                        </span>
+
+<span class="term_write">Type some words in this nano editor program.
+You can use [ctrl] plus some keywords to go to some functions.
+Hello every one.
+Bye bye.</span>
+
+
+<span class="term_white">Save modified buffer (ANSWERING &quot;No&quot; WILL DESTROY CHANGES) ? <span class="term_write">▋</span>  </span>
+
+<span class="term_white"> Y</span> Yes
+<span class="term_white"> N</span> No           <span class="term_white">^C</span> Cancel
+    </pre></td>
+        </tr>
+      </table>
+      <p>如果不要儲存資料只想要離開，可以按下N即可離開。如果確實是需要儲存的，那麼按下Y後，最後三行會出現如下畫面：</p>
+      <table class="term">
+        <tr>
+          <td class="term"><pre>
+<span class="term_white">File Name to Write: text.txt<span class="term_write">▋</span>  <span class="term_say">&lt;==可在這裡修改檔名或直接按[enter]</span></span>
+<span class="term_white">^G</span> Get Help     <span class="term_white">^T</span> To Files     <span class="term_white">M-M</span> Mac Format  <span class="term_white">M-P</span> Prepend
+
+<span class="term_white">^C</span> Cancel       <span class="term_white">M-D</span> DOS Format  <span class="term_white">M-A</span> Append      <span class="term_white">M-B</span> Backup File
+    </pre></td>
+        </tr>
+      </table>
+      <p>如果是單純的想要儲存而已，直接按下[enter]即可儲存後離開nano程式。不過上圖中最底下還有兩行，我們知道指數符號代表[crtl]，
+        那個M是代表什麼呢？其實就是[alt]囉！其實nano也不需要記太多指令啦！只要知道怎麼進入nano、怎麼離開，怎麼搜尋字串即可。
+        未來我們還會學習更有趣的vi呢！</p>
+    </div>
+    <hr />
+    <a name="shutdown_pc" id="shutdown_pc"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">正確的關機方法</span><br />
+    <div class="block1">
+      <p>OK！大概知道開機的方法，也知道基本的指令操作，而且還已經知道線上查詢了，好累呦！
+        想去休息呢！那麼如何關機呢？我想，很多朋友在DOS的年代已經有在玩電腦了！
+        在當時我們關掉DOS的系統時，常常是直接關掉電源開關，而
+        Windows 在你不爽的時候，按著電源開關四秒也可以關機！但是在Linux則相當的不建議這麼做！</p>
+      <p>Why？在 Windows (非 NT 主機系統) 系統中，由於是單人假多工的情況，所以即使你的電腦關機，
+        對於別人應該不會有影響才對！不過呢，在 Linux 底下，由於每個程序 (或者說是服務)
+        都是在在背景下執行的，因此，<span 
+	class="text_import2">在你看不到的螢幕背後其實可能有相當多人同時在你的主機上面工作</span>，
+        例如瀏覽網頁啦、傳送信件啦以 FTP 傳送檔案啦等等的，如果你直接按下電源開關來關機時，
+        則其他人的資料可能就此中斷！那可就傷腦筋了！</p>
+      <p>此外，最大的問題是，<span class="text_import2">若不正常關機，則可能造成檔案系統的毀損</span> （因為來不及將資料回寫到檔案中，所以有些服務的檔案會有問題！）。所以正常情況下，要關機時需要注意底下幾件事：</p>
+      <ul>
+        <li><span class="text_import1">觀察系統的使用狀態</span>：<br />
+          如果要看目前有誰在線上，可以下達『who』這個指令，而如果要看網路的連線狀態，可以下達
+          『 netstat -a 』這個指令，而要看背景執行的程序可以執行『
+          ps -aux 』這個指令。使用這些指令可以讓你稍微瞭解主機目前的使用狀態！當然囉，就可以讓你判斷是否可以關機了
+          （這些指令在後面Linux常用指令中會提及喔！）<br />
+          <br />
+        </li>
+        <li><span class="text_import1">通知線上使用者關機的時刻</span>：<br />
+          要關機前總得給線上的使用者一些時間來結束他們的工作，所以，這個時候你可以使用
+          shutdown 的特別指令來達到此一功能。<br />
+          <br />
+        </li>
+        <li><span class="text_import1">正確的關機指令使用</span>：<br />
+          例如 shutdown 與 reboot 兩個指令！</li>
+      </ul>
+      <p>所以底下我們就來談一談幾個與關機/重新開機相關的指令囉！</p>
+      <ul>
+        <li>將資料同步寫入硬碟中的指令： sync</li>
+        <li>慣用的關機指令： shutdown</li>
+        <li>重新開機，關機： reboot, halt, poweroff</li>
+      </ul>
+      <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+        <table width="90%">
+          <tr>
+            <td><b>Tips:</b><br />
+              <span style="color : #009000"><font size="-1"> 由於Linux系統的關機/重新開機是很重大的系統運作，因此只有root才能夠進行例如shutdown, reboot等指令。
+                不過在某些distributions當中，例如我們這裡談到的CentOS系統，他允許你在本機前的tty7使用圖形介面登入時，
+                可以用一般帳號來關機或重新開機！但某些distributions則在你要關機時，他會要你輸入root的密碼呢！^_^ </font></span></td>
+            <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+          </tr>
+        </table>
+      </div>
+      <a name="sync" id="sync"></a>
+      <hr />
+      <a name="sync" id="sync"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">資料同步寫入磁碟： sync</span><br />
+      <div class="block2">
+        <p>在<a href="/linux_basic/0105computers.php">第零章、計算機概論</a>裡面我們談到過資料在電腦中運作的模式，
+          所有的資料都得要被讀入記憶體後才能夠被CPU所處理，但是資料又常常需要由記憶體寫回硬碟當中(例如儲存的動作)。
+          由於硬碟的速度太慢(相對於記憶體來說)，如果常常讓資料在記憶體與硬碟中來回寫入/讀出，系統的效能就不會太好。</p>
+        <p>因此在Linux系統中，為了加快資料的讀取速度，所以在預設的情況中，
+          某些已經載入記憶體中的資料將不會直接被寫回硬碟，而是先暫存在記憶體當中，如此一來，
+          如果一個資料被你重複的改寫，那麼由於他尚未被寫入硬碟中，因此可以直接由記憶體當中讀取出來，
+          在速度上一定是快上相當多的！</p>
+        <p>不過，如此一來也造成些許的困擾，那就是萬一你的系統因為某些特殊情況造成不正常關機
+          (例如停電或者是不小心踢到power)時，由於資料尚未被寫入硬碟當中，哇！所以就會造成資料的更新不正常啦！
+          那要怎麼辦呢？這個時候就需要sync這個指令來進行資料的寫入動作啦！
+          直接在文字介面下輸入sync，那麼在記憶體中尚未被更新的資料，就會被寫入硬碟中！所以，這個指令在系統關機或重新開機之前，
+          很重要喔！最好多執行幾次！</p>
+        <p>雖然目前的 shutdown/reboot/halt 等等指令均已經在關機前進行了 sync 這個工具的呼叫，
+          不過，多做幾次總是比較放心點～呵呵～</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">sync</span>
+    </pre></td>
+          </tr>
+        </table>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 事實上sync也可以被一般帳號使用喔！只不過一般帳號使用者所更新的硬碟資料就僅有自己的資料，
+                  不像root可以更新整個系統中的資料了。 </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <a name="shutdown" id="shutdown"></a>
+      <hr />
+      <img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">慣用的關機指令： shutdown</span><br />
+      <div class="block2">
+        <p>由於Linux的關機是那麼重要的工作，因此除了你是在主機前面以tty7圖形介面來登入系統時，
+          不論用什麼身份都能夠關機之外，若你是使用遠端管理工具(如透過pietty使用ssh服務來從其他電腦登入主機)，
+          那關機<span class="text_import2">就只有root有權力而已喔！</span></p>
+        <p>嗯！那麼就來關機試試看吧！我們較常使用的是shutdown這個指令，而這個指令會通知系統內的各個程序
+          (processes)，並且將通知系統中的run-level內的一些服務來關閉。shutdown可以達成如下的工作：</p>
+        <ul class="text_import2">
+          <li>可以自由選擇關機模式：是要關機、重新開機或進入單人操作模式均可；</li>
+          <li>可以設定關機時間: 可以設定成現在立刻關機, 也可以設定某一個特定的時間才關機。</li>
+          <li>可以自訂關機訊息：在關機之前，可以將自己設定的訊息傳送給線上 user 。</li>
+          <li>可以僅發出警告訊息：有時有可能你要進行一些測試，而不想讓其他的使用者干擾，
+            或者是明白的告訴使用者某段時間要注意一下！這個時候可以使用
+            shutdown 來嚇一嚇使用者，但卻不是真的要關機啦！</li>
+          <li>可以選擇是否要 fsck 檢查檔案系統 。</li>
+        </ul>
+        <p>那麼shutdown的語法是如何呢？聰明的讀者大概已經開始找『男人』了！沒錯，隨時隨地的
+          man 一下，是很不錯的舉動！好了，簡單的語法規則為：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">/sbin/shutdown [-t 秒] [-arkhncfF] 時間 [警告訊息]</span>
+<span class="term_say">選項與參數：
+-t sec ： -t 後面加秒數，亦即『過幾秒後關機』的意思
+-k     ： 不要真的關機，只是發送警告訊息出去！
+-r     ： 在將系統的服務停掉之後就重新開機(常用)
+-h     ： 將系統的服務停掉後，立即關機。 (常用)
+-n     ： 不經過 init 程序，直接以 shutdown 的功能來關機
+-f     ： 關機並開機之後，強制略過 fsck 的磁碟檢查
+-F     ： 系統重新開機之後，強制進行 fsck 的磁碟檢查
+-c     ： 取消已經在進行的 shutdown 指令內容。
+時間   ： 這是一定要加入的參數！指定系統關機的時間！時間的範例底下會說明。
+範例：</span>
+[root@www ~]# <span class="term_command">/sbin/shutdown -h 10 'I will shutdown after 10 mins'</span>
+<span class="term_say"># 告訴大家，這部機器會在十分鐘後關機！並且會顯示在目前登入者的螢幕前方！
+# 至於參數有哪些呢？以下介紹幾個吧！</span>
+
+    </pre></td>
+          </tr>
+        </table>
+        <p>此外，需要注意的是，<span class="text_import2">時間參數請務必加入指令中，否則shutdown會自動跳到
+          run-level 1 (就是單人維護的登入情況)</span>，這樣就傷腦筋了！底下提供幾個時間參數的例子吧：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">shutdown -h now</span>
+<span class="term_say">立刻關機，其中 now 相當於時間為 0 的狀態</span>
+[root@www ~]# <span class="term_command">shutdown -h 20:25</span>
+
+<span class="term_say">系統在今天的 20:25 分會關機，若在21:25才下達此指令，則隔天才關機</span>
+[root@www ~]# <span class="term_command">shutdown -h +10</span>
+<span class="term_say">系統再過十分鐘後自動關機</span>
+[root@www ~]# <span class="term_command">shutdown -r now</span>
+<span class="term_say">系統立刻重新開機</span>
+[root@www ~]# <span class="term_command">shutdown -r +30 'The system will reboot' </span>
+<span class="term_say">再過三十分鐘系統會重新開機，並顯示後面的訊息給所有在線上的使用者</span>
+
+[root@www ~]# <span class="term_command">shutdown -k now 'This system will reboot' </span>
+<span class="term_say">僅發出警告信件的參數！系統並不會關機啦！嚇唬人！</span>
+    </pre></td>
+          </tr>
+        </table>
+      </div>
+      <a name="reboot" id="reboot"></a>
+      <hr />
+      <img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">重新開機，關機： reboot, halt, poweroff</span><br />
+      <div class="block2">
+        <p>還有三個指令可以進行重新開機與關機的任務，那就是reboot, halt, poweroff。
+          其實這三個指令呼叫的函式庫都差不多，所以當你使用『man reboot』時，會同時出現三個指令的用法給你看呢。
+          其實鳥哥通常都只有記shutdown與reboot這兩個指令啦！不過使用poweroff這個指令卻比較簡單就是了！^_^
+          通常鳥哥在重新開機時，都會下達如下的指令喔：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">sync; sync; sync; reboot</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>既然這些指令都能夠關機或重新開機，那他有沒有什麼差異啊？基本上，在預設的情況下，
+          這幾個指令都會完成一樣的工作！(因為halt會先呼叫shutdown，而shutdown最後會呼叫halt！)。
+          不過，shutdown可以依據目前已啟動的服務來逐次關閉各服務後才關機；至於halt卻能夠在不理會目前系統狀況下，
+          進行硬體關機的特殊功能！你可以在你的主機上面使用root進行底下兩個指令來關機，比較看看差異在哪裡喔！</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">shutdown -h now</span>
+[root@www ~]# <span class="term_command">poweroff -f</span>
+
+    </pre></td>
+          </tr>
+        </table>
+        <p>更多halt與poweroff的選項功能，請務必使用man去查詢一下喔！</p>
+      </div>
+      <a name="init" id="init"></a>
+      <hr />
+      <img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">切換執行等級： init</span><br />
+      <div class="block2">
+        <p>本章上頭有談到過關於run level的問題。之前談到的是系統運作的模式，分為純文字(run level 
+          3)及圖形介面模式(run level 5)。除了這兩種模式外，有沒有其他模式呢？其實Linux共有七種執行等級，
+          七種等級的意義我們在後面會再談到。本章你只要知道底下四種執行等級就好了：</p>
+        <ul class="text_import2">
+          <li>run level 0：關機</li>
+          <li>run level 3：純文字模式</li>
+          <li>run level 5：含有圖形介面模式</li>
+          <li>run level 6：重新開機</li>
+        </ul>
+        <p>那如何切換各模式呢？可以使用init這個指令來處理喔！也就是說，如果你想要關機的話，
+          除了上述的shutdown -h now以及poweroff之外，你也可以使用如下的指令來關機：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">init 0</span>
+    </pre></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <hr />
+    <a name="shoot" id="shoot"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">開機過程的問題排解</span><br />
+    <div class="block1">
+      <p>事實上，Linux主機是很穩定的，除非是硬體問題與系統管理員不小心的動作，否則，
+        很難會造成一些無法挽回的錯誤的。但是，畢竟我們目前使用的可能是練習機，會常常開開關關的，
+        所以確實可能會有一些小問題發生。好了，我們先來簡單的談一談，如果無法順利開機時，
+        你應該如何解決。要注意的是，底下說到的內容很多都還沒有開始介紹，
+        因此，看不懂也不要太緊張～在本書全部都讀完且看第二遍時，你自然就會有感覺了！ ^_^<br />
+        <br />
+      </p>
+      <hr />
+      <img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">檔案系統錯誤的問題</span><br />
+      <div class="block2">
+        <p>在開機的過程中最容易遇到的問題就是硬碟可能有壞軌或檔案系統發生錯誤(資料損毀)的情況，
+          這種情況雖然不容易發生在穩定的Linux系統下，不過由於<span class="text_import2">不當的開關機行為</span>，
+          還是可能會造成的，常見的發生原因可能有：</p>
+        <ul>
+          <li>最可能發生的原因是<span class="text_import2">因為斷電或不正常關機所導致的檔案系統發生錯誤</span>，
+            鳥哥的主機就曾經發生過多次因為跳電，家裡的主機又沒有安裝不斷電系統，
+            結果就導致硬碟內的檔案系統錯誤！檔案系統錯誤並非硬體錯誤，而是軟體資料的問題喔！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">硬碟使用率過高或主機所在環境不良也是一個可能的原因</span>，
+            例如你開放了一個FTP服務，裡面有些資料很有用，
+            所以一堆人搶著下載，如果你又不是使用較穩定的SCSI介面硬碟，僅使用一般PC使用的硬碟，
+            雖然機率真的不高，但還是有可能造成硬碟壞軌的。此外，如果主機所在環境沒有散熱的設備，
+            或者是相對濕度比較高的環境，也很容易造成硬碟的損壞喔！</li>
+        </ul>
+        <p>解決的方法其實很簡單，不過因為出錯磁區所掛載的目錄不同，處理的流程困難度就有差異了。
+          舉例來說，如果你的根目錄『/』並沒有損毀，那就很容易解決，如果根目錄已經損毀了，那就比較麻煩！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">如果根目錄沒有損毀：</li>
+        </ul>
+        <p>假設你發生錯誤的partition是在/dev/sda7這一塊，那麼在開機的時候，螢幕應該會告訴你：<span 
+		class="text_import2">press root password or ctrl+D : </span>這時候請輸入root的密碼登入系統，然後進行如下動作：</p>
+        <ul>
+          <li>在游標處輸入root密碼登入系統，進行單人單機的維護工作；</li>
+          <li>輸入『 fsck /dev/sda7 』(fsck 為檔案系統檢查的指令，/dev/sda7為錯誤的partition，請依你的情況下達參數)，
+            這時螢幕會顯示開始修理硬碟的訊息，如果有發現任何的錯誤時，螢幕會顯示： <span class="text_import2">clear [Y/N]？</span> 的詢問訊息，就直接輸入 Y 吧！</li>
+          <li>修理完成之後，以 reboot 重新開機囉！</li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">如果根目錄損毀了</li>
+        </ul>
+        <p>一般初學者喜歡將自己的硬碟只劃分為一個大partition，亦即只有根目錄，
+          那檔案系統錯誤一定是根目錄的問題囉！這時你可以將硬碟拔掉，接到另一台Linux系統的電腦上，
+          並且不要掛載(mount)該硬碟，然後以root的身份執行『 fsck /dev/sdb1 』(/dev/sdb1
+          指的是你的硬碟裝置檔名，你要依你的實際狀況來設定)，這樣就 OK 囉！</p>
+        <p><a name="20071208" id="20071208"></a>另外，也可以使用近年來很熱門的Live CD，也就是利用光碟開機就能夠進入Linux作業系統的特性，
+          你可以前往：『<a href="http://knoppix.tnc.edu.tw/" target="_blank">http://knoppix.tnc.edu.tw/</a>』
+          這個網站來下載，並且燒錄成為CD，這個時候先用Live CD光碟開機，然後使用fsck去修復原本的根目錄，
+          例如： fsck /dev/sda1 ，就能夠救回來了！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">如果硬碟整個壞掉：</li>
+        </ul>
+        <p>如果硬碟實在壞的離譜時，那就先將舊硬碟內的資料，能救出來的救出來，然後換一顆硬碟來重新安裝Linux吧！
+          不要不願意換硬碟啊！啥時後硬碟會壞掉誰也說不準的！</p>
+        <p>那麼硬碟該如何預防發生檔案系統錯誤的問題呢？可以參考底下說明：</p>
+        <ul>
+          <li><span class="text_import2">妥善保養硬碟</span>：<br />
+            例如：主機通電之後不要搬動，避免移動或震動硬碟；盡量降低硬碟的溫度，可以加裝風扇來冷卻硬碟；
+            或者可以換裝 SCSI 硬碟。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">劃分不同的partition</span>：<br />
+            為什麼磁碟分割這麼重要！因為Linux每個目錄被讀寫的頻率不同，妥善的分割將會讓我們的Linux更安全！
+            通常我們會建議劃分下列的磁碟區塊：<br />
+            <ul class="text_import2">
+              <li>/</li>
+              <li>/boot</li>
+              <li>/usr</li>
+              <li>/home</li>
+              <li>/var</li>
+            </ul>
+            這樣劃分有些好處，例如/var是系統預設的一些資料暫存或者是cache資料的儲存目錄，
+            像 e-mail 就含在這裡面。如果還有使用proxy時，因為常常存取，所以有可能會造成磁碟損壞，
+            而當這部份的磁碟損壞時，由於其他的地方是沒問題的，因此資料得以保存，而且在處理時也比較容易！</li>
+        </ul>
+      </div>
+      <hr />
+      <img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">忘記 root 密碼：</span><br />
+      <div class="block2">
+        <p>常常有些朋友在設定好了Linux之後，結果root密碼給他忘記去！要重新安裝嗎？不需要的，
+          你只要以單人維護模式登入即可更改你的root密碼喔！由於lilo這個開機管理程式已經很少見了，
+          這裡鳥哥使用grub開機管理程式作為範例來介紹囉！</p>
+        <p>先將系統重新開機，在讀秒的時候按下任意鍵就會出現如同<a 
+		href="/linux_basic/0157installcentos5.php#fig3.2">第四章圖3.2</a>的選單畫面，仔細看選單底下的說明，
+          按下『e』就能夠進入grub的編輯模式了。此時你看到的畫面有點像底下這樣：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+root (hd0,0)
+kernel /vmlinuz-2.6.18-128.el5 ro root=LABEL=/ rhgb quiet
+initrd /initrd-2.6.18-128.el5.img
+    </pre></td>
+          </tr>
+        </table>
+        <p>此時，請將游標移動到kernel那一行，再按一次『 e 』進入kernel該行的編輯畫面中，
+          然後在出現的畫面當中，最後方輸入 single ：</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+kernel /vmlinuz-2.6.18-128.el5 ro root=LABEL=/ rhgb quiet <span class="term_command">single</span>
+    </pre></td>
+          </tr>
+        </table>
+        <p>再按下『 Enter 』確定之後，按下 b 就可以開機進入單人維護模式了！
+          在這個模式底下，你會在tty1的地方不需要輸入密碼即可取得終端機的控制權(而且是使用root的身份喔！)。
+          之後就能夠修改root的密碼了！請使用底下的指令來修改root的密碼喔！</p>
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+[root@www ~]# <span class="term_command">passwd</span>
+<span class="term_say"># 接下來系統會要求你輸入兩次新的密碼，然後再來reboot即可順利修訂root密碼了！</span>
+
+    </pre></td>
+          </tr>
+        </table>
+        <p>這裡僅是介紹一個簡單的處理方法而已，更多的原理與說明將會在後續的各相關章節介紹的喔！</p>
+      </div>
+    </div>
+    <hr />
+    <a name="hint" id="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+    <div class="block1">
+      <ul class="text_import2">
+        <li>為了避免瞬間斷電造成的Linux系統危害，建議做為伺服器的Linux主機應該加上不斷電系統來持續提供穩定的電力；</li>
+        <li>預設的圖形模式登入中，可以選擇語系以及作業階段。作業階段為多種視窗管理員軟體所提供，如GNOME及KDE等；</li>
+        <li>CentOS 5.x預設的中文輸入法為使用SCIM這個軟體所提供的輸入；</li>
+        <li>不論是KDE還是GNOME預設都提供四個Virtual Desktop給使用者使用；</li>
+        <li>在X的環境下想要重新啟動X的組合按鍵為：『[alt]+[ctrl]+[backspace]』；</li>
+        <li>預設情況下，Linux提供tty1~tty6的文字介面登入，以及tty7的圖形介面登入環境；</li>
+        <li>除了run level 5預設取得圖形介面之外，run level 3亦可使用 startx 進入圖形環境；</li>
+        <li>在終端機環境中，可依據提示字元為$或#判斷為一般帳號或root帳號；</li>
+        <li>取得終端機支援的語系資料可下達『echo $LANG』或『locale』指令；</li>
+        <li>date可顯示日期、cal可顯示日曆、bc可以做為計算機軟體；</li>
+        <li>組合按鍵中，[tab]按鍵可做為命令補齊或檔名補齊，[crtl]-[c]可以中斷目前正在運作中的程式；</li>
+        <li>線上說明系統有man及info兩個常見的指令；</li>
+        <li>man page說明後面的數字中，1代表一般帳號可用指令，8代表系統管理員常用指令，5代表系統設定檔格式；</li>
+        <li>info page可將一份說明文件拆成多個節點(node)顯示，並具有類似超連結的功能，增加易讀性；</li>
+        <li>系統需正確的關機比較不容易損壞，可使用shutdown, poweroff等指令關機。</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="ex" id="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+    ( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看)
+  <div class="block1">
+    <hr />
+    情境模擬題一：我們在tty1裡面看到的歡迎畫面，就是在那個login:之前的畫面(CentOS release 5.3 (Final)...)是怎麼來的？
+    <ul>
+      <li>目標：瞭解到終端機介面的歡迎訊息是怎麼來的？</li>
+      <li>前提：歡迎訊息的內容，是記錄到/etc/issue當中的</li>
+      <li>需求：利用man找到該檔案當中的變數內容</li>
+    </ul>
+    情境模擬題一的解決步驟：
+    <ol>
+      <li>歡迎畫面是在/etc/issue檔案中，你可以使用『<span class="text_import1">nano 
+        /etc/issue</span>』看看該檔案的內容(注意，不要修改這個檔案內容，看完就離開)，這個檔案的內容有點像底下這樣：<br />
+        <table class="term">
+          <tr>
+            <td class="term"><pre>
+CentOS release 5.3 (Final)
+Kernel \r on an \m
+    </pre></td>
+          </tr>
+        </table>
+      </li>
+      <li>與tty2比較之下，發現到核心版本使用的是 \r 而硬體等級則是 \m 來取代，這兩者代表的意義為何？
+        由於這個檔案的檔名是issue，所以我們使用『<span class="text_import1">man issue</span>』來查閱這個檔案的格式； <br />
+        <br />
+      </li>
+      <li>透過上一步的查詢我們會知道反斜線(\)後面接的字元是與mingetty(8)有關，故進行『<span class="text_import1">man 
+        mingetty</span>』這個指令的查詢。<br />
+        <br />
+      </li>
+      <li>由於反斜線(\)的英文為『escape』因此在上個步驟的man環境中，你可以使用『<span 
+	class="text_import1">/escape</span>』來搜尋各反斜線後面所接字元所代表的意義為何。<br />
+        <br />
+      </li>
+      <li>請自行找出：如果我想要在/etc/issue檔案內表示『時間(localtime)』與『tty號碼(如tty1, tty2的號碼)』的話，
+        應該要找到那個字元來表示(透過反斜線的功能)？(答案為：\t 與 \l)</li>
+    </ol>
+    <hr />
+    簡答題部分：
+    <ul>
+      <li>請問如果我以文字模式登入Linux主機時，我有幾個終端機介面可以使用？如何切換各個不同的終端機介面？
+        <div class="blockex"> 共有六個， tty1 ~ tty6 ，切換的方式為 Crtl +
+          Alt + [F1]~[F6]，其中， [F7] 為圖形介面的使用。 </div>
+      </li>
+      <li>在Linux系統中，/VBird與/vbird是否為相同的檔案？
+        <div class="blockex"> 兩者為不同的檔案，因為 Linux 系統中，大小寫字母代表意義不一樣！ </div>
+      </li>
+      <li>我想要知道 date 如何使用，應該如何查詢？
+        <div class="blockex"> 最簡單的方式就是使用 man date 或 info date 來查看，如果該套件有完整說明的話，那麼應該也可以在
+          /usr/share/doc 裡面找到說明檔！ </div>
+      </li>
+      <li>我想要在今天的 1:30 讓系統自己關機，要怎麼做？
+        <div class="blockex"> shutdown -h 1:30 </div>
+      </li>
+      <li>如果我 Linux 的 X Window 突然發生問題而掛掉，但 Linux 本身還是好好的，那麼我可以按下哪三個按鍵來讓
+        X window 重新啟動？
+        <div class="blockex"> [crtl]+[alt]+[backspace] </div>
+      </li>
+      <li>我想要知道 2010 年 5 月 2 日是星期幾？該怎麼做？
+        <div class="blockex"> 最簡單的方式直接使用 cal 5 2010 即可找出 2010 年 5 月份的月曆。 </div>
+      </li>
+      <li>使用 man date 然後找出顯示目前的日期與時間的參數，成為類似：2009/10/16-20:03
+        <div class="blockex"> date +%Y/%m/%d-%H:%M </div>
+      </li>
+      <li>若以 X-Window 為預設的登入方式，那請問如何進入 Virtual console 呢？
+        <div class="blockex"> 可以按下 [Ctrl] + [Alt] + [F1] ~ [F6] 進入 Virtual console ( 共六個 )；
+          而按下 [Ctrl] + [Alt] + [F8] 或 [F7] 可回到 X-Window 的 desktop 中！ </div>
+      </li>
+      <li>簡單說明在 bash shell 的環境下， [tab] 按鍵的用途？
+        <div class="blockex"> [Tab] 按鍵可做為命令補齊或檔案補齊的功能，與所接的指令位置有關。
+          接在一串指令的第一個單字後面，則為命令補齊，否則則為檔案補齊！ </div>
+      </li>
+      <li>如何強制中斷一個程式的進行？(利用按鍵，非利用 kill 指令)
+        <div class="blockex"> 可以利用 [Ctrl] + c 來中斷！ </div>
+      </li>
+      <li>Linux 提供相當多的線上查詢，稱為 man page，請問，我如何知道系統上有多少關於 
+        passwd 的說明？又，可以使用其他的程式來取代 man 的這個功能嗎？
+        <div class="blockex"> 可以利用 man -f passwd 來查詢，另外，如果有提供 info 的文件資料時 (在 /usr/share/info/ 目錄中)
+          ，則能夠利用 info passwd 來查詢之！ </div>
+      </li>
+      <li>man -k passwd 與 man -K passwd 有什麼差異(大小寫的 K )？
+        <div class="blockex"> 小寫的 -k 為查詢關鍵字，至於 -K 則是整個系統的 man page 查詢～
+          每個被檢查到有關鍵字的 man page file 都會被詢問是否要顯示，
+          你可以輸入『ynq』，來表示：y:要顯示到螢幕上；n:不顯示；q:結束 man 的查詢。 </div>
+      </li>
+      <li>在 man 的時候， man page 顯示的內容中，指令(或檔案)後面會接一組數字，這個數字若為 
+        1, 5, 8 ，表示該查詢的指令(或檔案)意義為何？
+        <div class="blockex"> 代表意義為 1) 一般使用者可以使用的指令或可執行檔案 5)一些設定檔的檔案內容格式 
+          8)系統管理員能夠使用的管理指令。 </div>
+      </li>
+      <li>man page 顯示的內容的檔案是放置在哪些目錄中？
+        <div class="blockex"> 放置在 /usr/share/man/ 與 /usr/local/man 等預設目錄中。 </div>
+      </li>
+      <li>請問這一串指令『 foo1 -foo2 foo3 foo4 』中，各代表什麼意義？
+        <div class="blockex"> foo1 一定是指令， -foo2 則是 foo1 這個指令的選擇項目參數， foo3 與 foo4 則不一定，
+          可能是 foo1 的參數設定值，也可能是額外加入的 parameters。 </div>
+      </li>
+      <li>當我輸入 man date 時，在我的終端機卻出現一些亂碼，請問可能的原因為何？如何修正？
+        <div class="blockex"> 如果沒有其他錯誤的發生，那麼發生亂碼可能是因為語系的問題所致。
+          可以利用 LANG=en 或者是 LANG=en_US 等設定來修訂這個問題。 </div>
+      </li>
+      <li>我輸入這個指令『ls -al /vbird』，系統回覆我這個結果：『ls: /vbird: No such file or directory』
+        請問發生了什麼事？』
+        <div class="blockex"> 不要緊張，很簡單的英文，因為系統根本沒有 /vbird 這個檔案的存在啊！ ^_^ </div>
+      </li>
+      <li>你目前的 Linux 底下，預設共有多少可以被你執行的指令？
+        <div class="blockex"> 最簡單的做法，直接輸入兩次 [tab] 按鍵即可知道有多少指令可以被執行。 </div>
+      </li>
+      <li>我想知道目前系統有多少指令是以 bz 為開頭的，可以怎麼作？
+        <div class="blockex"> 直接輸入 bz[tab][tab] 就可以知道了！ </div>
+      </li>
+      <li>承上題，在出現的許多指令中，請問 bzip2 是幹嘛用的？
+        <div class="blockex"> 在使用 man bzip2 之後，可以發現到，其實 bzip2 是用來作為壓縮與解壓縮檔案用的！ </div>
+      </li>
+      <li>Linux 提供一些線上文獻資料，這些資料通常放在那個目錄當中
+        <div class="blockex"> 通常放在 /usr/share/doc 當中！ </div>
+      </li>
+      <li>在終端機裡面登入後，看到的提示字元 $ 與 # 有何不同？平時操作應該使用哪一個？
+        <div class="blockex"> # 代表以 root 的身份登入系統，而 $ 則代表一般身份使用者。依據提示字元的不同，
+          我們可以約略判斷登入者身份。一般來說，建議日常操作使用一般身份使用者登入，亦即是 $ ！ </div>
+      </li>
+      <li>我使用dmtsai這個帳號登入系統了，請問我能不能使用reboot來重新開機？
+        若不能，請說明原因，若可以，請說明指令如何下達？
+        <div class="blockex"> 理論上reboot僅能讓root執行。不過，如果dmtsai是在主機前面以圖形介面登入時，則dmtsai還是可以透過圖形介面功能來關機。 </div>
+      </li>
+    </ul>
+  </div>
+  <hr />
+  <a name="reference" id="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+  <div class="block1">
+    <ul>
+      <li><a name="ps1" id="ps1"></a>註1：為了讓Linux的視窗顯示效果更佳，很多團體開始發展桌面應用的環境，GNOME/KDE都是。
+        他們的目標就是發展出類似Windows桌面的一整套可以工作的桌面環境，他可以進行視窗的定位、放大、縮小、
+        同時還提供很多的桌面應用軟體。底下是KDE與GNOME的相關連結：<br />
+        <a href="http://www.kde.org" target="_blank">http://www.kde.org/</a><br />
+        <a href="http://www.gnome.org/" target="_blank">http://www.gnome.org/</a></li>
+      <li>楊錦昌老師的X Window操作圖解，以Fedora Core 3為例：<a href="http://apt.nc.hcc.edu.tw/docs/FC3_X/"
+		target="_blank">http://apt.nc.hcc.edu.tw/docs/FC3_X/</a></li>
+      <li>man 7 man ：取得更詳細的數字說明內容</li>
+    </ul>
+  </div>
+  <hr />
+  <span class="text_history"> 2002/07/16：第一次完成吧？<br />
+    2003/02/06：重新編排與加入 FAQ <br />
+    2004/05/01：在shutdown的指令部分，修改 shutdown -k &quot;messages&quot; 成為 
+    shutdown -k now &quot;messages&quot;，很抱歉，寫錯了！<br />
+    2005/06/17：將原本的文章移動到 <a href="/linux_basic/0160startlinux/0160startlinux.php">這裡</a> <br />
+    2005/06/27：終於寫完了！寫的真久～沒辦法，將 man page 擴大解釋，增加的幅度還挺多的！<br />
+    2005/08/23：剛剛才發現，那個man page的內部指令說明中， n 與 N 的說明錯誤了！已訂正！<br />
+    2007/12/08：透過網友sheaushyong的發現，之前將Live CD中，說明要掛載 / 才 fsck 是不對的！請查閱<a href="#20071208">此處</a>。<br />
+    2008/09/03：將原本的Fedora Core IV的文章移動到<a href="/linux_basic/0160startlinux/0160startlinux-fc4.php">此處</a>。<br />
+    2008/09/08：加入了一些圖示說明，尤其是info的部分多了一個示意圖！<br />
+    2008/09/09：加入了<a href="#nano">nano</a>這個簡單的文書編輯器說明，以及<a href="#ex">情境模擬題</a>的解釋！<br />
+    2009/09/17：修訂了顯示的資訊，將圖片重新抓圖彙整。<br />
+  </span>
+  <hr />
+  <br />  
+  <br /></td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

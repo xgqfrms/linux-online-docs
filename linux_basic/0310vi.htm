@@ -1,0 +1,1373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW"><!-- InstanceBegin template="/Templates/tp_basic.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+    <title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    <!-- InstanceEndEditable -->
+    <!-- InstanceBeginEditable name="head" -->
+    <!-- InstanceEndEditable -->
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  
+  <!-- InstanceBeginEditable name="content" -->
+<td width="718">
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十章、<span class="text_head_en">vim </span>程式編輯器</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/08/20</span>
+</div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	系統管理員的重要工作就是得要修改與設定某些重要軟體的設定檔，因此至少得要學會一種以上的文字介面的文書編輯器。
+	在所有的 Linux distributions 上頭都會有的一套文書編輯器就是 vi ，而且很多軟體預設也是使用 vi 做為他們編輯的介面，
+	因此鳥哥建議您務必要學會使用 vi 這個正規的文書編輯器。此外，vim 是進階版的 vi ，
+	vim 不但可以用不同顏色顯示文字內容，還能夠進行諸如 shell script, C program 等程式編輯功能，
+	你可以將 vim 視為一種程式編輯器！鳥哥也是用 vim 編輯鳥站的網頁文章呢！ ^_^
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#vi_vim">vi 與 vim</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#vi_vim_why">為何要學 vim</a><br />
+	</span>
+2. <a href="#vi">vi 的使用</a><br />
+
+	<span class="text_h2">
+	　　2.1 <a href="#vi_ex">簡易執行範例</a><br />
+	　　2.2 <a href="#vi_command">按鍵說明</a><br />
+	　　2.3 <a href="#vi_case">一個案例的練習</a><br />
+	　　2.4 <a href="#vi_temp">vim 的暫存檔、救援回復與開啟時的警告訊息</a><br />
+
+	</span>
+3. <a href="#vim">vim 的額外功能</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#vim_v">區塊選擇(Visual Block)</a><br />
+	　　3.2 <a href="#vim_files">多檔案編輯</a><br />
+	　　3.3 <a href="#vim_ws">多視窗功能</a><br />
+
+	　　3.4 <a href="#vim_set">vim 環境設定與記錄： ~/.vimrc, ~/.viminfo</a><br />
+	　　3.5 <a href="#vim_fig">vim 常用指令示意圖</a><br />
+	</span>
+4. <a href="#tips">其他 vim 使用注意事項</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#tips_code">中文編碼的問題</a><br />
+
+	　　4.2 <a href="#tips_dos">DOS 與 Linux 的斷行字元</a>： <a href="#dos2unix">dos2unix</a>,
+		<a href="#unix2dos">unix2dos</a><br />
+	　　4.3 <a href="#tips_translate">語系編碼轉換</a>： <a href="#iconv">iconv</a><br />
+	</span>
+5. <a href="#hint">重點回顧</a><br />
+
+6. <a href="#ex">本章習題</a><br />
+7. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+8. <a href="http://phorum.vbird.org/viewtopic.php?t=23883"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23883</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="vi_vim"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">vi 與 vim</span><br />
+
+<div class="block1">
+	<p>由前面一路走來，我們一直建議使用文字模式來處理 Linux 的系統設定問題，因為不但可以讓你比較容易瞭解到
+	Linux 的運作狀況，也比較容易瞭解整個設定的基本精神，更能『保證』你的修改可以順利的被運作。
+	所以，<span class="text_import2">在 Linux 的系統中使用文字編輯器來編輯你的 Linux 
+	參數設定檔，可是一件很重要的事情呦</span>！也因此呢，系統管理員至少應該要熟悉一種文書處理器的！</p>
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	這裡要再次的強調，不同的 Linux distribution 各有其不同的附加軟體，例如
+	Red Hat Enterprise Linux 與 Fedora 的 ntsysv 與 setup 等，而 SuSE 則有 YAST 管理工具等等，
+	因此，如果你只會使用此種類型的軟體來控制你的 Linux 系統時，當接管不同的
+	Linux distributions 時，呵呵！那可就苦惱了！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<p>在 Linux 的世界中，絕大部分的設定檔都是以 ASCII 的純文字形態存在，因此利用簡單的文字編輯軟體就能夠修改設定了！
+	與微軟的 Windows 系統不同的是，如果你用慣了 Microsoft Word 或 Corel Wordperfect 的話，那麼除了 X window 
+	裡面的圖形介面編輯程式(如 xemacs )用起來尚可應付外，在 Linux 的文字模式下，會覺得文書編輯程式都沒有視窗介面來的直觀與方便。</p>
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	什麼是純文字檔？其實檔案記錄的就是 0 與 1 ，而我們透過編碼系統來將這些 0 與 1 轉成我們認識的文字就是了。
+	在<a href="/linux_basic/0105computers.php#data">第零章裡面的資料表示方式</a>有較多說明，請自行查閱。
+	ASCII 就是其中一種廣為使用的文字編碼系統，在 ASCII 系統中的圖示與代碼可以參考 <a href="http://zh.wikipedia.org/wiki/ASCII"
+	target="_blank">http://zh.wikipedia.org/wiki/ASCII</a>呢！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+	<p>那麼 Linux 在文字介面下的文書編輯器有哪些呢？其實有非常多喔！常常聽到的就有：
+	<a href="http://www.gnu.org/software/emacs/" target="_blank">emacs</a>,
+	<a href="http://www.ece.uwaterloo.ca/~ece250/Online/Unix/pico/" target="_blank">pico</a>,
+	<a href="http://sourceforge.net/projects/nano/" target="_blank">nano</a>,
+	<a href="http://sourceforge.net/projects/joe-editor/" target="_blank">joe</a>,
+	與 <a href="http://www.vim.org" target="_blank">vim</a> 等等(<a href="#ps1">註1</a>)。
+	既然有這麼多文字介面的文書編輯器，那麼我們為什麼一定要學 vi 啊？還有那個 vim 是做啥用的？底下就來談一談先！<br /><br /></p>
+
+	<hr /><a name="vi_vim_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">為何要學 vim</span><br />
+	<div class="block2">
+		<p>文書編輯器那麼多，我們之前在<a href="/linux_basic/0160startlinux.php#nano">第五章</a>也曾經介紹過那簡單好用的 
+		<a href="/linux_basic/0160startlinux.php#nano">nano</a> ，既然已經學會了 
+		nano ，幹嘛鳥哥還一直要你學這不是很友善的 vi 呢？其實是有原因的啦！因為：</p>
+
+		<ul class="text_import2">
+		<li>所有的 Unix Like 系統都會內建 vi 文書編輯器，其他的文書編輯器則不一定會存在；</li>
+
+		<li>很多個別軟體的編輯介面都會主動呼叫 vi (例如未來會談到的 <a href="/linux_basic/0430cron.php#crontab">crontab</a>, 
+		<a href="/linux_basic/0410accountmanager.php#visudo">visudo</a>, 
+		<a href="/linux_basic/0420quota.php#edquota">edquota</a> 等指令)；</li>
+		<li>vim 具有程式編輯的能力，可以主動的以字體顏色辨別語法的正確性，方便程式設計；</li>
+		<li>因為程式簡單，編輯速度相當快速。</li>
+		</ul>
+
+		<p>其實重點是上述的第二點，因為有太多 Linux 上面的指令都預設使用 vi 作為資料編輯的介面，所以你必須、一定要學會 
+		vi ，否則很多指令你根本就無法操作呢！這樣說，有刺激到你務必要學會 vi 的熱情了嗎？ ^_^</p>
+
+		<p>那麼什麼是 vim 呢？其實你可以將 vim 視作 vi 的進階版本，vim 可以用顏色或底線等方式來顯示一些特殊的資訊。
+		舉例來說，當你使用 vim 去編輯一個 C 程式語言的檔案，或者是我們後續會談到的
+		<a href="/linux_basic/0340bashshell-scripts.php">shell script</a> 程式時，vim 會依據檔案的副檔名或者是檔案內的開頭資訊，
+		判斷該檔案的內容而自動的呼叫該程式的語法判斷式，再以顏色來顯示程式碼與一般資訊。也就是說，
+		這個 vim 是個『程式編輯器』啦！甚至一些 Linux 基礎設定檔內的語法，都能夠用 vim 來檢查呢！
+		例如我們在第八章談到的 <a href="/linux_basic/0230filesystem.php#fstab">/etc/fstab</a> 這個檔案的內容。</p>
+
+		<p>簡單的來說， vi 是老式的文書處理器，不過功能已經很齊全了，但是還是有可以進步的地方。
+		vim 則可以說是程式開發者的一項很好用的工具，就連 vim 的官方網站 (<a href="http://www.vim.org" 
+		target="_blank">http://www.vim.org</a>) 自己也說 vim 是一個『程式開發工具』而不是文書處理軟體～^_^。
+		因為 vim 裡面加入了很多額外的功能，例如支援正規表示法的搜尋架構、多檔案編輯、區塊複製等等。
+		這對於我們在 Linux 上面進行一些設定檔的修訂工作時，是很棒的一項功能呢！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		什麼時候會使用到 vim 呢？其實鳥哥的整個網站都是在 vim 的環境下一字一字的建立起來的喔！
+		早期鳥哥使用網頁製作軟體在編寫網頁，但是老是發現網頁編輯軟體都不怎麼友善，尤其是寫到 PHP 方面的程式碼時。
+		後來就乾脆不使用所見即所得的編輯軟體，直接使用 vim ，然後標籤 (tag) 也都自行用鍵盤輸入！
+		這樣整個檔案也比較乾淨！所以說，鳥哥我是很喜歡 vim 的啦！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>底下鳥哥會先就簡單的 vi 做個介紹，然後再跟大家報告一下 vim 的額外功能與用法呢！<br /></p>
+	</div>
+</div>
+
+<hr /><a name="vi"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">vi 的使用</span><br />
+<div class="block1">
+	<p>基本上 vi 共分為三種模式，分別是『<span class="text_import2">一般模式</span>』、『<span 
+	class="text_import2">編輯模式</span>』與『<span class="text_import2">指令列命令模式</span>』。
+	這三種模式的作用分別是：</p>
+
+	<ul style="padding-left: 20px">
+	<li><span class="text_import1">一般模式</span>：<br />
+		以 vi 打開一個檔案就直接進入一般模式了(這是預設的模式)。在這個模式中，
+		你可以使用『上下左右』按鍵來移動游標，你可以使用『刪除字元』或『刪除整行』來處理檔案內容，
+		也可以使用『複製、貼上』來處理你的文件資料。<br /><br /></li>
+
+	<li><span class="text_import1">編輯模式</span>：<br />
+		在一般模式中可以進行刪除、複製、貼上等等的動作，但是卻無法編輯文件內容的！
+		要等到你按下『<span class="text_import2" style="font-family:'細明體'">i,
+		I, o, O, a, A, r, R</span>』等任何一個字母之後才會進入編輯模式。注意了！通常在
+		Linux 中，按下這些按鍵時，在畫面的左下方會出現『 <span class="text_import2">INSERT
+		或 REPLACE </span>』的字樣，此時才可以進行編輯。而如果要回到一般模式時，
+		則必須要按下『<span class="text_import1">Esc</span>』這個按鍵即可退出編輯模式。<br /><br /></li>
+
+	<li><span class="text_import1">指令列命令模式</span>：<br />
+		在一般模式當中，輸入『<span class="text_import2">
+		: / ? </span>』三個中的任何一個按鈕，就可以將游標移動到最底下那一行。在這個模式當中，
+		可以提供你『搜尋資料』的動作，而讀取、存檔、大量取代字元、離開
+		vi 、顯示行號等等的動作則是在此模式中達成的！</li>
+	</ul>
+
+	<p>簡單的說，我們可以將這三個模式想成底下的圖示來表示：</p>
+
+	<a name="fig2.1"></a>
+	<center><img src="0310vi/vi-mode.gif" alt="vi三種模式的相互關係" 
+	title="vi三種模式的相互關係" border="0" /><br />
+	圖 2.1、vi 三種模式的相互關係<br /></center>
+
+	<p>注意到上面的圖示，你會發現<span class="text_import2">一般模式可與編輯模式及指令列模式切換，
+	但編輯模式與指令列模式之間不可互相切換</span>喔！這非常重要啦！
+	閒話不多說，我們底下以一個簡單的例子來進行說明吧！<br /><br /></p>
+
+	<hr /><a name="vi_ex"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">簡易執行範例</span><br />
+
+	<div class="block2">
+		<p>如果你想要使用 vi 來建立一個名為 test.txt 的檔案時，你可以這樣做：</p>
+
+		<ol style="margin-left: -20px">
+		<li><span class="text_import1">使用 vi 進入一般模式；</span><br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi test.txt</span>
+</pre></td></tr></table>
+
+		直接輸入『 vi 檔名』就能夠進入 vi 的一般模式了。請注意，記得 vi 後面一定要加檔名，不管該檔名存在與否！
+		整個畫面主要分為兩部份，上半部與最底下一行兩者可以視為獨立的。如下圖 2.1.1 所示，圖中那個虛線是不存在的，
+		鳥哥用來說明而已啦！上半部顯示的是檔案的實際內容，最底下一行則是狀態顯示列(如下圖的[New File]資訊)，
+		或者是命令下達列喔！<br /><br />
+
+		<center><img src="0310vi/vi-command.jpg" alt="用 vi 開啟一個新檔案" 
+		title="用 vi 開啟一個新檔案" border="1" /><br />
+		圖 2.1.1、用 vi 開啟一個新檔案<br /></center><br />
+
+		如果你開啟的檔案是舊檔(已經存在的檔案)，則可能會出現如下的資訊：<br /><br />
+
+		<center><img src="0310vi/vi-command-2.jpg" alt="用 vi 開啟一個舊檔案" 
+		title="用 vi 開啟一個舊檔案" border="1" /><br />
+
+		圖 2.1.2、用 vi 開啟一個舊檔案<br /></center><br />
+
+		如上圖 2.1.2 所示，箭頭所指的那個『"/etc/man.config" 141L, 4617C』代表的是『檔名為 /etc/man.conf，
+		檔案內有 141 行 以及具有 4617 個字元』的意思！
+		那一行的內容並不是在檔案內，而是 vi 顯示一些資訊的地方喔！此時是在一般模式的環境下啦。
+		接下來開始來輸入吧！<br /><br /></li>
+
+		<li><span class="text_import1">按下 i 進入編輯模式，開始編輯文字</span><br /><br />
+		在一般模式之中，只要按下 i, o, a 等字元就可以進入編輯模式了！在編輯模式當中，你可以發現在左下角狀態列中會出現
+		–INSERT- 的字樣，那就是可以輸入任意字元的提示囉！這個時候，鍵盤上除了
+		[Esc] 這個按鍵之外，其他的按鍵都可以視作為一般的輸入按鈕了，所以你可以進行任何的編輯囉！<br /><br />
+
+		<center><img src="0310vi/vi-insert.jpg" alt="開始用 vi 來進行編輯" 
+		title="開始用 vi 來進行編輯" border="1" /><br />
+
+		圖 2.1.3、開始用 vi 來進行編輯<br /></center>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在 vi 裡面， [tab] 這個按鈕所得到的結果與空白字元所得到的結果是不一樣的，特別強調一下！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div></li>
+
+		<li><span class="text_import1">按下 [ESC] 按鈕回到一般模式</span><br /><br />
+		好了，假設我已經按照上面的樣式給他編輯完畢了，那麼應該要如何退出呢？是的！沒錯！就是給他按下
+		[Esc] 這個按鈕即可！馬上你就會發現畫面左下角的 – INSERT – 不見了！<br /><br /></li>
+
+		<li><span class="text_import1">在一般模式中按下 :wq 儲存後離開 vi</span><br /><br />
+		OK，我們要存檔了，存檔並離開的指令很簡單，輸入『:wq』即可存檔離開！ (注意了，按下
+		: 該游標就會移動到最底下一行去！) 這時你在提示字元後面輸入『 ls -l 』即可看到我們剛剛建立的
+		test.txt 檔案啦！整個圖示有點像底下這樣：<br /><br />
+
+		<center><img src="0310vi/vi-line.jpg" alt="儲存並離開 vi 環境" 
+		title="儲存並離開 vi 環境" border="1" /><br />
+		圖 2.1.4、儲存並離開 vi 環境<br /></center>
+
+		</li></ol>
+
+		<p>如此一來，你的檔案 test.txt 就已經建立起來囉！需要注意的是，如果你的檔案權限不對，例如為
+		-r--r--r-- 時，那麼可能會無法寫入，此時可以使用『強制寫入』的方式嗎？可以！使用『 <span
+		class="text_import2">:wq!</span> 』
+		多加一個驚嘆號即可！不過，需要特別注意呦！那個是在『你的權限可以改變』的情況下才能成立的！
+		關於權限的概念，請自行回去翻一下<a href="/linux_basic/0210filepermission.php">第六章</a>的內容吧！</p>
+
+	</div>
+
+	<hr /><a name="vi_command"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">按鍵說明</span><br />
+	<div class="block2">
+		<p>除了上面簡易範例的 i, [Esc], :wq 之外，其實 vim 還有非常多的按鍵可以使用喔！在介紹之前還是要再次強調，
+		vim 的三種模式只有一般模式可以與編輯、指令列模式切換，編輯模式與指令列模式之間並不能切換的！
+		這點在<a href="#fig2.1">圖2.1</a>裡面有介紹到，注意去看看喔！底下就來談談 vim 軟體中會用到的按鍵功能吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">第一部份：一般模式可用的按鈕說明，游標移動、複製貼上、搜尋取代等</li></ul><br />
+
+<div class="fontwidth">
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">移動游標的方法</td></tr>
+	<tr><td width="180" style="text-align:center">h 或 向左方向鍵(←)</td>
+		<td>游標向左移動一個字元</td></tr>
+	<tr><td style="text-align:center">j 或 向下方向鍵(↓)</td>
+		<td>游標向下移動一個字元</td></tr>
+
+	<tr><td style="text-align:center">k 或 向上方向鍵(↑)</td>
+		<td>游標向上移動一個字元</td></tr>
+	<tr><td style="text-align:center">l 或 向右方向鍵(→)</td>
+		<td>游標向右移動一個字元</td></tr>
+	<tr><td colspan="2">
+		如果你將右手放在鍵盤上的話，你會發現 hjkl 是排列在一起的，因此可以使用這四個按鈕來移動游標。
+		如果想要進行多次移動的話，例如向下移動 30 行，可以使用 "30j" 或 "30↓" 的組合按鍵，
+		亦即加上想要進行的次數(數字)後，按下動作即可！</td></tr>
+
+	<tr><td style="text-align:center">[Ctrl] + [f]</td>
+		<td>螢幕『向下』移動一頁，相當於 [Page Down]按鍵
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">[Ctrl] + [b]</td>
+		<td>螢幕『向上』移動一頁，相當於 [Page Up] 按鍵
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">[Ctrl] + [d]</td>
+
+		<td>螢幕『向下』移動半頁</td></tr>
+	<tr><td style="text-align:center">[Ctrl] + [u]</td>
+		<td>螢幕『向上』移動半頁</td></tr>
+	<tr><td style="text-align:center">+</td>
+		<td>游標移動到非空白字元的下一列</td></tr>
+	<tr><td style="text-align:center">-</td>
+
+		<td>游標移動到非空白字元的上一列</td></tr>
+	<tr><td style="text-align:center">n&lt;space&gt;</td>
+		<td>那個 n 表示『數字』，例如 20 。按下數字後再按空白鍵，游標會向右移動這一行的 n
+		個字元。例如 20&lt;space&gt; 則游標會向後面移動 20 個字元距離。</td></tr>
+	<tr><td style="text-align:center">0 或功能鍵[Home]</td>
+		<td>這是數字『 0 』：移動到這一行的最前面字元處
+		(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">$ 或功能鍵[End]</td>
+		<td>移動到這一行的最後面字元處(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">H</td>
+		<td>游標移動到這個螢幕的最上方那一行的第一個字元</td></tr>
+	<tr><td style="text-align:center">M</td>
+
+		<td>游標移動到這個螢幕的中央那一行的第一個字元</td></tr>
+	<tr><td style="text-align:center">L</td>
+		<td>游標移動到這個螢幕的最下方那一行的第一個字元</td></tr>
+	<tr><td style="text-align:center">G</td>
+		<td>移動到這個檔案的最後一行(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">nG</td>
+		<td>n 為數字。移動到這個檔案的第 n 行。例如 20G 則會移動到這個檔案的第 20 
+		行(可配合 :set nu)</td></tr>
+	<tr><td style="text-align:center">gg</td>
+		<td>移動到這個檔案的第一行，相當於 1G 啊！
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">n&lt;Enter&gt;</td>
+
+		<td>n 為數字。游標向下移動 n 行(<span class="text_import2">常用</span>)</td></tr>
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">搜尋與取代</td></tr>
+	<tr><td style="text-align:center">/word</td>
+		<td>向游標之下尋找一個名稱為 word 的字串。例如要在檔案內搜尋 vbird 
+		這個字串，就輸入 /vbird 即可！
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">?word</td>
+
+		<td>向游標之上尋找一個字串名稱為 word 的字串。</td></tr>
+	<tr><td style="text-align:center">n</td>
+		<td>這個 n 是英文按鍵。代表『<u>重複前一個搜尋的動作</u>』。舉例來說，
+		如果剛剛我們執行 /vbird 去向下搜尋 vbird 這個字串，則按下 n 後，會向下繼續搜尋下一個名稱為 vbird 
+		的字串。如果是執行 ?vbird 的話，那麼按下 n 則會向上繼續搜尋名稱為 vbird 的字串！</td></tr>
+	<tr><td style="text-align:center">N</td>
+		<td>這個 N 是英文按鍵。與 n 剛好相反，為『反向』進行前一個搜尋動作。
+		例如 /vbird 後，按下 N 則表示『向上』搜尋 vbird 。</td></tr>
+
+	<tr><td colspan="2">
+		使用 /word 配合 n 及 N 是非常有幫助的！可以讓你重複的找到一些你搜尋的關鍵字！
+	</td></tr>
+	<tr><td style="text-align:center">:n1,n2s/word1/word2/g</td>
+		<td>n1 與 n2 為數字。在第 n1 與 n2 行之間尋找 word1 這個字串，並將該字串取代為
+		word2 ！舉例來說，在 100 到 200 行之間搜尋 vbird 並取代為 VBIRD 則：<br />
+		『:100,200s/vbird/VBIRD/g』。(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">:1,$s/word1/word2/g</td>
+
+		<td>從第一行到最後一行尋找 word1 字串，並將該字串取代為
+		word2 ！(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">:1,$s/word1/word2/gc</td>
+		<td>從第一行到最後一行尋找 word1 字串，並將該字串取代為
+		word2 ！且在取代前顯示提示字元給使用者確認 (confirm)
+		是否需要取代！(<span class="text_import2">常用</span>)</td></tr>
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">刪除、複製與貼上</td></tr>
+	<tr><td style="text-align:center">x, X</td>
+
+		<td>在一行字當中，x 為向後刪除一個字元 (相當於 [del] 按鍵)，
+		 X 為向前刪除一個字元(相當於 [backspace] 亦即是倒退鍵)
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">nx</td>
+		<td>n 為數字，連續向後刪除 n 個字元。舉例來說，我要連續刪除 10 個字元，
+		『10x』。</td></tr>
+	<tr><td style="text-align:center">dd</td>
+		<td>刪除游標所在的那一整列(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">ndd</td>
+		<td>n 為數字。刪除游標所在的向下 n 列，例如 20dd 則是刪除 20 列
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">d1G</td>
+		<td>刪除游標所在到第一行的所有資料</td></tr>
+	<tr><td style="text-align:center">dG</td>
+
+		<td>刪除游標所在到最後一行的所有資料</td></tr>
+	<tr><td style="text-align:center">d$</td>
+		<td>刪除游標所在處，到該行的最後一個字元</td></tr>
+	<tr><td style="text-align:center">d0</td>
+		<td>那個是數字的 0 ，刪除游標所在處，到該行的最前面一個字元</td></tr>
+	<tr><td style="text-align:center">yy</td>
+
+		<td>複製游標所在的那一行(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">nyy</td>
+		<td>n 為數字。複製游標所在的向下 n 列，例如 20yy 則是複製 20
+		列(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">y1G</td>
+		<td>複製游標所在列到第一列的所有資料</td></tr>
+
+	<tr><td style="text-align:center">yG</td>
+		<td>複製游標所在列到最後一列的所有資料</td></tr>
+	<tr><td style="text-align:center">y0</td>
+		<td>複製游標所在的那個字元到該行行首的所有資料</td></tr>
+	<tr><td style="text-align:center">y$</td>
+		<td>複製游標所在的那個字元到該行行尾的所有資料</td></tr>
+
+	<tr><td style="text-align:center">p, P</td>
+		<td>p 為將已複製的資料在游標下一行貼上，P 則為貼在游標上一行！
+		舉例來說，我目前游標在第 20 行，且已經複製了 10 行資料。則按下 p 後，
+		那 10 行資料會貼在原本的 20 行之後，亦即由 21 行開始貼。但如果是按下 P 呢？
+		那麼原本的第 20 行會被推到變成 30 行。
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">J</td>
+		<td>將游標所在列與下一列的資料結合成同一列</td></tr>
+	<tr><td style="text-align:center">c</td>
+
+		<td>重複刪除多個資料，例如向下刪除 10 行，[ 10cj ]</td></tr>
+	<tr><td style="text-align:center">u</td>
+		<td>復原前一個動作。(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">[Ctrl]+r</td>
+		<td>重做上一個動作。(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td colspan="2">這個 u 與 [Ctrl]+r 是很常用的指令！一個是復原，另一個則是重做一次～
+		利用這兩個功能按鍵，你的編輯，嘿嘿！很快樂的啦！</td></tr>
+	<tr><td style="text-align:center">.</td>
+		<td>不要懷疑！這就是小數點！意思是重複前一個動作的意思。
+		如果你想要重複刪除、重複貼上等等動作，按下小數點『.』就好了！
+		(<span class="text_import2">常用</span>)</td></tr>
+	</table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">第二部份：一般模式切換到編輯模式的可用的按鈕說明</li></ul><br />
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">進入插入或取代的編輯模式</td></tr>
+	<tr><td width="120" style="text-align:center">i, I</td>
+		<td>進入插入模式(Insert mode)：<br />
+		i 為『從目前游標所在處插入』， I 為『在目前所在行的第一個非空白字元處開始插入』。
+		(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">a, A</td>
+
+		<td>進入插入模式(Insert mode)：<br />
+		a 為『從目前游標所在的下一個字元處開始插入』， A
+		為『從游標所在行的最後一個字元處開始插入』。(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">o, O</td>
+		<td>進入插入模式(Insert mode)：<br />
+		這是英文字母 o 的大小寫。o 為『在目前游標所在的下一行處插入新的一行』；
+		O 為在目前游標所在處的上一行插入新的一行！(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">r, R</td>
+		<td>進入取代模式(Replace mode)：<br />
+		r 只會取代游標所在的那一個字元一次；R會一直取代游標所在的文字，直到按下
+		ESC 為止；(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td colspan="2">上面這些按鍵中，在 vi 畫面的左下角處會出現『--INSERT--』或『--REPLACE--』的字樣。
+		由名稱就知道該動作了吧！！特別注意的是，我們上面也提過了，你想要在檔案裡面輸入字元時，
+		一定要在左下角處看到 INSERT 或 REPLACE 才能輸入喔！</td></tr>
+	<tr><td style="text-align:center">[Esc]</td>
+
+		<td>退出編輯模式，回到一般模式中(<span class="text_import2">常用</span>)</td></tr>
+	</table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">第三部份：一般模式切換到指令列模式的可用的按鈕說明</li></ul><br />
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">指令列的儲存、離開等指令</td></tr>
+	<tr><td width="160" style="text-align:center">:w</td>
+
+		<td>將編輯的資料寫入硬碟檔案中(<span class="text_import2">常用</span>)</td></tr>
+	<tr><td style="text-align:center">:w!</td>
+		<td>若檔案屬性為『唯讀』時，強制寫入該檔案。不過，到底能不能寫入，
+		還是跟你對該檔案的檔案權限有關啊！</td></tr>
+	<tr><td style="text-align:center">:q</td>
+		<td>離開 vi (<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">:q!</td>
+		<td>若曾修改過檔案，又不想儲存，使用 ! 為強制離開不儲存檔案。</td></tr>
+	<tr><td colspan="2">注意一下啊，那個驚嘆號 (!) 在 vi 當中，常常具有『強制』的意思～</td></tr>
+	<tr><td style="text-align:center">:wq</td>
+		<td>儲存後離開，若為 :wq! 則為強制儲存後離開
+		(<span class="text_import2">常用</span>)</td></tr>
+
+	<tr><td style="text-align:center">ZZ</td>
+		<td>這是大寫的 Z 喔！若檔案沒有更動，則不儲存離開，若檔案已經被更動過，則儲存後離開！</td></tr>
+	<tr><td style="text-align:center">:w [filename]</td>
+		<td>將編輯的資料儲存成另一個檔案（類似另存新檔）</td></tr>
+	<tr><td style="text-align:center">:r [filename]</td>
+		<td>在編輯的資料中，讀入另一個檔案的資料。亦即將 『filename』
+		這個檔案內容加到游標所在行後面</td></tr>
+
+	<tr><td style="text-align:center">:n1,n2 w [filename]</td>
+		<td>將 n1 到 n2 的內容儲存成 filename 這個檔案。</td></tr>
+	<tr><td style="text-align:center">:! command</td>
+		<td>暫時離開 vi 到指令列模式下執行 command 的顯示結果！例如<br />
+		『:! ls /home』即可在 vi 當中察看 /home 底下以 ls 輸出的檔案資訊！</td></tr>
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">vim 環境的變更</td></tr>
+
+	<tr><td style="text-align:center">:set nu</td>
+		<td>顯示行號，設定之後，會在每一行的字首顯示該行的行號</td></tr>
+	<tr><td style="text-align:center">:set nonu</td>
+		<td>與 set nu 相反，為取消行號！</td></tr>
+</table><br />
+</div>
+
+		<p>特別注意，<span class="text_import2">在 vi 中，『數字』是很有意義的！數字通常代表重複做幾次的意思！
+		也有可能是代表去到第幾個什麼什麼的意思。</span>舉例來說，要刪除 50 行，則是用 『50dd』 對吧！
+		數字加在動作之前～那我要向下移動 20 行呢？那就是『20j』或者是『20↓』即可。</p>
+
+		<p>OK！會這些指令就已經很厲害了，因為常用到的指令也只有不到一半！通常 vi
+		的指令除了上面鳥哥註明的常用的幾個外，其他是不用背的，你可以做一張簡單的指令表在你的螢幕牆上，
+		一有疑問可以馬上的查詢呦！這也是當初鳥哥使用 vim 的方法啦！</p>
+	</div>
+
+	<hr /><a name="vi_case"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個案例練習</span><br />
+	<div class="block2">
+		<p>來來來！趕緊測試一下你是否已經熟悉 vi 這個指令呢？請依照底下的需求進行指令動作。
+		(底下的操作為使用 CentOS 5.2 中的 man.config 來做練習的，該檔案你可以在這裡下載： 
+		<a href="/linux_basic/0310vi/man.config">http://linux.vbird.org/linux_basic/0310vi/man.config</a>。)
+		看看你的顯示結果與鳥哥的結果是否相同啊？</p>
+
+		<ol>
+		<li>請在 /tmp 這個目錄下建立一個名為 vitest 的目錄；</li>
+		<li>進入 vitest 這個目錄當中；</li>
+		<li>將 /etc/man.config 複製到本目錄底下(或由上述的連結下載 <a 
+		href="/linux_basic/0310vi/man.config">man.config</a> 檔案)；</li>
+		<li>使用 vi 開啟本目錄下的 man.config 這個檔案；</li>
+
+		<li>在 vi 中設定一下行號；</li>
+		<li>移動到第 58 行，向右移動 40 個字元，請問你看到的雙引號內是什麼目錄？</li>
+		<li>移動到第一行，並且向下搜尋一下『 bzip2 』這個字串，請問他在第幾行？</li>
+		<li>接著下來，我要將 50 到 100 行之間的『小寫 man 字串』改為『大寫 MAN 
+			字串』，並且一個一個挑選是否需要修改，如何下達指令？如果在挑選過程中一直按『y』，
+			結果會在最後一行出現改變了幾個 man 呢？</li>
+		<li>修改完之後，突然反悔了，要全部復原，有哪些方法？</li>
+		<li>我要複製 65 到 73 這九行的內容(含有MANPATH_MAP)，並且貼到最後一行之後；</li>
+
+		<li>21 到 42 行之間的開頭為 # 符號的註解資料我不要了，要如何刪除？</li>
+		<li>將這個檔案另存成一個 man.test.config 的檔名；</li>
+		<li>去到第 27 行，並且刪除 15 個字元，結果出現的第一個單字是什麼？</li>
+		<li>在第一行新增一行，該行內容輸入『I am a student...』；</li>
+		<li>儲存後離開吧！</li>
+		</ol>
+
+		<p>整個步驟可以如下顯示：</p>
+
+		<ol class="text_import2" style="font-family: '細明體'">
+
+		<li>『mkdir /tmp/vitest』</li>
+		<li>『cd /tmp/vitest』</li>
+		<li>『cp /etc/man.config .』</li>
+
+		<li>『vi man.config』</li>
+		<li>『:set nu』然後你會在畫面中看到左側出現數字即為行號。</li>
+		<li>先按下『58G』再按下『40→』會看到『/dir/bin/foo』這個字樣在雙引號內；</li>
+		<li>先執行『1G』或『gg』後，直接輸入『/bzip2』，則會去到第 118 行才對！</li>
+		<li>直接下達『 :50,100s/man/MAN/gc 』即可！若一直按『y』最終會出現『在 23 行內置換 25 個字串』的說明。</li>
+		<li>(1)簡單的方法可以一直按『 u 』回復到原始狀態，(2)使用不儲存離開『 :q! 』之後，再重新讀取一次該檔案；</li>
+
+		<li>『65G』 然後再『 9yy 』之後最後一行會出現『複製九行』之類的說明字樣。
+			按下『 G 』到最後一行，再給他『 p 』貼上九行！</li>
+		<li>因為 21~42 22 行，因此『 21G 』→『 22dd 』就能刪除 22 行，此時你會發現游標所在 21 行的地方變成 MANPATH 開頭囉，
+			註解的 # 符號那幾行都被刪除了。</li>
+		<li>『 :w man.test.config 』，你會發現最後一行出現 "man.test.config" [New].. 的字樣。</li>
+		<li>『27G』 之後，再給他『 15x 』即可刪除 15 個字元，出現『 you 』的字樣；</li>
+		<li>先『 1G 』去到第一行，然後按下大寫的『 O 』便新增一行且在插入模式；開始輸入『I am a student...』後，
+			按下[Esc]回到一般模式等待後續工作；</li>
+		<li>『:wq』</li>
+
+		</ol>
+
+		<p>如果你的結果都可以查的到，那麼 vi 的使用上面應該沒有太大的問題啦！剩下的問題會是在…打字練習…。</p>
+	</div>
+
+	<hr /><a name="vi_temp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">vim 的暫存檔、救援回復與開啟時的警告訊息</span><br />
+	<div class="block2">
+		<p>在目前主要的編輯軟體都會有『回復』的功能，亦即當你的系統因為某些原因而導致類似當機的情況時，
+		還可以透過某些特別的機制來讓你將之前未儲存的資料『救』回來！這就是鳥哥這裡所謂的『回復』功能啦！
+		那麼 vim 有沒有回復功能呢？有的！ vim 就是透過『暫存檔』來救援的啦！</p>
+
+		<p>當我們在使用 vim 編輯時， vim 會在與被編輯的檔案的目錄下，<span
+		class="text_import2">再建立一個名為 .filename.swp 的檔案</span>。
+		比如說我們在上一個小節談到的編輯 /tmp/vitest/man.config 這個檔案時， vim 會主動的建立 /tmp/vitest/.man.config.swp
+		的暫存檔，你對 man.config 做的動作就會被記錄到這個 .man.config.swp 當中喔！如果你的系統因為某些原因斷線了，
+		導致你編輯的檔案還沒有儲存，這個時候 .man.config.swp 就能夠發會救援的功能了！我們來測試一下吧！
+
+		底下的練習有些部分的指令我們尚未談到，沒關係，你先照著做，後續再回來瞭解囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cd /tmp/vitest</span>
+[root@www vitest]# <span class="term_command">vim man.config</span>
+<span class="term_say"># 此時會進入到 vim 的畫面，請在 vim 的一般模式下按下『 [ctrl]-z 』的組合鍵</span>
+
+[1]+  Stopped             vim man.config  <span class="term_note">&lt;==按下 [ctrl]-z 會告訴你這個訊息</span>
+</pre></td></tr></table>
+
+		<p>當我們在 vim 的一般模式下按下 [ctrl]-z 的組合按鍵時，你的 vim 會被丟到背景去執行！
+		這部份的功能我們會在<a href="/linux_basic/0440processcontrol.php#background">第十七章的程序管理</a>當中談到，
+		你這裡先知道一下即可。回到命令提示字元後，接下來我們來模擬將 vim 的工作不正常的中斷吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www vitest]# <span class="term_command">ls -al</span>
+total 48
+drwxr-xr-x 2 root root 4096 Jan 12 14:48 .
+drwxrwxrwt 7 root root 4096 Jan 12 13:26 ..
+-rw-r--r-- 1 root root 4101 Jan 12 13:55 man.config
+-rw-r--r-- 1 root root 4096 Jan 12 14:48 <span class="term_write">.man.config.swp</span>  <span class="term_note">&lt;==就是他，暫存檔</span>
+
+-rw-r--r-- 1 root root 4101 Jan 12 13:43 man.test.config
+
+[root@www vitest]# <span class="term_command">kill -9 %1</span> <span class="term_note">&lt;==這裡模擬斷線停止 vim 工作</span>
+[root@www vitest]# <span class="term_command">ls -al .man.config.swp</span>
+-rw-r--r-- 1 root root 4096 Jan 12 14:48 .man.config.swp  <span class="term_note">&lt;==暫存檔還是會存在！</span>
+</pre></td></tr></table>
+
+		<p>那個 kill 可以模擬將系統的 vim 工作刪除的情況，你可以假裝當機了啦！
+		<span class="text_import2">由於 vim 的工作被不正常的中斷，導致暫存檔無法藉由正常流程來結束，
+		所以暫存檔就不會消失，而繼續保留下來。</span>此時如果你繼續編輯那個 man.config ，會出現什麼情況呢？
+		會出現如下所示的狀態喔：</p>
+
+
+<table class="term"><tr><td class="term"><pre>
+[root@www vitest]# <span class="term_command">vim man.config</span>
+E325: ATTENTION  <span class="term_note">&lt;==錯誤代碼</span>
+Found a swap file by the name "<span class="term_write">.man.config.swp</span>"  <span class="term_note">&lt;==底下數行說明有暫存檔的存在</span>
+          owned by: root   dated: Mon Jan 12 14:48:24 2009
+         file name: /tmp/vitest/man.config  <span class="term_note">&lt;==這個暫存檔屬於哪個實際的檔案？</span>
+
+          modified: no
+         user name: root   host name: www.vbird.tsai
+        process ID: 11539
+While opening file "man.config"
+             dated: Mon Jan 12 13:55:07 2009
+<span class="term_note">底下說明可能發生這個錯誤的兩個主要原因與解決方案！</span>
+(1) Another program may be editing the same file.
+    If this is the case, be careful not to end up with two
+    different instances of the same file when making changes.
+    Quit, or continue with caution.
+
+(2) An edit session for this file crashed.
+    If this is the case, use ":recover" or "vim -r man.config"
+    to recover the changes (see ":help recovery").
+    If you did this already, delete the swap file ".man.config.swp"
+    to avoid this message.
+
+Swap file ".man.config.swp" already exists!<span class="term_note">底下說明你可進行的動作</span>
+<u>[O]pen Read-Only, (E)dit anyway, (R)ecover, (D)elete it, (Q)uit, (A)bort: <span class="term_white"> </span></u>
+</pre></td></tr></table>
+
+		<p>由於暫存檔存在的關係，因此 vim 會主動的判斷你的這個檔案可能有些問題，在上面的圖示中 vim 
+		提示兩點主要的問題與解決方案，分別是這樣的：</p>
+
+		<ul>
+
+		<li>問題一：可能有其他人或程式同時在編輯這個檔案：<br /><br />
+		由於 Linux 是多人多工的環境，因此很可能有很多人同時在編輯同一個檔案。如果在多人共同編輯的情況下，
+		萬一大家同時儲存，那麼這個檔案的內容將會變的亂七八糟！為了避免這個問題，因此 vim 會出現這個警告視窗！
+		解決的方法則是：<br /><br />
+		<ul><li><span class="text_import2">找到另外那個程式或人員，請他將該 vim 的工作結束，然後你再繼續處理。</span>
+		<br /><br /></li>
+		<li>如果你只是要看該檔案的內容並不會有任何修改編輯的行為，那麼<span class="text_import2">可以選擇開啟成為唯讀(O)檔案，
+		亦即上述畫面反白部分輸入英文『 o 』即可</span>，其實就是 [O]pen Read-Only 的選項啦！
+		</li></ul><br /></li>
+
+		<li>問題二：在前一個 vim 的環境中，可能因為某些不知名原因導致 vim 中斷 (crashed)：<br /><br />
+		這就是常見的不正常結束 vim 產生的後果。解決方案依據不同的情況而不同喔！常見的處理方法為：<br /><br />
+		<ul>
+		<li>如果你之前的 vim 處理動作尚未儲存，此時你應該要按下『R』，亦即使用 (R)ecover 的項目，
+		此時 vim 會載入 .man.config.swp 的內容，讓你自己來決定要不要儲存！這樣就能夠救回來你之前未儲存的工作。
+		不過那個 .man.config.swp 並不會在你結束 vim 後自動刪除，所以<span class="text_import2">你離開 vim 
+		後還得要自行刪除 .man.config.swp 才能避免每次打開這個檔案都會出現這樣的警告</span>！<br /><br /></li>
+		<li>如果你確定這個暫存檔是沒有用的，那麼你可以直接按下『D』刪除掉這個暫存檔，亦即 (D)elete it 這個項目即可。
+		此時 vim 會載入 man.config ，並且將舊的 .man.config.swp 刪除後，建立這次會使用的新的 .man.config.swp 喔！</li>
+		</ul><br /></li>
+
+		</ul>
+
+		<p>至於這個發現暫存檔警告訊息的畫面中，有出現六個可用按鈕，各按鈕的說明如下：</p>
+		<ul>
+		<li><span class="text_import2">[O]pen Read-Only：</span>打開此檔案成為唯讀檔，
+		可以用在你只是想要查閱該檔案內容並不想要進行編輯行為時。一般來說，在上課時，如果你是登入到同學的電腦去看他的設定檔，
+		結果發現其實同學他自己也在編輯時，可以使用這個模式；<br /><br /></li>
+
+		<li><span class="text_import2">(E)dit anyway</span>：還是用正常的方式打開你要編輯的那個檔案，
+		並不會載入暫存檔的內容。不過很容易出現兩個使用者互相改變對方的檔案等問題！不好不好！<br /><br /></li>
+
+		<li><span class="text_import2">(R)ecover</span>：就是載入暫存檔的內容，用在你要救回之前未儲存的工作。
+		不過當你救回來並且儲存離開 vim 後，還是要手動自行刪除那個暫存檔喔！<br /><br /></li>
+
+		<li><span class="text_import2">(D)elete it</span>：你確定那個暫存檔是無用的！那麼開啟檔案前會先將這個暫存檔刪除！
+		這個動作其實是比較常做的！因為你可能不確定這個暫存檔是怎麼來的，所以就刪除掉他吧！哈哈！<br /><br /></li>
+
+		<li><span class="text_import2">(Q)uit</span>：按下 q 就離開 vim ，不會進行任何動作回到命令提示字元。<br /><br /></li>
+
+		<li><span class="text_import2">(A)bort</span>：忽略這個編輯行為，感覺上與 quit 非常類似！
+		也會送你回到命令提示字元就是囉！</li>
+
+		</ul>
+	</div>
+</div>
+
+
+<hr /><a name="vim"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">vim 的額外功能</span><br />
+<div class="block1">
+	<p>其實，目前大部分的 distributions 都以 vim 取代 vi 的功能了！如果你使用 vi 
+	後，卻看到畫面的右下角有顯示目前游標所在的行列號碼，那麼你的 vi 已經被 vim 所取代囉～
+	為什麼要用 vim 呢？因為 vim 具有顏色顯示的功能，並且還支援許多的程式語法 (syntax)，
+	因此，當你使用 vim 編輯程式時( 不論是 C 語言，還是 shell script )，
+	我們的 vim 將可幫你直接進行『程式除錯 (debug)』的功能！真的很不賴吧！^_^</p>
+
+	<p>如果你在文字模式下，輸入 alias 時，出現這樣的畫面：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">alias</span>
+<span class="term_say">....其他省略....</span>
+alias vi='vim'  <span class="term_note">&lt;==重點在這行啊！</span>
+</pre></td></tr></table>
+
+	<p>這表示當你使用 vi 這個指令時，其實就是執行 vim 啦！如果你沒有這一行，那麼你就必須要使用 vim filename 
+	來啟動 vim 囉！基本上， vim 的一般用法與 vi 完全一模一樣～沒有不同啦！那麼我們就來看看 vim 
+	的畫面是怎樣囉！假設我想要編輯 /etc/man.config ，則輸入『<span class="text_import2">vim /etc/man.config</span>』</p>
+
+	<center><img src="0310vi/vim-01.jpg" alt="vim 的圖示示意" title="vim 的圖示示意" border="1" /><br />
+	圖3.0.1、 vim 的圖示示意<br /></center>
+
+	<p>上面是 vim 的畫面示意圖，在這個畫面中有幾點特色要說明喔：</p>
+
+	<ol>
+	<li>由於 man.config 是系統規劃的設定檔，因此 vim 會進行語法檢驗，所以你會看到畫面中內部主要為深藍色，
+		且深藍色那一行是以註解符號 (#) 為開頭；</li>
+	<li>最底下一行的左邊顯示該檔案的屬性，包括 141行與 4617 字元；</li>
+
+	<li>最底下一行的右邊出現的 1,1 表示游標所在為第一行, 第一個字元位置之意(請看一下上圖中的游標所在)；</li>
+	</ol>
+
+	<p>所以，如果你向下移動到其他位置時，出現的非註解的資料就會有點像這樣：</p>
+
+	<center><img src="0310vi/vim-02.jpg" alt="vim 的圖示示意" title="vim 的圖示示意" border="1" /><br />
+	圖3.0.2、 vim 的圖示示意<br /></center>
+
+	<p>看到了喔！除了註解之外，其他的行就會有特別的顏色顯示呢！可以避免你打錯字啊！而且，
+	最右下角的 30% 代表目前這個畫面佔整體檔案的 30% 之意！這樣瞭乎？<br /><br /></p>
+
+	<hr /><a name="vim_v"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">區塊選擇(Visual Block)</span><br />
+	<div class="block2">
+		<p>剛剛我們提到的簡單的 vi 操作過程中，幾乎提到的都是以行為單位的操作。那麼如果我想要搞定的是一個區塊範圍呢？
+		舉例來說，像底下這種格式的檔案：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_write">192.168.1.1    host1.class.net
+192.168.1.2    host2.class.net
+192.168.1.3    host3.class.net
+192.168.1.4    host4.class.net</span>
+<span class="term_say">.....中間省略......</span>
+</pre></td></tr></table>
+
+		<p>這個檔案我將他放置到 <a href="/linux_basic/0310vi/hosts">http://linux.vbird.org/linux_basic/0310vi/hosts</a> 
+		，你可以自行下載來看一看這個檔案啊！現在我們來玩一玩這個檔案吧！假設我想要將 host1, host2... 等等複製起來，
+		並且加到每一行的後面，亦即每一行的結果要是『 192.168.1.2   host2.class.net  host2 』這樣的情況時，
+		在傳統或現代的視窗型編輯器似乎不容易達到這個需求，但是咱們的 vim 是辦的到的喔！那就使用區塊選擇
+		(Visual Block) 吧！當我們按下 v 或者 V 或者 [Ctrl]+v 時，
+		這個時候游標移動過的地方就會開始反白，這三個按鍵的意義分別是：</p>
+
+<div class="fontwidth">
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">區塊選擇的按鍵意義</td></tr>
+	<tr><td style="text-align:center">v</td><td>字元選擇，會將游標經過的地方反白選擇！</td></tr>
+	<tr><td style="text-align:center">V</td><td>行選擇，會將游標經過的行反白選擇！</td></tr>
+
+	<tr><td style="text-align:center">[Ctrl]+v</td><td>區塊選擇，可以用長方形的方式選擇資料</td></tr>
+	<tr><td style="text-align:center">y</td><td>將反白的地方複製起來</td></tr>
+	<tr><td style="text-align:center">d</td><td>將反白的地方刪除掉</td></tr>
+</table><br />
+</div>
+
+		<p>來實際進行我們需要的動作吧！就是將 host 再加到每一行的最後面，你可以這樣做：</p>
+
+		<ol>
+		<li>使用 vim hosts 來開啟該檔案，記得該檔案請由<a href="/linux_basic/0310vi/hosts">上述的連結</a>下載先！</li>
+		<li>將游標移動到第一行的 host 那個 h 上頭，然後按下 [ctrl]-v ，左下角出現區塊示意字樣：<br /><br />
+
+		<center><img src="0310vi/vim-block-01.jpg" alt="進入區塊功能的示意圖" 
+		title="進入區塊功能的示意圖" border="1" /><br />
+		圖 3.1.1、進入區塊功能的示意圖<br /></center><br /></li>
+
+		<li>將游標移動到最底部，此時游標移動過的區域會反白！如下圖所示：<br /><br />
+
+		<center><img src="0310vi/vim-block-02.jpg" alt="區塊選擇的結果示意圖" 
+		title="區塊選擇的結果示意圖" border="1" /><br />
+		圖 3.1.2、區塊選擇的結果示意圖<br /></center><br /></li>
+
+		<li>此時你可以按下『 y 』來進行複製，當你按下 y 之後，反白的區塊就會消失不見囉！</li>
+
+		<li>最後，將游標移動到第一行的最右邊，並且再用編輯模式向右按兩個空白鍵，回到一般模式後，
+		再按下『 p 』後，你會發現很有趣！如下圖所示：<br /><br />
+
+		<center><img src="0310vi/vim-block-03.jpg" alt="將區塊的資料貼上後的結果" 
+		title="將區塊的資料貼上後的結果" border="1" /><br />
+		圖 3.1.3、將區塊的資料貼上後的結果<br /></center></li>
+		</ol>
+
+		<p>透過上述的功能，你可以複製一個區塊，並且是貼在某個『區塊的範圍』內，而不是以行為單位來處理你的整份文件喔！
+		鳥哥個人是覺得這玩意兒非常的有幫助啦！至少在進行排列整齊的文字檔案中複製/刪除區塊時，會是一個非常棒的功能！
+		<br /></p>
+	</div>
+
+	<hr /><a name="vim_files"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">多檔案編輯</span><br />
+
+	<div class="block2">
+		<p>假設一個例子，你想要將剛剛我們的 hosts 內的 IP 複製到你的 /etc/hosts 這個檔案去，
+		那麼該如何編輯？我們知道在 vi 內可以使用 :r filename 來讀入某個檔案的內容，
+		不過，這樣畢竟是將整個檔案讀入啊！如果我只是想要部分內容呢？呵呵！這個時候多檔案同時編輯就很有用了。
+		我們可以使用 vim 後面同時接好幾個檔案來同時開啟喔！相關的按鍵有：</p>
+
+<div class="fontwidth">
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">多檔案編輯的按鍵</td></tr>
+	<tr><td style="text-align:center">:n</td><td>編輯下一個檔案</td></tr>
+	<tr><td style="text-align:center">:N</td><td>編輯上一個檔案</td></tr>
+
+	<tr><td style="text-align:center">:files</td><td>列出目前這個 vim 的開啟的所有檔案</td></tr>
+</table><br />
+</div>
+
+		<p>在過去，鳥哥想要將 A 檔案內的十條消息『移動』到 B 檔案去，通常要開兩個 vim 視窗來複製，
+		偏偏每個 vim 都是獨立的，因此並沒有辦法在 A 檔案下達『 nyy 』再跑到 B 檔案去『 p 』啦！
+		在這種情況下最常用的方法就是透過滑鼠圈選，
+		複製後貼上。不過這樣一來還是有問題，因為鳥哥超級喜歡使用 [Tab] 按鍵進行編排對齊動作，
+		透過滑鼠卻會將 [Tab] 轉成空白鍵，這樣內容就不一樣了！此時這個多檔案編輯就派上用場了！</p>
+
+		<p>現在你可以做一下練習看看說！假設你要將剛剛鳥哥提供的 hosts 內的前四行 IP 資料複製到你的
+		/etc/hosts 檔案內，那可以怎麼進行呢？可以這樣啊：</p>
+
+		<ol>
+
+		<li>透過『 <span class="text_import2">vim hosts /etc/hosts</span> 』指令來使用一個 vim 開啟兩個檔案；</li>
+		<li>在 vim 中先使用『 :files 』察看一下編輯的檔案資料有啥？結果如下所示。
+		至於下圖的最後一行顯示的是『按下任意鍵』就會回到 vim 的一般模式中！<br /><br />
+
+		<center><img src="0310vi/vim-files-01.jpg" alt="多檔案編輯示意圖" 
+		title="多檔案編輯示意圖" border="1" /><br />
+		圖 3.2.1、多檔案編輯示意圖"<br /></center><br /></li>
+
+		<li>在第一行輸入『 4yy 』複製四行；</li>
+
+		<li>在 vim 的環境下輸入『 :n 』會來到第二個編輯的檔案，亦即 /etc/hosts 內；</li>
+		<li>在 /etc/hosts 下按『 G 』到最後一行，再輸入『 p 』貼上；</li>
+		<li>按下多次的『 u 』來還原原本的檔案資料；</li>
+		<li>最終按下『 :q 』來離開 vim 的多檔案編輯吧！</li>
+		</ol>
+
+		<p>看到了吧？利用多檔案編輯的功能，可以讓你很快速的就將需要的資料複製到正確的檔案內。
+		當然囉，這個功能也可以利用視窗介面來達到，那就是底下要提到的多視窗功能。</p>
+
+	</div>
+
+	<hr /><a name="vim_ws"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">多視窗功能</span><br />
+	<div class="block2">
+		<p>在開始這個小節前，先來想像兩個情況：</p>
+
+		<ul>
+		<li>當我有一個檔案非常的大，我查閱到後面的資料時，想要『對照』前面的資料，
+			是否需要使用 [ctrl]+f 與 [ctrl]+b (或 pageup, pagedown 功能鍵) 來跑前跑後查閱？<br /><br /></li>
+
+		<li>我有兩個需要對照著看的檔案，不想使用前一小節提到的多檔案編輯功能；</li>
+		</ul>
+
+		<p>在一般視窗介面下的編輯軟體大多有『分割視窗』或者是『凍結視窗』的功能來將一個檔案分割成多個視窗的展現，
+		那麼 vim 能不能達到這個功能啊？可以啊！但是如何分割視窗並放入檔案呢？
+		很簡單啊！在指令列模式輸入『:sp {filename}』即可！那個 filename 可有可無，
+		<span class="text_import2">如果想要在新視窗啟動另一個檔案，就加入檔名，否則僅輸入 :sp 時，
+		出現的則是同一個檔案在兩個視窗間</span>！</p>
+
+		<p>讓我們來測試一下，你先使用『 vim /etc/man.config 』打開這個檔案，然後『 1G 』去到第一行，之後輸入『 :sp 』
+		再次的打開這個檔案一次，然後再輸入『 G 』，結果會變成底下這樣喔：</p>
+
+		<center><img src="0310vi/vim-window-01.jpg" alt="視窗分割的示意圖" 
+		title="視窗分割的示意圖" border="1" /><br />
+		圖 3.3.1、視窗分割的示意圖<br /></center>
+
+		<p>萬一你再輸入『 :sp /etc/hosts 』時，就會變成下圖這樣喔：</p>
+
+		<center><img src="0310vi/vim-window-02.jpg" alt="視窗分割的示意圖" 
+		title="視窗分割的示意圖" border="1" /><br />
+		圖 3.3.2、視窗分割的示意圖<br /></center>
+
+		<p>怎樣？帥吧！兩個檔案同時在一個螢幕上面顯示，你還可以利用『[ctrl]+w+↑』及『[ctrl]+w+↓』
+		在兩個視窗之間移動呢！這樣的話，複製啊、查閱啊等等的，就變的很簡單囉～
+		分割視窗的相關指令功能有很多，不過你只要記得這幾個就好了：</p>
+
+<div class="fontwidth">
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">多視窗情況下的按鍵功能</td></tr>
+	<tr><td width="150" style="text-align:center">:sp [filename]</td><td>開啟一個新視窗，如果有加 filename，
+		表示在新視窗開啟一個新檔案，否則表示兩個視窗為同一個檔案內容(同步顯示)。</td></tr>
+	<tr><td style="text-align:center">[ctrl]+w+ j<br />[ctrl]+w+↓</td><td>按鍵的按法是：先按下 [ctrl] 不放，
+		再按下 w 後放開所有的按鍵，然後再按下 j (或向下方向鍵)，則游標可移動到下方的視窗。</td></tr>
+	<tr><td style="text-align:center">[ctrl]+w+ k<br />[ctrl]+w+↑</td><td>同上，不過游標移動到上面的視窗。</td></tr>
+
+	<tr><td style="text-align:center">[ctrl]+w+ q</td><td>其實就是 :q 結束離開啦！
+		舉例來說，如果我想要結束下方的視窗，那麼利用 [ctrl]+w+↓ 移動到下方視窗後，按下 :q 即可離開，
+		也可以按下 [ctrl]+w+q 啊！</td></tr>
+</table>
+</div>
+
+		<p>鳥哥第一次玩 vim 的分割視窗時，真是很高興啊！竟然有這種功能！太棒了！ ^_^</p>
+	</div>
+
+	<hr /><a name="vim_set"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">vim 環境設定與記錄： ~/.vimrc, ~/.viminfo</span><br />
+	<div class="block2">
+
+		<p>有沒有發現，如果我們以 vim 軟體來搜尋一個檔案內部的某個字串時，這個字串會被反白，
+		而下次我們再次以 vim 編輯這個檔案時，該搜尋的字串反白情況還是存在呢！甚至於在編輯其他檔案時，
+		如果其他檔案內也存在這個字串，哇！竟然還是主動反白耶！真神奇！
+		另外，當我們重複編輯同一個檔案時，當第二次進入該檔案時，
+		游標竟然就在上次離開的那一行上頭呢！真是好方便啊～但是，怎麼會這樣呢？</p>
+
+		<p><span class="text_import2">這是因為我們的 vim 會主動的將你曾經做過的行為登錄下來，好讓你下次可以輕鬆的作業啊！
+		那個記錄動作的檔案就是： ~/.viminfo </span>！如果你曾經使用過 vim，
+		那你的家目錄應該會存在這個檔案才對。這個檔案是自動產生的，
+		你不必自行建立。而你在 vim 裡頭所做過的動作，就可以在這個檔案內部查詢到囉～ ^_^</p>
+
+		<p>此外，每個 distributions 對 vim 的預設環境都不太相同，舉例來說，某些版本在搜尋到關鍵字時並不會高亮度反白，
+		有些版本則會主動的幫你進行縮排的行為。但這些其實都可以自行設定的，那就是 vim 的環境設定囉～
+		vim 的環境設定參數有很多，如果你想要知道目前的設定值，可以在一般模式時輸入『 :set all 』
+		來查閱，不過.....設定項目實在太多了～所以，鳥哥在這裡僅列出一些平時比較常用的一些簡單的設定值，
+		提供給你參考啊。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		所謂的縮排，就是當你按下 Enter 編輯新的一行時，游標不會在行首，而是在與上一行的第一個非空白字元處對齊！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+<div class="fontwidth">
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue"><td colspan="2" style="color: #000088; font-size: 1.1em; text-align:center">vim 的環境設定參數</td></tr>
+	<tr><td width="170" style="text-align:center">:set nu<br />:set nonu</td><td>就是設定與取消行號啊！</td></tr>
+	<tr><td style="text-align:center">:set hlsearch<br />:set nohlsearch</td><td>hlsearch 就是 high light search(高亮度搜尋)。
+		這個就是設定是否將搜尋的字串反白的設定值。預設值是 hlsearch</td></tr>
+	<tr><td style="text-align:center">:set autoindent<br />:set noautoindent</td><td>是否自動縮排？autoindent 就是自動縮排。</td></tr>
+
+	<tr><td style="text-align:center">:set backup</td><td>是否自動儲存備份檔？一般是 nobackup 的，
+		如果設定 backup 的話，那麼當你更動任何一個檔案時，則原始檔案會被另存成一個檔名為 filename~ 的檔案。
+		舉例來說，我們編輯 hosts ，設定 :set backup ，那麼當更動 hosts 時，在同目錄下，就會產生 hosts~ 
+		檔名的檔案，記錄原始的 hosts 檔案內容</td></tr>
+	<tr><td style="text-align:center">:set ruler</td><td>還記得我們提到的右下角的一些狀態列說明嗎？
+		這個 ruler 就是在顯示或不顯示該設定值的啦！</td></tr>
+	<tr><td style="text-align:center">:set showmode</td><td>這個則是，是否要顯示 --INSERT-- 
+		之類的字眼在左下角的狀態列。</td></tr>
+	<tr><td style="text-align:center">:set backspace=(012)</td><td>一般來說，
+		如果我們按下 i 進入編輯模式後，可以利用倒退鍵 (backspace) 來刪除任意字元的。
+		但是，某些 distribution 則不許如此。此時，我們就可以透過 backspace 來設定囉～
+		當 backspace 為 2 時，就是可以刪除任意值；0 或 1 時，僅可刪除剛剛輸入的字元，
+		而無法刪除原本就已經存在的文字了！</td></tr>
+	<tr><td style="text-align:center">:set all</td><td>顯示目前所有的環境參數設定值。</td></tr>
+
+	<tr><td style="text-align:center">:set</td><td>顯示與系統預設值不同的設定參數，
+		一般來說就是你有自行變動過的設定參數啦！</td></tr>
+	<tr><td style="text-align:center">:syntax on<br />:syntax off</td><td>是否依據程式相關語法顯示不同顏色？
+		舉例來說，在編輯一個純文字檔時，如果開頭是以 # 開始，那麼該行就會變成藍色。
+		如果你懂得寫程式，那麼這個 :syntax on 還會主動的幫你除錯呢！但是，
+		如果你僅是編寫純文字檔案，要避免顏色對你的螢幕產生的干擾，則可以取消這個設定 。</td></tr>
+	<tr><td style="text-align:center">:set bg=dark<br />:set bg=light</td><td>
+		可用以顯示不同的顏色色調，預設是『 light 』。如果你常常發現註解的字體深藍色實在很不容易看，
+		那麼這裡可以設定為 dark 喔！試看看，會有不同的樣式呢！</td></tr>
+</table>
+
+</div>
+
+		<p>總之，這些設定值很有用處的啦！但是......我是否每次使用 vim 都要重新設定一次各個參數值？
+		這不太合理吧？沒錯啊！所以，我們可以透過設定檔來直接規定我們習慣的 vim 操作環境呢！
+		<span class="text_import2">整體 vim 的設定值一般是放置在 /etc/vimrc 這個檔案，不過，不建議你修改他！
+		你可以修改 ~/.vimrc 這個檔案</span> (預設不存在，請你自行手動建立！)，將你所希望的設定值寫入！
+		舉例來說，可以是這樣的一個檔案：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim ~/.vimrc</span>
+<span class="term_write">"這個檔案的雙引號 (") 是註解
+set hlsearch            "高亮度反白
+set backspace=2         "可隨時用倒退鍵刪除
+set autoindent          "自動縮排
+set ruler               "可顯示最後一行的狀態
+set showmode            "左下角那一行的狀態
+set nu                  "可以在每一行的最前面顯示行號啦！
+set bg=dark             "顯示不同的底色色調
+syntax on               "進行語法檢驗，顏色顯示。</span>
+</pre></td></tr></table>
+
+		<p>在這個檔案中，使用『 set hlsearch 』或『 :set hlsearch 』，亦即最前面有沒有冒號『 : 』效果都是一樣的！
+		至於雙引號則是註解符號！不要用錯註解符號，否則每次使用 vim 時都會發生警告訊息喔！
+		建立好這個檔案後，當你下次重新以 vim 編輯某個檔案時，該檔案的預設環境設定就是上頭寫的囉～
+		這樣，是否很方便你的操作啊！多多利用 vim 的環境設定功能呢！^_^</p>
+	</div>
+
+	<hr /><a name="vim_fig"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">vim 常用指令示意圖</span><br />
+	<div class="block2">
+		<p>為了方便大家查詢在不同的模式下可以使用的 vim 指令，鳥哥查詢了一些 vim 與 Linux 教育訓練手冊，
+		發現底下這張圖非常值得大家參考！可以更快速有效的查詢到需要的功能喔！看看吧！</p>
+
+		<center><img src="0310vi/vim-commands.jpg" alt="vim 常用指令示意圖" 
+		title="vim 常用指令示意圖" border="0" /><br />
+
+		圖 3.5.1 、 vim 常用指令示意圖<br /></center>
+	</div>
+</div>
+
+
+<hr /><a name="tips"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">其他 vim 使用注意事項</span><br />
+<div class="block1">
+	<p>vim 其實不是那麼好學，雖然他的功能確實非常強大！所以底下我們還有一些需要注意的地方要來跟大家分享喔！<br /><br /></p>
+
+	<hr /><a name="tips_code"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">中文編碼的問題</span><br />
+
+	<div class="block2">
+		<p>很多朋友常常哀嚎，說他們的 vim 裡面怎麼無法顯示正常的中文啊？其實這很有可能是因為編碼的問題！
+		因為中文編碼有 big5 與 utf8 兩種，如果你的檔案是使用 big5 編碼製作的，但在 vim 的終端介面中你使用的是萬國碼(utf8)，
+		由於編碼的不同，你的中文檔案內容當然就是一堆亂碼了！怎麼辦？這時你得要考慮許多東西啦！有這些：</p>
+		<ol>
+		<li>你的 Linux 系統預設支援的語系資料：這與 /etc/sysconfig/i18n 有關；</li>
+		<li>你的終端介面 (bash) 的語系： 這與 LANG 這個變數有關；</li>
+		<li>你的檔案原本的編碼；</li>
+		<li>開啟終端機的軟體，例如在 GNOME 底下的視窗介面。</li>
+
+		</ol>
+
+		<p>事實上最重要的是上頭的第三與第四點，只要這兩點的編碼一致，你就能夠正確的看到與編輯你的中文檔案。
+		否則就會看到一堆亂碼啦！</p>
+
+		<p>一般來說，中文編碼使用 big5 時，在寫入某些資料庫系統中，在『許、蓋、功』這些字體上面會發生錯誤！
+		所以近期以來大多希望大家能夠使用萬國碼 utf8 來進行中文編碼！但是在 Windows XP 上的軟體常常預設使用 big5 的編碼，
+		包括鳥哥由於沿用以前的文件資料檔案，也大多使用 big5 的編碼。此時就得要注意上述的這些咚咚囉。</p>
+
+		<p>在 Linux 本機前的 tty1~tty6 原本預設就不支援中文編碼，所以不用考慮這個問題！因為你一定會看到亂碼！呵呵！
+		現在鳥哥假設俺的文件檔案內編碼為 big5 時，而且我的環境是使用 Linux 的 GNOME ，啟動的終端介面為 GNOME-terminal 軟體，
+		那鳥哥通常是這樣來修正語系編碼的行為：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">LANG=zh_TW.big5</span>
+
+</pre></td></tr></table>
+
+		<p>然後在終端介面工具列的<span class="text_import2">『終端機』--&gt;『設定字元編碼』
+		--&gt;『中文 (正體) (BIG5)』</span>項目點選一下，
+		如果一切都沒有問題了，再用 vim 去開啟那個 big5 編碼的檔案，就沒有問題了！以上！報告完畢！</p>
+	</div>
+
+	<hr /><a name="tips_dos"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DOS 與 Linux 的斷行字元</span><br />
+	<div class="block2">
+
+		<p>我們在<a href="/linux_basic/0220filemanager.php">第七章</a>裡面談到
+		<a href="/linux_basic/0220filemanager.php#cat">cat</a> 這個指令時，曾經提到過 DOS 與 Linux 斷行字元的不同。
+		而我們也可以利用 cat -A 來觀察以 DOS (Windows 系統) 建立的檔案的特殊格式，
+		也可以發現在 DOS 使用的斷行字元為 ^M$ ，我們稱為 CR 與 LF 兩個符號。
+		而在 Linux 底下，則是僅有 LF ($) 這個斷行符號。這個斷行符號對於 Linux 的影響很大喔！
+		為什麼呢？</p>
+
+		<p>我們說過，在 Linux 底下的指令在開始執行時，他的判斷依據是 『Enter』，而 Linux 的 Enter 為 LF 符號，
+		不過，由於 DOS 的斷行符號是 CRLF ，也就是多了一個 ^M 的符號出來，
+		在這樣的情況下，如果是一個 shell script 的程式檔案，呵呵～將可能造成『程式無法執行』的狀態～
+		因為他會誤判程式所下達的指令內容啊！這很傷腦筋吧！</p>
+
+		<p>那怎麼辦啊？很簡單啊，將格式轉換成為 Linux 即可啊！『廢話』，這當然大家都知道，但是，
+		要以 vi 進入該檔案，然後一個一個刪除每一行的 CR 嗎？當然沒有這麼沒人性啦！
+		我們可以透過簡單的指令來進行格式的轉換啊！</p>
+
+<a name="dos2unix"></a><a name="unix2dos"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dos2unix [-kn] file [newfile]</span>
+[root@www ~]# <span class="term_command">unix2dos [-kn] file [newfile]</span>
+<span class="term_say">選項與參數：
+-k  ：保留該檔案原本的 mtime 時間格式 (不更新檔案上次內容經過修訂的時間)
+-n  ：保留原本的舊檔，將轉換後的內容輸出到新檔案，如： dos2unix -n old new</span>
+
+<span class="term_hd">範例一：將剛剛上述練習的 /tmp/vitest/man.config 修改成為 dos 斷行</span>
+[root@www ~]# <span class="term_command">cd /tmp/vitest</span>
+[root@www vitest]# <span class="term_command">cp -a /etc/man.config .</span>
+
+[root@www vitest]# <span class="term_command">ll man.config</span>
+-rw-r--r-- 1 root root <span class="term_write">4617</span> Jan  6  2007 man.config
+[root@www vitest]# <span class="term_command">unix2dos -k man.config</span>
+unix2dos: converting file man.config to DOS format ...
+<span class="term_say"># 螢幕會顯示上述的訊息，說明斷行轉為 DOS 格式了！</span>
+[root@www vitest]# <span class="term_command">ll man.config</span>
+-rw-r--r-- 1 root root <span class="term_write">4758</span> Jan  6  2007 man.config
+
+<span class="term_say"># 斷行字元多了 ^M ，所以容量增加了！</span>
+
+<span class="term_hd">範例二：將上述的 man.config 轉成 man.config.linux 的 Linux 斷行字元</span>
+[root@www vitest]# <span class="term_command">dos2unix -k -n man.config man.config.linux</span>
+dos2unix: converting file man.config to file man.config.linux in UNIX format ...
+[root@www vitest]# <span class="term_command">ll man.config*</span>
+-rw-r--r-- 1 root root 4758 Jan  6  2007 man.config
+-rw------- 1 root root 4617 Jan  6  2007 man.config.linux
+</pre></td></tr></table>
+
+		<p>因為斷行字符以及 DOS 與 Linux 作業系統底下一些字符的定義不同，因此，
+		不建議你在 Windows 系統當中將檔案編輯好之後，才上傳到 Linux 系統，會容易發生錯誤問題。
+		而且，如果你在不同的系統之間複製一些純文字檔案時，千萬記得要使用 unix2dos 或 dos2unix 來轉換一下斷行格式啊！</p>
+
+	</div>
+
+	<hr /><a name="tips_translate"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">語系編碼轉換</span><br />
+	<div class="block2">
+		<p>很多朋友都會有的問題，就是想要將語系編碼進行轉換啦！舉例來說，想要將 big5 編碼轉成 utf8 。
+		這個時候怎麼辦？難不成要每個檔案打開會轉存成 utf8 嗎？不需要這樣做啦！使用 iconv 這個指令即可！
+		鳥哥將之前的 vi 章節做成 big5 編碼的檔案，你可以照底下的連結來下載先：</p>
+
+		<ul><li><a href="/linux_basic/0310vi/vi.big5">http://linux.vbird.org/linux_basic/0310vi/vi.big5</a></li></ul>
+
+		<p>在終端機的環境下你可以使用『 wget 網址』來下載上述的檔案喔！鳥哥將他下載在 /tmp/vitest 目錄下。
+		接下來讓我們來使用 iconv 這個指令來玩一玩編碼轉換吧！</p>
+
+<a name="iconv"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">iconv --list</span>
+[root@www ~]# <span class="term_command">iconv -f 原本編碼 -t 新編碼 filename [-o newfile]</span>
+<span class="term_say">選項與參數：
+--list ：列出 iconv 支援的語系資料
+-f     ：from ，亦即來源之意，後接原本的編碼格式；
+-t     ：to ，亦即後來的新編碼要是什麼格式；
+-o file：如果要保留原本的檔案，那麼使用 -o 新檔名，可以建立新編碼檔案。</span>
+
+<span class="term_hd">範例一：將 /tmp/vitest/vi.big5 轉成 utf8 編碼吧！</span>
+[root@www ~]# <span class="term_command">cd /tmp/vitest</span>
+
+[root@www vitest]# <span class="term_command">iconv -f big5 -t utf8 vi.big5 -o vi.utf8</span>
+[root@www vitest]# <span class="term_command">file vi*</span>
+vi.big5: ISO-8859 text, with CRLF line terminators
+vi.utf8: UTF-8 Unicode text, with CRLF line terminators
+<span class="term_say"># 是吧！有明顯的不同吧！ ^_^</span>
+</pre></td></tr></table>
+
+		<p>這指令支援的語系非常之多，除了正體中文的 big5, utf8 編碼之外，也支援簡體中文的 gb2312 ，
+		所以對岸的朋友可以簡單的將鳥站的網頁資料下載後，利用這個指令來轉成簡體，就能夠輕鬆的讀取文件資料囉！
+		不過，不要將轉成簡體的檔案又上傳成為您自己的網頁啊！這明明是鳥哥寫的不是嗎？ ^_^</p>
+
+		<p>不過如果是要將正體中文的 utf8 轉成簡體中文的 utf8 編碼時，那就得費些功夫了！
+		舉例來說，如果要將剛剛那個 vi.utf8 轉成簡體的 utf8 時，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www vitest]# <span class="term_command">iconv -f utf8 -t big5 vi.utf8 | \</span>
+&gt; <span class="term_command">iconv -f big5 -t gb2312 | iconv -f gb2312 -t utf8 -o vi.gb.utf8</span>
+</pre></td></tr></table>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+
+<ul class="text_import2">
+	<li>Linux 底下的設定檔多為文字檔，故使用 vim 即可進行設定編輯；</li>
+	<li>vim 可視為程式編輯器，可用以編輯 shell script, 設定檔等，避免打錯字；</li>
+	<li>vi 為所有 unix like 的作業系統都會存在的編輯器，且執行速度快速；</li>
+	<li>vi 有三種模式，一般模式可變換到編輯與指令列模式，但編輯模式與指令列模式不能互換；</li>
+	<li>常用的按鍵有i, [Esc], :wq 等；</li>
+	<li>vi 的畫面大略可分為兩部份，(1)上半部的本文與(2)最後一行的狀態+指令列模式；</li>
+
+	<li>數字是有意義的，用來說明重複進行幾次動作的意思，如 5yy 為複製 5  行之意；</li>
+	<li>游標的移動中，大寫的 G 經常使用，尤其是 1G, G 移動到文章的頭/尾功能！</li>
+	<li>vi 的取代功能也很棒！ :n1,n2s/old/new/g 要特別注意學習起來；</li>
+	<li>小數點『 . 』為重複進行前一次動作，也是經常使用的按鍵功能！</li>
+	<li>進入編輯模式幾乎只要記住： i, o, R 三個按鈕即可！尤其是新增一行的 o 與取代的 R</li>
+	<li>vim 會主動的建立 swap 暫存檔，所以不要隨意斷線！</li>
+
+	<li>如果在文章內有對其的區塊，可以使用 [ctrl]-v 進行複製/貼上/刪除的行為</li>
+	<li>使用 :sp 功能可以分割視窗</li>
+	<li>vim 的環境設定可以寫入在 ~/.vimrc 檔案中；</li>
+	<li>可以使用 iconv 進行檔案語系編碼的轉換</li>
+	<li>使用 dos2unix 及 unix2dos 可以變更檔案每一行的行尾斷行字元。</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章練習</span><br />
+(要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看)
+<div class="block1">
+實作題部分：
+<ul>
+	<li>在第八章的情境模擬題二的第五點，編寫 /etc/fstab 時，當時使用 nano 這個指令，
+	請嘗試使用 vim 去編輯 /etc/fstab ，並且將第八章新增的那一行的 defatuls 改成 default ，會出現什麼狀態？
+	離開前請務必要修訂成原本正確的資訊。此外，如果將該行註解 (最前面加 #)，你會發現字體顏色也有變化喔！<br /><br /></li>
+
+	<li>嘗試在你的系統中，你慣常使用的那個帳號的家目錄下，將本章介紹的 vimrc 內容進行一些常用設定，包括：<br />
+		<ul>
+
+		<li>設定搜尋高亮度反白</li>
+		<li>設定語法檢驗啟動</li>
+		<li>設定預設啟動行號顯示</li>
+		<li>設定有兩行狀態列 (一行狀態+一行指令列) :set laststatus=2</li>
+		</ul></li>
+</ul>
+<hr />簡答題部分：
+<ul>
+
+	<li>我用 vi 開啟某個檔案後，要在第 34 行向右移動 15 個字元，應該在一般模式中下達什麼指令？
+	<div class="blockex">
+		(1)先按下 34G 到第 34 行；(2)再按下 [ 15 + 向右鍵 ]，或 [ 15l ] 亦可！
+	</div></li>
+
+	<li>在 vi 開啟的檔案中，如何去到該檔案的頁首或頁尾？
+	<div class="blockex">
+		去頁首按下 1G 或 gg ；去頁尾按下 G 即可
+	</div></li>
+
+	<li>在 vi 開啟的檔案中，如何在游標所在行中，移動到行頭及行尾？
+	<div class="blockex">
+
+		移動到行頭，按 0 ，移動到行尾按 $ 即可！
+	</div></li>
+
+	<li>vi 的一般模式情況下，按下『 r 』有什麼功能？
+	<div class="blockex">
+		取代游標所在的那個字元
+	</div></li>
+
+	<li>在 vi 的環境中，如何將目前正在編輯的檔案另存新檔名為 newfilename？
+	<div class="blockex">
+		:w newfilename
+	</div></li>
+
+	<li>在 linux 底下最常使用的文書編輯器為 vi ，請問如何進入編輯模式？
+	<div class="blockex">
+		在一般模式底下輸入： i, I, a, A 為在本行當中輸入新字元；(出現 –Insert- )<br />
+		在一般模式當中輸入： o, O 為在一個新的一行輸入新字元；<br />
+		在一般模式當中輸入： r, R 為取代字元！（左下角出現 –Replace-）
+	</div></li>
+
+	<li>在 vi 軟體中，如何由編輯模式跳回一般模式？
+	<div class="blockex">
+
+		可以按下[Esc]
+	</div></li>
+
+	<li>在 vi 環境中，若上下左右鍵無法使用時，請問如何在一般模式移動游標？
+	<div class="blockex">
+		[h, j, k, l]分別代表[左、下、上、右]
+	</div></li>
+
+	<li>在 vi 的一般模式中，如何刪除一行、n行；如何刪除一個字元？
+	<div class="blockex">
+		分別為 dd, ndd, x 或 X （dG 及 d1G 分別表示刪除到頁首及頁尾）
+	</div></li>
+
+	<li>在 vi 的一般模式中，如何複製一行、n行並加以貼上？
+	<div class="blockex">
+		分別為 yy, nyy, p 或 P
+	</div></li>
+
+	<li>在 vi 的一般模式中如何搜尋 string 這個字串？
+	<div class="blockex">
+		?string (往前搜尋)<br />
+		/string (往後搜尋)
+	</div></li>
+
+	<li>在 vi 的一般模式中，如何取代 word1 成為 word2，而若需要使用者確認機制，又該如何？
+	<div class="blockex">
+		:1,$s/word1/word2/g 或<br />
+		:1,$s/word1/word2/gc （需要使用者確認）
+	</div></li>
+
+	<li>在 vi 目前的編輯檔案中，在一般模式下，如何讀取一個檔案 filename 進來目前這個檔案？
+	<div class="blockex">
+		:r filename
+	</div></li>
+
+	<li>在 vi 的一般模式中，如何存檔、離開、存檔後離開、強制存檔後離開？
+	<div class="blockex">
+		:w； :q： :wq； :wq!
+	</div></li>
+
+	<li>在 vi 底下作了很多的編輯動作之後，卻想還原成原來的檔案內容，應該怎麼進行？
+	<div class="blockex">
+		直接按下 :e! 即可恢復成檔案的原始狀態！
+	</div></li>
+
+	<li>我在 vi 這個程式當中，不想離開 vi ，但是想執行 ls /home 這個指令，vi 有什麼額外的功能可以達到這個目的：
+	<div class="blockex">
+
+		事實上，可以使用[ :! ls /home ]不過，如果你學過後面的章節之後，你會發現，執行[ ctrl + z ]亦可暫時退出
+		vi 讓你在指令列模式當中執行指令喔！
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li>維基百科：ASCII 的代碼與圖示對應表：<a href="http://zh.wikipedia.org/wiki/ASCII"
+	target="_blank">http://zh.wikipedia.org/wiki/ASCII</a></li>
+	<li><a name="ps1"></a>註1：常見文書編輯器專案計畫連結：
+	<ul>
+
+		<li>emacs: <a href="http://www.gnu.org/software/emacs/" target="_blank">http://www.gnu.org/software/emacs/</a></li>
+		<li>pico: <a href="http://www.ece.uwaterloo.ca/~ece250/Online/Unix/pico/" 
+			target="_blank">http://www.ece.uwaterloo.ca/~ece250/Online/Unix/pico/</a></li>
+		<li>nano: <a href="http://sourceforge.net/projects/nano/" target="_blank">http://sourceforge.net/projects/nano/</a></li>
+		<li>joe: <a href="http://sourceforge.net/projects/joe-editor/"
+			target="_blank">http://sourceforge.net/projects/joe-editor/</a></li>
+		<li>vim: <a href="http://www.vim.org" target="_blank">http://www.vim.org</a></li>
+
+		<li>常見文書編輯器比較：<a href="http://encyclopedia.thefreedictionary.com/List+of+text+editors"
+			target="_blank">http://encyclopedia.thefreedictionary.com/List+of+text+editors</a></li>
+		<li>維基百科的文書編輯器比較：<a href="http://en.wikipedia.org/wiki/Comparison_of_text_editors"
+			target="_blank">http://en.wikipedia.org/wiki/Comparison_of_text_editors</a></li>
+	</ul></li>
+	<li>關於 vim 是什麼的『中文』說明：<a href="http://www.vim.org/6k/features.zh.txt"
+		target="_blank">http://www.vim.org/6k/features.zh.txt</a>。</li>
+	<li>李果正兄的：大家來學 vim <a href="http://info.sayya.org/~edt1023/vim/"
+		target="_blank">(http://info.sayya.org/~edt1023/vim/)</a></li>
+
+	<li>麥克星球 Linux Fedora 心得筆記：<br />正體/簡體中文的轉換方法：<a href="http://blog.xuite.net/michaelr/linux/15650102"
+		target="_blank">http://blog.xuite.net/michaelr/linux/15650102</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/04/05：第一次完成<br />
+2003/02/07：重新編排與加入 FAQ<br />
+2003/02/25：新加入本章節與 LPI 的相關性說明！<br />
+2005/07/28：將舊文章移動到 <a href="0310vi/0310vi.php">這裡</a> 。<br />
+
+2005/08/01：加入果正兄文章的參考，還有查閱 vim 官方網站的資料！<br />
+2008/12/18：將原本針對 FC4 版本的文章移動到 <a href="0310vi/0310vi-fc4.php">此處</a><br />
+2009/01/13：這麼簡單的一篇改寫，竟改了一個月！原因只是期末考將近太忙了～<br />
+2009/08/20：加入實作題，編輯簡答題，加入 vim 指令示意圖等<br />
+</span>
+<hr /><br />
+    </td>
+  <!-- InstanceEndEditable -->
+  
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+<!-- InstanceEnd --></html>

@@ -1,0 +1,1027 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- NTP 時間伺服器</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0440ntp.htm">
+    <span class="text_head0"><span class="text_head_en">NTP </span>時間伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0440ntp.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/12/08</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	很多時候由於電腦硬體的問題，所以我們都會調整一下時間，好讓電腦系統的時間可以一直保持正確的狀態。
+	而既然要調整時間，那麼自然就會有一個讓我們可以對照著來調整時間的『準確時間』咯！
+	在實際生活中，我們可以透過電視台、廣播電台、電話等等來調整我們的手錶，那麼如果是在網路上呢？
+	該如何讓我們的主機隨時保持正確的時間資訊？！另外，整個地球被切分成為
+	24 個時區，那麼什麼是 GMT (格林威治時間)，我們所在的時區又是哪一區呢？讓我們來簡單的談一談吧！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#theory">關於時區與網路校時的通訊協定</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#theory_timezone">什麼是時區？全球有多少時區？GMT 在那個時區？</a><br />
+	　　2.2 <a href="#theory_summer">什麼是夏季節約時間 (daylight savings)？</a><br />
+	　　2.3 <a href="#theory_UTC">Coordinated Universal Time (UTC)與系統時間的誤差 </a><br />
+	　　2.4 <a href="#theory_NTP">NTP 通訊協定</a><br />
+	</span>
+3. <a href="#server">NTP 伺服器的安裝與設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#server_pkg">所需套件與套件結構</a><br />
+	　　3.2 <a href="#server_ntp.conf">主要設定檔 ntp.conf 的處理</a><br />
+	　　3.3 <a href="#server_start">NTP 的啟動與觀察</a><br />
+	　　3.4 <a href="#server_firewall">安全性設定</a><br />
+	</span>
+4. <a href="#client">用戶端的時間更新方式</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#client_systime">Linux 系統時間與硬體時間</a><br />
+	　　4.2 <a href="#client_timezone">Linux 系統時區與手動校時工作： date, hwclock</a><br />
+	　　4.3 <a href="#client_linux">Linux 的網路校時</a><br />
+	　　4.4 <a href="#client_windows">Windows 的網路校時</a><br />
+	</span>
+5. <a href="#review">重點回顧</a><br />
+6. <a href="#ex">課後練習</a><br />
+7. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+8. <a href="http://phorum.vbird.org/viewtopic.htm?p=117976"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=117976</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	NTP 伺服器是個很容易設定的服務，你只要熟悉網路基礎即可輕易的將他設定好。
+	這一章沒有什麼很重要的預習功課，您可以輕鬆的學習啊！ ^_^<br /><br />
+</div>
+
+
+<hr /><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">關於時區與網路校時的通訊協定</span><br />
+<div class=block1>
+	時間對於現代人來說是很重要的，因為『 Time is money ！』。既然時間如此重要，對於 Internet 來說應該也是很重要吧？
+	為什麼呢？還記得我們在基礎學習篇裡面談到的『<a href="../linux_basic/0570syslog.htm#syslogd_server">登錄檔分析</a>』吧？
+	如果你架設了一個登錄檔記錄伺服器的話，那麼總得要分析每個主機所傳來的資訊吧？如果每一部主機的時間都不相同，
+	那如何判斷問題發生的時間點？所以囉，『<span class=text_import2>每一部主機的時間同步化</span>』就很重要了。<br /><br />
+
+	每一部主機時間的同步化重要性當然不只如此，包括之前談到的 DHCP 用戶端/伺服器端所需要的租約時間限制、
+	網路偵測時所需要注意的時間點、剛剛談到的登錄檔分析功能、具有相關性的主機彼此之間的錯誤偵測等等，
+	都需要具有相同的時間才能夠捉出問題呢。好了，底下咱們就來聊一聊，如何利用網路來進行主機的時間同步化吧！<br /><br />
+
+	<hr /><a NAME="theory_timezone"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是時區？全球有多少時區？GMT 
+	在那個時區？</span><br />
+	<div class=block2>
+		因為地球是圓的，所以同一個時刻，在地球的一邊是白天，一邊是黑夜。而因為人類使用一天 24 
+		小時的制度，所以，在地球對角的兩邊就應該差了 12 的小時才對。由於同一個時間點上面，
+		整個地球的時間應該都不一樣，為了解決這個問題，所以可以想見的，地球就被分成 24 個時區了！<br /><br />
+
+		那麼這 24 個時區是依據什麼來劃分的呢？由於地球被人類以『經緯度』座標來進行定位，
+		而經度為零的地點在英國『格林威治』這個城市所在縱剖面上，
+		(註：所謂的縱剖面就是由南極切到北極的直線，而橫切面就是與赤道平行的切線)，如下圖所示：<br /><br />
+
+		<a name="fig_01"></a><center><img src="0440ntp/time.gif"
+		title="地球的子午線、經緯度與時區的分隔概念"
+		alt="地球的子午線、經緯度與時區的分隔概念"><br />
+		圖一、地球的子午線、經緯度與時區的分隔概念</center><br />
+
+		因為繞地球一圈是 360 度角，這 360 度角共分為 24 個時區，當然一個時區就是 15 度角啦！
+		又由於是以<span class=text_import2>格林威治時間為標準時間(Greenwich Mean Time, GMT 
+		時間)</span>，加上地球自轉的關係，因此，在格林威治以東的區域時間是比較快的(+小時)，
+		而以西的地方當然就是較慢囉！<br /><br />
+
+		以台灣為例，因為台灣所在地約為東經 120 度北緯 25 度左右，又因為台灣在格林威治的東方 
+		(廢話！因為是東經嘛！ ^_^)，因此<span class=text_import2>台灣本地時間 (local time) 會比 GMT 時間快 8 小時 
+		(GMT + 8)</span>。當格林威治時間為零點，台灣就已經是早上八點了！
+		底下約略列出各個時區的名稱與所在經度，以及與 GMT 時間的時差：<br /><br />
+
+<table width=90% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr BGCOLOR="lightblue">
+<td WIDTH="60%">
+<center><font face="細明體">標準時區</font></center>
+</td>
+<td WIDTH="20%">
+<center><font face="細明體">經度</font></center>
+</td>
+<td WIDTH="20%">
+<center><font face="細明體">時差</font></center>
+</td>
+</tr>
+
+<tr>
+<td><font face="細明體">GMT , Greenwich Mean Time</font></td>
+<td><font face="細明體">0&nbsp;&nbsp; W/E</font></td>
+<td><font face="細明體">標準時間</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">CET , Central European</font></td>
+<td><font face="細明體">15&nbsp; E</font></td>
+<td><font face="細明體">+1&nbsp; 東一區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">EET , Eastern European</font></td>
+<td><font face="細明體">30&nbsp; E</font></td>
+<td><font face="細明體">+2&nbsp; 東二區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">BT&nbsp; , Baghdad</font></td>
+<td><font face="細明體">45&nbsp; E</font></td>
+<td><font face="細明體">+3&nbsp; 東三區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">USSR, Zone 3&nbsp;</font></td>
+<td><font face="細明體">60&nbsp; E</font></td>
+<td><font face="細明體">+4&nbsp; 東四區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">USSR, Zone 4</font></td>
+<td><font face="細明體">75&nbsp; E</font></td>
+<td><font face="細明體">+5&nbsp; 東五區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">Indian, First</font></td>
+<td><font face="細明體">82.3E</font></td>
+<td><font face="細明體">+5.5東五半區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">USSR, Zone 5</font></td>
+<td><font face="細明體">90&nbsp; E</font></td>
+<td><font face="細明體">+6&nbsp; 東六區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">SST , South Sumatra</font></td>
+<td><font face="細明體">105 E</font></td>
+<td><font face="細明體">+7&nbsp; 東七區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">JT&nbsp; , Java</font></td>
+<td><font face="細明體">112 E</font></td>
+<td><font face="細明體">+7.5東七半區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">CCT , China Coast <b>(台灣所在地)</b></font></td>
+<td><font face="細明體">120 E</font></td>
+<td><font face="細明體">+8&nbsp; 東八區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">JST , Japan</font></td>
+<td><font face="細明體">135 E</font></td>
+<td><font face="細明體">+9&nbsp; 東九區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">SAST, South Australia</font></td>
+<td><font face="細明體">142 E</font></td>
+<td><font face="細明體">+9.5東九半區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">GST , Guam</font></td>
+<td><font face="細明體">150 E</font></td>
+<td><font face="細明體">+10 東十區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">NZT , New Zealand</font></td>
+<td><font face="細明體">180 E</font></td>
+<td><font face="細明體">+12 東十二區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">Int'l Date Line</font></td>
+<td><font face="細明體">180 E/W</font></td>
+<td><font face="細明體">國際換日線</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">BST , Bering</font></td>
+<td><font face="細明體">165 W</font></td>
+<td><font face="細明體">-11 西十一區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">SHST, Alaska/Hawaiian</font></td>
+<td><font face="細明體">150 W</font></td>
+<td><font face="細明體">-10 西十區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">YST , Yukon</font></td>
+<td><font face="細明體">135 W</font></td>
+<td><font face="細明體">-9&nbsp; 西九區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">PST , Pacific</font></td>
+<td><font face="細明體">120 W</font></td>
+<td><font face="細明體">-8&nbsp; 西八區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">MST , Mountain</font></td>
+<td><font face="細明體">105 W</font></td>
+<td><font face="細明體">-7&nbsp; 西七區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">CST , Central</font></td>
+<td><font face="細明體">90&nbsp; W</font></td>
+<td><font face="細明體">-6&nbsp; 西六區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">EST , Eastern</font></td>
+<td><font face="細明體">75&nbsp; W</font></td>
+<td><font face="細明體">-5&nbsp; 西五區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">AST , Atlantic</font></td>
+<td><font face="細明體">60&nbsp; W</font></td>
+<td><font face="細明體">-4&nbsp; 西四區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">Brazil, Zone 2</font></td>
+<td><font face="細明體">45&nbsp; W</font></td>
+<td><font face="細明體">-3&nbsp; 西三區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">AT&nbsp; , Azores</font></td>
+<td><font face="細明體">30&nbsp; W</font></td>
+<td><font face="細明體">-2&nbsp; 西二區</font></td>
+</tr>
+
+<tr>
+<td><font face="細明體">WAT , West Africa</font></td>
+<td><font face="細明體">15&nbsp; W</font></td>
+<td><font face="細明體">-1&nbsp; 西一區</font></td>
+</tr>
+</table><br />
+
+		所以囉，台灣時間是 GMT + 8 就很容易推算出來了吧！要特別留意的是，很多朋友在安裝 Linux 的時候，
+		<span class=text_import2>總是會發現目前的時間慢或者快了 8 小時，不要懷疑，絕對與時區有關</span>！
+		趕緊給他查一下如何調整時區吧！ ^_^。<br /><br />
+
+		另外，在上表中有個比較有趣的時區，那就是在太平洋上面的國際換日線了！我們剛剛說，在格林威治的東邊時間會較快，
+		而在西邊時間會較慢，但是兩邊各走了 180 度之後就會碰頭啊！那不就剛好差了 24 小時嗎？沒錯啦！
+		所以才訂定為『國際換日線』啊！國際換日線剛好在太平洋上面，因此，如果您有坐飛機到美國的經驗應該會發現，咦！
+		怎麼出發的時間是星期六下午，坐了 13 個小時的飛機到了美國還是星期六！因為剛好通過了國際換日線，
+		日期減少了一天喔！如果反過來，由美國到台灣，日期就會多加一天喔！ ^_^ <br /><br />
+	</div>
+
+	<hr /><a NAME="theory_summer"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是夏季節約時間
+	(daylight savings)？ </span><br />
+	<div class=block2>
+		除了時區的概念先建立起來之後，現在再來談一談，那麼什麼是『<span class=text_import2>夏季節約時間</span>』？
+		既然是『夏季節約時間』當然主要是與夏天有關啦！因為地球在運行的時候是呈現一個傾斜角在繞太陽運轉的，
+		所以才有春夏秋冬(這個大家應該都知道啦！)，在夏天的時候，白天的時間會比較長，所以為了節約用電，
+		因此在夏天的時候某些地區會將他們的時間定早一小時，也就是說，原本時區是 8 點好了，
+		但是因為夏天太陽比較早出現，因此把時間向前挪，在 8 點的時候，訂定為該天的 7 點～如此一來，
+		我們就可以利用陽光照明，省去了花費電力的時間，因此才會稱之為夏季節約時間！<br /><br />
+
+		因為台灣實在是太小了，並沒有橫跨兩個時區，因此，夏季節約時間對我們來說，雖然還是有幫助啦！
+		不過，似乎沒有特別推行的樣子說～ <br /><br />
+	</div>
+
+	<hr /><a NAME="theory_UTC"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Coordinated Universal Time 
+	(UTC)與系統時間的誤差</span><br />
+	<div class=block2>
+		瞭解了一些時區的概念之後，這裡要談的是『<span class=text_import2>什麼是正確的時間</span>』。
+		在計算時間的時候，最準確的計算應該是使用『<span class=text_import2>原子震盪週期</span>』所計算的物理時鐘了
+		(Atomic Clock, 也被稱為原子鐘)，這也被定義為標準時間 (International Atomic Time)。而我們常常看見的 
+		UTC 也就是 <span class=text_import2>Coordinated Universal Time (協和標準時間)</span>就是利用這種 
+		Atomic Clock 為基準所定義出來的正確時間。例如 1999 年在美國啟用的原子鐘 NIST F-1，
+		他所產生的時間誤差每兩千年才差一秒鐘！真的是很準吶！這個 UTC 標準時間是以 GMT 
+		這個時區為主的喔！所以本地時間與 UTC 時間的時差就是本地時間與 GMT 時間的時差就是了！<br /><br />
+
+		事實上，在我們的身邊就有很多的原子鐘，例如石英表，還有電腦主機上面的 BIOS 
+		內部就含有一個原子鐘在紀錄與計算時間的進行吶！不過由於原子鐘主要是利用計算晶片 (crystal) 
+		的原子震盪週期去計時的，這是因為每種晶片都有自己的獨特的震盪週期之故。
+		然而因為這種晶片的震盪週期在不同的晶片之間多多少少都會有點差異性，
+		甚至同一批晶片也可能會或多或少有些許的差異(就連溫度也可能造成這樣的誤差呢！)，因此也就造成了 BIOS 
+		的時間會三不五時的給他快了幾秒或者慢了幾秒。<br /><br />
+
+		或許您會認為，BIOS 計時器每天快個五秒也沒有什麼了不起的，不過如果您再仔細的算一算，會發現，一天快五秒，
+		那麼一個月快2.5分鐘，一年就快了 75 分鐘了！所以說，呵呵！時間差是真的會存在的！
+		那麼如果您的電腦真的有這樣的情況，那要怎麼來重新校正時間呢？那就需要『網路校時』
+		(Network Time Protocol, NTP) 的功能了！底下我們就談一談那個 NTP 的 daemon 吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="theory_NTP"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NTP 通訊協定</span><br />
+	<div class=block2>
+		如同前面說的，電腦主機主要是以 BIOS 內部的時間為主要的時間依據，而偏偏這個時間可能因為 BIOS 
+		內部晶片本身的問題，而導致 BIOS 時間與標準時間 (UTC) 有一點點的差異存在！
+		所以為了避免主機時間因為長期運作下所導致的時間偏差，進行時間同步 (synchronize) 的工作就顯的很重要了！<br /><br />
+
+		那麼怎麼讓時間同步化呢？想一想，如果我們選擇幾部主要主機 (Primary server) 調校時間，讓這些 
+		Primary Servers 的時間同步之後，再開放網路服務來讓 Client 端連線，並且提供 Client 
+		端調整自己的時間，不就可以達到全部的電腦時間同步化的運作了嗎！那麼什麼協定可以達到這樣的功能呢？那就是 
+		<span class=text_import2>Network Time Protocol</span> ，另外還有 
+		Digital Time Synchronization Protocol (DTSS) 也可以達到相同的功能！<br /><br />
+
+		不過，到底 NTP 這個 daemon 是如何讓 Server 與 Client 同步他們的時間呢？<br />
+		<ol><span class=text_import2>
+		<li>首先，主機當然需要啟動這個 daemon ，之後，
+		<li>Client 會向 NTP Server 發送出調校時間的 message ，
+		<li>然後 NTP Server 會送出目前的標準時間給 Client ，
+		<li>Client 接收了來自 Server 的時間後，會據以調整自己的時間，就達成了網路校時咯！
+		</span></ol>
+
+		不過，在上面的步驟中您有沒有想到一件事啊，那就是<span class=text_import2>如果 Client 到 Server 
+		的訊息傳送時間過長怎麼辦</span>？舉例來說，我在台灣以 ADSL 的 PC 主機，連線到美國的 NTP Server 
+		主機進行時間同步化要求，而美國 NTP Server 收到我的要求之後，就發送當時的正確時間給我，不過，
+		由美國將資料傳送回我的 PC 時，時間可能已經延遲了 10 秒鐘去了！這樣一來，我的 PC 
+		校正的時間是 10 秒鐘前的標準時間喔！此外，如果美國那麼 NTP 主機有太多的人喜歡上去進行網路校時了，所以 
+		loading (負荷) 太重啦！導致訊息的回傳又延遲的更為嚴重！那怎麼辦？<br /><br />
+
+		為了這些延遲的問題，有一些 program 已經開發了自動計算時間傳送過程的誤差，以更準確的校準自己的時間！當然啦，在 
+		daemon 的部分，也同時以 server/client 及 master/slave 的架構來提供使用者進行網路校時的動作！所謂的 
+		master/slave 就有點類似 DNS 的系統咯！舉例來說，台灣的標準時間主機去國際標準時間的主機校時，
+		然後各大專院校再到台灣的標準時間校時，然後我們再到各大專院校的標準時間校時！這樣一來，那幾部國際標準時間主機 
+		(Time server) 的 loading 就不至於太大，而我們也可以很快速的達到正確的網路校時的目的呢！台灣常見的 
+		Time Server 有：<br />
+
+		<ul><span class=text_import2>
+		<li>tock.stdtime.gov.tw
+		<li>time.stdtime.gov.tw
+		<li>clock.stdtime.gov.tw
+		<li>freq_f.stdtime.gov.tw
+		<li>tick.stdtime.gov.tw
+		</span></ul>
+
+		至於 ntp 這個 daemon 是以 port 123 為連結的埠口 (使用 UDP 封包)，所以我們要利用 Time server 
+		來進行時間的同步更新時，就得要使用 NTP 套件提供的 ntpdate 來進行 port 123 
+		的連線喔！關於網路校時更多的說明，可以到 NTP 的官方網站上察看喔！<br />
+
+		<ul><a href="http://www.ntp.org" target="blank">http://www.ntp.org</a></ul>
+
+	</div>
+</div>
+
+
+<hr /><a NAME="server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NTP 伺服器的安裝與設定</span><br />
+<div class=block1>
+	NTP 伺服器也是一個很容易就可以架設成功的玩意兒，不過這個套件在不同的 distribution 上面可能有不一樣的名稱，
+	你要作的其實就是將他安裝起來之後，規定一部上層 NTP 伺服器來同步化你的時間即可啊！
+	如果你只是想要進行你自己單部主機的時間同步化，別架設 NTP ，直接使用 NTP 用戶端軟體即可喔！<br /><br />
+
+	<hr /><a NAME="server_pkg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需套件與套件結構</span><br />
+	<div class=block2>
+		在 CentOS 上頭，你所需要的套件其實僅有 ntp 這個玩意兒而已，請自行使用 rpm 去找找看，
+		若沒有安裝，請拿出原版光碟來安裝，或者利用 yum install ntp 即可啊！
+		萬一找不到的話，那就用 Tarball 的方式來安裝吧！請自行前往 ntp 官方網站下載原始碼來安裝先。
+		不過，我們還需要時區相關的資料檔案，所以你需要的套件有：<br />
+
+		<ul>
+		<li><span class=text_import1>ntp</span><br />
+		就是 NTP 伺服器的主要套件啦，包括設定檔以及執行檔等等，都是這個套件提供的；</li><br />
+
+		<li><span class=text_import1>tzdata</span><br />
+		套件名稱為『 Time Zone data 』的縮寫囉～主要提供了各個時區對應的顯示格式。
+		</ul>
+
+		至於你需要的檔案方面，主要有這幾個玩意兒啦：<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/ntp.conf</span><br />
+		這個是 NTP daemon 的主要設定檔，依據不同的版本放置的目錄可能會不同，不過檔名都是一樣的！使用 
+		locate ntp.conf 搜尋一下您的系統有沒有這個檔案吧！這也是 NTP 唯一的一個設定檔案！</li><br />
+
+		<li><span class=text_import1>/usr/share/zoneinfo/</span><br />
+		這是個目錄，這個目錄是 Linux 本身提供的，而不是 NTP 所提供的。
+		在這個目錄下的檔案其實是規定了各主要時區的時間設定檔案，例如台灣地區的時區設定檔案在 
+		/usr/share/zoneinfo/Asia/Taipei 就是了！這個目錄裡面的檔案與底下要談的兩個檔案 (clock 與 localtime)
+		是有關係的喔！</li><br />
+
+		<li><span class=text_import1>/etc/sysconfig/clock</span><br />
+		這個檔案其實也不包含在 NTP 的 daemon 當中，因為這個是 linux 的主要時區設定檔案啊！每次開機後
+		Linux 會自動的讀取這個檔案來設定自己系統所預設要顯示的時間說！舉個例子來說，
+		在我們台灣地區的本地時間設定中，這個檔案內應該會出現一行『ZONE="Asia/Taipei"』的字樣，
+		這表示我們的時間設定檔案『要取用 /usr/share/zoneinfoe/Asia/Taipei 那個檔案』的意思！</li><br />
+
+		<li><span class=text_import1>/etc/localtime</span><br />
+		這個檔案就是『本地端的時間設定檔』啦！剛剛那個 clock 檔案裡面規定了使用的時間設定檔 (ZONE) 為 
+		/usr/share/zoneinfo/Asia/Taipei ，所以說這就是本地端的時間了，此時 Linux 系統就會將 Taipei 
+		那個檔案複製一份成為 /etc/localtime ，所以未來我們的時間顯示就會以 Taipei 那個時間設定檔案為準。<br /><br />
+
+		好了，如果現在我這部主機搬到日本東京去了，那麼我應該如何調整時間呢？其實什麼調整都不需要，因為我們的 
+		localtime 主要是分析與 UTC 時間的時差來顯示的格式，所以，您只要將 /etc/sysconfig/clock 裡面的 ZONE 
+		設定成為 Asia/Tokyo 並且將 /usr/share/zoneinfo/Asia/Tokyo 複製成為 /etc/localtime 
+		，呵呵！就能顯示時間為日本東京的時間了！這樣是否能夠瞭解？</li><br />
+
+		<li><span class=text_import1>/bin/date</span><br />
+		這個是 Linux 系統上面常見的日期與時間輸出指令，用途很廣喔！除了輸出時間外，也可以修改時間。</li><br />
+
+		<li><span class=text_import1>/sbin/hwclock</span><br />
+		這是一個 root 才能執行的指令，因為 Linux 系統上面 BIOS 時間與 Linux 系統時間是分開的，所以使用 date 
+		這個指令調整了時間之後，還需要使用 hwclock 才能將修改過後的時間寫入 BIOS 當中！</li><br />
+
+		<li><span class=text_import1>/usr/sbin/ntpd</span><br />
+		這就是 NTP 的主要 daemon 檔案啦！得要啟動他才能提供 NTP 服務。注意，這個指令預設會參考 /etc/ntp.conf 
+		裡面的設定喔！</li><br />
+
+		<li><span class=text_import1>/usr/sbin/ntpdate</span><br />
+		這個就是 Client 端用來連接 NTP Server 的主要執行檔囉！如果您沒有要啟用 NTP 而僅想要使用 NTP Client 
+		功能的話，那麼只會用到這個指令而已啦！</li><br />
+
+		<li><span class=text_import1>/usr/sbin/ntptrace</span><br />
+		這個指令可以用來追蹤某部時間伺服器的時間對應關係，這也是個很有用的指令喔！底下我們會介紹如何使用這支程式！
+		</ul>
+
+		接下來，我們先來談一談如何設計那個 /etc/ntp.conf 吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_ntp.conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主要設定檔 ntp.conf 的處理</span><br />
+	<div class=block2>
+		如前所述，由於 NTP 時間伺服器採用類似階層架構 (stratum) 來處理時間的同步化，
+		所以他使用的是類似一般 server/client 的主從架構。網路社會上面有提供一些主要與次要的時間伺服器，
+		這些均屬於第一階及第二階的時間伺服器 (stratum-1, stratum-2) ，如下所示：<br />
+
+		<ul>
+		<li>主要時間伺服器：<a href="http://www.eecis.udel.edu/~mills/ntp/clock1a.html" 
+		target="_blank">http://www.eecis.udel.edu/~mills/ntp/clock1a.html</a></li>
+		<li>次要時間伺服器：<a href="http://www.eecis.udel.edu/~mills/ntp/clock2a.html" 
+		target="_blank">http://www.eecis.udel.edu/~mills/ntp/clock2a.html</a></li>
+		</ul>
+
+		由於這些時間伺服器大多在國外，所以我們是否要使用這些伺服器來同步化自己的時間呢？
+		其實如果台灣地區已經有標準時間伺服器的話，用那部即可，不需要連線到國外啦！浪費頻寬與時間啊！
+		而如前面提到的，台灣地區已經有第二階的時間伺服器了，所以當然我們可以直接選擇台灣地區的 NTP 主機即可。<br /><br />
+
+		<li><span class=text_import1>時間伺服器的階層概念</span></li>
+		<div class=block2>
+		其實 NTP 的階層概念與 DNS 很類似啦，當你架設一部 NTP 主機，這部 NTP 所向上要求同步化的那部主要主機為 
+		stratum-1 時，那麼你的 NTP 就是 stratum-2 囉！舉例來說，如果我們的 NTP 是向台灣的 tock.stdtime.gov.tw 
+		這部 stratum-2 的主機要求時間同步化，那我們的主機即為 stratum-3 ，如果還有其他的 NTP 主機向我們要求時間同步，
+		那麼該部主機則會是 stratum-4 啦！就這樣啊～
+		那最多可以有幾個階層？<span class=text_import2>最多可達 15 個階層喔！</span><br /><br />
+		</div>
+
+		如果你評估一下，確定有架設 NTP 的需求時，我們可以直接選擇台灣地區的上層 NTP 來同步化時間即可。
+		舉例來說 tock.stdtime.gov.tw 這個國家單位的第二層主機 (stratum-2) 應該是比較適合的。
+		一般來說，我們在進行 NTP 主機的設定時，都會先選擇多部上層的 Time Server 來做為我們這一部 NTP Server 
+		的校正之用，選擇多部的原因是因為<span class=text_import2>可以避免因為某部時間伺服器突然掛點時，
+		其他主機仍然可以提供我們的 NTP 主機來自我更新啊！然後我們的 NTP Server 才提供給自己的 Client 
+		端更新時間</span>。如此一來，國家單位的 tock.stdtime.gov.tw 負載才不會太大，而我們的 Client 
+		也可以很快速的達到校時的動作！<br /><br />
+
+		好了，我假設俺的 NTP 伺服器所需要設定的架構如下：<br />
+		<ul>
+		<li>我的上層 NTP 伺服器共有 tock.stdtime.gov.tw, tick.stdtime.gov.tw, time.stdtime.gov.tw 
+			三部，其中以 tock.stdtime.gov.tw 最優先使用 (prefer)；
+		<li>不對 Internet 提供服務，僅允許來自內部網域 192.168.1.0/24 的查詢而已；
+		<li>偵測一些 BIOS 時鐘與 Linux 系統時間的差異並寫入 /var/lib/ntp/drift 檔案當中。
+		</ul>
+
+		好了，先讓我們談一談如何在 ntp.conf 裡面設定權限控制吧！<br /><br />
+
+		<hr /><li><span class=text_import1>利用 restrict 來管理權限控制</span></li>
+		<div class=block2>
+		在 ntp.conf 檔案內可以利用『 restrict 』來控管權限，這個參數的設定方式為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+restrict [你的IP] mask [netmask_IP] [parameter]
+</pre></td></tr></table>
+
+		其中 parameter 的參數主要有底下這些：<br />
+		<ul>
+		<li><span class=text_import2>ignore</span><br />
+		拒絕所有類型的 NTP 連線；</li><br />
+
+		<li><span class=text_import2>nomodiy</span><br />
+		用戶端不能更改 NTP 伺服器的時間參數，這即表示用戶端不能使用 ntpc 與 ntpq 這兩支程式來修改伺服器囉。
+		但用戶端仍可透過這部主機來進行網路校時的；</li><br />
+
+		<li><span class=text_import2>noquery</span><br />
+		用戶端不能夠使用 ntpq, ntpc 等指令來查詢時間伺服器，等於不提供 NTP 的網路校時囉；</li><br />
+
+		<li><span class=text_import2>notrap</span><br />
+		不提供 trap 這個遠端事件登錄 (remote event logging) 的功能。</li><br />
+
+		<li><span class=text_import2>notrust</span><br />
+		拒絕沒有認證的用戶端。
+		</ul>
+		那如果你沒有在 parameter 的地方加上任何參數的話，這表示『<span class=text_import2>該 IP 
+		或網段不受任何限制</span>』的意思喔！一般來說，我們可以先關閉 NTP 
+		的使用權限，然後在一個一個的啟用允許登入的網段。<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>利用 server 設定上層 NTP 伺服器</span></li>
+		<div class=block2>
+		上層 NTP 伺服器的設定方式為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+server [IP or hostname] [prefer]
+</pre></td></tr></table>
+
+		在 server 後端可以接 IP 或主機名稱，鳥哥個人比較喜歡使用主機名稱來設定說！
+		至於那個 perfer 表示『優先使用』的主機囉～有夠簡單吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>以  driftfile 記錄時間差異</span></li>
+		<div class=block2>
+		設定的方式如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+driftfile [可以被 ntpd 寫入的目錄與檔案]
+</pre></td></tr></table>
+
+		因為預設的 NTP Server 本身的時間計算是依據 BIOS 的晶片震盪週期頻率來計算的，但是這個數值與上層 
+		Time Server 不見得會一致啊！所以 NTP 這個 daemon (ntpd) 會自動的去計算我們自己主機的頻率與上層 
+		Time server 的頻率，並且將兩個頻率的誤差記錄下來，記錄下來的檔案就是在 driftfile 
+		後面接的完整檔名當中了！關於檔名你必須要知道：
+		<ul><span class=text_import2>
+		<li>driftfile 後面接的檔案需要使用完整路徑檔名；
+		<li>該檔案不能是連結檔；
+		<li>該檔案需要設定成 ntpd 這個 daemon 可以寫入的權限。
+		<li>該檔案所記錄的數值單位為：百萬分之一秒 (ppm)。
+		</span></ul>
+		driftfile 後面接的檔案會被 ntpd 自動更新，所以他的權限一定要能夠讓 ntpd 寫入才行。在 CentOS 4.x 
+		預設的 NTP 伺服器中，使用的 ntpd 的 owner 是 ntp ，這部份可以查閱 /etc/sysconfig/ntpd 就可以知道啦！
+		</div>
+
+		<hr /><li><span class=text_import1>keys [key_file]</span></li>
+		<div class=block2>
+		除了以 restrict 來限制用戶端的連線之外，我們也可以透過金鑰系統來給用戶端認證，
+		如此一來可以讓主機端更放心了。不過在這個章節裡面我們暫不討論這個部分，
+		有興趣的朋友可以參考 ntp-keygen  這個指令的相關說明喔！<br /><br />
+		</div>
+
+		根據上面的說明，我們最終可以取得這樣的設定檔案內容喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/ntp.conf</span>
+<span class=term_say># 在保留大部分的預設值的情況下，我們作了幾個小部分的修改喔：
+# 1. 先處理權限方面的問題：</span>
+<span class=term_write>restrict default nomodify notrap noquery
+restrict 220.130.158.71  <span class=term_say>&lt;==底下這三行在開放主機進入的權限</span>
+restrict 220.130.158.51
+restrict 220.130.158.52
+restrict 127.0.0.1   mask 255.0.0.0  <span class=term_say>&lt;==內部與 LAN 的使用權限</span>
+restrict 192.168.1.0 mask 255.255.255.0 nomodify</span>
+
+<span class=term_say># 2. 設定主機來源！</span>
+<span class=term_write>server 220.130.158.71 prefer  <span class=term_say>&lt;==以這部主機為最優先</span>
+server 220.130.158.51
+server 220.130.158.51</span>
+
+<span class=term_say># 3.原本內定的一個內部時間資料，不需要更動他</span>
+server  127.127.1.0     # local clock
+fudge   127.127.1.0 stratum 10
+
+<span class=term_say># 4. 就是那個時間差異分析的咚咚，保留預設值即可。</span>
+driftfile /var/lib/ntp/drift
+broadcastdelay  0.008
+
+<span class=term_say># 5.暫時不會使用的 keys 相關認證功能。</span>
+keys            /etc/ntp/keys
+</pre></td></tr></table>
+
+		然後準備一下修訂一下 /etc/sysconfig/ntpd 吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/ntpd</span>
+OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid"
+SYNC_HWCLOCK=<span class=term_write>yes</span>
+<span class=term_say># 將他改成 yes 吧！這樣 BIOS 的時間也會跟著改變的！</span>
+</pre></td></tr></table>
+
+		這樣就設定妥當了，準備來啟動 NTP 服務吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_start"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NTP 的啟動與觀察</span><br />
+	<div class=block2>
+		設定完 ntp.conf 之後就可以啟動 ntp 伺服器了。啟動與觀察的方式如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 啟動 NTP </span>
+[root@linux ~]# <span class=term_command>/etc/init.d/ntpd start</span>
+
+<span class=term_hd>2. 觀察啟動的埠口看看：</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Proto Recv-Q Send-Q Local Address      Foreign Address  PID/Program name
+udp        0      0 192.168.1.254:123  0.0.0.0:*        15118/ntpd
+udp        0      0 127.0.0.1:123      0.0.0.0:*        15118/ntpd
+udp        0      0 0.0.0.0:123        0.0.0.0:*        15118/ntpd
+udp        0      0 :::123             :::*             15118/ntpd
+<span class=term_say># 主要是 UDP 封包，且在 port 123 這個埠口的啦！</span>
+</pre></td></tr></table>
+
+		這樣就表示我們的 NTP 伺服器已經啟動了，不過要與上層 NTP 伺服器連線則還需要一些時間，
+		<span class=text_import2>通常啟動 NTP 後約在 15 分鐘內才會和上層 NTP 伺服器順利連接上。</span>
+		那要如何確認我們的 NTP 伺服器有順利的更新自己的時間呢？你可以使用底下幾個指令來查閱喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ntpstat</span>
+synchronised to NTP server (220.130.158.71) at stratum 3
+   time correct to within 495 ms
+   polling server every 64 s
+<span class=term_say># 這個指令可以列出我們的 NTP 伺服器有跟上層連線否。由上述的輸出結果可以知道，
+# 時間有校正約 495 * 10^(-3) 秒，且每格 64 秒會主動去更新時間喔！</span>
+</pre></td></tr></table>
+
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ntptrace -n 127.0.0.1</span>
+127.0.0.1: <span class=term_write>stratum 3</span>, offset -0.034965, synch distance 0.109233
+220.130.158.71: <span class=term_write>stratum 2</span>, offset -0.000873, synch distance 0.031625
+220.130.158.50: timed out, nothing received
+***Request timed out
+<span class=term_say># 這個指令則可以列出目前我們的 NTP 伺服器與上層 NTP 伺服器彼此之間的關係。
+# 由於我們已經和第二層連接上，但第二層與第一層就不是我們能管理的囉。
+# 所以那個 timed out 可以不理他沒關係的。</span>
+</pre></td></tr></table>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ntpq -p</span>
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+*220-130-158-71. 220.130.158.50   2 u   53   64   77   36.800  -10.496   1.890
+ 220-130-158-51. .INIT.          16 u    -   64    0    0.000    0.000 4000.00
++220-130-158-51. 220.130.158.50   2 u   49   64   77   33.448  -10.431   2.581
+ LOCAL(0)        LOCAL(0)        10 l   51   64   77    0.000    0.000   0.004
+</pre></td></tr></table>
+
+		這個 ntpq -p 可以列出目前我們的 NTP 與相關的上層 NTP 的狀態，上頭的幾個欄位的意義為：<br />
+
+		<ul>
+		<li><span class=text_import2>remote</span>：亦即是 NTP 主機的 IP 或主機名稱囉～注意最左邊的符號，
+		如果有『+』代表目前正在作用當中的上層 NTP ，如果是『*』代表也有連上線，不過是作為次要連線的 NTP 主機。
+		<li style="padding: 5px 0 0 0"><span class=text_import2>refid</span>：參考的上一層 NTP 主機的位址
+		<li style="padding: 5px 0 0 0"><span class=text_import2>st</span>：就是 stratum 階層囉！
+		<li style="padding: 5px 0 0 0"><span class=text_import2>when</span>：幾秒鐘前曾經做過時間同步化更新的動作；
+		<li style="padding: 5px 0 0 0"><span class=text_import2>poll</span>：下一次更新在幾秒鐘之後；
+		<li style="padding: 5px 0 0 0"><span class=text_import2>reach</span>：已經向上層 NTP 伺服器要求更新的次數
+		<li style="padding: 5px 0 0 0"><span class=text_import2>delay</span>：網路傳輸過程當中延遲的時間，單位為 10^(-6) 秒
+		<li style="padding: 5px 0 0 0"><a name="20090427"></a><span class=text_import2>offset</span>：時間補償的結果，單位與 10^(-3) 秒
+		<li style="padding: 5px 0 0 0"><span class=text_import2>jitter</span>：Linux 系統時間與 BIOS 硬體時間的差異時間，
+		單位為 10^(-6) 秒。
+		</ul>
+
+		事實上這個輸出的結果告訴我們，時間真的很準了啦！因為差異都在 0.0001 秒以內，
+		可以符合我們的一般使用了。另外，你也可以檢查一下你的 BIOS 時間與 Linux 系統時間的差異，
+		就是 /var/lib/ntp/drift 這個檔案的內容，就能瞭解到咱們的 Linux 系統時間與 BIOS
+		硬體時鐘到底差多久？單位為 10^(-6) 秒啦！<br /><br />
+	</div>
+
+	<hr /><a NAME="server_firewall"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">安全性設定</span><br />
+	<div class=block2>
+		NTP 伺服器在安全的相關性方面，其實剛剛我們在 /etc/ntp.conf 裡面的 restrict 
+		參數中就已經設定了 NTP 這個 daemon 的服務限制範圍了！不過，在防火牆 iptables 
+		的部分，還是需要開啟連線監聽的啦！所以，在您的 iptables 規則的 scripts 當中，需要加入這一段 
+		(我是以開放 192.168.1.0/24 這個網域作為範例的！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_write>iptables -A INPUT -p UDP -i $EXTIF -s 192.168.1.0/24  --dport 123 -j ACCEPT</span>
+</pre></td></tr></table>
+
+		若還要開放其他的網段或者主機，請自行修改您的防火牆機制咯！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="client"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">用戶端的時間更新方式</span><br />
+<div class=block1>
+	上頭介紹了 NTP 伺服器的安裝與設定，如果我們僅有十部不到的主機時，老實說，實在沒有架設 NTP 伺服器的需求。
+	只要能夠在你的主機上頭以 NTP 用戶端軟體來進行網路校時就能夠同步化時間了，沒必要時時刻刻進行時間的校正吧！^_^！
+	底下我們會介紹幾個重要的概念，瞭解一下為何電腦關機了時間還能夠繼續記憶呢？<br /><br />
+
+	<hr /><a NAME="client_systime"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 系統時間與硬體時間</span><br />
+	<div class=block2>
+		在咱們的 Linux 作業系統當中其實有兩個時間喔，分別是：<br />
+		<ul><span class=text_import2>
+		<li>一個是 BIOS 記錄的實際時間，這也是硬體所記錄的；
+		<li>一個是 Linux 自己的系統時間，由 1970/01/01 開始記錄的時間參數。
+		</span></ul>
+		當 Linux 開機後，他會主動的讀出 BIOS 所記錄的時間，然後開始用自己的方式來計算時間了。
+		當我們使用 date 之類的指令來查詢或者是設定時間時，該時間指的僅是 Linux 的時間而已，
+		並沒有更動到 BIOS 內所記錄的時間吶！除非你使用 hwclock 來寫入或者是讀出 BIOS 的時間。<br /><br />
+
+		而由於 BIOS 會記錄時間而且會持續計時，因此我們關機後再開機時，會發現時間其實是有順利的累積上來的。
+		為了要維持 BIOS 所記錄的資訊，因此<span class=text_import2>主機板上面的電池就很重要了，
+		因為他可以讓 BIOS 在關機的時候還繼續的記錄硬體資訊以及維持時間的累計。</span>
+		所以如果你發現開機後整個 BIOS 時間竟然恢復成為系統出廠值，很可能就是主機板上面的電池沒電了。
+		如果你將 BIOS 斷電處理時，嘿嘿！時間可能也會恢復成為系統出廠值啊。<br /><br />
+
+		由於每個 BIOS 內部的時間計算器可能有點誤差，因此與我們的 Linux 時間多多少少就會產生差異，
+		這個差異在時間拉長之後，就會發現他的重要性了。所以才會需要進行網路校時嘛！您說是吧～<br /><br />
+	</div>
+
+	<hr /><a NAME="client_timezone"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 系統時區與手動校時工作： 
+	date, hwclock</span><br />
+	<div class=block2>
+		我們在前面說過， Linux 的時區檔案就是 /etc/localtime ，這是一個時間格式的檔案而不是 ASCII 類型的檔案喔！
+		(file /etc/localtime 可以看出)，至於所有的 Time Zone 則放置在 /usr/share/zoneinfo 這個目錄下。請注意：<br />
+		<ul><span class=text_import2>
+		<li>當 /etc/localtime 存在時，系統的時區以該檔案代表的時區來顯示、
+		<li>當 /etc/localtime 不存在時，系統的時區主要以 GMT (或 UTC) 為準；
+		</span></ul>
+
+		所以，如果您想要變更您 Linux 系統的時區，那麼只要在 /usr/share/zoneinfo 裡面找到您需要的時區檔案，
+		然後將他複製一份成為 /etc/localtime 就可以順利的更新時區設定了！另外，同時建議修正一下 
+		<span class=text_import2>/etc/sysconfig/clock</span> 這個檔案裡面的 ZONE 設定值！以我們台灣的 Time zone 
+		為例，在 /etc/sysconfig/clock 這個檔案當中應該是『ZONE="Asia/Taipei"』這就表示我們的時區檔案為 
+		/usr/share/zoneinfo/Asia/Taipei 這個檔案囉！請對應著修改成您所想要的時區吧！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：<br />假設你的主機本來在台灣，後來被搬到美國的洛杉磯 (Los_Angeles) 去了。
+請問你如何更改主機的時區參考檔案？<br />
+答：<ul>
+	時區參考檔在是 /etc/localtime ，不過這個檔案在不同的 Linux distribution 的處理方式不一樣。
+	以 Red Hat 系統為例，他是以複製的方式來處理這個檔案。而 SuSE 則是以 hard link 來處理的。
+	所以，請記得不要隨意的單純用『複製』的方式來處理，最好先移除後複製。
+	所以你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>rm /etc/localtime</span>
+[root@linux ~]# <span class=term_command>cp -a /usr/share/zoneinfo/America/Los_Angeles \</span>
+> <span class=term_command>/etc/localtime</span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/clock</span>
+ZONE="<span class=term_write>America/Los_Angeles</span>"
+UTC=false
+ARC=false
+</pre></td></tr></table>
+
+	這樣就 OK 的啦！ ^_^
+</ul>
+</td></tr></table><br />
+
+		好了，時區修正完畢了，那麼時間呢？如前所述，目前 Linux 系統上面有兩個時間喔，一個是 Linux 系統，另一個則是 
+		BIOS 時間！我們可以使用 date 這個指令來手動修正目前主機的時間，不過， date 這個指令僅修正 Linux 時間而已，我們還需要以 
+		hwclock 這個指令來將 BIOS 時間也更新才行！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>date MMDDhhmmYYYY</span>
+<span class=term_say>參數：
+MM：月份
+DD：日期
+hh：小時
+mm：分鐘
+YYYY：西元年</span>
+
+<span class=term_hd>1. 修改時間成為 1 小時後的時間該如何是好？</span>
+[root@linux ~]# <span class=term_command>date</span>
+Thu Dec  7 15:36:45 CST 2006
+
+[root@linux ~]# <span class=term_command>date 120716362006</span>
+Thu Dec  7 16:36:00 CST 2006
+<span class=term_say># 瞧！時間立刻就修改過來了！</span>
+</pre></td></tr></table>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>hwclock [-rw]</span>
+<span class=term_say>參數：
+-r ：亦即 read ，讀出目前 BIOS 內的時間參數；
+-w ：亦即 write ，將目前的 Linux 系統時間寫入 BIOS 當中啊！</span>
+
+<span class=term_hd>2. 查閱 BIOS 時間，並且寫入更改過的時間囉！</span>
+[root@linux ~]# <span class=term_command>hwclock -r</span>
+Thu Dec  7 15:37:44 2006  -0.627128 seconds
+<span class=term_say># 看一看，是否剛好差異約一個小時啊！這就是 BIOS 時間！</span>
+
+[root@linux ~]# <span class=term_command>hwclock -w</span>
+<span class=term_say># 這樣就寫入囉～很簡單吧！</span>
+</pre></td></tr></table>
+
+		這樣可以瞭解了嗎？當我們進行完 Linux 時間的校時後，還需要以 hwclock 來更新 BIOS 
+		的時間，因為每次開機的時候，系統會重新由 BIOS 將時間讀出來，所以， BIOS 才是重要的時間依據吶。<br /><br />
+	</div>
+
+	<hr /><a NAME="client_linux"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 的網路校時</span><br />
+	<div class=block2>
+		在 Linux 的環境當中可利用 NTP 的用戶端程式，亦即是 ntpdate 這支程式就能夠進行時間的同步化。
+		不過你要知道的是，<span class=text_import2>因為 NTP 伺服器本來就會與上層時間伺服器進行時間的同步化，
+		所以在預設的情況下，NTP 伺服器不可以使用 ntpdate ！也就是說 ntpdate 與 ntpd 不能同時啟用的。</span>
+		所以你不要在 NTP server 上頭執行這個指令呦！我們就來看看如何處理吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ntpdate [-nv] [NTP IP/hostname]</span>
+<span class=term_say>參數：
+-d ：進入除錯模式 (debug) ，可以顯示出更多的有效資訊。</span>
+
+[root@linux ~]# <span class=term_command>ntpdate 192.168.1.254</span>
+ 7 Dec 17:21:46 ntpdate[1427]: adjust time server 192.168.1.254 offset -0.0147 sec
+<span class=term_say># 最後面會顯示微調的時間有多少 (offset)</span>
+
+[root@linux ~]# <span class=term_command>hwclock -w</span>
+<span class=term_say># 還得寫入 BIOS 時間才行啊！</span>
+
+[root@linux ~]# <span class=term_command>vi /etc/crontab</span>
+<span class=term_say># 加入這一行去！</span>
+<span class=term_write>10 5 * * * root /usr/sbin/ntpdate tock.stdtime.gov.tw && /sbin/hwclock -w</span>
+</pre></td></tr></table>
+
+		使用 cron 之後，每天 5:10 Linux 系統就會自動的進行網路校時囉！相當的簡易吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="client_windows"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Windows 的網路校時</span><br />
+	<div class=block2>
+		或許你一直都沒發現，其實 Windows 在預設的情況當中，已經幫我們處理了網路校時的工作喔！
+		不管你願不願意.....你可以將滑鼠的指標指在工作列右下角的時間處按兩下，就會出現如下的畫面：<br /><br />
+
+		<a name="fig_02"></a><center><img src="0440ntp/windows.png"
+		title="Windows XP 提供的網路校時功能"
+		alt="Windows XP 提供的網路校時功能"><br />
+		圖二、Windows XP 提供的網路校時功能</center><br />
+
+		如上所示，你可以自行填寫台灣的時間伺服器來對應時間，當然也可以填寫你自己的時間伺服器啊！
+		之後系統就會主動的上網去更新時間了。不過，這是 Windows XP 才有的功能，如果是比較早期的 Windows ，
+		例如 Windows 95/2000 預設是沒有這個功能的。不過也沒有關係，
+		因為國家頻率與時間標準實驗室 (<a href="http://www.stdtime.gov.tw/" 
+		target="_blank">http://www.stdtime.gov.tw/</a>) 也有提供一個用戶端軟體喔！連結資料如下：<br />
+
+		<ul><a href="http://www.stdtime.gov.tw/chinese/EXE/NTPClock.exe"
+		target="_blank">http://www.stdtime.gov.tw/chinese/EXE/NTPClock.exe</a></ul>
+
+		你可以下載，直接執行他就知道如何處理了，因為是全中文介面的圖形化軟體嘛！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>地球共有 24 個時區，而以格林威治時間 (GMT) 為標準時間；
+	<li>台灣本地時間為 GMT + 8 小時；
+	<li>最準確的時間為使用原子鐘 (Atomic clock) 所計算的，例如 UTC (Coordinated Universal Time) 就是一例；
+	<li>Linux 系統本來就有兩種時間，一種是 Linux 以 1970/01/01 開始計數的系統時間，一種則是 BIOS 記載的硬體時間；
+	<li>Linux 可以透過網路校時，最常見的網路校時為使用 NTP 伺服器，這個服務啟動在 udp port 123；
+	<li>時區檔案主要放置於 /usr/share/zoneinfo/ 目錄下，而本地時區則參考 /etc/localtime；
+	<li>NTP 伺服器為一種階層式的服務，所以 NTP 伺服器本來就會與上層時間伺服器作時間的同步化，
+		因此 nptd 與 ntpdate 兩個指令不可同時使用；
+	<li>NTP 伺服器的連線狀態可以使用 ntptrace 及 ntpq -p 來查詢；
+	<li>NTP 提供的用戶端軟體為 ntpdate 這個指令；
+	<li>在 Linux  下想要手動處理時間時，需以 date 設定時間後，以 hwclock -w 來寫入 BIOS 所記錄的時間。
+	<li>在 LPI 網站 <a href="http://www.lpi.org" target="_blank">http://www.lpi.org</a> 裡面提到的，在 LPI 102 
+		裡面 NTP 其實考的還不少！Topic 1.111.6 Maintain system time 裡面說到，應試者應該要瞭解 
+		BIOS 時間與 UTC 時間的意義，同時需要知道怎麼設定 timezone ，而時間差所使用的檔案 driftfile 
+		也需要瞭解吶！可能會考的內容含有：<ul>
+		<li>date
+		<li>hwclock
+		<li>ntpd
+		<li>ntpdate
+		<li>/usr/share/zoneinfo
+		<li>/etc/localtime
+		<li>/etc/ntp.conf
+		<li>/etc/ntp.drift (新版已經改至 /var/lib/ntp/drift)</ul>
+</span></ul>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>什麼是 GMT (格林威治) 時間與 UTC 時間？</li>
+	<div class=block2><font color=white size=-1>
+	由於地球是圓的，所以同一時間點上，在地球共可分為 24 個時區，其中，我們以歐洲的格林威治時間為一個對照的依據，這個即是 
+	GMT 時間。台灣時間比 GMT 時間快了 8 小時。至於 UTC 時間則是由原子鐘所計算的時間，這個時間是相當的準確的，
+	主要仍以格林威治時間為時區！
+	</font></div>
+
+	<li>Linux 系統的所有時區檔案放置哪一個目錄底下？</li>
+	<div class=block2><font color=white size=-1>
+	所有的時區檔案放置於：/usr/share/zoneinfo 底下！至於系統時區的設定檔則在 /etc/sysconfig/clock 與 /etc/localtime 喔！
+	</font></div>
+
+	<li>我的 Linux 主機本來放置在日本東京，現在想將他拿到台灣來運作，不過因為日本與台灣有一個小時的時差，
+		所以我的時間應該需要經過調整才行。不過，因為我的 BIOS Time 主要是依據 UTC 
+		時間來設定的，所以似乎只要更動時區參數即可。請問我該如何設定時區，好讓我的
+		Linux 主機能夠顯示正確的時間？</li>
+	<div class=block2><font color=white size=-1>
+		先將 /etc/localtime 刪除，然後將 /usr/share/zoneinfo/Asia/Taipei 這個檔案複製成為 /etc/localtime 即可！
+	</font></div>
+
+	<li>目前 Linux 系統上面的時間伺服器主要是以 NTP 為主，請問這個 daemon 的主要設定檔放在哪裡，而該設定檔中，針對上層
+		time server 的設定參數為何？而那個 driftfile 參數是幹嘛用的？</li>
+	<div class=block2><font color=white size=-1>
+		在 /etc/ntp.conf 這個檔案當中，至於上層 time server 的設定參數為 server 啊！那個 driftfile 
+		則是用來做為『時間差額』的計算的！該參數後面接的是一個完整路徑的檔名，該檔案裡面的數值單位為百萬分之一(ppm)。
+	</font></div>
+
+	<li>請問 ntptrace 的功能為何？</li>
+	<div class=block2><font color=white size=-1>
+	可以用來追蹤上層 time server 的連線時間與目前時間！
+	</font></div>
+
+	<li>我以 date 更新了我 Linux 上面的時間後，該如何將時間數據寫入 BIOS 內？</li>
+	<div class=block2><font color=white size=-1>
+	必須利用 hwclock 這個程式來寫入，利用 hwclock -w 寫入 BIOS 
+	</font></div>
+
+	<li>在 Linux 上面如何進行網路校時？</li>
+	<div class=block2><font color=white size=-1>
+	最簡單的方法即是使用『 ntpdate time.servers.ip && hwclock -w 』即可！
+	</font></div>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>NTP 的官方網站：<a href="http://www.ntp.org" target="_blank">http://www.ntp.org</a></li>
+	<li>時間伺服器網頁：<a href="http://www.stdtime.gov.tw/Time/home.htm" 
+		target="_blank">http://www.stdtime.gov.tw/Time/home.htm</a><br />
+	<li>NTP 網站：<a href="http://www.eecis.udel.edu/~mills/ntp/html/ntpd.html" 
+		target="_blank">http://www.eecis.udel.edu/~mills/ntp/html/ntpd.html</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2003/08/21：首次完成<br />
+2006/12/05：將舊的文章移動到<a href="0440ntp/0440ntp.htm">此處</a><br />
+2006/12/08：將文章作了個版面修改，同時將一些資料再加強一些。並補充一些額外的查閱 NTP 的指令。<br />
+2009/04/28：將 <a href="#20090427">offset</a> 的時間單位寫錯了，應該是 ms 不是 us ，亦即 10^(-3) 秒，而不是 10^(-6) 秒。抱歉。<br />
+</span>
+<hr><span class="text_date">2003/08/21以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0440ntp.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

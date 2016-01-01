@@ -1,0 +1,505 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Linux 網路偵測功能</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0150detect_network.htm">
+    <span class="text_head0"><span class="text_head_en">Linux </span>網路偵錯</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0150detect_network.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/08/04</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	Linux 最強的，也是最讓人稱道的地方，就是他的網路功能了，不論是 Mail server、Web server、Proxy server
+	等等，都好好用喔！但是，我們也常在網路上看到一堆常見的問題，就是在問『我的
+	Linux 沒有辦法連上網路，該如何是好....』等等的問題，問來問去的重點大概都是一樣的狀況！傷腦筋！那鳥哥就把一些在
+	Linux 上面可能會發生的網路問題把他整理一下，看看您是不是有這方面的問題，參考看看吧！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#problems">無法連線原因分析</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#problems_hw">硬體問題</a><br />
+	　　1.2 <a href="#problems_soft">軟體問題</a><br />
+	　　1.3 <a href="#problems_solv">問題的處理</a><br />
+	</span>
+2. <a href="#step">處理流程</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#step_1_nic">步驟一：網路卡工作確認</a><br />
+	　　2.2 <a href="#step_2_lan">步驟二：區域網路內各項連接設備檢測</a><br />
+	　　2.3 <a href="#step_3_ip">步驟三：取得正確的 IP 參數</a><br />
+	　　2.4 <a href="#step_4_route">步驟四：確認路由表的規則</a><br />
+	　　2.5 <a href="#step_5_dns">步驟五：主機名稱與 IP 查詢的 DNS 錯誤</a><br />
+	　　2.6 <a href="#step_6_ipshare">步驟六：Linux 的 NAT 伺服器或 IP 分享器出問題</a><br />
+	　　2.7 <a href="#step_7_traceroute">步驟七：Internet 的問題</a><br />
+	　　2.8 <a href="#step_8_server">步驟八：主機的問題</a><br />
+	</span>
+3. <a href="#ex">課後練習</a><br />
+<span class=text_h2>
+4. <a href="http://phorum.vbird.org/viewtopic.htm?t=26155"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=26155</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="problems"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">無法連線原因分析</span><br />
+<div class=block1>
+	老是看到有朋友在網路上哀嚎說：『我的網路不通啊！』還有比較奇怪的是『啊怎麼網路時通時不通』之類的問題，
+	這類的問題其實主要可以歸類為硬體問題與軟體設定問題，硬體的問題比較麻煩，因為需要透過一些專門的裝置來分析硬體；
+	至於軟體方面，絕大部分都是設定錯誤或者是觀念錯誤而已，比較好處理啦！
+	OK！我們先來看看網路在哪裡可能會出問題吧！<br /><br />
+
+	<hr /><a NAME="problems_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">硬體問題</span><br />
+	<div class=block2>
+		在<a href="0110network_basic.htm">網路基礎</a>章節當中我們曾提到很多的網路基礎概念，
+		以及一些簡單的硬體維護問題。以一個簡單的星形連線來說，我們可以假設他的架構如同下圖所示：<br /><br />
+
+		<a name=fig_1></a><center>
+		<img SRC="0150detect_network/intranet_03.jpg"
+		title="區域網路的連線狀態示意圖" alt="區域網路的連線狀態示意圖"><br />
+		圖一、區域網路的連線狀態示意圖
+		</center><br /><br />
+
+		在上面的圖示當中，"Linux PC3" 要連到 Internet 上面去的話，需要透過網路線、
+		交換器、 NAT 主機 (Linux 伺服器或 IP 分享器)、ADSL 數據機，以及
+		Internet 上面的所有媒體設備 (包括路由器、橋接器、其他網路線等等)；
+		那麼哪些地方可能會出問題啊？<br />
+
+		<ol>
+		<li><span class=text_import1>網路線材的問題</span>：<br /><br />
+			在上面的圖示中，可以發現，其實網路周邊設備中，使用最多的就是網路線啦！
+			要注意<span class=text_import2>網路線分成平行線與跳線 (RJ-45接頭)
+			，而並不是所有的設備都支援自動分辨跳線與平行線的功能的</span>！
+			所以你必須要瞭解到你的設備 (Hub/Switch/數據機) 所支援的網路線；另外，
+			如果你的網路線是接在門縫處或者是容易凹折處，那很有可能具有被壓毀的情況，
+			所以您需要注意一下這些事情：<br /><br /><ul><span class=text_import2>
+			<li>網路線被截斷；
+			<li>網路線過度扭曲變形造成訊號不良；
+			<li>自製網路接頭 ( 如RJ-45跳線頭 ) 品質不良；
+			<li>網路接頭與設備 ( 如 Hub )接觸不良；</span></ul><br /></li>
+
+		<li><span class=text_import1>網路卡、Hub 及 Router 等網路設備的問題</span>：<br /><br />
+			另外，還有一些網路設備也會有問題，常見的問題如下：<br /><br />
+			<ul><span class=text_import2>
+			<li>網路卡不穩定、品質不佳，或者與整體系統的相容度不佳；
+			<li>各網路設備的接頭不佳，接觸不良，造成訊號衰減；
+			<li>由於網路設備所在環境惡劣 (例如過熱) 導致的當機問題；
+			<li>各網路設備使用方法不良，造成設備功能衰減；</span></ul><br /></li>
+
+		<li><span class=text_import1>設備配置的規則</span>：<br /><br />
+			在各個設備的配置上是有一定的規則的，而最容易發生的問題就是太長的網路線會造成訊號的衰減，
+			導致網路連線的時間太長甚至無法連線。我們曾在網路基礎當中談過乙太網路最長的支援距離，
+			還有一些其他網路媒體配置的問題您必須曉得的：<br /><br />
+			<ul><span class=text_import2>
+			<li>使用錯誤的網路線，最常發生在平行線與跳線的分別！
+			<li>架設的網路線過長，導致訊號衰減太嚴重。例如乙太網路 CAT5e 的線理論限制長度大概是在 90 
+			    公尺左右，若兩個設備 (Hub/主機之間) 長度大於 90 公尺時，自然就容易出現訊號發生問題了！
+			<li>其他雜訊的干擾，最常發生在網路線或者網路設備旁邊有太強的磁波；
+			<li>區域網路上面，節點或者其他的設備太多，過去我們常以所謂的 543 原則來說明：
+			<ul><li>5個網段(segment)。所謂segment就在物理連接上最接近的一組電腦，
+				在一個BNC網段裡面最多只能接30台電腦﹐且網線總長不能超過185m。
+				<li>4個增益器(repeater)。也就是將信號放大的裝置。
+				<li>3個電腦群體(population)。這個不好理解﹐也就是說前面所說的5個segment之中﹐
+				只能有3個可以裝電腦﹐其它兩個不行。</ul>
+			</span></ul></li>
+		</ol>
+		上述是一些最常見的硬體問題，當然啦，有的時候是設備本身就有問題，
+		而我們在網路基礎裡面談到的那個很重要的『
+		<a href="0110network_basic.htm#whatisnetwork_ethernet">網路佈線</a>
+		』的情況，也是造成網路停頓或通順與否的重要原因吶！所以，硬體問題的判斷比較困難點。
+		好～底下我們再來聊一聊軟體設定的相關問題。<br /><br />
+	</div>
+
+	<hr /><a NAME="problems_soft"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">軟體問題</span><br />
+	<div class=block2>
+		所謂的軟體問題，絕大部分就是 IP 設定錯誤啊，路由不對啊，還有 DNS 的 IP 設定錯誤等等的，
+		這些問題都是屬於軟體設定啦！只要將設定改一改，利用一些偵測軟體查一查，
+		就知道問題出在哪裡了！基本的問題有：<br />
+		<ol>
+		<li><span class=text_import1>網路卡的 IP 設定錯誤</span>：<br />
+		例如：同一個 IP 在同一個網段中出現造成 IP 衝突、子遮罩網路設定錯誤、網路卡的驅動程式使用錯誤、
+		網路卡的 IRQ、 I/O Address 的設定衝突等等；<br /><br /></li>
+		<li><span class=text_import1>路由的問題 (route table)</span>：<br />
+		最常見的就是預設路由 (default gateway) 設定錯誤了！或者是路由介面不符所導致的問題，
+		使得資料封包沒有辦法順利的送出去。<br /><br /></li>
+		<li><span class=text_import1>通訊協定不相符</span>：<br />
+		最常發生在不同的作業系統之間的通訊傳輸，例如早期 Windows 98 與 Windows 2000 之間的『網芳』
+		若要達成溝通，則 Windows 98 必須要加裝 NetBEUI 這個通訊協定才行。又例如兩部 Linux 
+		主機要透過 NFS 通訊協定傳輸資料時，兩邊都得要支援 portmap 這個啟動 RPC 協定的程式才行！
+		這些通訊協定我們都會在後面的章節分別介紹的啦！<br /><br /></li>
+		<li><span class=text_import1>網路負荷的問題 (loading)</span>：<br />
+		當同時有大量的資料封包湧進 Server 或者是 Hub 或者是同一個網域中，
+		就有可能造成網路的停頓甚至掛點！另外，如果區網內有人使用 BT (P2P 軟體)
+		或者是有人中毒導致蠕蟲充滿整個區網，也會造成網路的停頓問題；<br /><br /></li>
+		<li><span class=text_import1>其他問題</span>：<br />
+		例如：一些 port 被防火牆擋住了，造成無法執行某些網路資源；應用程式本身的 Bug 
+		問題；應用程式中使用者的網路設定錯誤；以及不同的作業系統的相容性問題等等。
+		</ol>
+	</div>
+
+	<hr /><a NAME="problems_solv"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">問題的處理</span><br />
+	<div class=block2>
+		既然問題發生了，就要去處理他啊！那如何處理呢？以上面的星形連線圖示為例，把握兩個原則：
+		<ul><span class=text_import2>
+		<li>先由自身的環境偵測起，可以由自身 PC 上的網路卡查起，到網路線、到 Hub 再到 ATU-R 
+			等等的硬體先檢查完。在這個步驟當中，最好用的軟體就是 ping ，
+			而你最好能有兩部以上的主機來進行連線的測試；<br /></li>
+		<li>確定硬體沒問題了，再來思考軟體的設定問題！</span></ul>
+
+		實際上，如果網路不通時，你可以依序這樣處理：<br />
+		<ol>
+		<li><span class=text_import2>瞭解問題</span>：這個問題是剛剛發生？還是因為之前我做了什麼動作而導致無法連線？
+		<li><span class=text_import2>確認 IP</span>：先看看自己的網卡有無驅動？能否取得正確的 IP 來連線？
+		<li><span class=text_import2>確認區網連線</span>：利用 <a href="0140networkcommand.htm#ping">ping</a>
+		來溝通兩部主機，確定網路線與中繼的 hub/switch 工作正常；
+		<li><span class=text_import2>確認對外連線</span>：看主機或 IP 分享器能否依據
+		<a href="0130internet_connect.htm">連上 Internet</a> 那一章的方法順利取得 IP 參數，並以
+		<a href="0140networkcommand.htm#ping">ping</a> 的方法確定對外連線是可以成功的；
+		<li><span class=text_import2>確認 DNS 查詢</span>：利用 <a href="0140networkcommand.htm#nslookup">nslookup</a>
+		或 host 或 dig 檢查 www.google.com 看看；
+		<li><span class=text_import2>確認 Internet 節點</span>：可以利用
+		<a href="0140networkcommand.htm#traceroute">traceroute</a> 檢查各節點是否沒問題？
+		<li><span class=text_import2>確認對方伺服器正常服務</span>：是否對方伺服器忙線中？或他的機器掛了？
+		<li><span class=text_import2>確認我方伺服器</span>：是否某些服務沒有正確啟動？可利用 
+		<a href="0140networkcommand.htm#netstat">netstat</a> 檢查，
+		是否某些安全機制的套件沒有開放，例如 SELinux 這項機制；
+		<li><span class=text_import2>防火牆或權限的問題</span>：是否由於權限設定錯誤所致？
+		是否由於您的機器有防火牆忘記啟用可連線的埠口所致？這個可以透過
+		<a href="0140networkcommand.htm#tcpdump">tcpdump</a> 來處理！
+		</ol>
+
+		透過這些處理動作後，一般來說，應該都可以解決您無法上網的問題了！
+		當然啦，如果是硬體的問題，那麼鳥哥也無法幫你，你可能最需要的是......
+		『<span class=text_import1>送修吧孩子！</span>』<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="step"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">處理流程</span><br />
+<div class=block1>
+	既然知道上面已經談到的幾個小重點了，接下來當然是一個一個的給他處理掉啊！
+	底下我們就得要一步一腳印的開始檢查的流程啊！<br /><br />
+
+	<hr /><a NAME="step_1_nic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟一：網路卡工作確認</span><br />
+	<div class=block2>
+		其實，網路一出問題的時候，您應該從自己可以檢查的地方檢查起，因此，
+		最重要的地方就是檢查您的網路卡是否有工作的問題啦！檢查網路卡是否正常工作的方法如下：<br />
+
+		<ol>
+		<li><span class=text_import1>確定網路卡已經驅動成功：</span><br />
+		如果網路卡沒有驅動成功，其他的，免談！！所以你當然需要驅動你的網路卡才行！
+		確認網路卡是否被驅動，可以利用 lspci 先看看有沒有捉到 Ethernet 字樣的顯示資訊，再以 dmesg 
+		來檢查是否被核心偵測到，最後使用 lsmod 看看有沒有相對應的模組已被載入。
+		整個步驟可以參考『<a href="0130internet_connect.htm#note_nic">連上 Internet - Linux 網路卡</a>』那一個小節，
+		這裡鳥哥不再說明了！ ^_^！不過你要注意的是，如果上述的檢測方式都無法發現你的網路卡模組，
+		那肯定就是核心與核心模組不支援你的網路卡啊！那該怎辦？參考
+		『<a href="0130internet_connect.htm#note_compile">連上 Internet之網卡編譯</a>』就對了！<br /><br />
+
+		<li><span class=text_import1>確定可以手動直接建立 IP 參數：</span><br />
+		在順利的載入網路卡的模組，並且『取得網路卡的代號』之後，我們可以利用
+		<a href="0140networkcommand.htm#ifconfig">ifconfig</a> 或 
+		<a href="0140networkcommand.htm#ip_cmd">ip</a> 來直接給予該網路卡一個網路位址試看看！
+		看能否給予 IP 設定呢？例如：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig eth0 192.168.1.100</span>
+</pre></td></tr></table>
+		來直接建立該網路卡的 IP ，然後直接輸入 ifconfig 看能否查閱到剛剛設定好的參數即可。
+		如果可以建立起該 IP ，就以 ping 來檢測看看：<br />
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ping 192.168.1.100</span>
+</pre></td></tr></table>
+		如果有回應的話，那表示這個網卡的設定應該是沒有問題了！
+		再來則是開始檢測一下區域網路內的各個連接硬體啦！</li>
+		</ol>
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">			事實上要再次的重申，如果您的主機捉不到您主機上的網路卡 (通常是內建的網路晶片)，
+			那麼最好買一張便宜的螃蟹卡先來湊合著用，『先求有！再求完美』，
+			不要一開始就挑戰自己的耐心啊！拜託拜託！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a NAME="step_2_lan"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" />	<span class="text_h2">步驟二：區域網路內各項連接設備檢測</span><br />
+	<div class=block2>
+		在確認完了最重要的網路卡設定之後，並且確定網路卡是正常的之後，
+		再接著下來則是區域網路內的網路連接情況了！假設您是按照
+		<a href="#fig_1">圖一</a>所設定的星形連線區域網路架構，那麼你必須要知道整個『網域』的概念！<br />
+		<ol>
+		<li><span class=text_import1>關於網域的概念</span>：<br />
+		你得清楚的知道圖一中各主機與伺服器可以互相溝通是因為他們在『同一個網域裡面』，
+		所以，你要知道所謂的 192.168.1.0/24 這種網域的表達方式所代表的意義，
+		且子遮罩網路 (Netmask) 的意義也得瞭解。如果忘記了，請回去<a href="0110network_basic.htm">網路基礎</a>再翻一翻。
+		<br /><br /></li>
+
+		<li><span class=text_import1>關於 Gateway 與 DNS 的設定</span>：<br />
+		Gateway 與 DNS (在 /etc/sysconfig/network-scripts/ifcfg-eth0, /etc/resolv.conf 的設定) 最容易被搞混～
+		這兩個並非是填寫你的 Linux 主機的 IP 喔！應該是要填寫 IP 分享器 (或 NAT 主機) 的 IP 在 Gateway 中，
+		填寫 168.95.1.1 在 DNS 的 IP 設定當中！不能夠搞錯啊！如果還是不清楚？回去網路基礎看看吧！<br /><br /></li>
+
+		<li><span class=text_import1>關於 Windows 端的工作群組與電腦名稱</span>：<br />
+		假如您還需要資源分享，那麼您就必須在 windows 系統中開放檔案分享，
+		並且建議所有的電腦將『工作群組』設定相同，但『電腦名稱』則不能相同！</li>
+		</ol>
+
+		假設你的區網內所有的主機 IP 都設定正確了，那麼接下來你就可以使用 ping 來測試兩部區網內主機的連線，
+		這個連線的動作可以讓你測試兩部主機間的各項設備，包括網路線、Hub/Switch 等等的咚咚！
+		如果無法測試成功，那就請瞭解一下：<br />
+		<ol>
+		<li><span class=text_import1>IP 參數是否設定正確</span>：<br />
+		再次強調，先決定 IP 是對的！鳥哥在上課的時候常常發現同學無法連到我的主機上，
+		一經使用 ifconfig 才發現他們與我的 IP 不在同一個網段內，就是會有這樣的情況發生啊！唉～<br /><br /></li>
+
+		<li><span class=text_import1>連線的線材問題</span>：<br />
+		包括我們前面提到的網路線本身折損、過度纏繞造成的訊號衰減問題等等，
+		另外，有些比較舊的 Hub/Switch 或者是 ATU-R (ADSL 數據機，俗稱的小烏龜是也) 由於沒有
+		<a href="0110network_basic.htm#auto_mdi">Auto MDI/MDIX</a> 的功能，所以無法自動的分辨跳線與否，
+		那麼當你插錯網路線的時候，也就無法接通啦！這樣瞭解乎？另外，<span class=text_import2>早期我們常常會說，
+		最簡單判斷每部主機是否順利連接到 Hub/Switch 可以透過連接到 Switch 上的燈號來判斷</span>，
+		不過，由於有時候網路線本身訊號不良，雖然燈號還是會亮，不過就是無法連接到 Switch  的情況
+		(鳥哥自己就曾發生過啊！)，此時，跟朋友借一條 OK 的網路線來測試看看吧！<br /><br /></li>
+
+		<li><span class=text_import1>網卡或 Hub/Switch 本身出問題</span>：<br />
+		有一次鳥哥無法在外部連接到鳥哥的主機，懷疑是掛點了，結果衝到主機所在辦公室察看，咦！
+		主機是好好的嘛！那怎麼會無法連線呢？原因是.......室內環境通風不良，加上 Switch 所在處溫度過高，
+		加上那部舊的 switch 『剛好』風扇壞了，哈！就這樣『 <span class=text_import2>switch 當機</span> 』
+		在重新啟動 switch (拔掉再插上電源線) 後就正常了。所以囉，很多情況都是會發生的，
+		而區域網路內的環境也很容易影響到連線品質啊！<br /></li>
+		</ol>
+		確定自己主機的 IP 與網卡沒有問題，加上內部區網透過 ping 也測試過沒有問題，
+		接下來就是要『取得可以對外連線的 IP 參數』啦！這個重要！<br /><br />
+	</div>
+
+	<hr /><a NAME="step_3_ip"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟三：取得正確的 IP 參數</span><br />
+	<div class=block2>
+		什麼叫『取得正確的 IP 參數』啊？還記得我們談過如果要順利的連接上 Internet 的話，
+		必須要可以跟 public IP 進行溝通才行，而與 public IP 取得溝通的方法，在台灣比較常見的有 ADSL, 
+		Cable modem, 學術網路, 電話撥接等等，在 CentOS 當中，我們可以透過修改 
+		/etc/sysconfig/network-scripts/ifcfg-eth0，或者是利用 rp-pppoe 來進行撥接，
+		無論如何，<span class=text_import2>你就是得要連接到某個 ISP 去就是了</span>～在你確認所有的區網沒有問題之後，
+		參考一下<a href="0130internet_connect.htm">連上 Internet </a>那一章的介紹，
+		連上之後，立即以 ifconfig 看看有沒有捉到正確的 IP 啊？
+		在台灣如果使用 ADSL 連線的話，你應該可以順利的取得一組正確的 Public IP 參數的！<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		曾有國外的華人朋友來信說到，他們使用 ADSL 撥接之後竟然取得一組 Private IP ，
+		害他們沒有辦法架站！他們想請問這樣的情況是否合理。如果您熟悉路由相關的概念之後，
+		當然會知道：『這當然合理！』，因為你取得的 IP 只是為了要連接到 ISP 去而已，
+		而 ISP 與你的主機當然可以透過 Private IP 來連線啊！如果是這樣的話，那麼您就肯定無法架站了！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		另外，最常發現無法順利取得 IP 的錯誤就是『BOOTPROTO』這個設定值設定錯了！
+		因為 static 與 hdcp 協定所產生的 IP 要求是不一樣的啊！還記得吧！
+		要特別留在 ifcfg-eth0 裡面的設定參數喔！另外，如果你是使用 ADSL 撥接的，
+		但是老是無法撥接成功，那麼建議你可以這樣試看看：<br />
+		<ul><span class=text_import2>
+		<li>將 ADSL 的數據機 (ATU-R) 整個關機，將 Switch/Hub 也關掉電源；
+		<li>靜待十分鐘，等這些設備比較『涼快』一點後，再重新插上電源；
+		<li>將 Linux 連接到 ADSL 的那塊網卡 (假設為 eth0) 在 ifcfg-eth0 內，『ONBOOT』設定為 no，
+			重新啟動網路 (/etc/init.d/network restart)，然後再執行 adsl-start
+		<li>如果還是無法撥接成功，並且你已經確認內部網域沒有問題，那請中華電信的工程人員來幫忙您處理吧！</span></ul>
+		因為很多時候都是由於網路媒體過熱，也有可能主機內部的一些網路參數有點問題，
+		所以，乾脆就不要啟動網卡，讓 adsl-start 自動去啟動網卡即可！ 
+		如果順利取得 IP 後，卻還是無法順利連到 Internet 上面時，你覺得還有哪些地方需要處理的呢？<br /><br />
+	</div>
+
+	<hr /><a NAME="step_4_route"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟四：確認路由表的規則</span><br />
+	<div class=block2>
+		如果你已經順利取得正確的 IP 參數的話，那麼接下來就是測試一下是否可以連上 Internet 啊！
+		鳥哥建議你可以嘗試使用 ping 來連連看 Hinet 的 DNS 主機，也就是 168.95.1.1 那部機器啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ping -c 3 168.95.1.1</span>
+</pre></td></tr></table>
+
+		如果有回應，那就表示你的網路『基本上已經沒有問題，可以連到 Internet 了！』，
+		那如果沒有回應呢？明明取得了正確的 IP 卻無法連接到外部的主機，肯定有鬼！呵呵！沒錯！
+		還記得我們在網域內資料的傳輸可以直接透過 <a href="0110network_basic.htm#fig_mac">MAC</a> 來傳送，
+		但如果不在區網內的資料，則需要透過路由，尤其是那個預設路由 (default route) 來幫忙轉遞封包吧！
+		所以說，<span class=text_import2>如果你的 public IP 無法連接到外部 (例如 168.95.1.1)
+		，可能的問題就出在路由與防火牆上面了</span>。
+		假設你沒有啟動防火牆，那問題就縮小到剩下路由囉～<br /><br />
+
+		那路由的問題如何檢查？就用 <a href="0140networkcommand.htm#route">route -n</a> 來檢查啊！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：假設有個使用 ADSL 撥接的 Linux 主機，他的路由表如下，你覺得出了什麼問題？<br />
+<pre><font size=-1>Destination     Gateway       Genmask         Flags Metric Ref    Use Iface
+59.104.200.1    0.0.0.0       255.255.255.255 UH    0      0        0 ppp0
+192.168.1.0     0.0.0.0       255.255.255.0   U     0      0        0 eth0
+169.254.0.0     0.0.0.0       255.255.0.0     U     0      0        0 eth0
+127.0.0.0       0.0.0.0       255.0.0.0       U     0      0        0 lo
+0.0.0.0         192.168.1.2   0.0.0.0         UG    0      0        0 eth0</font></pre>
+答：<ul>
+仔細看到上面的路由輸出，第一條是 ppp0 產生的 public IP 介面，第二條是 eth0 的內部網域介面，
+在看到最後一條的 0.0.0.0/0.0.0.0 這個預設路由，竟然是內部網域的 eth0 為 gateway ？
+這不合理，最大的問題應該是出在 ifcfg-eth0 裡面不小心設定了『GATEWAY=192.168.1.2』
+所致，解決的方法為：<br /><br /><ol>
+<li>取消 ifcfg-eth0 內 GATEWAY=192.168.1.2 那一行，(該行亦可能出現在 /etc/sysconfig/network 內)<br />
+<li>重新啟動網路 /etc/init.d/network restart<br />
+<li>重新進行撥接： adsl-stop; adsl-start</ol>
+</ul>
+</td></tr></table><br />
+
+		另外一個可能發生的情況，就是：『忘記設定預設路由』啦！
+		例如使用 ifconfig 手動重新設定過網路卡的 IP 之後，其實路由規則是會被更新的，
+		所以預設路由可能就會不見了！那個時候你就得要利用 route add 來增加預設路由囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="step_5_dns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟五：主機名稱與 IP 查詢的 
+	DNS 錯誤</span><br />
+	<div class=block2>
+		如果你發現可以 ping 到 168.95.1.1 這個 Internet 上面的主機，卻無法使用瀏覽器在網址列瀏覽 
+		http://www.google.com  的話，那肯定 99% 以上問題是來自於 DNS 解析的困擾！
+		解決的方法就是直接到 /etc/resolv.conf 去看看設定值對不對啊！
+		一般常見的內容是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/resolv.conf</span>
+nameserver 168.95.1.1
+nameserver 139.175.10.20
+</pre></td></tr></table>
+
+		最常見的錯誤是『那個 nameserver 的拼字寫錯了！』真是最常見的問題～～另外，如果 client 端是
+		Windows 系統呢？常常初學者會搞錯的地方就是在 windows 的設定了！要注意：
+		<span class=text_import2>Windows 端的 DNS 設定與主機端 /etc/resolv.conf 的內容相同即可</span>！
+		很多初學者都以為 TCP/IP 內的 DNS 主機是填上自己的 Linux 主機，這是不對的 
+		(除非您自己的 Linux 上面有 DNS 服務) ！您只要填上您的 ISP 給您的 DNS 主機 IP 位置就可以了<br /><br />
+	</div>
+
+	<hr /><a NAME="step_6_ipshare"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟六：Linux 的 NAT
+	伺服器或 IP 分享器出問題</span><br />
+	<div class=block2>
+		NAT 伺服器最簡單的功能就是 IP 分享器啦！NAT 主機一定是部路由器，所以你必須要在 Linux 
+		上面觀察好正確的路由資訊。否則肯定有問題。另外， NAT 主機上面的防火牆設定是否合理？
+		IP 分享器上面是否有設定抵擋的機制等等，都會影響到對外連線是否能夠成功的問題點。
+		關於 NAT 與防火牆我們會在後續的章節繼續介紹的啦！<br /><br />
+	</div>
+
+	<hr /><a NAME="step_7_traceroute"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟七：Internet 的問題</span><br />
+	<div class=block2>
+		Internet 也會出問題喔！當然啦～沒有任何東西是不會出問題的！
+		舉例來說，好幾年前台灣西岸因為施工的關係，導致南北網路骨幹纜線被挖斷，
+		結果導致整個 Internet 流量的大塞車！這就是 Internet 的問題～還有，數年前
+		<a href="http://phorum.study-area.org">Study Area 網站</a>放置的地點由於路由器設定出了點差錯，
+		結果導致連線速度的緩慢。這都不是主機本身出問題，而是 Internet 上面某個節點出了狀況。
+		想要確認是否問題來自 Internet 的話，就使用 <a href="0140networkcommand.htm#traceroute">traceroute</a> 吧！
+		查察看問題是來自那個地方再說！<br /><br />
+	</div>
+
+	<hr /><a NAME="step_8_server"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">步驟八：主機的問題</span><br />
+	<div class=block2>
+		如果上述的處理都 OK ，卻無法登入某部主機時，我想，最大的問題就是出現在主機的設定啦！
+		這包括有：<br />
+		<ul>
+		<li>主機並沒有開放該項服務：例如主機關閉了 telnet ，那你使用 telnet 去連線，是無法連接上的啦！
+		<li>主機的權限設定錯誤：例如你將某個目錄設定為 drwx------ ，該目錄擁有者為 root ，
+			你卻將該目錄開放給 WWW 來瀏覽，由於 WWW 無法進入該目錄，所以當然無法正確的給用戶端瀏覽啊！
+			這是最典型的權限設定錯誤的情況啊！
+		<li>安全機制設定錯誤：例如 SELinux 是用來更細微控管主機存取的一種核心機制，
+			如果你沒有設定好就啟用的話，那麼主機的服務很多都『無法順利的啟用』，
+			關閉 SELinux  就好了。而其他例如 /etc/hosts.deny, PAM 模組等等，
+			都可能造成使用者無法登入的問題！這就不是網路問題，而是主機造成連線無法成功！
+		<li>防火牆問題：防火牆設定錯誤也是一個很常見的問題，你可以使用
+			<a href="0140networkcommand.htm#tcpdump">tcpdump</a> 來追蹤封包的流向，
+			以順利的瞭解防火牆是否設定錯誤。</ul>
+
+		基本上，一個網路環境的檢測工作可不是三言兩語就講的完的～而且常常牽涉到很多經驗的問題～
+		請您常常到一些講座的場合去聽聽看大家的經驗，去 google 看看人家的解決方法，
+		都有助於讓你更輕易的解決網路問題的喔！ ^_^
+	</div>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>以圖一的星形連線為例，你的 Linux PC 3 可以 ping 到 Windows PC1 ，但是反過來， 
+		Windows PC1 無法 ping 到 Linux PC3，你覺得原因可能發生在哪裡？
+	<div class=block2><font color=white size=-1>
+		由於兩邊已經可以用 ping 進行連線，所以硬體應該是沒有問題了。
+		而 Linux --> Windows 沒問題， Windows --> Linux 有問題，可能是由於 Linux 主機上面的防火牆所致。
+		可以使用 iptables -L -n 去查閱一下防火牆的設定規則。詳細的防火牆請參考後續的章節。
+	</font></div>
+</div>
+
+
+<hr><span class="text_history">
+2002/07/31：第一次完成日期！<br />
+2003/08/19：重新修訂一些資料，與前面的章節比較好配合！<br />
+2006/08/04：將舊的文章移動到 <a href="0150detect_network/0150detect_network.htm">此處</a><br />
+</span>
+<hr><span class="text_date">2002/07/31以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0150detect_network.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

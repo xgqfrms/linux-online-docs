@@ -1,0 +1,948 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="包括了 crontab 與 at 這兩支程式啦！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 例行性工作排程的建立</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十六章、例行性工作排程<span class="text_head_en"> (crontab)</span></span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/11</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	學習了基礎篇也一陣子了，你會發現到為什麼系統常常會主動的進行一些任務？這些任務到底是誰在設定工作的？
+	如果你想要讓自己設計的備份程式可以自動的在系統底下執行，而不需要手動來啟動他，又該如何處置？
+	這些例行的工作可能又分為『單一』工作與『循環』工作，在系統內又是哪些服務在負責？
+	還有還有，如果你想要每年在老婆的生日前一天就發出一封信件提醒自己不要忘記，可以辦的到嗎？
+	嘿嘿！這些種種要如何處理，就看看這一章先！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#whatiscron">什麼是例行性工作排程</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#whatiscron_type">Linux 工作排程的種類： at, crontab</a><br />
+	　　1.2 <a href="#whatiscron_linux">Linux 上常見的例行性工作</a><br />
+	</span>
+2. <a href="#atjob">僅執行一次的工作排程</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#atjob_how">atd 的啟動與 at 運作的方式</a>： <a href="#at_deny">/etc/at.deny</a><br />
+	　　2.2 <a href="#atjob_work">實際運作單一工作排程</a>： <a href="#at">at</a>,
+		<a href="#atq_atrm">atq &amp; atrm</a>, <a href="#batch">batch</a><br />
+	</span>
+3. <a href="#cron">循環執行的例行性工作排程</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#crontab_user">使用者的設定</a>： <a href="#cron_deny">/etc/cron.deny</a>, <a href="#crontab">crontab</a><br />
+	　　3.2 <a href="#etc_crontab1">系統的設定檔</a>： <a href="#etc_crontab">/etc/crontab</a><br />
+	　　3.3 <a href="#security">一些注意事項</a><br />
+	</span>
+4. <a href="#anacron_1">可喚醒停機期間的工作任務</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#anacron_what">什麼是 anacron</a><br />
+	　　4.2 <a href="#anacron">anacron 與 /etc/anacrontab</a><br />
+	</span>
+5. <a href="hint">重點回顧</a><br />
+6. <a href="#ex">本章習題</a><br />
+<span class="text_h2">
+7. <a href="http://phorum.vbird.org/viewtopic.php?t=23889"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23889</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="whatiscron"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是例行性工作排程</span><br />
+<div class="block1">
+	<p>每個人或多或少都有一些約會或者是工作，<span class="text_import2">有的工作是例行性的</span>，
+	例如每年一次的加薪、每個月一次的工作報告、每週一次的午餐會報、每天需要的打卡等等；
+	<span class="text_import2">有的工作則是臨時發生的</span>，例如剛好總公司有高官來訪，需要你準備演講器材等等！
+	用在生活上面，例如每年的愛人的生日、每天的起床時間等等、還有突發性的電腦大降價 (啊！真希望天天都有！) 
+	等等囉。</p>
+
+	<p>像上面這些例行性工作，通常你得要記錄在行事曆上面才能避免忘記！不過，由於我們常常在電腦前面的緣故，
+	如果電腦系統能夠主動的通知我們的話，那麼不就輕鬆多了！嘿嘿！這個時候 Linux 的例行性工作排程就可以派上場了！
+	在不考慮硬體與我們伺服器的連結狀態下，我們的 Linux 可以幫你提醒很多任務，例如：每一天早上 
+	8:00 鐘要伺服器連接上音響，並啟動音樂來喚你起床；而中午
+	12:00 希望 Linux 可以發一封信到你的郵件信箱，提醒你可以去吃午餐了；
+	另外，在每年的你愛人生日的前一天，先發封信提醒你，以免忘記這麼重要的一天。</p>
+
+	<p>那麼 Linux 的例行性工作是如何進行排程的呢？所謂的排程就是將這些工作安排執行的流程之意！
+	咱們的 Linux 排程就是透過 crontab 與 at 這兩個東西！這兩個玩意兒有啥異同？就讓我們來瞧瞧先！<br /><br /></p>
+
+	<hr /><a name="whatiscron_type"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 工作排程的種類： 
+	at, cron</span><br />
+	<div class="block2">
+		<p>從上面的說明當中，我們可以很清楚的發現兩種工作排程的方式：</p>
+
+		<ul>
+		<li>一種是例行性的，就是每隔一定的週期要來辦的事項；</li>
+		<li>一種是突發性的，就是這次做完以後就沒有的那一種 (電腦大降價...)</li>
+		</ul>
+
+		<p>那麼在 Linux 底下如何達到這兩個功能呢？那就得使用 at 與 crontab 這兩個好東西囉！</p>
+
+		<ul>
+		<li><span class="text_import1">at</span> ：at 是個可以處理僅執行一次就結束排程的指令，不過要執行 at 時，
+		必須要有 atd 這個<a href="/linux_basic/0560daemons.php">服務 (第十八章)</a> 的支援才行。在某些新版的 distributions 
+		中，atd 可能預設並沒有啟動，那麼 at 這個指令就會失效呢！不過我們的 CentOS 預設是啟動的！<br /><br /></li>
+
+		<li><span class="text_import1">crontab</span> ：crontab 這個指令所設定的工作將會循環的一直進行下去！
+		可循環的時間為分鐘、小時、每週、每月或每年等。crontab 除了可以使用指令執行外，亦可編輯 /etc/crontab 來支援。
+		至於讓 crontab 可以生效的服務則是 crond 這個服務喔！</li>
+		</ul>
+
+		<p>底下我們先來談一談 Linux 的系統到底在做什麼事情，怎麼有若干多的工作排程在進行呢？然後再回來談一談
+		at 與 crontab 這兩個好東西！</p>
+	</div>
+
+	<hr /><a name="whatiscron_linux"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 上常見的例行性工作</span><br />
+	<div class="block2">
+		<p>如果你曾經使用過 Linux 一陣子了，那麼你大概會發現到 Linux 會主動的幫我們進行一些工作呢！
+		比方說自動的進行線上更新 (on-line update)、自動的進行 updatedb (<a 
+		href="/linux_basic/0220filemanager.php#locate">第七章談到的 locate 指令</a>) 更新檔名資料庫、自動的作登錄檔分析
+		(所以 root 常常會收到標題為 logwatch 的信件) 等等。這是由於系統要正常運作的話，
+		某些在背景底下的工作必須要定時進行的緣故。基本上 Linux 系統常見的例行性任務有：</p>
+
+		<ul style="padding-left: 25px">
+		<li><span class="text_import2">進行登錄檔的輪替 (log rotate)</span>：<br />
+		Linux 會主動的將系統所發生的各種資訊都記錄下來，這就是<a href="/linux_basic/0570syslog.php">登錄檔 (第十九章)</a>。
+		由於系統會一直記錄登錄資訊，所以登錄檔將會越來越大！我們知道大型檔案不但佔容量還會造成讀寫效能的困擾，
+		因此適時的將登錄檔資料挪一挪，讓舊的資料與新的資料分別存放，則比較可以有效的記錄登錄資訊。這就是 log rotate 
+		的任務！這也是系統必要的例行任務；<br /><br /></li>
+
+		<li><span class="text_import2">登錄檔分析 logwatch 的任務</span>：<br />
+		如果系統發生了軟體問題、硬體錯誤、資安問題等，絕大部分的錯誤資訊都會被記錄到登錄檔中，
+		因此系統管理員的重要任務之一就是分析登錄檔。但你不可能手動透過 vim 等軟體去檢視登錄檔，因為資料太複雜了！
+		我們的 CentOS 提供了一隻程式『 logwatch 』來主動分析登錄資訊，所以你會發現，你的 root 老是會收到標題為 logwatch
+		的信件，那是正常的！你最好也能夠看看該信件的內容喔！<br /><br /></li>
+
+		<li><span class="text_import2">建立 locate 的資料庫</span>：<br />
+		在第七章我們談到的 <a href="/linux_basic/0220filemanager.php#locate">locate</a> 指令時，
+		我們知道該指令是透過已經存在的檔名資料庫來進行系統上檔名的查詢。我們的檔名資料庫是放置到 /var/lib/mlocate/ 中。
+		問題是，這個資料庫怎麼會自動更新啊？嘿嘿！這就是系統的例行性工作所產生的效果啦！系統會主動的進行
+		updatedb 喔！<br /><br /></li>
+
+		<li><span class="text_import2">whatis 資料庫的建立</span>：<br />
+		與 locate 資料庫類似的，whatis 也是個資料庫，這個 whatis 是與
+		<a href="/linux_basic/0160startlinux.php#manual_man">man page</a> 有關的一個查詢指令，不過要使用 whatis 指令時，
+		必須要擁有 whatis 資料庫，而這個資料庫也是透過系統的例行性工作排程來自動執行的哩！<br /><br /></li>
+
+		<li><span class="text_import2">RPM 軟體登錄檔的建立</span>：<br />
+		RPM (<a href="/linux_basic/0520rpm_and_srpm.php">第二十三章</a>) 是一種軟體管理的機制。由於系統可能會常常變更軟體，
+		包括軟體的新安裝、非經常性更新等，都會造成軟體檔名的差異。為了方便未來追蹤，系統也幫我們將檔名作個排序的記錄呢！
+		有時候系統也會透過排程來幫忙 RPM 資料庫的重新建置喔！<br /><br /></li>
+
+		<li><span class="text_import2">移除暫存檔</span>：<br />
+		某些軟體在運作中會產生一些暫存檔，但是當這個軟體關閉時，這些暫存檔可能並不會主動的被移除。
+		有些暫存檔則有時間性，如果超過一段時間後，這個暫存檔就沒有效用了，此時移除這些暫存檔就是一件重要的工作！
+		否則磁碟容量會被耗光。系統透過例行性工作排程執行名為 tmpwatch 的指令來刪除這些暫存檔呢！<br /><br /></li>
+
+		<li><span class="text_import2">與網路服務有關的分析行為</span>：<br />
+		如果你有安裝類似 WWW 伺服器軟體 (一個名為 apache 的軟體)，那麼你的 Linux 系統通常就會主動的分析該軟體的登錄檔。
+		同時某些憑證與認證的網路資訊是否過期的問題，我們的 Linux 系統也會很親和的幫你進行自動檢查！</li>
+		</ul>
+
+		<p>其實你的系統會進行的例行性工作與你安裝的軟體多寡有關，如果你安裝過多的軟體，某些服務功能的軟體都會附上分析工具，
+		那麼你的系統就會多出一些例行性工作囉！像鳥哥的主機還多加了很多自己撰寫的分析工具，以及其他第三方協力軟體的分析軟體，
+		嘿嘿！俺的 Linux 工作量可是非常大的哩！因為有這麼多的工作需要進行，所以我們當然得要瞭解例行性工作的處理方式囉！</p>
+	</div>
+</div>
+
+
+<hr /><a name="atjob"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">僅執行一次的工作排程</span><br />
+<div class="block1">
+	<p>首先，我們先來談談單一工作排程的運作，那就是 at 這個指令的運作！<br /><br /></p>
+
+	<hr /><a name="atjob_how"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">atd 的啟動與 at 運作的方式</span><br />
+	<div class="block2">
+		<p>要使用單一工作排程時，我們的 Linux 系統上面必須要有負責這個排程的服務，那就是 atd 這個玩意兒。
+		不過並非所有的 Linux distributions 都預設會把他打開的，所以呢，某些時刻我們必須要手動將他啟用才行。
+		啟用的方法很簡單，就是這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">/etc/init.d/atd restart</span>
+正在停止 atd:                          [  確定  ]
+正在啟動 atd:                          [  確定  ]
+
+<span class="term_hd"># 再設定一下開機時就啟動這個服務，免得每次重新開機都得再來一次！</span>
+[root@www ~]# <span class="term_command">chkconfig atd on</span>
+</pre></td></tr></table>
+
+		<p>重點是那個『正在啟動(或 starting)』項目的 OK 啦！那表示啟動是正常的！這部份我們在<a 
+		href="/linux_basic/0560daemons.php">第十八章</a>會談及。
+		如果您真的有興趣，那麼可以自行到 /etc/init.d/atd 這個 shell script 內去瞧一瞧先！ ^_^。
+		至於那個 chkconfig ，你也可以使用 man 先查閱一下啊！我們<a
+		href="/linux_basic/0560daemons.php#chkconfig">第十八章</a>再介紹啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">at 的運作方式</li></ul>
+
+		<p>既然是工作排程，那麼應該會有產生工作的方式，並且將這些工作排進行程表中囉！OK！那麼產生工作的方式是怎麼進行的？
+		事實上，<span class="text_import2">我們使用 at 這個指令來產生所要運作的工作，並將這個工作以文字檔的方式寫入
+		/var/spool/at/ 目錄內，該工作便能等待 atd 這個服務的取用與執行了</span>。就這麼簡單。</p>
+
+		<p>不過，並不是所有的人都可以進行 at 工作排程喔！為什麼？因為安全的理由啊～
+		很多主機被所謂的『綁架』後，最常發現的就是他們的系統當中多了很多的怪客程式 (cracker program)，
+		這些程式非常可能運用工作排程來執行或蒐集系統資訊，並定時的回報給怪客團體！
+		所以囉，除非是你認可的帳號，否則先不要讓他們使用 at 吧！那怎麼達到使用 at 的列管呢？</p>
+
+		<a name="at_deny"></a>
+		<p>我們可以利用 /etc/at.allow 與 /etc/at.deny 這兩個檔案來進行 at 的使用限制呢！
+		加上這兩個檔案後， at 的工作情況其實是這樣的：</p>
+
+		<ol class="text_import2">
+		<li>先找尋 <b>/etc/at.allow</b> 這個檔案，寫在這個檔案中的使用者才能使用 at
+		，沒有在這個檔案中的使用者則不能使用 at (即使沒有寫在 at.deny 當中)；<br /><br /></li>
+		<li>如果 /etc/at.allow 不存在，就尋找<b> /etc/at.deny</b> 這個檔案，若寫在這個
+		at.deny 的使用者則不能使用 at ，而沒有在這個 at.deny 檔案中的使用者，就可以使用
+		at 咯；<br /><br /></li>
+		<li>如果兩個檔案都不存在，那麼只有 root 可以使用 at 這個指令。</li>
+		</ol>
+
+		<p>透過這個說明，我們知道 /etc/at.allow 是管理較為嚴格的方式，而 /etc/at.deny 則較為鬆散 
+		(因為帳號沒有在該檔案中，就能夠執行 at 了)。在一般的 distributions 當中，由於假設系統上的所有用戶都是可信任的，
+		因此系統通常會保留一個空的 /etc/at.deny 檔案，意思是允許所有人使用 at 指令的意思 (您可以自行檢查一下該檔案)。
+		不過，萬一你不希望有某些使用者使用 at 的話，將那個使用者的帳號寫入 /etc/at.deny 即可！
+		一個帳號寫一行。</p>
+	</div>
+
+
+	<hr /><a name="atjob_work"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實際運作單一工作排程</span><br />
+	<div class="block2">
+		<a name="at"></a>
+		<p>單一工作排程的進行就使用 at 這個指令囉！這個指令的運作非常簡單！將 at 加上一個時間即可！基本的語法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">at [-mldv] TIME</span>
+[root@www ~]# <span class="term_command">at -c 工作號碼</span>
+<span class="term_say">選項與參數：
+-m  ：當 at 的工作完成後，即使沒有輸出訊息，亦以 email 通知使用者該工作已完成。
+-l  ：at -l 相當於 atq，列出目前系統上面的所有該使用者的 at 排程；
+-d  ：at -d 相當於 atrm ，可以取消一個在 at 排程中的工作；
+-v  ：可以使用較明顯的時間格式列出 at 排程中的工作列表；
+-c  ：可以列出後面接的該項工作的實際指令內容。
+
+TIME：時間格式，這裡可以定義出『什麼時候要進行 at 這項工作』的時間，格式有：
+  HH:MM				ex&gt; 04:00
+	在今日的 HH:MM 時刻進行，若該時刻已超過，則明天的 HH:MM 進行此工作。
+  HH:MM YYYY-MM-DD		ex&gt; 04:00 2009-03-17
+	強制規定在某年某月的某一天的特殊時刻進行該工作！
+  HH:MM[am|pm] [Month] [Date]	ex&gt; 04pm March 17
+	也是一樣，強制在某年某月某日的某時刻進行！
+  HH:MM[am|pm] + number [minutes|hours|days|weeks]
+	ex&gt; now + 5 minutes	ex&gt; 04pm + 3 days
+	就是說，在某個時間點『再加幾個時間後』才進行。</span>
+</pre></td></tr></table>
+
+		<p>老實說，這個 at 指令的下達最重要的地方在於『時間』的指定了！鳥哥喜歡使用『 now + ... 』
+		的方式來定義現在過多少時間再進行工作，但有時也需要定義特定的時間點來進行！底下的範例先看看囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：再過五分鐘後，將 /root/.bashrc 寄給 root 自己</span>
+[root@www ~]# <span class="term_command">at now + 5 minutes</span>  <span class="term_note">&lt;==記得單位要加 s 喔！</span>
+at&gt; <span class="term_command">/bin/mail root -s "testing at job" &lt; /root/.bashrc</span>
+at&gt; &lt;EOT&gt;   <span class="term_note">&lt;==這裡輸入 [ctrl] + d 就會出現 &lt;EOF&gt; 的字樣！代表結束！</span>
+job 4 at 2009-03-14 15:38
+<span class="term_say"># 上面這行資訊在說明，第 4 個 at 工作將在 2009/03/14 的 15:38 進行！
+# 而執行 at 會進入所謂的 at shell 環境，讓你下達多重指令等待運作！</span>
+
+<span class="term_hd">範例二：將上述的第 4 項工作內容列出來查閱</span>
+[root@www ~]# <span class="term_command">at -c 4</span>
+#!/bin/sh               <span class="term_note">&lt;==就是透過 bash shell 的啦！</span>
+# atrun uid=0 gid=0
+# mail     root 0
+umask 22
+<span class="term_say">....(中間省略許多的環境變數項目)....</span>
+cd /root || {           <span class="term_note">&lt;==可以看出，會到下達 at 時的工作目錄去執行指令</span>
+         echo 'Execution directory inaccessible' &gt;&amp;2
+         exit 1
+}
+
+/bin/mail root -s "testing at job" &lt; /root/.bashrc
+<span class="term_say"># 你可以看到指令執行的目錄 (/root)，還有多個環境變數與實際的指令內容啦！</span>
+
+<span class="term_hd">範例三：由於機房預計於 2009/03/18 停電，我想要在 2009/03/17 23:00 關機？</span>
+[root@www ~]# <span class="term_command">at 23:00 2009-03-17</span>
+at&gt; <span class="term_write">/bin/sync</span>
+at&gt; <span class="term_write">/bin/sync</span>
+at&gt; <span class="term_write">/sbin/shutdown -h now</span>
+at&gt; &lt;EOT&gt;
+job 5 at 2009-03-17 23:00
+<span class="term_say"># 您瞧瞧！ at 還可以在一個工作內輸入多個指令呢！不錯吧！</span>
+</pre></td></tr></table>
+
+		<p>事實上，當我們使用 at 時會進入一個 at shell 的環境來讓使用者下達工作指令，此時，<span 
+		class="text_import2">建議你最好使用絕對路徑來下達你的指令，比較不會有問題喔</span>！由於指令的下達與 PATH 變數有關，
+		同時與當時的工作目錄也有關連 (如果有牽涉到檔案的話)，因此使用絕對路徑來下達指令，會是比較一勞永逸的方法。
+		為什麼呢？舉例來說，你在 /tmp 下達『 at now 』然後輸入『 mail root -s "test" &lt; .bashrc 』，
+		問一下，那個 .bashrc 的檔案會是在哪裡？答案是『 /tmp/.bashrc 』！因為<span class="text_import2">
+		at 在運作時，會跑到當時下達 at 指令的那個工作目錄</span>的緣故啊！</p>
+
+		<p>有些朋友會希望『我要在某某時刻，在我的終端機顯示出 Hello 的字樣』，然後就在 at 裡面下達這樣的資訊『
+		echo "Hello" 』。等到時間到了，卻發現沒有任何訊息在螢幕上顯示，這是啥原因啊？<span 
+		class="text_import2">這是因為 at 的執行與終端機環境無關，而所有 standard output/standard error output
+		都會傳送到執行者的 mailbox 去</span>啦！所以在終端機當然看不到任何資訊。那怎辦？沒關係，
+		可以透過終端機的裝置來處理！假如你在 tty1 登入，則可以使用『 echo "Hello" &gt; /dev/tty1 』來取代。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		要注意的是，如果在 at shell 內的指令並沒有任何的訊息輸出，那麼 at 預設不會發 email 給執行者的。
+		如果你想要讓 at 無論如何都發一封 email 告知你是否執行了指令，那麼可以使用『 at -m 時間格式 』來下達指令喔！
+		at 就會傳送一個訊息給執行者，而不論該指令執行有無訊息輸出了！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>at 有另外一個很棒的優點，那就是『背景執行』的功能了！什麼是背景執行啊？很難瞭解嗎？其實與 bash 的 nohup 
+		(<a href="/linux_basic/0440processcontrol.php#nohup">第十七章</a>) 類似啦！
+		鳥哥提我自己的幾個例子來給您聽聽，您就瞭了！</p>
+
+		<ul>
+		<li><span class="text_import2">離線繼續工作的任務</span>：鳥哥初次接觸 Unix 為的是要跑空氣品質模式，
+		那是一種大型的程式，這個程式在當時的硬體底下跑，一個案例要跑 3 天！由於鳥哥也要進行其他研究工作，因此常常使用 Windows
+		98 來連線到 Unix 工作站跑那個 3 天的案例！結果你也該知道， Windows 98 連開三天而不當機的機率是很低的～@_@～
+		而當機時，所有在 Windows 上的連線都會中斷！包括鳥哥在跑的那個程式也中斷了～嗚嗚～明明再三個鐘頭就跑完的程式，
+		由於當機害我又得跑 3 天！<br /><br /></li>
+
+
+		<li>另一個常用的時刻則是例如上面的範例三，由於某個突發狀況導致你必須要進行某項工作時，這個 at 就很好用啦！</li>
+		</ul>
+
+		<p><span class="text_import2">由於 at 工作排程的使用上，系統會將該項 at 工作獨立出你的 bash 環境中，
+		直接交給系統的 atd 程式來接管，因此，當你下達了 at 的工作之後就可以立刻離線了，
+		剩下的工作就完全交給 Linux 管理即可</span>！所以囉，如果有長時間的網路工作時，嘿嘿！
+		使用 at 可以讓你免除網路斷線後的困擾喔！ ^_^<br /><br /></p>
+
+		<a name="atq_atrm"></a>
+		<hr /><ul class="list1"><li class="text_import1">at 工作的管理</li></ul>
+
+		<p>那麼萬一我下達了 at 之後，才發現指令輸入錯誤，該如何是好？就將他移除啊！利用 atq 與 atrm 吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">atq</span>
+[root@www ~]# <span class="term_command">atrm [jobnumber]</span>
+
+<span class="term_hd">範例一：查詢目前主機上面有多少的 at 工作排程？</span>
+[root@www ~]# <span class="term_command">atq</span>
+5       2009-03-17 23:00 a root
+<span class="term_say"># 上面說的是：『在 2009/03/17 的 23:00 有一項工作，該項工作指令下達者為 
+# root』而且，該項工作的工作號碼 (jobnumber) 為 5 號喔！</span>
+
+<span class="term_hd">範例二：將上述的第 5 個工作移除！</span>
+[root@www ~]# <span class="term_command">atrm 5</span>
+[root@www ~]# <span class="term_command">atq</span>
+<span class="term_say"># 沒有任何資訊，表示該工作被移除了！</span>
+</pre></td></tr></table>
+
+		<p>如此一來，你可以利用 atq 來查詢，利用 atrm 來刪除錯誤的指令，利用 at 來直接下達單一工作排程！很簡單吧！
+		不過，有個問題需要處理一下。<span class="text_import2">如果你是在一個非常忙碌的系統下運作 at ，
+		能不能指定你的工作在系統較閒的時候才進行</span>呢？可以的，那就使用 batch 指令吧！<br /><br /></p>
+
+		<a name="batch"></a>
+		<hr /><ul class="list1"><li class="text_import1">batch：系統有空時才進行背景任務</li></ul>
+
+		<p>其實 batch 是利用 at 來進行指令的下達啦！只是加入一些控制參數而已。這個 batch 神奇的地方在於：<span
+		class="text_import2">他會在 CPU 工作負載小於 0.8 的時候，才進行你所下達的工作任務</span>啦！
+		那什麼是負載 0.8 呢？這個負載的意思是： CPU 在單一時間點所負責的工作數量。不是 CPU 的使用率喔！
+		舉例來說，如果我有一隻程式他需要一直使用 CPU 的運算功能，那麼此時 CPU 的使用率可能到達 100% ，
+		但是 CPU 的工作負載則是趨近於『 1 』，因為 CPU 僅負責一個工作嘛！如果同時執行這樣的程式兩支呢？
+		CPU 的使用率還是 100% ，但是工作負載則變成 2 了！瞭解乎？</p>
+
+		<p>所以也就是說，當 CPU 的工作負載越大，代表 CPU 必須要在不同的工作之間進行頻繁的工作切換。
+		這樣的 CPU 運作情況我們在第零章有談過，忘記的話請回去瞧瞧！因為一直切換工作，所以會導致系統忙碌啊！
+		系統如果很忙碌，還要額外進行 at ，不太合理！所以才有 batch 指令的產生！</p>
+
+		<p>那麼 batch 如何下達指令呢？很簡單啊！與 at 相同啦！例如下面的範例：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：同樣是機房停電在 2009/3/17 23:00 關機，但若當時系統負載太高，則暫緩執行</span>
+[root@www ~]# <span class="term_command">batch 23:00 2009-3-17</span>
+at&gt; <span class="term_command">sync</span>
+at&gt; <span class="term_command">sync</span>
+at&gt; <span class="term_command">shutdown -h now</span>
+at&gt; &lt;EOT&gt;
+job 6 at 2009-03-17 23:00
+
+[root@www ~]# <span class="term_command">atq</span>
+6       2009-03-17 23:00 b root
+[root@www ~]# <span class="term_command">atrm 6</span>
+</pre></td></tr></table>
+
+		<p>你會發現其實 batch 也是使用 atq/atrm 來管理的！這樣瞭解乎？</p>
+	</div>
+</div>
+
+
+<hr /><a name="cron"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">循環執行的例行性工作排程</span><br />
+<div class="block1">
+	<p>相對於 at 是僅執行一次的工作，<span class="text_import2">循環執行的例行性工作排程則是由 cron (crond)
+	這個系統服務來控制的</span>。剛剛談過 Linux 系統上面原本就有非常多的例行性工作，因此這個系統服務是預設啟動的。另外，
+	由於使用者自己也可以進行例行性工作排程，所以囉， Linux 也提供使用者控制例行性工作排程的指令 (crontab)。
+	底下我們分別來聊一聊囉！<br /><br /></p>
+
+	<hr /><a name="crontab_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者的設定</span><br />
+	<div class="block2">
+		<a name="cron_deny"></a>
+		<p>使用者想要建立循環型工作排程時，使用的是 crontab 這個指令啦～不過，為了安全性的問題，
+		與 at 同樣的，我們可以限制使用 crontab 的使用者帳號喔！使用的限制資料有：</p>
+
+		<ul>
+		<li><span class="text_import2">/etc/cron.allow</span>：<br />
+		將可以使用 crontab 的帳號寫入其中，若不在這個檔案內的使用者則不可使用 crontab；<br /><br /></li>
+
+		<li><span class="text_import2">/etc/cron.deny</span>：<br />
+		將不可以使用 crontab 的帳號寫入其中，若未記錄到這個檔案當中的使用者，就可以使用 crontab 。</li></ul>
+
+		<p>與 at 很像吧！同樣的，以優先順序來說， /etc/cron.allow 比 /etc/cron.deny 要優先，
+		而判斷上面，這兩個檔案只選擇一個來限制而已，因此，建議你只要保留一個即可，
+		免得影響自己在設定上面的判斷！一般來說，系統預設是保留 /etc/cron.deny ，
+		你可以將不想讓他執行 crontab 的那個使用者寫入 /etc/cron.deny 當中，一個帳號一行！</p>
+
+		<p><span class="text_import2">當使用者使用 crontab 這個指令來建立工作排程之後，該項工作就會被紀錄到 /var/spool/cron/ 
+		裡面去了，而且是以帳號來作為判別的喔</span>！舉例來說， dmtsai 使用 crontab 後，
+		他的工作會被紀錄到 /var/spool/cron/dmtsai 裡頭去！但請注意，<span class="text_import2">不要使用 vi 直接編輯該檔案，
+		因為可能由於輸入語法錯誤，會導致無法執行 cron 喔</span>！另外， cron 執行的每一項工作都會被紀錄到
+		/var/log/cron 這個登錄檔中，所以囉，如果你的 Linux 不知道有否被植入木馬時，也可以搜尋一下 /var/log/cron 
+		這個登錄檔呢！</p>
+
+		<a name="crontab"></a>
+		<p>好了，那麼我們就來聊一聊 crontab 的語法吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">crontab [-u username] [-l|-e|-r]</span>
+<span class="term_say">選項與參數：
+-u  ：只有 root 才能進行這個任務，亦即幫其他使用者建立/移除 crontab 工作排程；
+-e  ：編輯 crontab 的工作內容
+-l  ：查閱 crontab 的工作內容
+-r  ：移除所有的 crontab 的工作內容，若僅要移除一項，請用 -e 去編輯。</span>
+
+<span class="term_hd">範例一：用 dmtsai 的身份在每天的 12:00 發信給自己</span>
+[dmtsai@www ~]$ <span class="term_command">crontab -e</span>
+<span class="term_say"># 此時會進入 vi 的編輯畫面讓您編輯工作！注意到，每項工作都是一行。</span>
+<span class="term_write">0   12  *  *  * mail dmtsai -s "at 12:00" &lt; /home/dmtsai/.bashrc</span>
+<span class="term_say">#分 時 日 月 週 |&lt;==============指令串========================&gt;|</span>
+</pre></td></tr></table>
+
+		<p>預設情況下，任何使用者只要不被列入 /etc/cron.deny 當中，那麼他就可以直接下達『 crontab -e 
+		』去編輯自己的例行性命令了！整個過程就如同上面提到的，會進入 vi 的編輯畫面，
+		然後以一個工作一行來編輯，編輯完畢之後輸入『 :wq 』儲存後離開 vi 就可以了！
+		而每項工作 (每行) 的格式都是具有六個欄位，這六個欄位的意義為：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>代表意義</td><td>分鐘</td><td>小時</td><td>日期</td><td>月份</td><td>週</td><td>指令</td></tr>
+<tr align="center"><td bgcolor="lightblue">數字範圍</td><td>0-59</td><td>0-23</td><td>1-31</td><td>1-12</td><td>0-7</td>
+	<td>呀就指令啊</td></tr>
+</table><br />
+
+		<p>比較有趣的是那個『週』喔！週的數字為 0 或 7 時，都代表『星期天』的意思！另外，
+		還有一些輔助的字符，大概有底下這些：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="70">特殊字符</td><td>代表意義</td></tr>
+<tr><td align="center">*</td><td>代表任何時刻都接受的意思！舉例來說，範例一內那個日、月、週都是 * ，
+	就代表著『不論何月、何日的禮拜幾的 12:00 都執行後續指令』的意思！</td></tr>
+<tr><td align="center">,</td><td>代表分隔時段的意思。舉例來說，如果要下達的工作是 3:00 與 6:00 時，就會是：
+	<blockquote class="text_import2" style="font-family: '細明體'">0 3,6 * * * command</blockquote>
+	時間參數還是有五欄，不過第二欄是 3,6 ，代表 3 與 6 都適用！</td></tr>
+<tr><td align="center">-</td><td>代表一段時間範圍內，舉例來說， 8 點到 12 點之間的每小時的 20 分都進行一項工作：
+	<blockquote class="text_import2" style="font-family: '細明體'">20 8-12 * * * command</blockquote>
+	仔細看到第二欄變成 8-12 喔！代表 8,9,10,11,12 都適用的意思！</td></tr>
+<tr><td align="center">/n</td><td>那個 n 代表數字，亦即是『每隔 n 單位間隔』的意思，例如每五分鐘進行一次，則：<br />
+	<blockquote class="text_import2" style="font-family: '細明體'">*/5 * * * * command</blockquote>
+	很簡單吧！用 * 與 /5 來搭配，也可以寫成 0-59/5 ，相同意思！</td></tr>
+</table>
+
+		<p>我們就來搭配幾個例子練習看看吧！底下的案例請實際用 dmtsai 
+		這個身份作看看喔！後續的動作才能夠搭配起來！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假若你的女朋友生日是 5 月 2 日，你想要在 5 月 1 日的 23:59 發一封信給他，這封信的內容已經寫在
+/home/dmtsai/lover.txt 內了，該如何進行？
+</div>
+答：<div class="block2">
+直接下達 crontab -e 之後，編輯成為：<blockquote class="text_import2" style="font-family: '細明體'">
+59 23 1 5  *  mail kiki &lt; /home/dmtsai/lover.txt</blockquote>
+那樣的話，每年 kiki 都會收到你的這封信喔！（當然囉，信的內容就要每年變一變啦！）
+</div>
+</td></tr></table><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假如每五分鐘需要執行  /home/dmtsai/test.sh 一次，又該如何？
+</div>
+答：<div class="block2">
+同樣使用 crontab -e 進入編輯：<blockquote class="text_import2" style="font-family:'細明體'">
+*/5 * * * * /home/dmtsai/test.sh</blockquote>
+</div>
+</td></tr></table>
+
+		<p>那個 crontab 每個人都只有一個檔案存在，就是在 /var/spool/cron 裡面啊！
+		還有建議您：『<span class="text_import2">指令下達時，最好使用絕對路徑，這樣比較不會找不到執行檔喔</span>！』</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假如你每星期六都與朋友有約，那麼想要每個星期五下午 4:30 告訴你朋友星期六的約會不要忘記，則：
+</div>
+答：<div class="block2">
+還是使用 crontab -e 啊！<blockquote class="text_import2">
+30 16 * * 5 mail friend@his.server.name &lt; /home/dmtsai/friend.txt</blockquote>
+</div>
+</td></tr></table><br />
+
+		<p>真的是很簡單吧！呵呵！那麼，該如何查詢使用者目前的 crontab 內容呢？我們可以這樣來看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[dmtsai@www ~]$ <span class="term_command">crontab -l</span>
+59 23 1 5 * mail kiki &lt; /home/dmtsai/lover.txt
+*/5 * * * * /home/dmtsai/test.sh
+30 16 * * 5 mail friend@his.server.name &lt; /home/dmtsai/friend.txt
+
+<span class="term_hd"># 注意，若僅想要移除一項工作而已的話，必須要用 crontab -e 去編輯～
+# 如果想要全部的工作都移除，才使用 crontab -r 喔！</span>
+[dmtsai@www ~]$ <span class="term_command">crontab -r</span>
+[dmtsai@www ~]$ <span class="term_command">crontab -l</span>
+no crontab for dmtsai
+</pre></td></tr></table>
+
+		<p>看到了嗎？ crontab 『整個內容都不見了！』所以請注意：『如果只是要刪除某個 
+		crontab 的工作項目，那麼請使用 crontab -e 來重新編輯即可！』如果使用 -r 的參數，是會將所有的 
+		crontab 資料內容都刪掉的！千萬注意了！</p>
+	</div>
+
+	<hr /><a name="etc_crontab1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">系統的設定檔： /etc/crontab</span><br />
+	<div class="block2">
+		<p>這個『 crontab -e 』是針對使用者的 cron 來設計的，如果是『系統的例行性任務』時，
+		該怎麼辦呢？是否還是需要以 crontab -e 來管理你的例行性工作排程呢？當然不需要，你只要編輯
+		<span class="text_import2">/etc/crontab</span> 這個檔案就可以啦！有一點需要特別注意喔！那就是
+		crontab -e 這個 crontab 其實是 /usr/bin/crontab 這個執行檔，但是 /etc/crontab
+		可是一個『純文字檔』喔！你可以 root 的身份編輯一下這個檔案哩！</p>
+
+		<p>基本上，<span class="text_import2"> cron 這個服務的最低偵測限制是『分鐘』，所以『 cron
+		會每分鐘去讀取一次 /etc/crontab 與 /var/spool/cron 裡面的資料內容</span >
+		』，因此，只要你編輯完 /etc/crontab 這個檔案，並且將他儲存之後，那麼 
+		cron 的設定就自動的會來執行了！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在 Linux 底下的 crontab 會自動的幫我們每分鐘重新讀取一次 /etc/crontab 
+		的例行工作事項，但是某些原因或者是其他的 Unix 系統中，由於 crontab 
+		是讀到記憶體當中的，所以在你修改完 /etc/crontab 之後，可能並不會馬上執行，
+		這個時候請重新啟動 crond 這個服務吧！『/etc/init.d/crond restart』
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<a name="etc_crontab"></a>
+		<p>廢話少說，我們就來看一下這個 /etc/crontab 的內容吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/crontab</span>
+SHELL=/bin/bash                     <span class="term_note">&lt;==使用哪種 shell 介面</span>
+PATH=/sbin:/bin:/usr/sbin:/usr/bin  <span class="term_note">&lt;==執行檔搜尋路徑</span>
+MAILTO=root                         <span class="term_note">&lt;==若有額外STDOUT，以 email將資料送給誰</span>
+HOME=/                              <span class="term_note">&lt;==預設此 shell 的家目錄所在</span>
+
+# run-parts
+01  *  *  *  *   root      run-parts /etc/cron.hourly   <span class="term_note">&lt;==每小時</span>
+02  4  *  *  *   root      run-parts /etc/cron.daily    <span class="term_note">&lt;==每天</span>
+22  4  *  *  0   root      run-parts /etc/cron.weekly   <span class="term_note">&lt;==每週日</span>
+42  4  1  *  *   root      run-parts /etc/cron.monthly  <span class="term_note">&lt;==每個月 1 號</span>
+<span class="term_say">分 時 日 月 週 執行者身份  指令串</span>
+</pre></td></tr></table>
+
+		<p>看到這個檔案的內容你大概就瞭解了吧！呵呵，沒錯！這個檔案與將剛剛我們下達 
+		crontab -e 的內容幾乎完全一模一樣！只是有幾個地方不太相同：</p>
+
+		<ul>
+		<li><span class="text_import1">MAILTO=root</span>：<br /><br />
+		這個項目是說，當 /etc/crontab 這個檔案中的例行性工作的指令發生錯誤時，或者是該工作的執行結果有 
+		STDOUT/STDERR 時，會將錯誤訊息或者是螢幕顯示的訊息傳給誰？預設當然是由系統直接寄發一封 mail 給 root 啦！不過，
+		由於 root 並無法在用戶端中以 POP3 之類的軟體收信，因此，鳥哥通常都將這個 e-mail 
+		改成自己的帳號，好讓我隨時瞭解系統的狀況！例如： 
+		<span class="text_import2">MAILTO=dmtsai@my.host.name</span><br /><br /></li>
+
+		<li><span class="text_import1">PATH=....</span>：<br /><br />
+		還記得我們在<a href="/linux_basic/0320bash.php#env">第十一章的 BASH</a> 當中一直提到的執行檔路徑問題吧！
+		沒錯啦！這裡就是輸入執行檔的搜尋路徑！使用預設的路徑設定就已經很足夠了！<br /><br /></li>
+
+		<li><span class="text_import1">01 * * * * root run-parts /etc/cron.hourly</span>：<br /><br />
+		這個 /etc/crontab 裡面預設定義出四項工作任務，分別是每小時、每天、每週及每個月分別進行一次的工作！
+		但是在五個欄位後面接的並不是指令，而是一個新的欄位，那就是『<span 
+		class="text_import2">執行後面那串指令的身份</span>』為何！這與使用者的 crontab -e 不相同。由於使用者自己的 
+		crontab 並不需要指定身份，但 /etc/crontab 裡面當然要指定身份啦！以上表的內容來說，系統預設的例行性工作是以 root
+		的身份來進行的。<br /><br />
+
+		那麼後面那串指令是什麼呢？你可以使用『 <a href="/linux_basic/0220filemanager.php#file_find_cmd">which</a> 
+		run-parts 』搜尋看看，其實那是一個 bash script 啦！如果你直接進入 /usr/bin/run-parts 去看看，
+		會發現這支指令會將後面接的『目錄』內的所有檔案捉出來執行！這也就是說『<span class="text_import2">
+		如果你想讓系統每小時主動幫你執行某個指令，將該指令寫成 script，並將該檔案放置到 /etc/cron.hourly/ 
+		目錄下即可</span>』的意思！<br /><br />
+
+		現在你知道系統是如何進行他預設的一堆例行性工作排程了嗎？如果你下達『 ll /etc/cron.daily 』就可以看到一堆檔案，
+		那些檔案就是系統提供的 script ，而這堆 scripts 將會在每天的凌晨 4:02 開始運作！這也是為啥如果你是夜貓族，
+		就會發現奇怪的是，Linux 系統為何早上 4:02 開始會很忙碌的發出一些硬碟跑動的聲音！因為他必須要進行
+		makewhatis, updatedb, rpm rebuild 等等的任務嘛！
+		</li></ul>
+
+		<p>由於 CentOS 提供的 run-parts 這個 script 的輔助，因此 /etc/crontab 這個檔案裡面支援兩種下達指令的方式，
+		一種是直接下達指令，一種則是以目錄來規劃，例如：</p>
+
+		<ul>
+		<li><span class="text_import1">指令型態</span><br />
+		<font face="'細明體'">01 * * * * dmtsai mail -s "testing" kiki &lt; /home/dmtsai/test.txt</font><br />
+		以 dmtsai 這個使用者的身份，在每小時執行一次 mail 指令。<br /><br /></li>
+
+		<li><span class="text_import1">目錄規劃</span><br />
+		<font face="'細明體'">*/5 * * * * root run-parts /root/runcron</font><br />
+		建立一個 /root/runcron 的目錄，將要每隔五分鐘執行的『可執行檔』都寫到該目錄下，
+		就可以讓系統每五分鐘執行一次該目錄下的所有可執行檔。</li>
+		</ul>
+
+		<p>好！你現在大概瞭解了這一個咚咚吧！OK！假設你現在要作一個目錄，讓系統可以每 
+		2 分鐘去執行這個目錄下的所有可以執行的檔案，你可以寫下如下的這一行在 /etc/crontab 中：</p>
+		<blockquote class="text_import2"><font face="'細明體'">*/2 * * * * root run-parts 
+		/etc/cron.min</font></blockquote>
+
+		<p>當然囉， /etc/cron.min 這個目錄是需要存在的喔！那如果我需要執行的是一個『程式』而已，
+		不需要用到一個目錄呢？該如何是好？例如在偵測網路流量時，我們希望每五分鐘偵測分析一次，
+		可以這樣寫：</p>
+		<blockquote class="text_import2"><font face="'細明體'">*/5 * * * * root 
+		/bin/mrtg /etc/mrtg/mrtg.cfg</font></blockquote>
+
+		<p>如何！建立例行性命令很簡單吧！如果你是系統管理員而且你的工作又是系統維護方面的例行任務時，
+		直接修改 /etc/crontab 這個檔案即可喔！又便利，又方便管理呢！</p>
+	</div>
+
+	<hr /><a name="security"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一些注意事項</span><br />
+	<div class="block2">
+		<p>有的時候，我們以系統的 cron 來進行例行性工作的建立時，要注意一些使用方面的特性。
+		舉例來說，如果我們有四個工作都是五分鐘要進行一次的，那麼是否這四個動作全部都在同一個時間點進行？
+		如果同時進行，該四個動作又很耗系統資源，如此一來，每五分鐘不是會讓系統忙得要死？
+		呵呵！此時好好的分配一些執行時間就 OK 啦！所以，注意一下：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">資源分配不均的問題</li></ul>
+
+		<p>當大量使用 crontab 的時候，總是會有問題發生的，最嚴重的問題就是『系統資源分配不均』的問題，
+		以鳥哥的系統為例，我有偵測主機流量的資訊，包括：</p>
+		<ul>
+		<li>流量</li>
+		<li>區域內其他 PC 的流量偵測</li>
+		<li>CPU 使用率</li>
+		<li>RAM 使用率</li>
+		<li>線上人數即時偵測</li></ul>
+		<p>如果每個流程都在同一個時間啟動的話，那麼在某個時段時，我的系統會變的相當的繁忙，
+		所以，這個時候就必須要分別設定啦！我可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/crontab</span>
+1,6,11,16,21,26,31,36,41,46,51,56 * * * * root  CMD1
+2,7,12,17,22,27,32,37,42,47,52,57 * * * * root  CMD2
+3,8,13,18,23,28,33,38,43,48,53,58 * * * * root  CMD3
+4,9,14,19,24,29,34,39,44,49,54,59 * * * * root  CMD4
+</pre></td></tr></table>
+
+		<p>看到了沒？那個『 , 』分隔的時候，請注意，不要有空白字元！（連續的意思）如此一來，
+		則可以將每五分鐘工作的流程分別在不同的時刻來工作！則可以讓系統的執行較為順暢呦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">取消不要的輸出項目</li></ul>
+
+		<p>另外一個困擾發生在『 <span class="text_import2">當有執行成果或者是執行的項目中有輸出的資料時，該資料將會
+		mail 給 MAILTO 設定的帳號</span> 』，好啦，那麼當有一個排程一直出錯（例如 DNS
+		的偵測系統當中，若 DNS 上層主機掛掉，那麼你就會一直收到錯誤訊息！）怎麼辦？呵呵！還記得<a 
+		href="/linux_basic/0320bash.php#redirect">十一章談到的資料流重導向</a>吧？
+		直接以『命令重導向』將輸出的結果輸出到 <span class="text_import2">/dev/null</span> 
+		這個垃圾桶當中就好了！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">安全的檢驗</li></ul>
+
+		<p>很多時候被植入木馬都是以例行命令的方式植入的，所以可以藉由檢查 /var/log/cron
+		的內容來視察是否有『非您設定的 cron 被執行了？』這個時候就需要小心一點囉！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">週與日月不可同時並存</li></ul>
+
+		<p>另一個需要注意的地方在於：『你可以分別以週或者是日月為單位作為循環，但你不可使用「幾月幾號且為星期幾」的模式工作』。
+		這個意思是說，你不可以這樣編寫一個工作排程：</p>
+
+<table class="term"><tr><td class="term"><pre>
+30 12 11 9 5 root echo "just test"   <span class="term_note">&lt;==這是錯誤的寫法</span>
+</pre></td></tr></table>
+
+		<p>本來你以為九月十一號且為星期五才會進行這項工作，無奈的是，系統可能會判定每個星期五作一次，或每年的 9 月 11 
+		號分別進行，如此一來與你當初的規劃就不一樣了～所以囉，得要注意這個地方！上述的寫法是不對的喔！</p>
+	</div>
+</div>
+
+
+<hr /><a name="anacron_1"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">可喚醒停機期間的工作任務</span><br />
+<div class="block1">
+	<p>如果你的 Linux 主機是作為 24 小時全天、全年無休的伺服器之用，那麼你只要有 atd 與 crond 
+	這兩個服務來管理你的例行性工作排程即可。如果你的伺服器並非 24 小時無間斷的開機，那麼你該如何進行例行性工作？
+	舉例來說，如果你每天晚上都要關機，等到白天才啟動你的 Linux 主機時，由於 CentOS 預設的工作排程都在
+	4:02am 每天進行，唔！如此一來不就一堆系統例行工作都沒有人在做了！那可怎麼辦？此時就得要 anacron 這傢伙了！<br /><br /></p>
+
+	<hr /><a name="anacron_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 anacron</span><br />
+	<div class="block2">
+		<p>anacron 並不是用來取代 crontab 的，anacron 存在的目的就在於我們上頭提到的，在處理非 
+		24 小時一直啟動的 Linux 系統的 crontab 的執行！所以 anacron 並不能指定何時執行某項任務，
+		而是以天為單位或者是在開機後立刻進行 anacron 的動作，他會去偵測停機期間應該進行但是並沒有進行的
+		crontab 任務，並將該任務執行一遍後，anacron 就會自動停止了。</p>
+
+		<p>由於 anacron 會以一天、七天、一個月為期去偵測系統未進行的 crontab 任務，因此對於某些特殊的使用環境非常有幫助。
+		舉例來說，如果你的 Linux 主機是放在公司給同仁使用的，因為週末假日大家都不在所以也沒有必要開啟，
+		因此你的 Linux 是週末都會關機兩天的。但是 crontab 大多在每天的凌晨以及週日的早上進行各項任務，
+		偏偏你又關機了，此時系統很多 crontab 的任務就無法進行。 anacron 剛好可以解決這個問題！</p>
+
+		<p>那麼 anacron 又是怎麼知道我們的系統啥時關機的呢？這就得要使用 anacron 讀取的時間記錄檔 (timestamps) 了！
+		anacron 會去分析現在的時間與時間記錄檔所記載的上次執行 anacron 的時間，兩者比較後若發現有差異，
+		那就是在某些時刻沒有進行 crontab 囉！此時 anacron 就會開始執行未進行的 crontab 任務了！
+		<span class="text_import2">所以 anacron 其實也是透過 crontab 
+		來運作的！因此 anacron 運作的時間通常有兩個，一個是系統開機期間運作，一個是寫入 crontab 的排程中。</span>
+		這樣才能夠在特定時間分析系統未進行的 crontab 工作嘛！瞭解乎！</p>
+	</div>
+
+	<hr /><a name="anacron"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">anacron 與 /etc/anacrontab</span><br />
+	<div class="block2">
+		<p>anacron 其實是一支程式並非一個服務！這支程式在 CentOS 當中已經進入 crontab 的排程喔！
+		不相信嗎？你可以這樣追蹤看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll /etc/cron*/*ana*</span>
+-rwxr-xr-x 1 root root 379 Mar 28  2007 /etc/cron.daily/0anacron
+-rwxr-xr-x 1 root root 381 Mar 28  2007 /etc/cron.monthly/0anacron
+-rwxr-xr-x 1 root root 380 Mar 28  2007 /etc/cron.weekly/0anacron
+<span class="term_say"># 剛好是每天、每週、每月有排程的工作目錄！查閱一下每天的任務</span>
+
+[root@www ~]# <span class="term_command">cat /etc/cron.daily/0anacron</span>
+if [ ! -e /var/run/anacron.pid ]; then
+    anacron -u cron.daily
+fi
+<span class="term_say"># 所以其實也僅是執行 anacron -u 的指令！因此我們得來談談這支程式！</span>
+</pre></td></tr></table>
+
+		<p>基本上， anacron 的語法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">anacron [-sfn] [job]..</span>
+[root@www ~]# <span class="term_command">anacron -u [job]..</span>
+<span class="term_say">選項與參數：
+-s  ：開始一連續的執行各項工作 (job)，會依據時間記錄檔的資料判斷是否進行；
+-f  ：強制進行，而不去判斷時間記錄檔的時間戳記；
+-n  ：立刻進行未進行的任務，而不延遲 (delay) 等待時間；
+-u  ：僅更新時間記錄檔的時間戳記，不進行任何工作。
+job ：由 /etc/anacrontab 定義的各項工作名稱。</span>
+</pre></td></tr></table>
+
+		<p>所以我們發現<span class="text_import2">其實 /etc/cron.daily/0anacron 
+		僅進行時間戳記的更新，而沒有進行任何 anacron 的動作</span>！
+		在我們的 CentOS 中，anacron 的進行其實是在開機完成後才進行的一項工作任務，你也可以將 anacron 排入 crontab 
+		的排程中。但是為了擔心 anacron 誤判時間參數，因此 /etc/cron.daily/ 裡面的 anacron 才會在檔名之前加個 0 
+		(0anacron)，讓 anacron 最先進行！就是為了讓時間戳記先更新！以避免 anacron 誤判 crontab 
+		尚未進行任何工作的意思。</p>
+
+		<p>接下來我們看一下 /etc/anacrontab 的內容好了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/anacrontab</span>
+SHELL=/bin/sh
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+<u>1       65      cron.daily     run-parts /etc/cron.daily</u>
+7       70      cron.weekly    run-parts /etc/cron.weekly
+30      75      cron.monthly   run-parts /etc/cron.monthly
+<span class="term_say">天數   延遲時間 工作名稱定義   實際要進行的指令串
+# 天數單位為天；延遲時間單位為分鐘；工作名稱定義可自訂；
+# 指令串則通常與 crontab 的設定相同！</span>
+
+[root@www ~]# <span class="term_command">more /var/spool/anacron/*</span>
+::::::::::::::
+/var/spool/anacron/cron.daily
+::::::::::::::
+<u>20090315</u>
+::::::::::::::
+/var/spool/anacron/cron.monthly
+::::::::::::::
+20090301
+::::::::::::::
+/var/spool/anacron/cron.weekly
+::::::::::::::
+20090315
+<span class="term_say"># 上面則是三個工作名稱的時間記錄檔以及記錄的時間戳記</span>
+</pre></td></tr></table>
+
+		<p>由於 /etc/cron.daily 內的任務比較多，因此我們使用每天進行的任務來解釋一下 anacron 的運作情況好了。
+		anacron 若下達『 <span class="text_import2">anacron -s cron.daily</span> 』時，他會這樣運作的：</p>
+
+		<ol class="text_import2">
+		<li>由 /etc/anacrontab 分析到 cron.daily 這項工作名稱的天數為 1 天；</li>
+		<li>由 /var/spool/anacron/cron.daily 取出最近一次執行 anacron 的時間戳記；</li>
+		<li>由上個步驟與目前的時間比較，若差異天數為 1 天以上 (含 1 天)，就準備進行指令；</li>
+		<li>若準備進行指令，根據 /etc/anacrontab 的設定，將延遲 65 分鐘</li>
+		<li>延遲時間過後，開始執行後續指令，亦即『 run-parts /etc/cron.daily 』這串指令；</li>
+		<li>執行完畢後， anacron 程式結束。</li>
+		</ol>
+
+		<p>所以說，時間戳記是非常重要的！anacron 是透過該記錄與目前的時間差異，瞭解到是否應該要進行某項任務的工作！
+		舉例來說，如果我的主機在 2009/03/15(星期天) 18:00 關機，然後在 2009/03/16(星期一) 8:00 開機，由於我的 
+		crontab 是在早上 04:00 左右進行各項任務，由於該時刻系統是關機的，因此時間戳記依舊為 20090315 (舊的時間)，
+		但是目前時間已經是 20090316 (新的時間)，因此 <span class="text_import2">run-parts /etc/cron.daily 
+		就會在開機過 65 分鐘後開始運作了</span>。</p>
+
+		<p>所以囉， anacron 並不需要額外的設定，使用預設值即可！只是我們的 CentOS 只有在開機時才會執行
+		anacron 就是了。如果要確定 anacron 是否開機時會主動的執行，你可以下達下列指令：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chkconfig --list anacron</span>
+anacron      0:off   1:off   2:on    3:on    4:on    5:on    6:off
+<span class="term_say"># 詳細的 chkconfig 說明我們會在後續章節提到，注意看 3, 5
+# 的項目，都是 on ！那就是有啟動啦！開機時才會執行的意思！</span>
+</pre></td></tr></table>
+
+		<p>現在你知道<span class="text_import2">為什麼隔了一陣子才將 CentOS 開機，開機過後約 1 
+		小時左右系統會有一小段時間的忙碌！而且硬碟會跑個不停！那就是因為 anacron 正在執行過去 crontab 
+		未進行的各項工作排程啦！</span>這樣對 anacron 有沒有概念了呢？ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>系統可以透過 at 這個指令來排程單一工作的任務！『at TIME』為指令下達的方法，當 at 進入排程後，
+	系統執行該排程工作時，會到下達時的目錄進行任務；</li>
+	<li>at 的執行必須要有 atd 服務的支援，且 /etc/at.deny 為控制是否能夠執行的使用者帳號；</li>
+	<li>透過 atq, atrm 可以查詢與刪除 at 的工作排程；</li>
+	<li>batch 與 at 相同，不過 batch 可在 CPU 工作負載小於 0.8 時才進行後續的工作排程；</li>
+	<li>系統的循環例行性工作排程使用 cron 這個服務，同時利用 crontab -e 及 /etc/crontab 進行排程的安排；</li>
+	<li>crontab -e 設定項目分為六欄，『分、時、日、月、周、指令』為其設定依據；</li>
+	<li>/etc/crontab 設定分為七欄，『分、時、日、月、周、執行者、指令』為其設定依據；</li>
+	<li>anacron 配合 /etc/anacrontab  的設定，可以喚醒停機期間系統未進行的 crontab 任務！</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+簡答題：
+<ul>
+	<li>今天假設我有一個指令程式，名稱為： ping.sh 這個檔名！我想要讓系統每三分鐘執行這個檔案一次，
+	但是偏偏這個檔案會有很多的訊息顯示出來，所以我的
+	root 帳號每天都會收到差不多四百多封的信件，光是收信就差不多快要瘋掉了！
+	那麼請問應該怎麼設定比較好呢？
+	<div class="blockex">
+		這個涉及資料流重導向的問題，我們可以將他導入檔案或者直接丟棄！如果該訊息不重要的話，
+		那麼就予以丟棄，如果訊息很重要的話，才將他保留下來！假設今天這個命令不重要，
+		所以將他丟棄掉！因此，可以這樣寫：<blockquote>
+		*/3 * * * * root /usr/local/ping.sh &gt; /dev/null 2&gt;&amp;1</blockquote>
+	</div></li>
+
+	<li>您預計要在 2010 年的 2 月 14 日寄出一封給 kiki ，只有該年才寄出！該如何下達指令？
+	<div class="blockex">
+		at 1am 2010-02-14
+	</div></li>
+
+	<li>下達 crontab -e 之後，如果輸入這一行，代表什麼意思？<br />
+	* 15 * * 1-5 /usr/local/bin/tea_time.sh
+	<div class="blockex">
+		在每星期的 1~5 ，下午 3 點的每分鐘，共進行 60 次 /usr/local/bin/tea_time.sh 這個檔案。
+		要特別注意的是，每個星期 1~5 的 3 點都會進行 60 次ㄟ！很麻煩吧～是錯誤的寫法啦～
+		應該是要寫成：<br />
+		30 15 * * 1-5 /usr/local/bin/tea_time.sh
+	</div></li>
+
+	<li>我用 vi 編輯 /etc/crontab 這個檔案，我編輯的那一行是這樣的：<br />
+	25 00 * * 0   /usr/local/bin/backup.sh<br />
+	這一行代表的意義是什麼？
+	<div class="blockex">
+		這一行代表......沒有任何意義！因為語法錯誤！您必須要瞭解，在 /etc/crontab 
+		當中每一行都必須要有使用者才行！所以，應該要將原本那行改成：<br />
+		25 00 * * 0 root  /usr/local/bin/backup.sh
+	</div></li>
+
+	<li>請問，您的系統每天、每週、每個月各有進行什麼工作？
+	<div class="blockex">
+		因為 CentOS 系統預設的例行性命令都放置在 /etc/cron.* 裡面，所以，你可以自行去：
+		/etc/cron.daily/, /etc/cron.week/, /etc/cron.monthly/ 這三個目錄內看一看，
+		就知道啦！ ^_^
+	</div></li>
+
+	<li>每個星期六凌晨三點去系統搜尋一下內有 SUID/SGID 的任何檔案！並將結果輸出到 /tmp/uidgid.files
+	<div class="blockex"><font face="'細明體'">
+		vi /etc/crontab<br />
+		0 3 * * 6 root find / -perm +6000 &gt; /tmp/uidgid.files
+	</font></div></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/05/30：第一次完成<br />
+2003/02/10：重新編排與加入 FAQ<br />
+2005/09/07：將舊的文章移動到 <a href="0430cron/0430cron.php">此處</a> 。<br />
+2005/09/07：呼呼！終於完成風格囉～同時加入一些習題練習。<br />
+2009/03/12：將舊的文件移動到<a href="/linux_basic/0430cron/0430cron-fc4.php">此處</a>。<br />
+2009/03/14：加入 <a href="#batch">batch</a> 這個項目的說明！與 at 有關！<br />
+2009/03/15：加入了 anacron  這玩意的簡單說明！<br />
+2009/09/11：稍微修訂一下說明語氣與連結資料。<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

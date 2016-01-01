@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 企業級應用篇的目錄</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="index.htm">
+    <span class="text_head0">鳥哥的<span class="text_head_en"> Linux </span>私房菜 -- 企業應用篇目錄</span></a><br />
+</div>
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+<center><span class="text_h2">特別強調</span></center>
+	底下的文件主要是針對比較大型的網域才需要的伺服器設定加以介紹的，
+	一般來說，如果是小型企業，或者是個體戶(^_^)通常不太需要底下的資源，
+	因為一部 Linux 主機就能夠完成所有的事情，而且也不會太花費時間與金錢！
+	不過，如果是中小企業以上的網路環境時，由於我們需要快速的安裝多部主機、
+	快速且統一的處理員工的帳號等等，此時就需要某些伺服器的幫助了！
+	包括安裝伺服器(installation server)及帳號控管中心(NIS or LDAP等等)。<br /><br />
+
+	這個企業應用中，其實很多部分鳥哥也只是根據過去的經驗來撰寫的，對於實際的企業環境，
+	鳥哥很想多多去學習與看看。如果有朋友願意開放機房與一些相關的軟、硬體給鳥哥參觀的話，
+	敬請來信指教喔！小老兒會非常高興的！ ^_^<br ><br />
+
+	在這個章節部分，鳥哥已經假設您看過基礎篇與伺服器篇，所以將不會花費很多時間在基礎的介紹上，
+	如果您對於 Linux 基礎與簡單的伺服器架設沒有概念的話，那麼底下的文章先看看就好，別急著作！
+	否則老是發問一些蠢問題，對您的學習也不是件好事！<br />
+</td></tr></table><br>
+
+
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">企業環境常見的伺服器架設</span><br>
+<div class=block1 style="text-align:justify">
+	<span class="text_import2">
+	包括 Samba 的 PDC 中心、利用 LDAP 架設個人資料的維護、Xen 虛擬主機的運作、
+	網路安裝主機 (Installation server) 的配置、 關於 CentOS YUM 主機的配置等等，
+	都可以拿來玩一玩！讓您的企業環境更加的迅速便捷！ ^_^
+	<br /><br /></span>
+
+
+	<table BORDER COLS=2 WIDTH="100%" cellspacing=0 cellpadding=5 style="text-align:justify">
+	<tr>
+		<td WIDTH="170" align=center>
+			Installation Server
+			<br><font face="細明體" size=-1>(構思中)</font>
+		</td>
+		<td><font size="-1">如何透過網路來進行 Linux 的安裝？ </font></td></tr>
+	<tr>
+		<td align=center>
+			<a href="xen.htm">利用 Xen  設計虛擬機器</a>
+			<br><font face="細明體" size=-1>2007/10/20</font>
+		</td>
+		<td><font size="-1">
+			所謂的『虛擬機器』就是在一部實體主機上面虛擬出多部實體主機的環境，
+			且每部實體主機都是獨立的，除了原本的那部原主機外，其他的主機都可以獨立開、關機，
+			由於個人電腦的能力在近年來突飛猛進，速度與效能都非常棒，所以用一部實體主機來進行虛擬機器的架設，
+			並適當的分配不同的服務在上頭，將有助於能源的節約、管理的簡化以及服務追蹤的簡化哩
+		</font></td></tr>
+	<tr>
+		<td WIDTH="170" align=center>
+			流量控管資料
+			<br><font face="細明體" size=-1>(構思中)</font>
+		</td>
+		<td><font size="-1">包括 MRTG, bounding 等等怎麼玩？</font></td></tr>
+	<tr>
+	<tr>
+		<td align=center>
+			<!a href="0450apt.htm">簡易 APT Server</a>
+			<br><font face="細明體" size=-1>2003/08/27</font>
+		</td>
+		<td><font size="-1">APT (Advanced Package Tool) 是由 debian 這個 distribution 
+			所發展的一個套件管理工具，不過因為太好用了，所以很多機構就將他設計成為可以符合其他
+			distribution 做為網路更新的一項利器！在這個章節當中，我們要介紹如何在 Red
+			Hat 9 上面建置一個 ATP 伺服器，並且提供 Mandrake 的更新給 Client 端來更新使用！</font></td></tr>
+
+<tr>
+<td>
+<center><font face="細明體"><!a href="0420squid.htm">簡易 Proxy 伺服器</a></font>
+<br><font face="細明體"><font size=-1>2003/09/16</font></font></center>
+</td>
+
+
+<td><font face="細明體">代理伺服器這個東西對於大企業可了不得囉！可以提升內部的網路的速度呢！雖然是有點奇怪的說法，不過，他確實可以『假象』的提升企業內部的網路工作效率，嘿嘿，廢話不多說，趕快來看看怎樣架設吧！</font></td>
+</tr>
+
+<tr>
+<td>
+<center>LDAP 伺服器
+<br><font face="細明體"><font size=-1>構思中</font></font></center>
+</td>
+<td>
+如何利用一個主控帳號/密碼的主機來管理整個公司內部的員工資料呢？在 Windows 內有 AD 這個東西，
+在我們的 Linux  裡面則有 LDAP 這個玩意兒！讓我們來瞧一瞧這個東西在  Linux 下的用途，
+以及在 Windows 網芳等等的用途吧！
+</td>
+</tr>
+
+<tr>
+<td>
+<center><!a href="0520openwebmail.htm">OpenWebMail</a>
+<br><font face="細明體"><font size=-1>2004/08/26</font></font></center>
+</td>
+<td>
+使用 Webmail 可以避免大部分的病毒信呢！所以這個小東西有越來越熱門的趨勢！
+在這裡，我們使用台灣人自己寫的一套自由軟體：OpenWebMail 來架設我們的 MUA ！
+很不錯的東西！趕緊來看看先！
+</td>
+</tr>
+
+                <td WIDTH="170" align=center>
+                        MySQL 基本指令使用
+                        <br><font face="細明體" size=-1>( 施工中 )</font>
+                </td>
+                <td><font size="-1">如果已經架設好 LAMP ( Linux + Apache + MySQL + PHP )
+                        的朋友，最想要知道的大概就是『嗄！我的資料庫出問題，或者是死掉的時候怎麼辦？』
+                        呵呵！這個時候我們可以直接登入
+                        MySQL 資料庫系統，而不必經由 PHP 程式來管理呢！ But HOW ？我們這裡就來談一談吧！</td></tr>
+
+</table><br />
+
+</div>
+
+
+<hr>
+<br><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,876 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="淺談備份策略啊！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 淺談備份策略</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第二十五章、<span class="text_head_en"> Linux </span>備份策略</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/18</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	萬一不幸你的 Linux 被駭客入侵了、或是你的 Linux 系統由於硬體關係 (不論是天災還是人禍) 
+	而掛掉了！這個時候，請問如何快速的回復你的系統呢？呵呵！當然囉，如果有備份資料的話，
+	那麼回復系統所花費的時間與成本將降低相當的多！平時最好就養成備份的習慣，
+	以免突然間的系統損毀造成手足無措！此外，哪些檔案最需要備份呢？又，備份是需要完整的備份還是僅備份重要資料即可？
+	嗯！確實需要考慮看看呦！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#backup_hint">備份要點</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#who_need_backup">備份資料的考量</a><br />
+	　　1.2 <a href="#what_data_must_backup">哪些 Linux 資料具有備份的意義</a><br />
+	　　1.3 <a href="#what_media">備份用儲存媒體的選擇</a><br />
+	</span>
+2. <a href="#backup_type">備份的種類、頻率與工具的選擇</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#full_incremental">完整備份之累積備份 (Incremental backup)</a>,
+		<a href="#incremental_tool">使用軟體</a><br />
+	　　2.2 <a href="#full_differential">完整備份之差異備份 (Differential backup)</a><br />
+	　　2.3 <a href="#key_file">關鍵資料備份</a><br />
+	</span>
+3. <a href="#VBird_strategy">VBird 的備份策略與 scripts</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#all_back">每週系統備份的 script</a><br />
+	　　3.2 <a href="#daily">每日備份資料的 script</a><br />
+	　　3.3 <a href="#remote">遠端備援的 script</a><br />
+	</span>
+4. <a href="#restore">災難復原的考量</a><br />
+5. <a href="#hint">重點回顧</a><br />
+6. <a href="#ex">本章習題</a><br />
+7. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+8. <a href="http://phorum.vbird.org/viewtopic.php?t=23896"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23896</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="backup_hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">備份要點</span><br />
+<div class="block1">
+	<p>備份是個很重要的工作，很多人總是在系統損毀的時候才在哀嚎說：『我的資料啊！天那...！』此時才會發現備份資料的可愛！
+	但是備份其實也非常可怕！因為你的重要資料都在備份檔裡面，如果這個備份被竊取或遺失，其實對你的系統資安影響也非常大！
+	同時，備份使用的媒體選擇也非常多樣，但是各種儲存媒體各有其功能與優劣，所以當然得要選擇囉！閒話少說，來談談備份吧！<br /><br /></p>
+
+	<hr /><a name="who_need_backup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">備份資料的考量</span><br />
+	<div class="block2">
+		<p>老實說，<span class="text_import2">備份是系統損毀時等待救援的救星</span>！因為你需要重新安裝系統時，
+		備份的好壞會影響到你系統復原的進度！不過，我們想先知道的是，系統為什麼會損毀啊？是人為的還是怎樣產生的啊？
+		事實上，<span class="text_import2">系統有可能由於不預期的傷害而導致系統發生錯誤</span>！
+		什麼是不預期的傷害呢？這是由於系統可能因為不預期的硬體損壞，例如硬碟壞掉等等，或者是軟體問題導致系統出錯，
+		包括人為的操作不當或是其他不明因素等等所致。底下我們就來談談系統損壞的情況與為何需要備份吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">造成系統損毀的問題-硬體問題</li></ul>
+
+		<p>基本上，『<span class="text_import2">電腦是一個相當不可靠的機器</span>』這句話在大部分的時間內還是成立的！
+		常常會聽到說『要電腦正常的工作，最重要的是要去拜拜！』嘿嘿！不要笑！這還是真的哩！
+		尤其是在日前一些電腦周邊硬體的生產良率 (就是將硬體產生出來之後，經過測試，
+		發現可正常工作的與不能正常工作的硬體總數之比值) 越來越差的情況之下，電腦的不穩定狀態實在是越來越嚴重了！</p>
+
+		<p>舉個例子來說，鳥哥曾經同時買過同一廠牌的 30GB 硬碟三顆，回來之後經過一個星期，嘿嘿！掛掉了兩顆！
+		其中一顆是有壞軌，另外一顆是『完全死掉』，拿去公司要求修理，結果呢？嗯！店家直接拿了一顆新的給我，
+		害我嚇一跳，店家的工程師說『唉呀！目前這個牌子的良率太差了，所以代理商為了怕麻煩，都會直接拿新的替換給我們啦！』
+		要曉得的是，當初那一顆完全死掉的硬碟，是我用來備份我的主機資料的....
+		好在當時我將備份的資料放在三四個地方，還好...</p>
+
+		<p>一般來說，會造成系統損毀的硬體元件應該要算硬碟吧！因為其他的元件壞掉時，雖然會影響到系統的運作，
+		不過至少我們的資料還是存在硬碟當中的啊！為了避免這個困擾，於是乎有可備份用的 RAID1, RAID5 
+		等磁碟陣列的應用啊！但是如果是 RAID 控制晶片壞掉呢？這就麻煩了～所以說，如果有 RAID 系統時，
+		鳥哥個人還是覺得需要進行額外的備份才好的！如果資料夠重要的話。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">造成系統損毀的問題-軟體問題</li></ul>
+
+		<p>根據分析，其實系統的軟體傷害最嚴重的就屬使用者的操作不當啦！像最近這幾天才在鳥園討論區發現，
+		有網友手滑了一下，結果在指令列輸入了『 rm -rf /home 』，這造成什麼後果？就造成使用者家目錄被刪光光～
+		因為當時下達指令的身份是 root 啊～會欲哭無淚喔！為了避免這方面的『手滑』問題，備份是重要的！</p>
+
+		<p>軟體傷害除了來自主機上的使用者操作不當之外，最常見的可能是資安攻擊事件了。
+		假如你的 Linux 系統上面某些 Internet 的服務軟體是最新的！這也意味著可能是『相對最安全的』，
+		但是，這個世界目前的閒人是相當多的，你不知道什麼時候會有所謂的『駭客軟體』被提供出來，萬一你在
+		Internet 上面的服務程序被攻擊，導致你的 Linux 系統全毀，這個時候怎麼辦？當然是要復原系統吧？</p>
+
+		<p>那如何復原被傷害的系統呢？『<span class="text_import2">重新安裝就好啦</span>！』或許你會這麼說，
+		但是，像鳥哥管理的幾個網站的資料，尤其是 MySQL 資料庫的資料，這些都是彌足珍貴的經驗資料，
+		萬一被損毀而救不回來的時候，不是很可惜嗎？這個還好哩，萬一你是某家銀行的話，
+		那麼資料的損毀可就不是能夠等閒視之的！關係的可是數千甚至上萬人的身家財產！這就是備份的重要性了！
+		他可以最起碼的稍微保障我們的資料有另外一份
+		copy 的備援以達到『<span class="text_import2">安全回復</span>』的基本要求！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">主機角色不同，備份任務也不同</li></ul>
+
+		<p>由於軟硬體的問題都可能造成系統的損毀，所以備份當然就很重要啦！問題是，每一部主機都需要備份嗎？
+		多久備份一次呢？要備份什麼資料呢？</p>
+
+		<p>如果是針對個人桌上型電腦使用的資料，那麼 Norton 的『 Ghost 』應該算是一套好到不行的備份大師了！
+		最主要是 Ghost 可以針對整個 partition 來進行備份，所以囉，我們可以將 Windows 系統當中的整個 C
+		或者是整個 D 槽完整的備份下來。甚至在還原方面也是非常的快速，而且操作簡便！
+		另外，由於個人桌上型電腦所使用的資料量通常不大，所以當
+		ghost 完成之後，通常只要將資料燒錄到光碟片當中，大約只要一至兩片的光碟片也就綽綽有餘囉！
+		那麼將光碟片保存好，這就是最簡易的資料備份模式囉！
+		此外，由於個人的資料變動性不大，所以資料的備份頻率方面也不需要非常的頻繁！</p>
+
+		<p>但是，萬一你的主機有提供 Internet 方面的服務呢？又該如何備份啊？舉個例子來說，像是我們 Study Area 
+		團隊的討論區網站 <a href="http://phorum.study-area.org" 
+		target="_blank">http://phorum.study-area.org</a> 提供的是類似 BBS 的討論文章，
+		雖然資料量不大，但是由於討論區的文件是天天在增加的，每天都有相當多的資訊流入，
+		由於某些資訊都是屬於重要的人物之留言，這個時候，我們能夠讓機器死掉嗎？或者是能夠一季三個月才備份一次嗎？
+		這個備份頻率需求的考量是非常重要的！</p>
+
+		<p>再提到 2002 年左右鳥哥的討論區曾經掛點的問題，以及 2003 年初 Study-Area 
+		討論區掛點的問題，討論區一旦掛點的話，該資料庫內容如果損毀到無法救回來，
+		嘿嘿！要曉得討論區可不是一個人的心血耶！有的時候 (像 Study-Area 討論區) 是一群熱心 Linux 
+		的朋友們互相建立交流起來的資料流通網，如果死掉了，那麼不是讓這些熱血青年的熱情付之一炬了嗎？
+		所以囉，建立備份的策略 (頻率、媒體、方法等) 是相當的重要的。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">備份因素考量</li></ul>
+
+		<p>由於電腦 (尤其是目前的電腦，操作頻率太高、硬體良率太差、使用者操作習慣不良、
+		『某些』作業系統的當機率太高....) 的穩定性較差，所以囉！備份的工作就越來越重要了！
+		那麼一般我們在備份時考慮的因素有哪些呢？</p>
+
+		<ul>
+		<li><span class="text_import2">備份哪些檔案：</span><br />
+		哪些資料對系統或使用者來說是重要的？那些資料就是值得備份的資料！例如 /etc/* 及 /home/* 等。<br /><br /></li>
+
+		<li><span class="text_import2">選擇什麼備份的媒介：</span><br />
+		是可讀寫光碟、另一顆硬碟、同一顆硬碟的不同 partition、還是使用網路備援系統？
+		哪一種的速度最快，最便宜，可將資料保存最久？這都可以考慮的。<br /><br /></li>
+
+		<li><span class="text_import2">考慮備份的方式：</span><br />
+		是以完整備份(類似 ghost)來備份所有資料，還是使用差異備份僅備份有被更動過的資料即可？<br /><br /></li>
+
+		<li><span class="text_import2">備份的頻率：</span><br />
+		例如 MySQL 資料庫是否天天備份、若完整備份，需要多久進行一次？<br /><br /></li>
+
+		<li><span class="text_import2">備份使用的工具為何：</span><br />
+		是利用 tar 、 cpio 、 dd 還是 dump 等等的備份工具？</li>
+		</ul>
+
+		<p>底下我們就來談一談這些問題的解決之道吧！ ^_^</p>
+	</div>
+
+	<hr /><a name="what_data_must_backup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">哪些
+	Linux 資料具有備份的意義</span><br />
+	<div class="block2">
+		<p>一般來說，鳥哥比較喜歡備份最重要的檔案而已 (關鍵資料備份)，而不是整個系統都備份起來
+		(完整備份, Full backup)！那麼哪些檔案是有必要備份的呢？具有備份意義的檔案通常可以粗分為兩大類，<span 
+		class="text_import2">一類是系統基本設定資訊、一類則是類似網路服務的內容資料</span>。
+		那麼各有哪些檔案需要備份的呢？我們就來稍微分析一下。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">作業系統本身需要備份的檔案：</li></ul>
+
+		<p>這方面的檔案主要跟『<span class="text_import2">帳號與系統設定檔</span>』有關係！
+		主要有哪些帳號的檔案需要備份呢？就是<span class="text_import2" style="font-family: '細明體'">
+		/etc/passwd, /etc/shadow, /etc/group, /etc/gshadow, /home 底下的使用者家目錄等等</span>，
+		而由於 Linux 預設的重要參數檔都在 /etc/ 底下，所以只要將這個目錄備份下來的話，
+		那麼幾乎所有的設定檔都可以被保存的！</p>
+
+		<p>至於 /home 目錄是一般用戶的家目錄，自然也需要來備份一番！再來，由於使用者會有郵件吧！所以呢，這個
+		/var/spool/mail/ 內容也需要備份呦！另外，由於如果你曾經自行更動過核心，那麼
+		/boot 裡頭的資訊也就很重要囉！所以囉，這方面的資料你必須要備份的檔案為：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/etc/ 整個目錄</li>
+		<li>/home 整個目錄</li>
+		<li>/var/spool/mail</li>
+		<li>/boot</li>
+		<li>/root</li>
+		<li>如果你自行安裝過其他的套件，那麼 /usr/local/ 或 /opt 也最好備份一下！</li>
+		</ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">網路服務的資料庫方面：</li></ul>
+
+		<p>這部份的資料可就多而且複雜了，首先是這些網路服務軟體的設定檔部分，
+		如果你的網路軟體安裝都是以原廠提供的為主，那麼你的設定檔案大多是在
+		/etc 底下，所以這個就沒啥大問題！但若你的套件大多來自於自行的安裝，那麼
+		/usr/local 這個目錄可就相當的重要了！</p>
+
+		<p>再來，每種服務提供的資料都不相同，這些資料很多都是人們提供的！舉例來說，你的 WWW 
+		伺服器總是需要有人提供網頁檔案吧？否則瀏覽器來是要看啥咚咚？你的討論區總是得要寫入資料庫系統吧？
+		否則討論的資料如何更新與記載？所以，使用者主動提供的檔案，以及服務運作過程會產生的資料，
+		都需要被考慮來備份。若我們假設我們提供的服務軟體都是使用原廠的 RPM 安裝的！所以要備份的資料檔案有：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>軟體本身的設定檔案，例如：/etc/ 整個目錄，/usr/local/ 整個目錄</li>
+		<li>軟體服務提供的資料，以 WWW 及 MySQL 為例：<br />
+			WWW 資料：/var/www 整個目錄或 /srv/www 整個目錄，及系統的使用者家目錄<br />
+			MySQL ： /var/lib/mysql 整個目錄</li>
+		<li>其他在 Linux 主機上面提供的服務之資料庫檔案！</li>
+		</ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">推薦需要備份的目錄：</li></ul>
+
+		<p>由上面的介紹來看的話，如果你的硬體或者是由於經費的關係而無法全部的資料都予以備份時，
+		鳥哥建議你至少需要備份這些目錄呦！</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/boot</li>
+		<li>/etc</li>
+		<li>/home</li>
+		<li>/root</li>
+		<li>/usr/local(或者是 /opt 及 /srv 等)</li>
+		<li>/var(註：這個目錄當中有些暫存目錄則可以不備份！)</li>
+		</ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">不需要備份的目錄：</li></ul>
+
+		<p>有些資料是不需要備份的啦！例如我們在<a 
+		href="/linux_basic/0210filepermission.php">第六章檔案權限與目錄配置</a>裡頭提到的 /proc 
+		這個目錄是在記錄目前系統上面正在跑的程序，這個資料根本就不需要備份的呢！此外，外掛的機器，例如
+		/mnt 或 /media 裡面都是掛載了其他的硬碟裝置、光碟機、軟碟機等等，這些也不需要備份吧？
+		所以囉！底下有些目錄可以不需要備份啦！</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/dev ：這個隨便你要不要備份</li>
+		<li>/proc：這個真的不需要備份啦！</li>
+		<li>/mnt 與 /media：如果你沒有在這個目錄內放置你自己系統的東西，也不需要備份</li>
+		<li>/tmp ：幹嘛存暫存檔！不需要備份！</li>
+		</ul>
+	</div>
+
+	<hr /><a name="what_media"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">備份用儲存媒體的選擇</span><br />
+	<div class="block2">
+		<p>用來儲存備份資料的媒體非常的多樣化，那該如何選擇呢？在選擇之前我們先來講個小故事先！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">一個實際發生的故事</li></ul>
+
+		<p>在備份的時候，選擇一個『<span class="text_import2">資料存放的地方</span>』也是很需要考慮的一個因素！
+		什麼叫做資料存放的地方呢？講個最簡單的例子好了，我們知道說，較為大型的機器都會使用
+		tape 這一種磁帶機來備份資料，而如果是一般個人電腦的話，很可能是使用類似
+		Mo 這一種可讀寫式光碟片來存取資料！但是你不要忘記了幾個重要的因素，那就是萬一你的
+		Linux 主機被偷了呢？</p>
+
+		<p>這不是不可能的，之前鳥哥在成大唸書時，隔壁校區的研究室曾經遭小偷，
+		裡面所有的電腦都被偷走了！包括『Mo 片』，當他們發現的時候，一開始以為是硬體被偷走了，還好，
+		他們都有習慣進行備份，但是很不幸的，這一次連『備份的
+		MO 都被拿走了！』怎麼辦？！只能道德勸說小偷先生能夠良心發現的將硬碟拿回來囉！唉～真慘....<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">異地備援系統</li></ul>
+
+		<p>這個時候，所謂的『<span class="text_import2">異地備援系統</span>』就顯的相當的重要了！
+		什麼是異地備援呀！說的太文言了！呵！簡單的說，就是將你的系統資料『備份』到其他的地方去，
+		例如說我的機器在台南，但是我還有另一部機器在高雄老家，這樣的話，
+		我可以將台南機器上面重要的資料都給他定期的自動的透過網路傳輸回去！
+		也可以將家裡重要的資料給他丟到台南來！這樣的最大優點是可以在台南的機器死掉的時候，
+		即使是遭小偷，也可以有一個『萬一』的備份所在！</p>
+
+		<p>有沒有缺點啊？有啊！缺點就是～<span class="text_import2">頻寬嚴重的不足</span>！
+		在這種狀態下，所能採取的策略大概就是『<span class="text_import2">僅將最重要的資料給他傳輸回去囉</span>！』
+		至於一些只要系統從新安裝就可以回復的咚咚！那就沒有這個必要了！當然囉，如果你的網路是屬於
+		T1 專線的話，那麼完整備份將資料丟到另一地去，也是很可行的啦！只是鳥哥沒有那麼好命...<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">儲存媒體的考量</li></ul>
+
+		<p>在此同時，我們再來談一談，那麼除了異地備援這個『<span class="text_import2">相對較為安全的備份</span>』方法之外，
+		還有沒有其他的方法可以儲存備份的呢？畢竟這種網路備援系統實在是太耗頻寬了！如果像我們一般家用的
+		ADSL 根本就是吃不消！那麼怎麼辦？喔～那就只好使用近端的裝置來備份囉！
+		這也是目前我們最常見到的備份方法！例如一般我們使用的 Tape, Mo, Zip, CD-RW, DVD-RW 還有備份用抽取式硬碟與攜帶式硬碟等等！
+		那麼在選擇上需要注意些什麼呢？需要注意的地方有幾點：</p>
+
+		<ul>
+		<li><span class="text_import2">備份速度要求 -- 思考硬碟用途</span>：<br /><br />
+
+		『備份』在 Linux 主機上面也是蠻耗系統資源的！因為需要將系統的資料拷貝到其他裝置上面去，這個時候
+		I/O 與 CPU 的負載都會大！你總不希望系統就這樣給他掛點吧！此外，有些系統的資料實在太多咯，
+		怎麼樣也備份不完！所以囉，<span class="text_import2">越快的儲存裝置是越好的</span>！如果你是個重視速度甚於一切的人，
+		那麼我覺得抽取式硬碟是個不錯的方式，只不過.....目前我知道的抽取式硬碟都需要冷開機才行，不太符合
+		Linux 主機 24 小時全年無休的狀態....<br /><br />
+
+		但是硬碟真的越來越大、越來越便宜了，不使用速度快的硬碟來備份實在很可惜～
+		加上目前的火線 (IEEE 1394) 以及 USB 2.0 外接式硬碟盒技術已經相當的成熟，
+		傳輸速度又快，又可以直接熱拔插 (Plug and Play)，接上 USB 硬碟，
+		整個複製一下，傳輸速度理論上可達 480Mbps (約 60 MBytes/second) ，快的哩！
+		複製完畢，又可以將硬碟帶走，不需要與主機放置在一起，還可以避免同時被偷，真是不錯。<br /><br />
+
+		但是，硬碟還是有一定的困擾，那就是『不接電源的硬碟需要很好很好的保養』。
+		我們知道電腦最好的保養就是常常開機去運作一下，免得長期不開機，造成受潮而損壞。
+		這個攜帶式硬碟只是偶而才會連上主機來進行備份的資料，除非你額外購買一部防潮箱來放置硬碟，
+		否則很容易損壞！所以，近年來速度越來越快的 DVD-RW 就變的很方便囉！至於磁帶 
+		(tape)，在速度上完全是落後的.....<br /><br />
+
+		至於使用直接安裝在主機上的第二顆硬碟來備份，類似 RAID 或者是安裝一顆備份的硬碟在 Linux 系統當中，這個方案也很好，
+		而且速度上絕對是最具優勢的！但是就如同我們剛剛提到的，萬一你的機器被偷了，連帶的，
+		這顆備份的硬碟自然也就不見了.....<br /><br /></li>
+
+		<li><span class="text_import2">儲存容量 -- 磁帶備份考量</span>：<br /><br />
+
+		這也是一個需要考量的因素！而且常常是最大考量的因素呢！雖然目前硬碟越來越便宜，
+		但是畢竟就如同前面說的，抽取式硬碟需要將系統冷開機，而建構在系統內的硬碟又同時具有不安全的成分在，
+		攜帶式硬碟可能又有不容易保存的特性，這個時候一個大容量的替代方案就顯的很重要了！雖然
+		CD-RW 與 DVD-RW 可以提供不錯的速度，但是其容量畢竟不足 (雖然有高達幾十 GB 的藍光 DVD 可用，但目前 (2009) 尚未普及，
+		光碟片太貴了！) 所以說，具有大容量的 tape  (磁帶容量最小的一款也可以到達 8 GB 左右！) 
+		就相當的具有這方面的優勢了！而且攜帶方便，存放也容易！更可以帶著走～～<br /><br /></li>
+
+		<li><span class="text_import2">經費與資料可靠性 -- DVD 的使用，可保存 10 年左右</span>：<br /><br />
+
+		在經費不短缺的情況下，我們當然會建議你上面的幾個裝置都買一買，
+		然後分別在不同的時間進行不同的備份作業 (底下我們有些建議的啦！^_^) 
+		！但是如果經費也是需要考量的話，那麼磁帶機這個目前還算貴重的物品可能暫時還動不到！
+		這個時候近來漸漸便宜的 DVD-RW 就顯的活躍的多了！而且光碟片也可以保存很久的ㄋㄟ～
+		當然，目前應該不會有人以軟碟來備份了吧！呵呵！軟碟可是相當不安全的。</li>
+		</ul>
+
+		<p>無論如何，如果經費允許的話， Tape 備份資料真的是一個不錯的點子！因為他的高容量讓我好滿意！
+		再來，如果經費稍微短缺的話，那麼 DVD-RW 經常性的將資料燒錄下來，這也是蠻好的，尤其 DVD 
+		片又不佔空間！再來，如果還是沒有辦法，那麼一顆內建在 Linux 的硬碟用來備份也是不錯的！
+		什麼！連備份的硬碟都沒有，唉！怎麼跟我一樣～這個時候沒辦法啦，用原來的安裝系統的硬碟，多留一個
+		partition 用來當作備份之用吧 (這也是目前鳥哥常用的方法之一！)底下我們來看一看一些常見的裝置代號！</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>光碟機： /dev/cdrom (其實應該是 /dev/sdX 或 /dev/hdX)</li>
+		<li>磁帶機： /dev/st0 (SCSI 介面), /dev/ht0 (IDE 介面)</li>
+		<li>軟碟機： /dev/fd0, /dev/fd1</li>
+		<li>硬碟機： /dev/hd[a-d][1-16] (IDE), /dev/sd[a-p][1-16] (SCSI/SATA)</li>
+		<li>外接式 USB 硬碟機： /dev/sd[a-p][1-16] (與 SCSI 相同)</li>
+		<li>印表機： /dev/lp[0-2]</li>
+		</ul>
+
+		<p>特別留意的是磁帶機呦！如果你有錢的話，那麼買一部磁帶機是相當不錯的建議！沒錢的話，買 IDE 或 
+		SATA 介面的硬碟也很不錯！！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="backup_type"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">備份的種類、頻率與工具的選擇</span><br />
+<div class="block1">
+	<p>講了好多口水了，還是沒有講到重點，真是的....好了，再來提到那個備份的種類，因為想要選擇什麼儲存媒體與相關備份工具，
+	都與備份使用的方式有關！那麼備份有哪些方式呢？一般可以粗略分為『累積備份』與『差異備份』這兩種 (<a 
+	href="#ps1">註1</a>)。當然啦，如果你在系統出錯時想要重新安裝到更新的系統時，僅備份關鍵資料也就可以了！<br /><br /></p>
+
+	<hr /><a name="full_incremental"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">完整備份之累積備份
+	(Incremental backup)</span><br />
+	<div class="block2">
+		<p>備份不就是將重要資料複製出來即可嗎？幹嘛需要完整備份 (Full backup) 呢？如果你的主機是負責相當重要的服務，
+		因此如果有不明原因的當機事件造成系統損毀時，你希望在最短的時間內復原系統。此時，如果僅備份關鍵資料時，
+		那麼你得要在系統出錯後，再去找新的 Linux distribution 來安裝，安裝完畢後還得要考慮到資料新舊版本的差異問題，
+		還得要進行資料的移植與系統服務的重新建立等等，等到建立妥當後，還得要進行相關測試！
+		這種種的工作可至少得要花上一個星期以上的工作天才能夠處理妥當！所以，僅有關鍵資料是不夠的！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">還原的考量</li></ul>
+
+		<p>但反過來講，如果是完整備份的話呢？若硬體出問題導致系統損毀時，只要將完整備份拿出來，整個給他傾倒回去硬碟，
+		所有事情就搞定了！有些時候 (例如使用 dd 指令) 甚至連系統都不需要重新安裝！反正整個系統都給他倒回去，連同重要的 
+		Linux 系統檔案等，所以當然也就不需要重新安裝啊！因此，很多企業用來提供重要服務的主機都會使用完整備份，
+		若所提供的服務真的非常重要時，甚至會再架設一部一模一樣的機器呢！如此一來，
+		若是原本的機器出問題，那就立刻將備份的機器拿出來接管！以使企業的網路服務不會中斷哩！</p>
+
+		<p>那你知道完整備份的定義了吧？沒錯！完整備份就是將根目錄 (/) 整個系統通通備份下來的意思！
+		不過，在某些場合底下，完整備份也可以是備份一個檔案系統 (filesystem)！例如 /dev/sda1 或
+		/dev/md0 或 /dev/myvg/mylv 之類的檔案系統就是了。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">累積備份的原則</li></ul>
+
+		<p>雖然完整備份在還原方面有相當良好的表現，但是我們都知道系統用的越久，資料量就會越大！如此一來，
+		完整備份所需要花費的時間與儲存媒體的使用就會相當麻煩～所以，完整備份並不會也不太可能每天都進行的！
+		那你想要每天都備份資料該如何進行呢？有兩種方式啦，一種是本小節會談到的累積備份，一種則是下個小節談到的差異備份。</p>
+
+		<p>所謂的累積備份，指的是在<span class="text_import2">系統在進行完第一次完整備份後，經過一段時間的運作，
+		比較系統與備份檔之間的差異，僅備份有差異的檔案而已。而第二次累積備份則與第一次累積備份的資料比較，
+		也是僅備份有差異的資料而已。</span>如此一來，由於僅備份有差異的資料，因此備份的資料量小且快速！備份也很有效率。
+		我們可以從下圖來說明：</p>
+
+		<center><img src="0580backup/incremental.gif" alt="累積備份 (incremental backup) 操作示意圖" 
+		title="累積備份 (incremental backup) 操作示意圖" border="0" /><br />
+		圖 2.1.1、 累積備份 (incremental backup) 操作示意圖<br /></center>
+
+		<p>假如我在星期一作好完整備份，則星期二的累積備份是系統與完整備份間的差異資料；星期三的備份是系統與星期二的差異資料，
+		星期四的備份則是系統與星期三的差異資料。那你得要注意的是，星期二的資料是完整備份加第一次累積備份，
+		星期三的資料是完整備份加第一次累積與第二次累積備份，星期四的資料則是星期一的完整備份加第一次加第二次加第三次累積備份。
+		由於每次都僅與前一次的備份資料比較而已，因此備份的資料量就會少很多！</p>
+
+		<p><span class="text_import2">那如何還原</span>？經過上面的分析，我們也會知道累積備份的還原方面比較麻煩！
+		假設你的系統在星期五的時候掛點了！那你要如何還原？首先，你必須要還原星期一的完整備份，然後還原星期二的累積備份，
+		再依序還原星期三、星期四的累積備份才算完全復原！那如果你是經過了九次的累積備份，就得要還原到第九次的階段，
+		才是最完整的還原程序！<br /><br /></p>
+
+		<a name="incremental_tool"></a>
+		<hr /><ul class="list1"><li class="text_import1">累積備份使用的備份軟體</li></ul>
+
+		<p>完整備份常用的工具有 <a href="/linux_basic/0240tarcompress.php#dd">dd</a>, 
+		<a href="/linux_basic/0240tarcompress.php#cpio">cpio</a>, 
+		<a href="/linux_basic/0240tarcompress.php#dump_restore">dump/restore</a> 等等。因為這些工具都能夠備份裝置與特殊檔案！
+		dd 可以直接讀取磁碟的磁區 (sector) 而不理會檔案系統，是相當良好的備份工具！不過缺點就是慢很多！
+		cpio 是能夠備份所有檔名，不過，得要配合 find 或其他找檔名的指令才能夠處理妥當。以上兩個都能夠進行完整備份，
+		但累積備份就得要額外使用腳本程式來處理。可以直接進行累積備份的就是 dump 這個指令囉！詳細的指令與參數用法，
+		請前往<a href="/linux_basic/0240tarcompress.php">第九章</a>查閱，這裡僅列出幾個簡單的範例而已。</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 用 dd 來將 /dev/sda 備份到完全一模一樣的 /dev/sdb 硬碟上：</span>
+[root@www ~]# <span class="term_command">dd if=/dev/sda of=/dev/sdb</span>
+<span class="term_say"># 由於 dd 是讀取磁區，所以 /dev/sdb 這顆磁碟可以不必格式化！非常的方便！
+# 只是你會等非常非常久！因為 dd 的速度比較慢！</span>
+
+<span class="term_hd"># 2. 使用 cpio 來備份與還原整個系統，假設儲存媒體為 SATA 磁帶機：</span>
+[root@www ~]# <span class="term_command">find / -print | cpio -covB &gt; /dev/st0</span>  <span class="term_note">&lt;==備份到磁帶機</span>
+[root@www ~]# <span class="term_command">cpio -iduv &lt; /dev/st0                </span>  <span class="term_note">&lt;==還原</span>
+</pre></td></tr></table>
+
+		<p>假設 /home 為一個獨立的檔案系統，而 /backupdata 也是一個獨立的用來備份的檔案系統，那如何使用 dump
+		將 /home 完整的備份到 /backupdata 上呢？可以像底下這樣進行看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 完整備份</span>
+[root@www ~]# <span class="term_command">dump -0u -f /backupdata/home.dump /home</span>
+
+<span class="term_hd"># 2. 第一次進行累積備份</span>
+[root@www ~]# <span class="term_command">dump -1u -f /backupdata/home.dump.1 /home</span>
+</pre></td></tr></table>
+
+		<p>除了這些指令之外，其實 tar 也可以用來進行完整備份啦！舉例來說，/backupdata 是個獨立的檔案系統，
+		你想要將整個系統通通備份起來時，可以這樣考慮：將不必要的 /proc, /mnt, /tmp 等目錄不備份，其他的資料則予以備份：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tar --exclude /proc --exclude /mnt --exclude /tmp \</span>
+&gt; <span class="term_command">--exclude /backupdata -jcvp -f /backupdata/system.tar.bz2 /</span>
+</pre></td></tr></table>
+	</div>
+
+	<hr /><a name="full_differential"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">完整備份之差異備份
+	(Differential backup)</span><br />
+	<div class="block2">
+		<p>差異備份與累積備份有點類似，也是需要進行第一次的完整備份後才能夠進行。只是差異備份指的是：<span
+		class="text_import2">每次的備份都是與原始的完整備份比較的結果。</span>所以系統運作的越久，離完整備份時間越長，
+		那麼該次的差異備份資料可能就會越大！差異備份的示意圖如下所示：</p>
+
+		<center><img src="0580backup/differential.gif" alt="差異備份 (differential backup) 操作示意圖" 
+		title="差異備份 (differential backup) 操作示意圖" border="0" /><br />
+		圖 2.2.1、 差異備份 (differential backup) 操作示意圖<br /></center>
+
+		<p>差異備份常用的工具與累積備份差不多！因為都需要完整備份嘛！如果使用 dump 來備份的話，那麼每次備份的等級 (level)
+		就都會是 level 1 的意思啦！當然啦，你也可以透過 tar 的 -N 選項來備份喔！如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tar -N '2009-06-01' -jpcv -f /backupdata/home.tar.bz2 /home</span>
+<span class="term_say"># 只有在比 2009-06-01 還要新的檔案，在 /home 底下的檔案才會被打包進 home.bz2 中！
+# 有點奇怪的是，目錄還是會被記錄下來，只是目錄內的舊檔案就不會備份。</span>
+</pre></td></tr></table>
+
+		<p>此外，你也可以透過 <a href="/linux_server/0310telnetssh.php#rsync">rsync</a> 來進行鏡像備份喔！
+		這個 rsync 可以對兩個目錄進行鏡像 (mirror) ，算是一個非常快速的備份工具！簡單的指令語法為：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">rsync -av 來源目錄 目標目錄</span>
+
+<span class="term_hd"># 1. 將 /home/ 鏡像到 /backupdata/home/ 去</span>
+[root@www ~]# <span class="term_command">rsync -av /home /backupdata/</span>
+<span class="term_say"># 此時會在 /backupdata 底下產生 home 這個目錄來！</span>
+[root@www ~]# <span class="term_command">rsync -av /home /backupdata/</span>
+<span class="term_say"># 再次進行會快很多！如果資料沒有更動，幾乎不會進行任何動作！</span>
+</pre></td></tr></table>
+
+		<p>根據分析 (<a href="#ps2">註2</a>) ，差異備份所使用的磁碟容量可能會比累積備份來的大，但是差異備份的還原較快，
+		因為只需要還原完整備份與最近一次的差異備份即可。無論如何，請依據你自己的喜好來選擇備份的方式吧！</p>
+	</div>
+
+	<hr /><a name="key_file"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關鍵資料備份</span><br />
+	<div class="block2">
+		<p>完整備份雖然有許多好處，但就是需要花費很多時間！所以，如果在主機提供的服務並不是一定要 24 小時提供的前提下，
+		我們可以僅備份重要的關鍵資料即可。由於主機即使當機個一兩天可能也不會影響到你的正常生活時，
+		僅備份關鍵資料就好啦！不需要整個系統都備份。僅備份關鍵資料是有許多好處的！
+		由於完整備份可能是在系統運作期間進行，不但會花費非常多時間，而且<span class="text_import2">如果備份當時系統已經被攻破，
+		那你備份的資料是有問題的，那還原回去也是有問題的系統啊！</span></p>
+
+		<p>如果僅是備份關鍵資料而已，那麼由於系統的絕大部分執行檔都可以後來重新安裝，因此若你的系統不是因為硬體問題，
+		而是因為軟體問題而導致系統被攻破或損毀時，直接捉取最新的 Linux distribution ，然後重新安裝，
+		然後再將系統資料 (如帳號/密碼與家目錄等等) 與服務資料 (如 www/email/crontab/ftp 等等) 一個一個的填回去！
+		那你的系統不但保持在最新的狀態，同時也可以趁機處理一下與重新溫習一下系統設定！是很不錯的呦！</p>
+
+		<p>不過，備份關鍵資料最麻煩的地方其實就是在還原啦！上述的還原方式是你必須要很熟悉系統運作，
+		否則還原得要花費很多時間的！尤其近來的 Linux 強調安全性，所以加入 SELinux 了，你如果要從舊版的 Linux 升級到新版時，
+		原本若沒有 SELinux 而換成新版則需要啟動 SELinux 時，那個除錯的時間會花很長一段日子哩！
+		鳥哥認為這是僅備份關鍵資料的一些優缺點啦～</p>
+
+		<p>備份關鍵資料鳥哥最愛使用 tar 來處理了！如果想要分門別類的將各種不同的服務在不同的時間備份使用不同檔名，
+		配合 date 指令是非常好用的工具！例如底下的案例是依據日期來備份 mysql 的資料庫喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tar -jpcvf mysql.`date +%Y-%m-%d`.tar.bz2 /var/lib/mysql</span>
+</pre></td></tr></table>
+
+		<p>備份是非常重要的工作，你可不希望想到才進行吧？交給系統自動處理就對啦！請自己撰寫 script ，
+		配合 crontab 去執行吧！這樣子，備份會很輕鬆喔！</p>
+	</div>
+</div>
+
+
+<hr /><a name="VBird_strategy"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">鳥哥的備份策略</span><br />
+<div class="block1">
+	<p>每部主機的任務都不相同，重要的資料也不相同，重要性也不一樣，因此，每個人的備份思考角度都不一樣！
+	有些備份策略是非常有趣的，包括使用多個磁帶機與磁帶來自動備份企業資料哩 (<a href="#ps3">註3</a>) 。</p>
+
+	<p>就鳥哥的想法來說，鳥哥並沒有想要將整個系統完整的備份下來，因為太耗時間了！而且就鳥哥的立場而言，似乎也沒有這個必要，
+	所以通常鳥哥只備份較為重要的檔案而已！不過，由於鳥哥需要備份 /home 與網頁資料，如果天天都備份，我想，系統遲早會受不了 
+	(因為這兩個部分就已經佔去數 10 GB 的硬碟空間...)，所以鳥哥就將我的備份分為兩大部分，一個是每日備份經常性變動的重要資料，
+	一個則是每週備份就不常變動的資訊。這個時候我就寫了兩個簡單的 scripts ，分別來儲存這些資料。</p>
+
+	<p>所以針對鳥哥的『鳥站』來說，我的備份策略是這樣的：</p>
+
+	<ol class="text_import2">
+	<li>主機硬體：使用一個獨立的 filesystem 來儲存備份資料，此 filesystem 掛載到 /backup 當中；</li>
+	<li>每日進行：目前僅備份 MySQL 資料庫；</li>
+	<li>每週進行：包括 /home, /var, /etc, /boot, /usr/local 等目錄與特殊服務的目錄；</li>
+	<li>自動處理：這方面利用 /etc/crontab 來自動提供備份的進行；</li>
+	<li>異地備援：每月定期的將資料分別 (a)燒錄到光碟上面 (b)使用網路傳輸到另一部機器上面。</li>
+	</ol>
+
+	<p>那就來看看鳥哥是怎麼備份的吧！ ^_^<br /><br /></p>
+
+	<hr /><a name="all_back"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">每週系統備份的 script</span><br />
+	<div class="block2">
+		<p>底下提供鳥哥的備份的 scripts ，希望對大家有點幫助！鳥哥假設你已經知道如何掛載一個新的 
+		filesystem 到 /backup 去，所以格式化與掛載這裡就不再強調囉。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /backup/backupwk.sh</span>
+#!/bin/bash
+# ====================================================================
+# 使用者參數輸入位置：
+# basedir=你用來儲存此腳本所預計備份的資料之目錄(請獨立檔案系統)
+<span class="term_write">basedir=/backup/weekly</span>  <span class="term_note">&lt;==您只要改這裡就好了！</span>
+
+# ====================================================================
+# 底下請不要修改了！用預設值即可！
+PATH=/bin:/usr/bin:/sbin:/usr/sbin; export PATH
+export LANG=C
+
+# 設定要備份的服務的設定檔，以及備份的目錄
+named=$basedir/named
+postfixd=$basedir/postfix
+vsftpd=$basedir/vsftp
+sshd=$basedir/ssh
+sambad=$basedir/samba
+wwwd=$basedir/www
+others=$basedir/others
+userinfod=$basedir/userinfo
+# 判斷目錄是否存在，若不存在則予以建立。
+for dirs in $named $postfixd $vsftpd $sshd $sambad $wwwd $others $userinfod
+do
+	[ ! -d "$dirs" ] &amp;&amp; mkdir -p $dirs
+done
+
+# 1. 將系統主要的服務之設定檔分別備份下來，同時也備份 /etc 全部。
+cp -a /var/named/chroot/{etc,var}	$named
+cp -a /etc/postfix /etc/dovecot.conf	$postfixd
+cp -a /etc/vsftpd/*			$vsftpd
+cp -a /etc/ssh/*			$sshd
+cp -a /etc/samba/*			$sambad
+cp -a /etc/{my.cnf,php.ini,httpd}	$wwwd
+cd /var/lib
+  tar -jpc -f $wwwd/mysql.tar.bz2 	mysql
+cd /var/www
+  tar -jpc -f $wwwd/html.tar.bz2 	html cgi-bin
+cd /
+  tar -jpc -f $others/etc.tar.bz2	etc
+cd /usr/
+  tar -jpc -f $others/local.tar.bz2	local
+
+# 2. 關於使用者參數方面
+cp -a /etc/{passwd,shadow,group}	$userinfod
+cd /var/spool
+  tar -jpc -f $userinfod/mail.tar.bz2	mail
+cd /
+  tar -jpc -f $userinfod/home.tar.bz2	home
+cd /var/spool
+  tar -jpc -f $userinfod/cron.tar.bz2	cron at
+
+[root@www ~]# <span class="term_command">chmod 700 /backup/backupwk.sh</span>
+[root@www ~]# <span class="term_command">/backup/backupwk.sh</span>  <span class="term_note">&lt;==記得自己試跑看看！</span>
+</pre></td></tr></table>
+
+		<p>上面的 script 主要均使用 CentOS 5.x (理論上， Red Hat 系列的 Linux 都是用) 預設的服務與目錄，
+		如果你有設定某些服務的資料在不同的目錄時，那麼上面的 script 是還需要修改的！不要只是拿來用而已喔！
+		上面 script 可以在底下的連結取得。</p>
+
+		<ul><li><a href="0580backup/backupwk-0.1.sh"
+		target="_blank">http://linux.vbird.org0580backup/backupwk-0.1.sh</a></li></ul>
+	</div>
+
+	<hr /><a name="daily"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">每日備份資料的 script</span><br />
+	<div class="block2">
+		<p>再來，繼續提供一下每日備份資料的腳本程式！請注意，鳥哥這裡僅有提供 MySQL 的資料庫備份目錄，
+		與 WWW 的類似留言版程式使用的 CGI 程式與寫入的資料而已。
+		如果你還有其他的資料需要每日備份，請自行照樣造句囉！ ^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /backup/backupday.sh</span>
+#!/bin/bash
+# =========================================================
+# 請輸入，你想讓備份資料放置到那個獨立的目錄去
+<span class="term_write">basedir=/backup/daily/</span>  <span class="term_note">&lt;==你只要改這裡就可以了！</span>
+
+# =========================================================
+PATH=/bin:/usr/bin:/sbin:/usr/sbin; export PATH
+export LANG=C
+basefile1=$basedir/mysql.$(date +%Y-%m-%d).tar.bz2
+basefile2=$basedir/cgi-bin.$(date +%Y-%m-%d).tar.bz2
+[ ! -d "$basedir" ] &amp;&amp; mkdir $basedir
+
+# 1. MysQL (資料庫目錄在 /var/lib/mysql)
+cd /var/lib
+  tar -jpc -f $basefile1 mysql
+
+# 2. WWW 的 CGI 程式 (如果有使用 CGI 程式的話)
+cd /var/www
+  tar -jpc -f $basefile2 cgi-bin
+
+[root@www ~]# <span class="term_command">chmod 700 /backup/backupday.sh</span>
+[root@www ~]# <span class="term_command">/backup/backupday.sh</span>  <span class="term_note">&lt;==記得自己試跑看看！</span>
+</pre></td></tr></table>
+
+		<p>上面的腳本可以在底下的連結取得。這樣一來每天的 MySQL 資料庫就可以自動的被記錄在 /backup/daily/ 
+		目錄裡頭啦！而且還是檔案名稱會自動改變的呦！呵呵！我很喜歡！OK！再來就是開始讓系統自己跑啦！
+		怎麼跑？就是 /etc/crontab 呀！提供一下我的相關設定呦！</p>
+
+		<ul><li><a href="0580backup/backupday.sh"
+		target="_blank">http://linux.vbird.org0580backup/backupday.sh</a></li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/crontab</span>
+<span class="term_say"># 加入這兩行即可 (請注意你的檔案目錄！不要照抄呦！)</span>
+<span class="term_write">30 3 * * 0 root /backup/backupwk.sh
+30 2 * * * root /backup/backupday.sh</span>
+</pre></td></tr></table>
+
+		<p>這樣系統就會自動的在每天的 2:30 進行 MySQL 的備份，而在每個星期日的
+		3:30 進行重要檔案的備份！呵呵！你說，是不是很容易呢！但是請千萬記得呦！還要將
+		/backup/ 當中的資料 copy 出來才行耶！否則整部系統死掉的時候...那可不是鬧著玩的！
+		所以鳥哥大約一個月到兩個月之間，會將 /backup 目錄內的資料使用 DVD 複製一下，然後將 DVD
+		放置在家中保存！這個 DVD 很重要的喔！不可以遺失，否則系統的重要資料 (尤其是帳號資訊) 
+		流出去可不是鬧著玩的！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		有些時候，你在進行備份時，被備份的檔案可能同時間被其他的網路服務所修改喔！
+		舉例來說，當你備份 MySQL 資料庫時，剛好有人利用你的資料庫發表文章，此時，
+		可能會發生一些錯誤的訊息。要避免這類的問題時，可以在備份前，將該服務先關掉，
+		備份完成後，再啟動該服務即可！感謝討論區 duncanlo 提供這個方法！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="remote"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">遠端備援的 script</span><br />
+	<div class="block2">
+		<p>如果你有控管兩部以上的 Linux 主機時，那麼互相將對方的重要資料保存一份在自己的系統中也是個不錯的想法！
+		那怎麼保存啊？使用 USB 複製來去嗎？當然不是啦！你可以透過網路來處置啦！我們假設你已經有一部主機，
+		這部主機的 IP 是 192.168.1.100 ，而且這部主機已經提供了 FTP 與 sshd 這兩個網路服務，
+		同時你已經做好了 FTP 的帳號，sshd 帳號的免密碼登入功能等 
+		(這部分請參考伺服器篇的介紹)，接下來你可以這樣做：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">使用 FTP 上傳備份資料</li></ul>
+
+		<p>假設你要上傳的資料是將 /backup/weekly/ 目錄內的檔案統整為一個 /backup/weekly.tar.bz2 ，
+		並且上傳到伺服器端的 /home/backup/ 底下，使用的帳號是 dmtsai ，密碼是 dmtsai.pass 。
+		那麼你可以這樣做看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /backup/ftp.sh</span>
+#!/bin/bash
+# ===========================================
+# 先輸入系統所需要的資料
+host="192.168.1.100"		# 遠端主機
+id="dmtsai"			# 遠端主機的 FTP 帳號
+pw='dmtsai.pass'		# 該帳號的密碼
+basedir="/backup/weekly"	# 本地端的欲被備份的目錄
+remotedir="/home/backup"	# 備份到遠端的何處？
+
+# ===========================================
+backupfile=weekly.tar.bz2
+cd $basedir/..
+  tar -jpc -f $backupfile $(basename $basedir)
+
+ftp -n "$host" &gt; ${basedir}/../ftp.log 2&gt;&amp;1 &lt;&lt;EOF
+user $id $pw
+binary
+cd $remotedir
+put $backupfile
+bye
+EOF
+</pre></td></tr></table>
+
+		<hr /><ul class="list1"><li class="text_import1">使用 rsync 上傳備份資料</li></ul>
+
+		<p>另一個更簡單的方法就是透過 rsync ，但是你必須要在你的伺服器上面取得某個帳號使用權後，
+		並讓該帳號可以不用密碼即可登入才行！這部分得要先參考伺服器篇的遠端連線伺服器才行！
+		假設你已經設定好 dmtsai 這個帳號可以不用密碼即可登入遠端伺服器，而同樣的你要讓 /backup/weekly/
+		整個備份到 /home/backup/weekly 底下時，可以簡單這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /backup/rsync.sh</span>
+#!/bin/bash
+remotedir=/home/backup/
+basedir=/backup/weekly
+host=127.0.0.1
+id=dmtsai
+
+# 底下為程式階段！不需要修改喔！
+rsync -av -e ssh $basedir ${id}@${host}:${remotedir}
+</pre></td></tr></table>
+
+		<p>由於 rsync 可以透過 ssh 來進行鏡像備份，所以沒有變更的檔案將不需要上傳的！相當的好用呢！
+		好了！大家趕緊寫一個適合自己的備份 script 來進行備份的行為吧！重要重要喔！</p>
+	</div>
+</div>
+
+
+<hr /><a name="restore"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">災難復原的考量</span><br />
+<div class="block1">
+	<p>之所以要備份當然就是預防系統掛點啦！如果系統真的掛點的話，那麼你該如何還原系統呢？<br /><br /></p>
+
+	<hr /><ul class="list1"><li class="text_import1">硬體損毀，且具有完整備份的資料時</li></ul>
+
+	<p>由於是硬體損毀，所以我們不需要考慮系統軟體的不穩定問題，所以可以直接將完整的系統復原回去即可。
+	首先，你必須要先處理好你的硬體，舉例來說，將你的硬碟作個適當的處理，譬如建置成為磁碟陣列之類的。
+	然後依據你的備份狀態來復原。舉例來說，如果是使用差異備份，那麼將完整備份復原後，
+	將最後一次的差異備份復原回去，你的系統就恢復了！非常簡單吧！<br /><br /></p>
+
+	<hr /><ul class="list1"><li class="text_import1">由於軟體的問題產生的被攻破資安事件</li></ul>
+
+	<p>由於系統的損毀是因為被攻擊，此時即使你恢復到正常的系統，那麼這個系統既然會被攻破，
+	沒道理你還原成舊系統就不會被再次攻破！所以，此時完整備份的復原可能不是個好方式喔！最好是需要這樣進行啦：</p>
+
+	<ol>
+	<li>先拔除網路線，最好將系統進行完整備份到其他媒體上，以備未來查驗</li>
+	<li>開始查閱登錄檔，嘗試找出各種可能的問題</li>
+	<li>開始安裝新系統 (最好找最新的 distribution)</li>
+	<li>進行系統的升級，與防火牆相關機制的制訂</li>
+	<li>根據 2 的錯誤，在安裝完成新系統後，將那些 bug 修復</li>
+	<li>進行各項服務與相關資料的恢復</li>
+	<li>正式上線提供服務，並且開始測試</li>
+	</ol>
+
+	<p>軟體資安事件造成的問題可大可小，一般來說，標準流程都是建議你將出問題的系統備份下來，
+	如果被追蹤到你的主機曾經攻擊過別人的話，那麼你至少可以拿出備份資料來佐證說，你是被攻擊者，
+	而不是主動攻擊別人的壞人啊！然後，記得一定要找出問題點並予以克服，不然的話，你的系統將一再地被攻擊啊！
+	那樣可就傷腦筋囉～</p>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>備份是系統損毀時等待救援的救星，但造成系統損毀的因素可能有硬體與軟體等原因。</li>
+	<li>由於主機的任務不同，備份的資料與頻率等考量參數也不相同。</li>
+	<li>常見的備份考慮因素有：關鍵檔案、儲存媒體、備份方式(完整/關鍵)、備份頻率、使用的備份工具等。</li>
+	<li>常見的關鍵資料有：/etc, /home, /var/spool/mail, /boot, /root 等等</li>
+	<li>儲存媒體的選擇方式，需要考慮的地方有：備份速度、媒體的容量、經費與媒體的可靠性等。</li>
+	<li>與完整備份有關的備份策略主要有：累積備份與差異備份。</li>
+	<li>累積備份可具有較小的儲存資料量、備份速度快速等。但是在還原方面則比差異備份的還原慢。</li>
+	<li>完整備份的策略中，常用的工具有 dd, cpio, tar, dump 等等。</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+	<li>挑戰題：嘗試將你在學習本書所進行的各項任務備份下來，然後刪除你的系統，接下來重新安裝最新的 CentOS 5.x ，
+	再將你備份的資料復原回來，看看能否成功的讓你的系統回復到之前的狀態呢？<br /><br /></li>
+
+	<li>挑戰題：查詢一下何謂企鵝龍軟體，討論一下該軟體的還原機制是屬於累積備份？還是完整備份？<br /><br /></li>
+
+	<li>常用的完整備份 (full backup) 工具指令有哪些？
+	<div class="blockex">
+		dump + restore, dd, cpio 搭配 find 等軟體。
+	</div></li>
+
+	<li>你所看到的常見的儲存設備有哪些？
+	<div class="blockex">
+		Floppy, Mo, Zip, CD-RW, DVD-RW, 外接式 USB 硬碟, Tape, 
+		外接式儲存陣列 (RAID)，額外的儲存架構，如 SAN, NAS 等。
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：維基百科的備份說明：<a href="http://en.wikipedia.org/wiki/Incremental_backup"
+	target="_blank">http://en.wikipedia.org/wiki/Incremental_backup</a></li>
+	<li><a name="ps2"></a>註2：關於 differential 與 incremental 備份的優缺點說明：<br /><a 
+	href="http://www.backupschedule.net/databackup/differentialbackup.html"
+	target="_blank">http://www.backupschedule.net/databackup/differentialbackup.html</a></li>
+	<li><a name="ps3"></a>註3：一些備份計畫的實施：<a href="http://en.wikipedia.org/wiki/Backup_rotation_scheme"
+	target="_blank">http://en.wikipedia.org/wiki/Backup_rotation_scheme</a></li>
+
+</ul>
+</div>
+<hr /><span class="text_history">
+2002/07/06：第一次完成<br />
+2003/02/12：重新編排與加入 FAQ<br />
+2005/10/25：舊版的資料已經移動到 <a href="0580backup/0580backup.php">此處</a> 。<br />
+2005/10/25：主要是增加了一些簡單的說明，以及將一些不合時宜的資料拿掉而已！<br />
+2009/07/15：將原本的基於 FC4 的文章移動到 <a href="0580backup/0580backup-fc4.php">此處</a>。<br />
+2009/09/18：加入簡單的幾個題目練習<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

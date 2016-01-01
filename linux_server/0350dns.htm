@@ -1,0 +1,2760 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- DNS Server</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0350dns.htm">
+    <span class="text_head0"><span class="text_head_en">DNS </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0350dns.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2007/06/25</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們知道電腦網路系統只認識所謂的 IP ，但是，您可能記得住網路上面所有主機的 IP 嗎？
+	就鳥哥來說，連自己的主機的 IP 都記不起來了，怎麼可能連其他的主機 IP 都記的住！
+	因為，人腦對於數字組成的 IP 的記憶實在是......不怎麼樣。
+	但是，相對來說，人們對於由文字所組成的主機名稱那可以容易記憶的多了～
+	所以，才會發展出可以經由主機名稱( hostname )對應到電腦
+	IP 的一個模式，這樣我們就可以輕輕鬆鬆的記住主機名稱即可，電腦 IP 那就交給
+	Domain Name System ( DNS )去搞定吧！<br /><br />
+
+	那個 DNS 系統是由柏克萊大學發展的 bind 這個套件( Berkeley
+	Internet Name Domain )所提供的啦！基本上，DNS 最主要的工作就是將 Hostname
+	對應到 IP 這個功能了，不過，要架設一個成功的 DNS 主機的話，還得要對於 DNS
+	的運作很清楚才行啊！否則架設的不對，還反而會造成大家的問題喔！這個章節當中，
+	要學會的資料其實還蠻多的，需要瞭解：什麼是正解、什麼是反解、什麼是 Zone、客戶端
+	( Client ) 是經由什麼咚咚來查詢得到 IP 的呢？！以及 DNS 的授權問題等等。
+	哇！趕快清一清腦門，要好好的用功囉！ ^_^
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#theory">甚麼是 DNS </a>：<br />
+	<span class="text_h2">
+	　　2.1 <a href="#Whatisdns">什麼是 Domain Name System</a><br />
+	　　2.2 <a href="#DNS_search">DNS 的查詢過程</a><br />
+	　　2.3 <a href="#DNS_register">關於『授權』的意義</a><br />
+	　　2.4 <a href="#DNS_settingorupper">網站代管還是自己設定 DNS</a><br />
+	　　2.5 <a href="#DNS_Zones">正解與反解的 Zone 意義</a><br />
+	</span>
+3. <a href="#server_settings">DNS 伺服器的套件、種類與 cache only 主機設定</a>：<br />
+	<span class="text_h2">
+	　　3.1 <a href="#what_software">架設 DNS 所需要的套件</a><br />
+	　　3.2 <a href="#what_pathway">BIND 的預設路徑設定與 chroot</a>,
+		<a href="#sys_named">/etc/sysconfig/named</a><br />
+	　　3.3 <a href="#master_slave">DNS 的 master/slave 架構</a><br />
+	　　3.3 <a href="#forwards">單純的 cache-only 與 forwarding DNS 主機設定</a><br />
+	</span>
+4. <a href="#DNS_master">DNS Master 伺服器機的詳細設定</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#DNS_master_case">一個簡單案例說明</a><br />
+	　　4.2 <a href="#DNS_master_named.conf">/etc/named.conf 設定檔</a><br />
+	　　4.3 <a href="#DNS_master_root">最上層 DNS (root) 資料庫檔案的設定</a><br />
+	　　4.4 <a href="#DNS_master_name">正解資料庫檔案的設定</a>： <a href="#rr_server">領域 RR</a>,
+		<a href="#rr_soa">master/slave RR</a>, <a href="#rr_ns">領域解析 NS</a>, 
+		<a href="#rr_name">正解標誌</a><br />
+	　　4.5 <a href="#DNS_master_ip">反解資料庫檔案的設定</a>： <a href="#rr_ptr">反解 RR</a><br />
+	　　4.6 <a href="#DNS_master_start">DNS 的啟動與觀察</a><br />
+	　　4.7 <a href="#DNS_master_update">資料庫的更新</a><br />
+	　　4.8 <a href="#DNS_master_client">測試</a><br />
+	</span>
+5. <a href="#DNS_slave">Master/Slave 架構的詳細設定</a><br />
+	<span class=text_h2>
+	　　5.1 <a href="#DNS_slave_master">master DNS 權限的開放</a><br />
+	　　5.2 <a href="#DNS_slave_slave">slave DNS 的設定</a><br />
+	</span>
+6. <a href="#DNS_resolver">Client 端的設定</a>：<br />
+	<span class="text_h2">
+	　　6.1 <a href="#DNS_resolver_file">相關設定檔： /etc/hosts, /etc/resolv.conf, /etc/nsswitch.conf</a><br />
+	　　6.2 <a href="#DNS_resolver_cmd">DNS 的查詢指令</a>： <a href="#host">host</a>, 
+		<a href="#nslookup">nslookup</a>, <a href="#dig">dig</a><br />
+	　　6.3 <a href="#DNS_resolver_whois">Domain 的資訊查詢： whois</a><br />
+	</span>
+7. <a href="#upgrade">DNS 伺服器的進階設定</a>：<br />
+	<span class="text_h2">
+	　　7.1 <a href="#sub_net">子網域授權問題</a><br />
+	　　7.2 <a href="#OK_DNS">架設一個合法授權的 DNS 主機</a><br />
+	　　7.3 <a href="#Lame_server">LAME Server 的問題</a><br />
+	　　7.4 <a href="#rndckey">利用 RNDC 指令管理 DNS 伺服器</a><br />
+	　　7.5 <a href="#ddns">架設動態 DNS 主機：讓你成為 ISP 啦！</a><br />
+	</span>
+8. <a href="#review">重點回顧</a><br />
+9. <a href="#FAQ">課後練習</a><br />
+10.<a href="#reference">參考資料</a><br />
+<span class=text_h2>
+11.<a href="http://phorum.vbird.org/viewtopic.htm?p=115692"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=115692</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	人類的腦袋對於數字畢竟不比文字來的敏感，偏偏電腦的世界僅認識 0/1 而已。
+	為了將兩者兜在一起於是有了主機名稱與 IP 的對應啊～而這個對應的協定就是 DNS 了。
+	學習 DNS 你必需要對網路有一定的概念，尤其是主機名稱的說明喔！<br />
+	<ul>
+	<li>瞭解<a href="0110network_basic.htm">網路基礎</a>，防火牆與<a
+	href="0240network-secure-1.htm#packet_flow_protect">關閉 SELinux 模組</a>等等。
+	<li>由於你可能會手動修改 /etc/init.d/named ，所以 
+	<a href="../linux_basic/0340bashshell-scripts.htm">shell script</a> 也要瞭解！
+	</ul>
+</div>
+
+
+<hr><a NAME="theory"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是 DNS</span><br />
+<div class=block1>
+	目前的 Internet 世界最常用的還是所謂的 TCP/IP 協定，其中 IP 協定為第四版的 IPv4 。
+	不過，這個 IPv4 是由 32 個位元 (32 bits) 所組成，為了人腦已經轉成四組十進位的數字了，
+	例如 123.234.56.78 這樣的格式。當我們利用 Internet 傳送資料的時候，
+	就需要這個 IP ，否則資料怎麼知道要被送到哪裡去？<br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	傳送資料的方法有很多，不見得全部都是透過 IPv4 這個協定，例如在 LAN 裡面常用的 NetBIOS 就是一例。
+	不過，在這裡，我們不討論其他的傳輸方法，專門探討 IPv4 這個協定喔！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	然而人腦對於 IP 這種數字的玩意兒，記憶力實在是不怎麼樣。但是如上所說，
+	當我們需要資料傳輸時，又很需要對方的 IP ，怎麼辦？為了應付這個問題，
+	早期的朋友想到一個方法，那就是<span class=text_import2>利用某些特定的檔案將主機名稱與 IP 作一個對應，
+	讓主機名稱與 IP 有關連性，如此一來，我們就可以透過主機名稱來取得該主機的 IP 了</span>！
+	真是個好主意，因為人類對於名字的記憶力可就好多了！ ^_^y。<br /><br />
+
+	可惜的是，該方法還是有缺憾的，那就是<span class=text_import2>主機名稱與 IP 的對應無法自動於所有的電腦內更新，
+	且要加入該對應僅能向 INTERNIC 註冊，若 IP 數量太多時，該檔案會大到不像話，也就不利於主機同步化了。</span>
+	而為了填補這個缺憾，柏克萊大學發展出另外一套階層式管理主機名稱對應 IP 的系統，
+	我們稱他為 <span class=text_import2>Berkeley Internet Name Domain, BIND</span> ，這個系統可就優秀的多了～
+	透過階層式管理，可以輕鬆的進行維護的工作～太棒了！
+	這也是目前全世界使用最廣泛的領域名稱系統(Domain Name System, DNS)哩～
+	透過 DNS ，我們不需要知道主機的 IP ，只要知道該主機的名稱，就能夠輕易的連上該主機了！<br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	在底下的說明當中，我們有時會提到 DNS 有時會提到 BIND ，這有什麼不同？
+	由上面的說明裡面，您可以瞭解到， DNS 是一種網際網路的通訊協定名稱，
+	至於 Bind 則是提供這個 DNS 服務的套件～這樣您瞭解了嗎？！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	那麼要立刻來架設 DNS 主機嗎？當然不是～如同上面說的，<span class="text_import2">網際網路上面，
+	資料的傳輸最重要的就是得要知道對方的 IP，如此才能達成連線。因此，
+	架設 DNS 就必須要瞭解整體網際網路的領域名稱架構，否則，一旦 DNS 架設錯誤，
+	可能會造成您所管轄的主機無法正確的在 Internet 上頭傳輸資料的問題！</span><br /><br />
+
+	所以，要設定 DNS 之前，您必須要就領域名稱系統裡面慣用的 FQDN、Hostname 與 IP 的查詢流程，
+	正解與反解、合法授權的 DNS 主機之意義，以及 Zone 等等的知識作一個認識才行！
+	這可是很重要的，不要輕忽他了！<br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	事實上，由於 IPv4 的 IP 數量已經不足了，為了應付未來的網路架構而開發了 IPv6 出來。
+	但是 IPv6 的『數字數量』是比 IPv4 要多出好多好多的！可想像的到的是，那時 DNS 可就更重要了！@_@
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<hr><a NAME="Whatisdns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">
+	什麼是 Domain Name System：</span><br />
+	<div class="block2">
+		DNS 的全名是『 <span class="text_import2">Domain name system </span>』，
+		中文譯名為『<span class="text_import2">領域名稱系統</span>』，
+		這個咚咚的用途是什麼哇！為什麼我們的電腦或者是
+		Internet 一定需要他 (尤其是以 WWW 的方式來上網時) ？呵呵！
+		他最大的用途就是『<span class="text_import2">造福懶惰與記憶性薄弱的人類～</span>』
+		哈哈！沒錯！為什麼說他是造福人類呢？且聽鳥哥娓娓道來：<br /><br />
+		
+		<li><span class="text_import1">/etc/hosts 的歷史：</span><br />
+		<div class=block2>
+		如同前面以及<a href="0110network_basic.htm">網路基礎</a>章節當中談到的，IPv4 的 IP
+		是由 32bits 所組成，轉成十進位的話則是四組 0-255 的數字所組成的。
+		由於不容易記憶，因此就有了主機名稱與 IP 對應的想法出來。也就是說，
+		<span class="text_import2">只要輸入一個『電腦的名字』而我們的系統就會自動的將這個名字轉成電腦瞭解的
+		IP ！</span>嘿嘿！如此一來，我要記得『名字』總是比 IP 容易的多了！<br /><br />
+
+		依據這個想法而有了 <span class="text_import2">/etc/hosts</span> 這個檔案！例如，只要您輸入
+		『 <span class="text_import2">ping -c 5 localhost</span> 』
+		您的 Linux 馬上可以印出 127.0.0.1 這個 IP
+		， Why ？您去看一下 /etc/hosts
+		就知道為什麼了！所以囉，只要將您常常上網的『網址對應的 IP 』寫到這個 /etc/hosts
+		底下，您的 IP 搜尋速度就會快上很多～<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		再次強調，在您的私有網域內部，最好將所有的 IP 都寫入這個檔案中啦！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+
+		<li><span class="text_import1">DNS 的歷史：</span><br />
+		<div class=block2>
+		早期(大約20~30年前)的電腦可是貴重物資，一般人是可望而不可及的，因為電腦數量太少，
+		所以使用 /etc/hosts 來記憶這些 IP 與名稱的對應還尚可應付。但是在現代，
+		Internet 上面這麼多主機，並且常常會突然的『噗通』又多出一部主機來服務，
+		那麼我們總不能一個一個的將他輸入在 /etc/hosts 裡面吧？對呀！真不聰明！
+		而且也無法立刻讓全世界的電腦都同步更新他們自己的 /etc/hosts 檔案啊！
+		所以後來的這個時候就有所謂的『<span class="text_import2">領域名稱解析系統,
+		DNS</span>』出現啦！<br /><br />
+
+		DNS 服務利用類似樹狀目錄的型態，將主機名稱的管理分配在不同層級的
+		DNS 伺服器當中，經由分層管理，所以每一部主機記憶的資訊就不會很多，
+		而且若有 IP 異動時也相當容易修改！那麼這個
+		DNS 的功能您知道了嗎？對啦！就是『<span class="text_import2">將電腦主機的名稱轉譯成
+		IP </span>』就是了！當然囉，他的額外功能還很多！總之，他的最大功能就是『
+		<span class="text_import2">讓有意義的，人類較容易記憶的主機名稱(英文字母)，轉譯成為電腦所熟悉的
+		IP 位址！</span> 』<br /><br />
+
+		舉個例子來說好了，奇摩雅虎的網站的 IP 是 202.43.195.52
+		，所以您可以在您的瀏覽器上面輸入『 http://202.43.195.52 』來連上奇摩雅虎！
+		不過，我想沒有幾個人能夠將這個
+		IP 背的起來的吧？反之，我們卻都知道奇摩雅虎的網址為 tw.yahoo.com ，那麼您只要輸入『
+		http://tw.yahoo.com 』就可以連上該主機啦！很容易記憶吧！<br />
+
+		<table class="term"><tr><td class="term">
+		<span class="term_write">/etc/hosts</span>
+			：直接在 Client 端的檔案內輸入主機名稱對應的 IP 來查詢；</br>
+		
+		<span class="term_write">DNS 系統&nbsp;&nbsp;</span>
+			：利用額外的DNS服務，讓Client端可以透過名稱解析來取得目的地主機的IP
+		</td></tr></table>
+		</div>
+
+		<li><span class="text_import1">Fully Qualified Domain Name ( FQDN )</span><br />
+		<div class=block2>
+		在提到名稱與 IP 的解析流程之前，我們還必需來討論一下『<span class="text_import2">什麼是
+		domain name 與 host name？』也就是領域名稱與主機名稱</span>。
+		在討論這個主題之前，我們來聊一聊比較生活化的話題：<br />
+
+		<ul>
+		<li>
+		網路世界其實有很多人自稱為『鳥哥』的，包括敝人在下小生我啦！那麼你怎麼知道此鳥哥非彼鳥哥呢？
+		這個時候你可以利用每個鳥哥的所在地來作為區分啊，比如說台南的鳥哥與台北的鳥哥等。
+		那萬一台南還有兩個人自稱鳥哥怎麼辦？沒關係，你還可以依照鄉鎮來區分呢！比如說台南北區的鳥哥及台南中區的鳥哥。
+		如果將這個咚咚列出來，就有點像這樣：
+
+<table class="term2"><tr><td class="term">
+鳥哥、北區、台南<br />
+鳥哥、中區、台南<br />
+鳥哥、台北<br />
+......
+</td></tr></table>
+
+		是否就可以分辨他的不同點了呢？呵呵！沒錯！就是這樣！</li><br />
+
+		<li>另外一個例子可以使用電話號碼來看，假如高雄有個 1234567 而台南也有個 1234567
+		，那麼(1)您在高雄直接撥接 1234567 時，他會直接掛入高雄的 1234567 電話中，
+		(2)但如果您要撥到台南去，就得加入(06)這個區碼才行！我們就是使用區碼來做為辨識之用的！</li>
+		</ul>
+
+		是否還不清楚鳥哥要說什麼？我們常常會發現<span class=text_import2>主機名稱都是 www 的網站</span>，例如
+		www.gov.tw, www.seednet.net, www.hinet.net 等等，那麼我們怎麼知道這些 www
+		名稱的主機在不同的地方呢？<span class=text_import2>就需要給他領域名稱</span>囉！也就是 gov.tw, seednet.net,
+		hinet.net 等等的不同，所以即使您的主機名稱相同，但是只要不是在同一個領域內，
+		那麼就可以被接受囉！<br /><br />
+
+		基本上，我們知道 DNS 是有層級之分的，那麼每個層級的 Hostname 與 Domain name
+		可是不一樣的咚咚ㄋㄟ～鳥哥使用我們的主機來加以說明，如下圖所示：<br /><br />
+
+		<center><a NAME="fig_01"></a><img SRC="0350dns/0350dns-1.jpg"
+		alt="分層次的 DNS 架構"
+		title="分層次的 DNS 架構">
+		<br />圖一、分層次的 DNS 架構 ( Hostname 與 Domain name )</center><br />
+
+		在上面的例子當中，由上向下數的第二層裡面，那個 .tw 是 domain name ，而 com, edu,
+		gov 則是主機的名稱，而在這個主機的名稱之管理下，還有其他更小網域的主機，
+		所以在第三層的時候，基本上，那個
+		edu.tw 就變成了 domain name 了！而成大與中山的 ncku, nsysu 則成為了 hostname 囉！<br /><br />
+		呵呵！以此類推，最後得到我們的主機那個 aerosol 是主機名稱，而 domain
+		name 是由 ev.ncku.edu.tw 那個名字所決定的！自然，我們的主機就是讓管理 ev.ncku.edu.tw
+		這個 domain name 的 DNS 伺服器所管理的囉！這樣是否瞭解了 domain name 與 hostname
+		的不同了呢？
+		</div>
+	</div>
+
+	<hr><a NAME="DNS_search"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DNS 的查詢過程：</span><br />
+	<div class="block2">
+		接下來我們要談一談，那麼 DNS 的 (1)架構是怎樣？ 
+		(2)查詢原理是怎樣？總是要先知道架構才能知道如何查詢的吶！所以底下我們先來介紹一下整體的架構。<br /><br />
+
+		<li><span class="text_import1">DNS 的架構：</span><br />
+		<div class=block2>
+		<center><a NAME="fig_02"></a><img SRC="0350dns/0350dns-2.jpg" 
+		title="DNS 層階概念示意圖"
+		alt="DNS 層階概念示意圖">
+		<br />圖二、DNS 層階概念示意圖</center><br />
+
+		上面就是一個簡單的 DNS 階層架構囉，在整個 DNS 系統的<span class="text_import2">最上方一定是
+		. (小數點) 這個 root 的 DNS 主機，</span>他底下管理的就只有 com, edu, gov, mil,
+		org 與以國家為分類的第二層的主機名稱了！這兩者稱為 Top Level Domains (TLDs) 喔！<br />
+		<ul><span class=text_import2>
+		<li>一般最上層領域名稱 (Generic TLDs)：例如 .com, .org, .gov 等等；
+		<li>國碼最上層領域名稱 (Country code TLDs)：例如 .tw, .uk, .jp 等
+		</span></ul>
+
+		例如台灣地區最上層的領域名稱是以
+		.tw 為開頭，管理這個領域名稱的這部機器的 IP 是在台灣，但是他的記錄則是記錄在
+		. (root)那部機器裡面的！還有其他的國家的最上層如 .cn 指的是大陸，
+		.de 指的是德國一樣！那麼每個國家之下記錄的主要的下層有哪些領域呢？
+		呵呵！主要就是有這六大類：<br /><br />
+
+<table width=400 border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td>名稱</td><td>代表意義</td></tr>
+	<tr align=center><td>com</td><td>公司、行號、企業</td></tr>
+	<tr align=center><td>org</td><td>組織、機構</td></tr>
+	<tr align=center><td>edu</td><td>教育單位</td> </tr>
+	<tr align=center> <td> gov </td> <td> 政府單位 </td> </tr>
+	<tr align=center> <td> net </td> <td> 網路、通訊 </td> </tr>
+	<tr align=center> <td> mil </td> <td> 軍事單位 </td> </tr>
+</table><br />
+
+		其實最早之前在 . (root)之下只有這六大類的 domain name 
+		，但是網路成長的速度太快了，因此後來又多出這些以國碼來分的
+		domain name ，如此一來，在該國家之內，只要向該國家申請 domain name 
+		即可，不需要再到最上層去申請囉！也因此，在這些國碼之下，還是有這六大類的
+		domain name 為主的哩！當然啦，在目前，由於網際網路持續的發燒，說實在的
+		domain name 實在是有點不太夠用，所以又有相當多的領域名稱被設計出來，例如目前台灣
+		ISP 提供的 .idv.tw 的個人網站啦！<br /><br />
+
+		好了，再強調一次， DNS 系統是以所謂的階層式的管理，所以，請注意喔！那個
+		.tw 只記錄底下那一層的這數個主要的 domain 的主機而已！至於例如 edu.tw 底下還有個
+		ncku.edu.tw 這部機器，那就直接授權交給 edu.tw 那部機器去管理了！也就是說『
+		<span class="text_import2">每個上一層的
+		DNS 主機，所記錄的資訊，其實只有其下一層的主機名稱而已！</span>
+		』至於再下一層，則直接『授權』給下層的某部主機來管理囉！呵呵！所以您就應該會知道
+		DNS 到底是如何管理的吧！ ^_^ <br /><br />
+
+		會這樣設定的原因不是沒有道理的！
+		這樣設計的好處就是：每部機器管理的只有下一層的
+		hostname 對應 IP 而已，所以減少了管理上的困擾！而下層 Client 端如果有問題，只要詢問上一層的
+		DNS server 即可！不需要跨越上層，除錯上面也會比較簡單呢！<br /><br />
+		</div>
+
+		<li><span class="text_import1">DNS 的搜尋流程：</span><br />
+		<div class=block2>
+		剛剛說過 DNS 是以類似『<span class="text_import2">樹狀目錄</span>』
+		的型態來進行名稱的管理的！所以每一部
+		DNS 主機都『<span class="text_import2">僅管理下一層 DNS 主機的名稱轉譯</span>』而已，
+		至於下層的下層，則『授權』給下層的
+		DNS 主機來管理啦！這樣說好像很繞口，好吧！我們就以下圖來說一說原理囉：<br /><br />
+
+		<center><a NAME="fig_03"></a><img SRC="0350dns/0350dns-3.jpg"
+		title="DNS 主機查詢流程示意圖"
+		alt="DNS 主機查詢流程示意圖">
+		<br />圖三、DNS 主機查詢流程示意圖</center><br />
+
+		首先，當您在瀏覽器的網址列輸入 http://aerosol.ev.ncku.edu.tw 時，您的電腦就會依據相關設定(
+		<span class="text_vbird">在 Linux 底下就是利用 /etc/resolv.conf 這個檔案 </span>)
+		所提供的 DNS 的 IP 去進行連線查詢，好了，由於目前最常見的 DNS 主機就屬
+		Hinet 的 168.95.1.1 這個 DNS 了，所以我們就拿他來做例子吧！嗯！這個時候，
+		hinet 的這部主機會這樣工作：<br />
+
+		<ol>
+		<li><span class="text_import2">先查看本身有沒有紀錄</span>：<br />
+		剛剛說過啦，由於 DNS
+		是層階式的架構，任何一部 DNS 都僅記錄下一層裡面的主機名稱對應的 IP 而已，由於
+		hinet 並非學術網路裡面的主機，所以自然也就沒有辦法直接提供給 client 端關於
+		aerosol.ev.ncku.edu.tw 這部機器的 IP 了，所以啦，一般而言，這個時候 168.95.1.1
+		就會向最頂層，也就是 . (root) 的主機查詢 .tw 這部機器的位址；</li><br />
+
+		<li><span class="text_import2">向最頂層 ( root )查詢</span>：<br />
+		由於 168.95.1.1 沒有紀錄我們主機的
+		IP ，這個時候他就會向『最頂層』的 . (root) 這部主機來查詢 . (root) 的下一層，也就是
+		.tw 這部機器的資料了！這個時候， . (root) 就會告訴 168.95.1.1 說『嘿！您要查
+		.tw 這個網域的管理者呀？我這裡有 .tw 這個網域的管理的主機之
+		IP 資訊，您可以直接去找他！』；</li><br />
+
+		<li><span class="text_import2">向第二層查詢</span>：<br />
+		168.95.1.1 接著又到 .tw 去查詢，而該部機器管理的又僅有
+		.edu.tw, .com.tw, gov.tw... 那幾部主機，經過比對後發現我們要的是 .edu.tw
+		的網域，所以這個時候 .tw 又告訴 168.95.1.1 說：『您要去管理 
+		.edu.tw 這個網域的主機那裡查詢，我有他的 IP ！』；</li><br />
+
+		<li><span class="text_import2">向下層持續查詢</span>：<br />
+		好了，一步一步下來， .edu.tw
+		可以查到管理 .ncku.edu.tw 的主機 IP ； .ncku.edu.tw 可以查到管理 .ev.ncku.edu.tw
+		的主機 IP ，而最後我們 aerosol.ev.ncku.edu.tw 就可在管理 .ev.ncku.edu.tw
+		網域的那部主機的設定紀錄當中查詢到啦！</li><br />
+
+		<li><span class="text_import2">記錄暫存記憶體</span>：<br />
+		查到了 IP 之後，這部 168.95.1.1
+		的 DNS 機器總不會在下次有人查詢 aerosol.ev.ncku.edu.tw
+		的時候再跑一次這樣的流程吧！粉遠粉累的吶！而且也很耗系統的資源與網路的頻寬，所以呢，
+		168.95.1.1 這個 DNS 很聰明的會先記錄一份 aerosol.ev.ncku.edu.tw 對應 IP
+		的資訊在自己的暫存記憶體當中，以方便下一次又有人對同一個主機名稱的要求之查詢！最後則將結果回報給
+		client 端！當然啦，那個記憶在 cache 當中的資料，其實是有時間性的，當過了
+		DNS 設定記憶的時間(通常可能是 24 小時)，那麼該記錄就會被釋放喔！</li>
+		</ol>
+
+		由這樣的分層負責您發現了什麼？嗯！那就是：<br />
+
+		<ul>
+		<li>當一個『合法』的 DNS 主機裡面的設定修改了之後，來自世界各地任何一個 DNS
+		的要求，都會正確無誤的顯示正確的主機名稱對應 IP
+		的資訊，因為他們會一層一層的尋找下來，所以，要找您的主機名稱對應的
+		IP 就一定得要透過您的上層 DNS 主機的紀錄才行！所以只要您的主機名字是經過上層『合法的
+		DNS』主機的設定的，那麼就可以在 Internet 上面被查詢到啦！呵呵！很簡單維護吧，機動性也很高。</li>
+		<br />
+		<li>在主機的暫存記憶體記錄當中，由於是有時間性的，所以當您的主機名稱在 DNS
+		當中被修改了之後，但是由於之前的舊資訊還記憶在其他的 DNS 
+		主機的暫存記憶體裡面，所以啦，可能在別人以非您的
+		DNS 主機來查詢您的主機名稱時，就會得到先前的舊資訊，這個時間差不多可能是
+		10 分鐘到 2 天左右，這也是為什麼我們常說當您修改了一個 domain name 之後，可能要
+		2 ~ 3 天後才能全面的啟用的緣故啦！</li><br />
+		<li>每一部可以記錄主機名稱與 IP 對應的 DNS 伺服器都可以隨意更動他自己的資料庫對應，
+		因此主機名稱與網域名稱在各個主機底下都不相同。舉例來說， idv.tw 是僅有台灣才有這個 idv 的網域～
+		因為這個 idv 是由 .tw 所管理的，所以只要台灣 .tw 維護小組同意，就能夠建立該網域喔！</li>
+		</ul>
+
+		好啦！既然 DNS 這麼棒，然後我們又需要架站，所以需要一個主機的名稱，因此，
+		那麼我們需要架設 DNS 了嗎？當然不是，為什麼呢？
+		剛剛鳥哥提到了很多次的『合法』的字眼，因為他就牽涉到『授權』的問題了！
+		我們在前面的『<a href="0270dynamic_dns.htm">申請合法的主機名稱</a>』當中也提到，
+		只要主機名稱合法即可，不見得需要架設 DNS 的啦！<br /><br />
+		</div>
+
+		<li><span class="text_import1">DNS 使用的 port number ：</span><br />
+		<div class=block2>
+		好了，既然 DNS 系統使用的是網路的查詢，那麼自然需要有開 Listen 的 port
+		囉 ( 監聽的埠號 )！沒錯！很合理！那麼 DNS 使用的是那一個 port 呢？那就是
+		53 這個 port 啦！您可以到您的 Linux 底下的 /etc/services
+		這個檔案看看！搜尋一下 domain 這個關鍵字，就可以查到 53 這個 port 啦！<br /><br />
+
+		但是這裡需要跟大家報告的是，通常，
+		DNS 查詢的時候，是以 udp 這個較快速的資料傳輸協定 (protocol)
+		來查詢的，但是萬一沒有辦法查詢到完整的資訊時，就會再次的以
+		TCP 這個協定來重新查詢的！所以啟動 DNS 的 daemon (就是 named 啦) 時，會同時啟動
+		TCP 及 udp 的 53 這個 port number 喔！<br />
+		</div>
+	</div>
+
+	<hr><a NAME="DNS_register"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">
+	關於『授權』的意義：</span><br />
+	<div class="block2">
+		很多朋友都認為『<span class="text_import2">
+		架設 DNS 可以設定主機的名稱，而我要架站需要主機有名字，因此一定需要架設
+		DNS ，只要有 DNS，我的主機就可以有名字了！</span>
+		』是這樣嗎？當然不是！這是錯誤的觀念！怎麼說呢？<br /><br />
+
+		從<a href="#fig_03">上面圖三的圖示</a>當中，您應該不難發現，當我要搜尋
+		aerosol.ev.ncku.edu.tw 主機時，就需要向管理 .ev.ncku.edu.tw 這個網域的那部機器查詢才行，而要查詢
+		.ev.ncku.edu.tw 則需要在 .ncku.edu.tw 上面詢問才可以！這是因為『<span class="text_import2">上層
+		DNS 主機 .ncku.edu.tw 已經將 .ev.ncku.edu.tw 這個網域的管理權 "授權" 給
+		green.ev.ncku.edu.tw 這部機器，當有人要查詢 .ev.ncku.edu.tw 這個網域的主機
+		IP 時， .ncku.edu.tw 將會把查詢的任務直接轉給 green.ev.ncku.edu.tw 去管理了！從此，
+		.ncku.edu.tw 這個網域的管理主機，將不會再接管 ev.ncku.edu.tw 這個網域的名稱管理！</span>
+		』是否很像人類社會的『授權』的概念？<br /><br />
+
+		也就是說，當您老闆充分的『授權』給您某項工作的時候，從此，
+		要進行該項工作的任何人，從老闆那邊知道您才是真正『有權』的人之後，都必須要向您請示一樣！
+		^_^！所以囉，如果您要架設 DNS ，而且是可以連上 Internet 上面的 DNS 
+		時，您就必須要透過『<span class="text_import2">上層
+		DNS 主機的授權</span>』才行！這是很重要的觀念喔！等一下我們在底下會介紹一個如何架設一個
+		『經過合法授權的 DNS 主機』哩！<br /><br />
+
+		其實，如果將上面的話改換成：『<span class="text_import2">
+		我要架站，所以我要讓我的主機有一個合法的名字！</span>
+		』那樣就合理了！怎麼說呢？因為我可以請上層
+		DNS 幫我設定主機名稱對應 IP 就可以啦！如此一來，要找我的 hostname 對應
+		IP 的人，都可以直接在我的上層 DNS 裡面找到，根本不需要透過我的 Linux 主機吶！例如鳥哥研究室的
+		aerosol.ev.ncku.edu.tw 就可以在 green.ev.ncku.edu.tw 這部管理 DNS 的 server
+		上面找到ㄋㄟ～不必親自來我的 aerosol.ev.ncku.edu.tw 上面找！<br /><br />
+
+		也就是說，藉由
+		DNS 系統最大的功能『<span class="text_import2">主機名稱轉譯成 IP </span>』
+		這個動作，那麼您只要向任何一個合法的
+		DNS 主機申請一個『<span class="text_import2">主機名稱, hostname</span> 』給您的
+		Linux 主機，讓大家都可以藉由該 DNS 主機來查詢到您的 Linux 之 
+		IP ，就可以使用該主機名稱來架站啦！就是這麼簡單！<br /><br />
+
+		好了，那麼您就應該知道了，要讓您的主機名稱對應 IP 且讓 Internet 上面的電腦都可以查詢的到，就需要：
+		<ol>
+		<li><span class="text_import2">上層 DNS 的授權讓您設定 DNS 主機，或者是；</span></li>
+		<li><span class="text_import2">直接請上層 DNS 主機來幫您設定！</span></li>
+		</ol>
+
+		這兩種模式。舉例來說，鳥哥的 Linux 教學網站主機名為 
+		linux.vbird.org ，鳥哥是向上層 .org 的 ISP 註冊了 vbird.org
+		的領域名稱，但鳥哥申請的是自己管理 DNS 伺服器，所以我網站的資料庫放在哪裡呢？<br /><br />
+
+		<center><a NAME="fig_04"></a><img SRC="0350dns/database.png"
+		title="授權與資料庫的差異"
+		alt="授權與資料庫的差異">
+		<br />圖四、授權與資料庫的差異</center><br />
+
+		看到了嗎？vbird.org 是向上層 ISP 註冊的，而 ISP 則是提供授權給鳥哥 (NS 的標誌)，
+		至於鳥哥的 linux.vbird.org 則是直接記錄在鳥哥的 DNS 伺服器上面。所以，萬一鳥哥的 DNS 伺服器掛點，
+		那麼雖然 ISP 有紀錄 dns.vbird.org 這一部主機的 IP ，但是大家都無法查到 dns.vbird.org 的 IP 喔！
+		為什麼呢？瞧一瞧<a href="#fig_03">圖三</a>啊！因為授權的關係嘛！對於 NS 及 A 標誌不熟沒關係，
+		後面就會立刻講到這個咚咚囉！<br /><br />
+
+		那麼哪種模式比較好呢？這沒有一定的答案，
+		底下我們來談一談，您比較適合哪一種模式的設定呢？<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_settingorupper"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">
+	網站代管還是自己設定 DNS：</span><br />
+	<div class="block2">
+		如果您曾經申請過 domain name 的話，例如向 Hinet 或 Seednet 等台灣各大主要
+		ISP 申請 domain name 的話，應該都會知道有兩種主要的模式，就是剛剛上頭提到的
+		DNS 授權，或者是直接交給 ISP 來管理。交給 ISP 管理的，
+		就可以稱作是網域名稱代管啦！當然啦，如果您是學校單位的話，或者是企業內部的小單位，那麼就得請您向上層
+		DNS 主機的負責人要求囉！無論如何，您只能有兩個選擇就是了，要不就是請他幫忙您設定好
+		hostname 對應 IP ，要嘛就是請他直接將某個 domain name 段授權給您做為 DNS
+		的主要管理網域。<br /><br />
+
+		那麼我怎麼知道那個方式對我比較好呢？請注意，由於 DNS 架設之後，會多出一個監聽的
+		port ，所以理論上，是比較不安全的！因此，能不設當然就不要設定比較好囉！所以，這裡的建議如下：<br /><br />
+
+		<li><span class=text_import1>需要架設 DNS 的時機：</span><br />
+		<ul>
+		<li>您所負責需要連上 Internet 的主機數量龐大：例如您一個人負責整個公司十幾部的網路
+			Server ，而這些 Server 都是掛載您的公司網域之下的。這個時候想要不架設 DNS
+			也粉難啦！</li>
+		<li>您可能需要時常修改您 Server 的名字，或者是您的 
+			Server 有隨時增加的可能性與變動性；</li>
+			</ul>
+
+		<li><span class=text_import1>不需要架設 DNS 的時機：</span><br />
+		<ul>
+		<li>網路主機數量很少：例如家裡或公司只有需要一部 mail server 時；</li>
+		<li>您可以直接請上層 DNS 主機管理員幫您設定好 Hostname 的對應時；</li>
+		<li>您對於 DNS 的認知不足時，如果架設反而容易造成網路不通的情況；</li>
+		<li>架設 DNS 的費用很高時！</li>
+		</ul>
+	</div>
+
+	<hr><a NAME="DNS_Zones"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">
+	正解與反解的 Zone 意義：</span><br />
+	<div class="block2">
+		講了這許多，還得再提一提關於正解、反解與 Zone 的問題才行啊！<br /><br />
+
+		<li><span class="text_import1">什麼是正解與反解？</span><br />
+		<div class=block2>
+		我們在前頭的開宗明義當中就提到啦， DNS 系統本來最主要的功能就是在轉譯
+		hostname 與 IP 囉，由於電腦在網路上面其實認識的只是 IP 
+		啦，所以，一般來說，我們稱『<span class="text_import2">由
+		hostname 去尋找出 IP 的程序稱為『 正解 』</span>』，
+		至於由 IP 去查詢得到 hostname 那就被稱為反解了！正反解的設定情況是差異性很大的！怎麼說呢？<br />
+
+		<ul>
+		<li><span class="text_import1">正解：</span><br />
+		在正解的情況之下，我們可以透過主機分層設定的方式來查詢 (例如前面的<a href="#fig_03">圖三</a>)，而因為是
+		Hostname 對應 IP ，所以即使在不同網段的 IP ，仍然可以寫在同一個 domain
+		之中！例如鳥哥的主機是在學校裡面 (140.116.xxx.xxx)，但是鳥哥申請的是 vbird.idv.tw
+		這個 domain 的名稱，而很多朋友則是以 ISP 提供的 IP (例如 61.xxx.xxx.xxx) 
+		來進行 *.idv.tw 的申請的！呵呵！那麼一來，我的 vbird.idv.tw 就與大家的
+		*.idv.tw 在同一個 domain 的設定當中囉，但是這些主機卻是在不同的網域之中喔 (140.116.xxx.xxx
+		不會跟 61.xxx.xxx.xxx 在同一個網段中吧！ ^_^) ！所以囉，任何一部 DNS 都可以將您的
+		IP 寫入他們的正解當中囉！</li><br />
+
+		<li><span class="text_import1">反解：</span><br />
+		但是反之則不行！怎麼說呢？因為當初 IP
+		規劃分配的時候，就必需要一個區域一個區域的劃分的，所以當然不可能同一個網段的
+		IP 在不同的地方出現吧！因為這涉及到 TCP/IP 的協定與 router 的架構ㄋㄟ～因此，同一個
+		IP 網段的反解就真的得要透過上層 IP 網域的 DNS 伺服器設定才行了！所以由 IP 反查 hostname
+		的話，大部分的情況下就需要向直屬的上層 IP 網域申請了！</li>
+		</ul>
+
+		舉個例子來說：我想要自己的領域名稱的名字，所以我可以去外面的 ISP 申請註冊一個合法的名字來架設我的
+		DNS ！從此之後，別人就可以經過我的 DNS 正解查詢得到我的主機 IP。但是如果要由
+		IP 反查回 hostname 的話，我就『<span class=text_import2>一定必需要』請管理我主機所在網域的上層的
+		DNS 管理員來設定才行ㄋㄟ</span>！這也是目前比較麻煩的地方，因為正解您可以自行設定，
+		但是反解則必需要請上層的管理員設定！如果是向
+		ISP 申請的 IP ，那就得向 ISP 申請反解名稱改換，這個部分通常很麻煩～<br /><br />
+		</div>
+
+		<li><span class="text_import1">什麼是 Zone ？</span><br />
+		<div class=block2>
+		知道正反解之後，再來要來知道一下，什麼又是 Zone (區域) 
+		呢？說的簡單一點的話，<span class=text_import2>一個正解或反解的設定就是一個
+		zone</span> ，例如我要規範 vbird.idv.tw 這個 domain 的設定內容，那麼他就是一個
+		zone ！通常，『<span class="text_import2">一個設定檔就是一個 zone </span>』！
+		如果以鳥哥的 vbird.idv.tw 這個例子來說，配合上面的 <a href="#fig_03">圖三</a> 來說明，
+		那鳥哥的 vbird.idv.tw 那部主機裡面至少需要知道 . (root) 以及鳥哥自身的設定，
+		所以，這個 domain 的 DNS 設定檔裡面，必需要有：<br />
+
+		<ul><span class="text_import2">
+		<li>hint( root ) 的設定；
+		<li>vbird.idv.tw 這個 domain 的正解設定；
+		<li>localhost 的正解設定(非必要)；
+		<li>localhost 的反解設定(非必要)。
+		</span></ul>
+
+		那麼我就有四個 zone 了！如果以我們系館的 DNS 主機 green.ev.ncku.edu.tw
+		來說的話，他至少要有：<br />
+
+		<ul><span class="text_import2">
+		<li>hint(root)；
+		<li>ev.ncku.edu.tw 正解；
+		<li>ev.ncku.edu.tw 反解以及 ；
+		<li>localhost 正解；
+		<li>localhost 反解。
+		</span></ul>
+
+		等五個 zone 的定義囉！嘿！您會發現，我沒有 vbird.idv.tw 這個 domain
+		的反解設定～為什麼呢？請參考上面的說明吧！因為反解需要要求 IP 
+		協定的上層來設定才行！並且，需要特別留意的是，『<span class="text_import2">每一個
+		zone 都有一個設定檔，而規定這些設定檔檔名的，就交給 
+		/etc/named.conf 這個參數檔來設定！</span>』<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在新版的 Linux distribution 當中，為了安全性的考量，
+		所以將這個檔案放置在 /var/named/chroot 當中喔！需要特別注意！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		也就是說，
+		DNS server 使用的 bind 這個套件中，他的主要參數檔是 /etc/named.conf ，而這個檔案當中就是記錄了每一個
+		zone 的設定檔檔名！實際上，主機名稱與 IP 的對應就是記錄在各個 zone 的設定檔內～<br /><br />
+		</div>
+
+		<li><span class="text_import1">正反解一定要成套嗎？</span><br />
+		<div class=block2>
+		好了，正反解需不需要成套產生，在這裡不用多說明了吧？
+		^_^！請注意喔，在很多的情況下，尤其是目前好多莫名其妙的領域名稱產生出來，
+		所以，常常會只有正解的設定需求而已。不過也不需要太過擔心啦，
+		因為通常在反查的情況中，如果您是使用目前台灣地區最流行的
+		ADSL 上網的話，那麼 ISP 早就已經幫您設定好反解了！例如：211.74.253.91這個
+		seednet 的浮動式 IP 反查的結果會得到 91.253.74.211.in-addr.arpa 
+		這樣的主機名稱！所以在一般我們自行申請領域名稱的時候，您只要擔心正解的設定即可！
+		不然的話，反正反解的授權根本也不會開放給您，您自己設定得很高興也沒有用呀！ ^_^<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上，需要正反解成對的大概僅有 mail server 才需要吧！由於目前網路頻寬老是被垃圾、廣告郵件佔光，
+		所以 Internet 的社會對於合法的 mail server 規定也就越來越嚴格。如果您想要架設 mail server 時，
+		最好具有固定 IP ，這樣才能向你的 ISP 要求設定反解喔！以 hinet 為例的反解申請：<br />
+		<a href="http://hidomain.hinet.net/top1.html" target="_blank">http://hidomain.hinet.net/top1.html</a>
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>		</div>
+	</div>
+</div>
+
+
+<hr><a NAME="server_settings"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DNS 伺服器的套件、種類與 cache 
+only 主機設定：</span><br />
+<div class=block1>
+	談完了一些基礎概念後，接下來讓我們來聊一聊，那如何設定好 DNS 伺服器啊？
+	這當然就得由套件安裝談起啦！趕緊來玩一玩吧！<br /><br />
+
+	<hr><a NAME="what_software"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">架設 DNS 所需要的套件：</span><br />
+	<div class=block2>
+		終於廢話都說完了！相信您大概也有點累的吧？鳥哥是蠻累的啦，因為手臂、
+		肩頸酸痛的毛病頗嚴重....咦！講這個幹嘛？
+		@_@ 好啦，我們終於要來安裝 DNS 所需要的套件了！還記得前面提過的，我們要使用的
+		DNS 就是使用柏克萊大學發展出來的 BIND (Berkeley Internet Name Domain,
+		BIND) 這個套件啦！那麼怎麼知道您安裝了沒？還記得 <a href="../linux_basic/">基礎篇</a>
+		裡面的<a href="../linux_basic/0520rpm_and_srpm.htm"> RPM </a>嗎？對啦！就是使用
+		RPM 來檢驗囉：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>rpm -qa | grep bind</span>
+bind-utils-9.2.4-16.EL4    <span class=term_say>&lt;==這個是用戶端搜尋主機名稱的相關指令</span>
+bind-9.2.4-16.EL4          <span class=term_say>&lt;==這個才是 DNS 伺服器主程式</span>
+bind-chroot-9.2.4-16.EL4   <span class=term_say>&lt;==將 bind 主程式關在家裡面！ ^_^</span>
+</pre></td></tr></table>
+
+		萬一沒裝怎麼辦？嗄！還問我ㄌㄟ～趕快將您的原版光碟拿出來，然後將他安裝上去先～不會安裝？
+		請自行拿出『<a href="../linux_basic/">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』去觀察一下
+		<a href="../linux_basic/0520rpm_and_srpm.htm">RPM</a> 的用法吧！
+		當然啦，更好的作法就是利用 <span class=text_import2>yum install bind</span> 即可啊！<br /><br />
+
+		此外，那個 bind-chroot 是幹嘛用的？所謂的 chroot 代表的是『 change to root 』的意思，
+		那個 root 代表的是根目錄。早期的 bind 預設將程序啟動在 /var/named 當中，但是該程序可以在根目錄到處轉移，
+		因此若 bind 的程式有問題時，則該程序會造成整個系統的危害。為避免這個問題，
+		所以我們將<span class=text_import2>某個目錄指定為 bind 程式的根目錄，由於是根目錄，
+		所以 bind 便不能離開該目錄！</span>所以如果該程序被攻擊，了不起也是在某個特定目錄底下搞破壞而已。
+		CentOS 預設將 bind 鎖在 /var/named/chroot 目錄中喔！ ^_^<br /><br />
+	</div>
+
+	<hr><a NAME="what_pathway"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">BIND 的預設路徑設定與 chroot</span><br />
+	<div class=block2>
+		好了，現在我們知道 BIND 這個 DNS 伺服器的設定需要有<br />
+		<ul><span class=text_import2>
+		<li>本身的設定檔：主要規範主機的設定、zone file 的所在、權限的設定等；
+		<li>資料庫檔案：記錄主機名稱與 IP 對應的等。
+		</span></ul>
+
+		其中 BIND 的設定檔為 /etc/named.conf ，而在這個檔案裡面可以規範 zone file 的完整檔名喔！
+		也就是說，你的 zone file 其實是由 /etc/named.conf 所指定的，所以 zone file 檔名可以隨便取啦！
+		只要 /etc/named.conf 內規範為正確即可。一般來說， CentOS 的預設目錄是這樣的：<br />
+
+		<ul><span class=text_import2>
+		<li>/etc/named.conf ：這就是我們的設定檔啦！
+		<li>/etc/sysconfig/named ：是否啟動 chroot 及額外的參數，就由這個檔案控制；
+		<li>/var/named/ ：資料庫檔案預設放置在這個目錄
+		<li>/var/run/named ：named 這支程式執行時預設放置 pid-file 在此目錄內。
+		</span></ul>
+
+		<a name="sys_named"></a>
+		不過，為了系統的安全性考量，一般來說目前各主要 distributions 都已經自動的將你的 bind 相關程式給他 chroot 了！
+		那你如何知道你 chroot 所指定的目錄在哪裡呢？就是上面提到的那個 /etc/sysconfig/named 啦！
+		你可以先查閱一下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/named</span>
+ROOTDIR=/var/named/chroot
+</pre></td></tr></table>
+
+		事實上裡面有意義的就只有上面這一行，意思是說：『我要將 named 給他 chroot ，並且變更的根目錄為
+		/var/named/chroot 』喔！由於根目錄已經被變更到 /var/named/chroot 了，但 bind 的相關程式是需要
+		/etc, /var/named, /var/run .... 等目錄的，所以實際上咱們 bind 的相關程式所需要的所有資料會是在：<br />
+
+		<ul><span class=text_import2>
+		<li><b>/var/named/chroot</b>/etc/named.conf
+		<li><b>/var/named/chroot</b>/var/named/zone_file1
+		<li><b>/var/named/chroot</b>/var/named/zone_file.....
+		<li><b>/var/named/chroot</b>/var/run/named/...
+		</span></ul>
+
+		哇！真是好麻煩～不過，不要太擔心！因為新版本的 distributions 通常幫您作好一些連結對應了！
+		舉例來說，你依舊可以使用 /etc/named.conf 來設定你的 DNS ，為什麼呢？因為 CentOS 主動的幫你將
+		/var/named/chroot/etc/named.conf 連結到 /etc/named.conf 囉！
+		另外，絕大部分預設的 zone file 資料庫檔案也都主動的幫你做好連結了！請自行進入 /var/named 
+		去 ls 一下吧！ ^_^<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上， /etc/sysconfig/named 是由 /etc/init.d/named 啟動時所讀入的，
+		所以你也可以直接修改 /etc/init.d/named 這個 script 哩！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		另外你需要注意到的是 /var/run/named/ 這個目錄是要讓 bind 的程式 (named) 寫入用的，
+		所以他的權限必需要讓 named 這個使用者可以寫入才行！這個可重要的很！<br /><br />
+
+		<li><span class="text_import1">BIND 的升級：</span><br />
+		<div class=block2>
+		必須請大家注意的是，這個 DNS 的 53 port 其實也不是個很安全的咚咚，所以呢，非必要，其實是不太建議啟用
+		DNS 的啦！不過，如果真的要安裝的話，那麼請隨時注意您的 Linux distribution
+		是否有定時的公告的漏洞修補套件呢？這個真的很重要，因為鳥哥很久很久以前，就是被這個
+		port 53 給種植了一個蠕蟲，真是討厭的很！ @_@<br /><br />
+
+		另外，舊版的使用者使用新的 9.x 版以後的 BIND 時，由於主動幫你設定好 chroot ，
+		你可能一開始會不太適應，不過，不建議你拿掉 chroot 的功能！畢竟 DNS 的 port 53  是需要 root 身份啟動的，
+		具有一定的危險性，所以，給他 chroot 畢竟是比較妥當啦！您說是吧！<br />
+		</div>
+	</div>
+
+	<hr><a NAME="master_slave"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DNS 的 master/slave 架構</span><br />
+	<div class=block2>
+		在 DNS 的設定上面，基本上，您必須要已經很清楚
+		zone 是什麼了，否則很難繼續設定喔！會搞的一塌糊塗的～無論如何，您一定要知道的是，
+		<span class=text_import2>bind 的設定檔，就是 /etc/named.conf</span>。
+		不過，由於 chroot 的關係，這個檔案也可能會在 /var/named/chroot/etc/ 當中，
+		另外，針對 DNS server 的類型大致上可以分為三類，分別是：<br /><br />
+
+		<li><span class="text_import1">Master：</span><br />
+		<div class=block2>
+		<span class=text_import2>這種類型的 DNS 本身含有領域名稱的設定檔 (就是有 Zone 啦！)，
+		這個設定檔就是設定正解或者是反解的『Database』囉</span>！所以他本身是具有提供
+		Internet 查詢所需的資料喔！例如我可以在我的主機上面設定提供 vbird.idv.tw
+		這個網域，那麼我的主機就是 master 類型的主機啦！<br /><br />
+		</div>
+
+		<li><span class="text_import1">Slave：</span><br />
+		<div class=block2>
+		假設你的 DNS 伺服器總共管理 50 部主機的 IP 與主機名稱的對應好了，
+		同時假設你只有一部 DNS 伺服器時，那麼萬一由於網路問題或者是主機的軟、硬體問題，導致這個服務終止了，
+		想一想，你那 50 部主機的 hostname 與 IP 的對應還能不能找的到？是吧！
+		所以，一般來說，<span class="text_import2">
+		DNS 系統通常會建議您至少要有兩部主機提供 DNS 的服務～</span><br /><br />
+
+		不過，如果您有四部 DNS 主機提供這樣的名稱解析服務，
+		而且這四部是互相為備援的，也就是說，這四部主機的內容其實是一模一樣的，
+		那麼如果您要更動一個 IP 與名稱的對應時，就必須要手動去修訂四部主機的內容，
+		這樣會不會很麻煩啊？！<br /><br />
+
+		這個時候就有 slave 類型的 DNS 主機出現了！不過，slave主機必須要與 master 主機相互搭配喔！
+		以上面的案例來說明，如果我必須要有四部主機提供 DNS 服務，且四部內容相同，
+		那麼我只要指定一部主機為 Master ，其他三部為該 Master 的 Slave 主機，
+		那麼當要修改一部名稱對應時，我只要手動更改 master 那部機器的設定檔，然後，
+		重新啟動 BIND 這個服務後，呵呵！其他三部 slave 就會自動的被通知更新了！
+		這樣一來，在維護上面可就輕鬆寫意的多了～<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		如果您設定 Master/Slave 架構時，您的 Master 主機必須要限制
+		只有某些特定 IP 的主機能夠取得您 Master 主機的正反解資料庫權限才好！
+		所以，上面才會提到 Master/Slave 必須要互相搭配才行！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		另外，既然我的所有 DNS 伺服器是需要同時提供 internet 上面的領域名稱解析的服務，
+		所以<span class=text_import2>不論是 Master 還是 Slave 主機，他都必須要可以同時提供 DNS 的服務才好！
+		因為在 DNS 系統當中，領域名稱的查詢是『先搶先贏』的狀態</span>，
+		我們不會曉得哪一部主機的資料會先被查詢到的！
+		為了提供良好的 DNS 服務，每部 DNS 主機都要能正常工作才好啊！
+		而且，<span class=text_import2>每一部 DNS 伺服器的資料庫內容需要完全一致，否則就會造成用戶端找到的 
+		IP 是錯誤的！</span><br /><br />
+		</div>
+
+		<li><span class="text_import1">Cache-only：</span><br />
+		<div class=block2>
+		這種類型的 DNS 主機沒有自己的資料庫，單純僅幫助 Client 端向外部的 DNS 
+		主機要求資料而已～簡單的來說，他可以想成是一個『代理人』的角色而已～
+		通常設定在防火牆上面的呢！<br /><br />
+		</div>
+
+		那麼 Master/Slave 的資料更新到底是如何動作的呢？請注意，Slave
+		是需要更新來自 Master 的 DNS 資料啊！所以當然 Slave 在設定之初就需要存在
+		Master 才行喔！好了， Master 與 Slave 的資料同步動作可以由底下的圖示來看：<br /><br />
+
+		<center><a NAME="fig_05"></a><img SRC="0350dns/0350dns-8.jpg" 
+		title="Master/Slave 的 DNS 主機資料同步過程"
+		alt="Master/Slave 的 DNS 主機資料同步過程">
+		<br />圖五、Master/Slave 的 DNS	主機資料同步過程</center><br />
+
+		整個更新的過程是這樣的：<br />
+		<ol>
+		<li><span class="text_import1">Slave 判斷是否需要更新(1.1)：</span><br />
+		我們可以在 Slave 設定好向 Master DNS 主機要求資料更新的週期時間，則每當到達更新時間時，
+		Slave 會向 Master 索取是否需要更新資料，<span class="text_import2">這個更新資料的判斷則以
+		Serial number 是否不同來進行更新喔！</span></li><br />
+		<li><span class="text_import1">Master 判斷是否需要更新(1.2)：</span><br />
+		除了由 Slave 向 Master 的查詢之外，Master 如果 DNS 資料經過變更，且想要 Slave
+		同步更新時，也可以主動的向 Slave 進行更新通知！</li><br />
+		<li><span class="text_import1">資料同步化(2)：</span><br />
+		最後當然就是資料由 Master 傳送到 Slave 來更新 Slave 的 DNS 資料囉！</li>
+		</ol>
+
+		如果您想要架設 Master/Slave 的 DNS 架構時，<span class="text_import2">兩部主機
+		(Master/Slave) 都需要您能夠掌控才行</span>！網路上很多的文件在這個地方都有點『閃失』，
+		請特別的留意啊！<br /><br />
+
+		底下我們就先來講一個不需要資料庫檔案的 cache only  的 DNS 伺服器吧！<br /><br />
+	</div>
+
+	<a name="20070625"></a>
+	<hr><a NAME="forwards"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">單純的 cache-only 與 forwarding DNS 主機設定 
+	</span><br />
+	<div class=block2>
+		<span class="text_import1"><li>什麼是 cache-only 與 forwarding DNS 的主機呢？</span></li>
+		<div class=block2>
+		在介紹怎麼設定每一個正反解的 zone 之前，我們先來玩一個簡單的 DNS 主機！就是
+		<span class="text_import2">cache-only (僅快取) DNS server</span>！顧名思義，這個 DNS server 只有
+		cache (快取) 的功能，也就是說，他本身並沒有主機名稱與 IP 正反解的設定檔，
+		完全是由對外的查詢來提供他的資料來源！<br /><br />
+
+		至於 <span class=text_import2>forwarding (轉遞) 的 DNS server</span> 
+		則是將用戶端所需要查詢的資訊轉交給 forwarding DNS server 來代為查詢，
+		等到查詢結束後，我們的 DNS server 才將結果快取後回傳給用戶端。這兩者的整個運作流程可以看成是這個樣子：<br /><br />
+
+		<center><a NAME="fig_06"></a><img SRC="0350dns/0350dns-4.png"
+		title="Cache-Only 與 Forwarding DNS 主機的運作流程"
+		alt="Cache-Only 與 Forwarding DNS 主機的運作流程">
+		<br />圖六、Cache-Only 與 Forwarding DNS 主機的運作流程</center><br />
+
+		觀察一下圖六上下兩個圖示，妳可以發現 cache-only 需要知道 . (root) DNS 的位址，
+		所以 cache-only 必須要指定出 . (root) DNS 的資料庫所在檔案才行。至於 Forwarding DNS 主機，
+		他是直接將查詢的資料丟給另一部上層 DNS 來查詢，本身可以不必知道 . (root) DNS 的位址！
+		一般來說，如果妳的環境需要架設一個 cache-only 的 DNS server 時，其實可以直接使用 forwarding 的機制，
+		選擇的那部 DNS 主機流量要能夠負荷較大流量為佳！<br /><br />
+
+		要注意的是，不論是 cache-only 還是 forwarding DNS 主機，他們本身都沒有管理 zone (那個 root DNS 例外) 的設定檔，
+		所以說，基本上這兩個 DNS 主機只是作為一個中間傳遞資料的角色罷了！那麼為什麼要架設這樣的一個
+		DNS 主機呢？閒閒沒事幹？當然不是！這是有原因的啦！底下說給您聽囉！<br /><Br>
+		</div>
+
+		<span class="text_import1"><li>什麼時候使用 cache-only DNS？</span></li>
+		<div class=block2>
+		在某些公司行號裡頭，為了預防員工利用公司的網路資源作自己的事情，所以都會針對 
+		Internet 的連線作比較嚴格的限制。當然啦，連 port 53 這個 DNS 會用到的 port 
+		也可能會被擋在防火牆之外的～這個時候，
+		您可以在『<span class="text_import2">防火牆的那部機器上面，加裝一個
+		cache-only 的 DNS 服務！</span>』這是什麼意思呢？很簡單啊！就是您自己利用自己的
+		防火牆主機上的 DNS 服務去幫您的 Client 端解譯 hostname &lt;--> IP 囉！因為防火牆主機
+		可以設定放行自己的 DNS 功能，而 Client 端就設定該防火牆 IP 為 DNS 主機的 IP 即可！
+		哈哈！這樣就可以取得主機名稱與 IP 的轉譯啦！<br /><br />
+		</div>
+
+		那如何在你的 Linux 主機上架設一個 cache-only 的 DNS 主機呢？
+		其實真的很簡單的啦！因為不需要設定正反解的
+		Zone ，所以只要設定一個檔案 (就是 named.conf) 即可！真是快樂得不得了吶！
+		另外，Cache-only 只要加上個 Forwarders 的設定即可指定 Forwarding 的資料，
+		所以底下我們將設定具有 Forwarding 的 cache-only DNS 伺服器吧！<br /><br />
+
+		<ol>
+		<hr><li><span class="text_import1">編輯主要設定檔 /etc/named.conf</span><br />
+		在這個檔案中，主要是定義跟主機有關的事項，以及各個 Zone 的代表含意與檔案，在鳥哥的這個案例當中，
+		因為使用了 forward 的機制，所以鳥哥的這個 cache-only DNS 伺服器並沒有 Zone 
+		，所以我們只要設定好跟主機有關的設定即可。設定這個檔案的時候請注意：<br /><br />
+			<ul><span class="text_import2">
+			<li>註解資料是以兩條斜線『 // 』來作設定的！</li>
+			<li>每個段落之後都需要以『 ; 』來做為結尾！</li>
+			</span></ul><br />
+		那麼您可以這樣設定這個檔案啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/named.conf</span>
+<span class=term_say>// 雖然 CentOS 將這個檔案放置到 /var/named/chroot/etc 當中，
+// 不過他很好心的幫我們作了個連結，所以你還是可以直接編輯這個檔案啦！</span>
+<span class=term_write>options {
+        directory "/var/named";
+        dump-file "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        pid-file "/var/run/named/named.pid"; 
+        forward only;            <span class="term_say">//只允許 forward!</span>
+        forwarders {
+                168.95.1.1;      <span class="term_say">//我這裡使用 hinet 的 DNS ！</span>
+                139.175.10.20;   <span class="term_say">//這個是 seednet 的 DNS ！</span>
+        };
+};
+include "/etc/rndc.key";</span>
+</pre></td></tr></table>
+
+		鳥哥在上頭的設定當中含有 pid-file 的設定，所以得要特別注意了！因為 pid-file 
+		所在的目錄下，也就是那個 /var/run/named 目錄，我的 bind 
+		執行檔程序的擁有人 (一般應該是 named 這個使用者) 必須要
+		能夠寫入！也就是說， /var/run/named 的 owner 必須
+		是 named 這個 user 才行喔！但由於我們有使用 chroot ，
+		因此實際的目錄會是 /var/named/chroot/var/run/named 喔！所以你還得要這樣確認：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ls -ald /var/named/chroot/var/run/named</span>
+d<span class=term_write>rwxrwx---</span>  2 <span class=term_write>named named</span> 4096 Oct 12 11:48 /var/named/chroot/var/run/named
+</pre></td></tr></table>
+
+		我們僅動用到<span class="text_import2"> option </span>這個參數而已，裡面的設定值意義為：<br /><br />
+		<ul>
+		<li><span class="text_import1">pid-file</span><br />
+		指的是每一個 services 記錄自己的
+		PID (Process ID) 的檔案囉！這個檔案通常用在重新啟動或者是 reload 整個
+		services 最常被使用到的！因為可以使用<span class="text_import2"> kill -1 PID</span>
+		來重新啟動啊！嗄！忘記什麼是 <a href="../linux_basic/0440processcontrol.htm">PID</a>
+		？趕快拿出<a href="../linux_basic/">基礎篇</a>複習一下！</li><br />
+
+		<li><span class="text_import1">forwarders</span><br />
+		(不要忘記那個 s 喔！)就是要設定往前尋找的那個『合法』的
+		DNS 囉！每一個 forward 的主機之 IP 都需要有『 ; 』來做為結尾！</li><br />
+
+		<li><span class="text_import1">forward only</span><br />
+		這個設定可以讓您的 DNS 主機僅進行
+		forward 而已！是 Cache-Only 主機最常見的設定了！</li>
+		</ul><br />
+
+		很簡單吧！至於更多的參數我們會在後續篇幅當中慢慢介紹的。
+		這樣就已經設定完成了最簡單的 cache-only 的 DNS 主機了！</li><br />
+
+		<hr><li><span class="text_import1">啟動 named</span><br />
+		啟動總不會忘記吧！？趕快去啟動一下吧！
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">/etc/init.d/named start</span>
+Starting named:                     [  OK  ]</pre>
+</td></tr></table><br />
+
+		<hr><li><span class="text_import1">觀察 port 的變化</span><br />
+		請特別的注意喔！並不是啟動的時候顯示 OK 你的 DNS 就會成功的！所以，還要趕快的來看一下您的
+		port 53 有沒有啟動ㄋㄟ～<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">netstat -utln</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address        Foreign Address     State
+tcp        0      0 192.168.1.254:53     0.0.0.0:*           LISTEN
+tcp        0      0 127.0.0.1:53         0.0.0.0:*           LISTEN
+udp        0      0 192.168.1.254:53     0.0.0.0:*
+udp        0      0 127.0.0.1:53         0.0.0.0:*
+</td></tr></table>
+
+		特別需要留意的是，如果沒有指定介面的話，那麼所有的網路介面，包含 lo,
+		eth0, ... 等介面都會被設定為可以接受 domain name 要求的回應介面！此外，
+		還記得我們在前面提到的，每個介面同時都會提供 TCP 與 UDP 封包的服務喔！
+		這樣看起來似乎真的有啟動的樣子，不過，我們還是得瞧一瞧設定方面有沒有什麼大問題呢？<br /><br />
+
+		<hr><li><span class="text_import1">檢查 /var/log/messages 的內容訊息</span><br />
+		named 這個服務的記錄檔就直接給他放置在 /var/log/messages 裡面啦，所以來看看裡面的幾行吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">tail -n 15 /var/log/messages | grep named</span>
+Oct 16 15:08 linux named[76]: starting BIND 9.2.4 -u named <span class=term_write>-t /var/named/chroot</span>
+Oct 16 15:08 linux named[76]: using 1 CPU
+Oct 16 15:08 linux named[76]: loading configuration from '/etc/named.conf'
+Oct 16 15:08 linux named[76]: listening on IPv4 interface lo, 127.0.0.1#53
+Oct 16 15:08 linux named[76]: listening on IPv4 interface eth0, 192.168.1.254#53
+Oct 16 15:08 linux named[76]: command channel listening on 127.0.0.1#953
+Oct 16 15:08 linux named[76]: command channel listening on ::1#953
+Oct 16 15:08 linux named[76]: running
+Oct 16 15:08 linux named: named startup succeeded
+</td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		如果你在 /var/log/messages 裡面一直看到這樣的錯誤資訊：<br />
+		couldn't add command channel 127.0.0.1#953: not found<br />
+		那表示你還必需要加入 rndc key ，請參考本章後面的
+		<a href="#rndckey">利用 RNDC 指令管理 DNS 伺服器</a> 的介紹，將他加入你的 named.conf 中！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		由上面第一行出現的那個『 -t ... 』可以瞭解到 chroot 的主要目錄啦！你可以使用 man named 去查閱一番。
+		呵呵！看起來似乎是沒有問題的樣子了！那麼就直接來測試看看吧！</li><br />
+
+		<hr><li><span class="text_import1">測試：</span><br />
+		這部分請參考：<a href="#DNS_resolver"> Client 端的測試項目</a></li>
+		</ol><br />
+
+		<span class="text_import1"><li>特別說明：Forwarders 的好處與問題分析</span></li>
+		<div class=block2>
+		關於 forwarder 的好處與壞處，其實有很多種的意見！大致的意見可分為這兩派： <br />
+
+		<ul>
+		<li><span class="text_import2">利用 Forwarder 的功能來增進效能的理論</span>：<br />
+		這些朋友們認為，當很多的下層 DNS 主機都使用 forwarder 時，
+		那麼那個被設定為 forwarder 的主機，由於會記錄很多的資訊記錄(請參考<a href="#fig_03">圖三</a>的說明)，
+		因此，對於那些下層的
+		DNS 主機而言，會增快很多，亦即會節省很多的查詢時間！基本上，這些基本的流程可以看成如下圖所示：<br /><br />
+
+		<center><a NAME="fig_06"></a><img SRC="0350dns/0350dns-5.jpg"
+		title="Forwarder 參數的運作說明"
+		alt="Forwarder 參數的運作說明">
+		<br />圖七、Forwarder 參數的運作說明</center><br />
+
+		所有的 cache-only 都設定 forwarder 為『主 DNS 主機』那一部，則由於主
+		DNS 主機已經記錄了較多的資訊了(每個人都來要求嘛！)所以，當其他人來要求相同的查詢資料時，則主
+		DNS 那部機器將會直接由其 cache 當中讀取，因此，查詢效率就變快了！<br /><br />
+		<li><span class="text_import2">利用 Forwarder 反而會使整體的效能降低</span>：<br />
+		但是另外一派則持相反的見解！這是因為當主
+		DNS 本身的『業務量』就很繁忙的時候，那麼您的 cache-only 
+		主機還向他要求資料，那麼因為他的資料傳輸量太大，頻寬方面可能負荷不量，而太多的下層
+		DNS 又向他要求資料，所以他的查詢速度會變慢！因為查詢速度變慢了，而您的
+		cache-only 主機又是向他提出要求的，所以自然兩邊的查詢速度就會同步下降！</li>
+		</ul>
+
+		很多種說法啦！鳥哥本人也覺得很有趣哩！只是不知道哪一派較正確就是了
+		>_&lt;"" ，不過可以知道的是，如果上層的 DNS 速度很快的話，那麼他被設定為
+		forwarder 時，或許真的可以增加不少效能哩！<br />
+		</div>
+	</div>
+</div>
+
+<hr><a NAME="DNS_master"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DNS 主機的詳細設定：</span><br />
+<div class=block1>
+	好了，經過上面的說明後，我們大概知道 DNS 的幾個小細節是這樣的：<br />
+	<ol><span class=text_import2>
+	<li>主要設定檔是 /etc/named.conf；
+	<li>每個正解、反解都需要一個檔案，而檔案的檔名是由 /etc/named.conf 所設定；
+	<li>目前的 bind 程式已經進行 chroot 了，可以參考 /etc/sysconfig/named ；
+	<li>當 DNS 查詢時，若本身沒有資料庫，則前往 root (.) 或 forwarders 主機查詢；
+	<li>DNS 伺服器的架設需要上層 DNS 的授權才可以成為合法的 DNS 伺服器。
+	<li>named 是否啟動成功務必要查閱 /var/log/messages 內的資訊！
+	</span></ol>
+
+	其中第五點很重要，因為我們並沒有向上層 ISP 註冊合法的領域名稱，所以我們當然就沒有權利架設合法的 DNS 伺服器了。
+	而由於擔心我們的 DNS 伺服器會與外部網際網路環境互相干擾，所以底下鳥哥將主要以一個 vbird.tsai 
+	的領域名稱來架設 DNS 伺服器，如此一來咱們就可以好好的玩一玩自己區域網路內的 DNS 啦！<br /><br />
+
+	另外，那個 chroot  是很重要的觀念，如果你是跳到這個地方來看或者是以前使用的是舊版的 bind 
+	的話，那麼請再次閱讀一下前兩小節談到的 <a href="#what_pathway">bind 的 chroot</a> 部分喔！
+	底下的文章就不再提及這些基礎觀念啦！<br /><br />
+
+	<hr><a NAME="DNS_master_case"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個簡單的案例說明</span><br />
+	<div class=block2>
+		假設鳥哥的這部 DNS 伺服器將針對 vbird.tsai 這個領域來設計，並且對應的反解為 192.168.1.0/24 
+		這個網域，另外我也針對本機 localhost 以及 127.0.0.1 這個預設的領域來對應喔！此外，
+		當然要包含最上層 (root, .) 這個領域的主機名稱資料庫才行！
+		所以我的設定檔及正反解 zone 的資料庫檔案應該有：<br />
+
+		<ol><span class=text_import2><font face="細明體">
+		<li>named.conf &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;：設定檔
+		<li>named.vbird.tsai ：vbird.tsai 的正解
+		<li>named.192.168.1 &nbsp;：192.168.1.0/24 的反解
+		<li>named.root &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;：root (.) 的資料庫
+		<li>named.localhost &nbsp;：localhost 的正解
+		<li>named.127.0.0 &nbsp;&nbsp;&nbsp;：127.0.0.1/24 的反解
+		</font></span></ol>
+
+		如果我還想要加入其他的領域，例如 niki.tsai 可不可以啊？當然可以啊！就再多一個資料庫正解檔案即可！
+		還有，鳥哥上頭這個設定資料為內部私有的，所以你可以完全照著玩！並不會影響到外部的網際網路啦！
+		只是，你的 DNS 設定網際網路也查不到就是了～反正是練功嘛！^_^<br /><br />
+
+		至於資料庫的對應方面，鳥哥預計的規劃是這樣的：<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width=120>作業系統與 IP</td><td width=120>對應之主機名稱</td><td>說明</td></tr>
+<tr><td>OS: Linux<br />IP: 192.168.1.254</td><td>linux.vbird.tsai<br />www.vbird.tsai<br />ftp.vbird.tsai<br />
+	forum.vbird.tsai</td><td>這部是主要的 DNS 伺服器，主要主機名稱為 linux.vbird.tsai
+	，其他的三部主機名稱為主機別名。</td></tr>
+<tr><td>OS: Linux<br />IP: 192.168.1.150</td><td>slave.vbird.tsai<br /><td>主要作為 slave DNS 主機，
+	相關的 slave 設定將在下個小節才會介紹的啦！</td></tr>
+<tr><td>OS: Windows XP<br />IP: 192.168.1.100</td><td>winxp.vbird.tsai</td><td>某一部主機的 IP 與主機名稱對應</td></tr>
+<tr><td>OS: Sun <br />IP: 192.168.1.200</td><td>sun.vbird.tsai</td><td>某一部主機，用來玩的而已！</td></tr>
+</table><br />
+
+		請特別留意啊，一個 IP 可以對應給多個主機名稱，同樣的，一個主機名稱可以給予多個 IP 喔！
+		主要是因為那部 linux.vbird.tsai 的機器未來的用途相當的多，
+		鳥哥希望那一部主機有多個名稱，以方便未來額外的規劃啊，所以就對該 IP 對應了四個主機名稱啊！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_named.conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">/etc/named.conf 
+	設定檔</span><br />
+	<div class=block2>
+		這個設定檔是整個 Linux 上 DNS 的核心啦！他最主要就是在：<br />
+		<ul>
+		<li>規範 DNS 伺服器的使用權限 (可否查詢、forward 與否、master/slave 架構等)；
+		<li>設定出 zone (domain name) 以及 zone file 的所在；
+		<li>設定 DNS 本機管理介面以及其相關的金鑰檔案 (key file)。
+		</ul>
+
+		基本上，這個檔案的內容主要就是分為上頭的三大部分啦！至於設定方面你要注意的有：<br />
+		<ul><span class=text_import2>
+		<li>在整體伺服器的環境與使用權限方面，主要是透過 options {....} 這個設定來處理的；
+		<li>還是要注意，在 named.conf 當中註解使用 // ，而每一個設定項目最後需要分號 (;)
+		</span></ul>
+
+		我們剛剛規範的 zonefile 檔名以及對應的 domain name 還沒有忘記吧？那如何處理這個設定檔呢？
+		最簡單的規劃如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/named.conf</span>
+<span class=term_say>// 先定義出整個 DNS 伺服器的相關環境，包括查詢、檔案放置目錄等</span>
+<span class=term_write>options {
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        pid-file        "/var/run/named/named.pid";
+        forwarders     { 168.95.1.1; 139.175.10.20; };
+        allow-query    { any; };  <span class=term_say>// 是否允許被查詢？當然要可以被查詢；</span>
+        allow-transfer { none; }; <span class=term_say>// 是否允許傳送 zone ，預設不可</span>
+};
+
+<span class=term_say>// 關於 DNS 伺服器的一些加密資料，先忽略過去先！</span>
+include "/etc/rndc.key";
+
+<span class=term_say>// 關於 root (.) 的設定喔：</span>
+zone "." {
+        type hint;                <span class=term_say>// 特殊的類別！專給 root (.) 用的</span>
+        file "named.root";        <span class=term_say>// 就是檔名的定義啦！</span>
+};
+
+<span class=term_say>// 關於本機 localhost 的正反解</span>
+zone "localhost" {
+        type master;
+        file "named.localhost";
+};
+zone "0.0.127.in-addr.arpa" {
+        type master;
+        file "named.127.0.0";
+};
+
+<span class=term_say>// 這裡規範出我們的 vbird.tsai 領域名</span>
+zone "vbird.tsai" {
+        type master;
+        file "named.vbird.tsai";
+};
+zone "1.168.192.in-addr.arpa" {
+        type master;
+        file "named.192.168.1";
+};</span>
+</pre></td></tr></table>
+
+		這是一個最基礎的 named.conf 的內容，在 options 部分你得要知道的有這些設定值：<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>options 內的相關參數說明</td></tr>
+<tr bgcolor=lightblue align=center><td width=90>設定值</td><td>意義</td></tr>
+<tr><td><span class=text_import1>directory</span></td><td>這個設定值就是在指定你的 zone file 要放置到哪個目錄啦！
+	非常重要的設定值。與底下 zone 設定項目的 file 配合而成完整檔名。</td></tr>
+<tr><td>dump-file</td><td>由<a href="#fig_03">圖三</a>我們知道 DNS 伺服器會將搜尋到的主機 IP 對應資料放置到快取記憶體中，
+	那如果你想要將目前的快取資料記錄下來時，就用這個設定值指定檔案</td></tr>
+<tr><td>statistics-file</td><td>我們 DNS 的一些統計資料，想要列出時就寫入這個設定值指定的檔名內</td></tr>
+<tr><td>pid-file</td><td>將 named 這個程式的 PID 記錄下來的一個檔案，這個檔案通常可以在 named 啟動、關閉時提供正確的 
+	PID 啦！</td></tr>
+<tr><td>forwarders</td><td>前面談到 <a href="#forwards">cache-only 的 DNS 伺服器設定值</a>已經談過了，請前往參考。</td></tr>
+<tr><td>allow-query</td><td>是否允許用戶端的查詢。查詢的重點就是讀取資料庫的內容，
+	既然要架設 DNS ，當然要允許用戶端的查詢啦。內容可以填寫任何來源 (any) 或 IP 或網域 (IP/netmask) 的格式。</td></tr>
+<tr><td>allow-transfer</td><td>是否允許 slave DNS 的整個領域資料的傳送？這個設定值與 master/slave DNS 
+	伺服器之間的資料庫傳送有關。除非你有 slave DNS 伺服器，否則這裡不要開放喔！</td></tr>
+</table><br />
+
+		在 options 之外就是每個正反解的檔案啦！注意看到了沒？每個正反解就是利用 zone 這個設定值來處理的啦！
+		最常見的設定值其實只有上頭那兩個，分別是這樣的意義：<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>zone 內的相關參數說明</td></tr>
+<tr bgcolor=lightblue align=center><td width=90>設定值</td><td>意義</td></tr>
+<tr><td>type</td><td>該 zone 的類型，主要的類型有： master, slave 及 hint。
+	其中需要注意最上層的 DNS (.) 使用的是 hint 的類型，然後 master 主機用 master 啊！
+	slave 主機就用 slave ㄇㄟ！</td></tr>
+<tr><td>file</td><td>就是 zone file 啦！那麼完整的 zone file 在哪裡啊？在這裡：<br />
+	<ul><span class=text_import2>[chroot_dir]/[options 內的 directory]/[file 設定值]</span></ul>
+	所以說，root (.) 設定檔就在：<br />
+	/var/named/chroot/var/named/named.root</td></tr>
+<tr><td>反解 zone</td><td>正解的 zone 很好理解，反解的 zone 怎麼那麼奇怪啊？就如同 linux.vbird.org 要追蹤時是由
+	org -> vbird -> linux 一樣，至於反解則例如 192.168.1.1: 192 -> 168 -> 1 -> 1。
+	由於 DNS 的領域名稱都是由後往前找，且反解是個特殊的領域，所以必需要
+	<span class=text_import2>將 IP 反過來寫</span>，同時在最後面加上『
+	<span class=text_import2>.in-addr.arpa</span> 』來表示反解宣告！所以 192.168.1 這個 zone 就得要寫成
+	1.168.192.in-addr.arpa</td></tr>
+</table><br />
+
+		所以我們才會說，你的 zone file 檔名都是透過 named.conf 這個設定檔來規範的啊！在設定完了 named.conf
+		後，接下來就是那五個 zone file 的設定了，底下咱們就一個一個資料庫檔案來設定設定先！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_root"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">最上層 DNS (root) 
+	資料庫檔案的設定</span><br />
+	<div class=block2>
+		為什麼一定要有 root (.) 這個最頂層的 DNS 伺服器主機的對應呢？請回到<a href="#fig_03">圖三</a>的畫面中，
+		一般來說，用戶端使用我們 DNS 伺服器來查詢時，如果查詢的目標不在我們 DNS 本身的資料庫檔案時，
+		我們的 DNS 就得到 root 去詢問啦！那麼如果有設定 forwarders 呢？那麼搜尋的問題就會丟給
+		forwarders 那部主機去處理。<br /><br />
+
+		不管怎麼說，我們的 DNS 伺服器最好還是得要有 root 主機的對應喔。那你怎麼知道 root
+		那幾部主機的 IP 啊？呵呵～鳥哥當然也不知道，不過掌管網際網路的 rs.internic.net 這個網站有提供啊！
+		你可以使用瀏覽器利用 ftp 的通訊協定來下載：<br />
+
+		<ul>
+		<li><a href="ftp://rs.internic.net/domain/named.root" 
+			target="_blank">ftp://rs.internic.net/domain/named.root</a></li></ul>
+
+		這個檔案的內容就是每一部最上層的 root (.) 的 IP 對應啦！如果你使用 vi 來查閱一下，
+		可以看到這個檔案的內容有點類似這樣：(你應該要將這個檔案放置到 /var/named 當中喔！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/var/named/named.root</span>
+<span class=term_say>; 抱歉，版權宣告部分先省略～</span>
+.                      3600000  IN  NS  A.ROOT-SERVERS.NET.
+A.ROOT-SERVERS.NET.    3600000      A   198.41.0.4
+<span class=term_say>;主機名稱或領域名稱    TTL          RR  相對應的資料</span>
+<span class=term_say>; 以下省略</span>
+</pre></td></tr></table>
+
+		在這個檔案當中有好幾行，每兩行成一對，另外，<span class=text_import2>這個檔案當中的註解使用的是分號 
+		(;) 喔！與 /etc/named.conf 不一樣！要注意喔！</span>在上表當中鳥哥僅取兩行作為範例，
+		每一行可以區分為四個欄位，這兩行的意思是：<br />
+		<ol>
+		<li>root (.) 的名稱伺服器主機 (Name server, NS) 在 A.ROOT-SERVERS.NET. 這部主機上；
+		<li>A.ROOT-SERVERS.NET. 這部主機的 IP (A) 為 198.41.0.4</ol>
+		這兩行有對應啊！看出來了沒？那個 IN 代表的是使用那個 RR (Resource Record, 資源記錄) 的意思，
+		至於 NS 與 A 我們將在下一小節介紹。那麼那個 TTL 是啥？就是這筆記錄會放置到 DNS 伺服器的快取多久啦！
+		單位是秒啊～<br /><br />
+
+		這個檔案的內容你不要修改啊～因為這個內容是 Internet 上面通用的資料，一般來說，也不會常常變動，
+		所以不需要更動他，將他放置到正確的目錄並改成你所指定的檔名即可啊！接下來可以看看正解檔案啦！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_name"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">正解資料庫檔案的設定</span><br />
+	<div class=block2>
+		就如同案例設定當中提到的，我們共有兩個正解檔，分別是針對 localhost 以及 vbird.tsai 這兩個領域名稱。
+		在正反解的設定檔當中可以簡單的分成幾部分來觀察：<br />
+		<ol><span class=text_import2>
+		<li>關於本領域的基礎設定方面：例如快取記憶時間 (TTL) 、領域名稱 (ORIGIN) 等等；
+		<li>關於 master/slave 的認證方面 (SOA)；
+		<li>關於本領域的領域名稱伺服器所在主機名稱與 IP 對應 (NS, A, PTR)；
+		<li>其他正反解相關的資源記錄 (RR)。</span></ol>
+
+		首先先來談談比較簡單的 localhost 這個領域的正解設定檔，named.localhost 的內容有點像這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/var/named/named.localhost</span>
+<span class=term_say>; 1. 首先是主機相關的設定</span>
+<span class=term_write>$TTL    600
+
+<span class=term_say>; 2. 關於 master/slave 的授權內容，如果沒有 slave 主機，依舊要設定喔！</span>
+@    IN   SOA  localhost.   root.localhost.  (
+               2006102001  <span class=term_say>; Serial  僅作為序號而已</span>
+               28800       <span class=term_say>; Refresh slave 伺服器的更新時間</span>
+               14400       <span class=term_say>; Retry   當 slave 主機更新失敗，多久再重新更新一次</span>
+               720000      <span class=term_say>; Expire  重複 retry 多久後就宣告不治....不再更新</span>
+               86400 )     <span class=term_say>; Minimum 可視為 TTL ，尤其是你沒有設定 $TTL 時</span>
+
+<span class=term_say>; 3. 本領域的 DNS 伺服器的主機名稱與 IP 的對應</span>
+@          IN   NS   localhost.  <span class=term_say>; 特別留意最後面的那個小數點！</span>
+localhost. IN   A    127.0.0.1
+
+<span class=term_say>; 4. 其他 RR 可以加入的地方。</span> </span>
+</pre></td></tr></table>
+
+		一般第一次看到這個檔案的朋友都會很頭痛～很多東西看不懂～其實將他拆成幾個小部分來看，你就會看懂啦！
+		底下我們就上面提到的四大部分分別來談一談先：<br /><br />
+
+<a name="rr_server"></a>
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>關於本領域的一些設定值</td></tr>
+<tr bgcolor=lightblue align=center><td width=80>設定值</td><td>說明</td></tr>
+<tr><td><span class=text_import1>$TTL</span></td><td>還記得<a href="#fig_03">圖三</a>的流程吧？當有外部 
+	DNS 伺服器對你的 DNS 的這個領域進行查詢時，這一筆記錄會放置在對方 DNS 伺服器內幾秒鐘的意思。</td></tr>
+<tr><td><span class=text_import1>$ORIGIN</span></td><td>這個設定值可以重新指定 zone 的定義。在預設的情況下，
+	這個正反解資料庫檔案中的 zone 是由 /etc/named.conf 所指定的，就是 zone 那個參數的功能。
+	不過，這個 zone 是可以改的，就是用 $ORIGIN 來修訂就是了。通常這個設定值不會用到的。</td></tr>
+</table><br />
+
+		我們前面講到很多 DNS 快取 (cache) 的功能對吧！就是向外查詢時所查詢到的資料會暫存在自己的快取記憶體中。
+		那麼這筆記錄可以放在我的 DNS 主機內多久？那就是 "對方" 設定的 $TTL 這個變數的功能了。<br /><br />
+
+		所以，當你的某個領域名稱內的主機對應常常變動時，則這個 $TTL 應該要設定小一點，
+		免得你的變動總是無法被查詢到 (因為對方可能會快取住你之前舊的資料！)。而如果你的 DNS 內容已經很穩定了，
+		那麼這個數值可以設定大一點 (例如 86400  或三天)，如此一來外部的 DNS 才不會常常對你的 DNS 要求，
+		而造成你的 DNS 忙碌的問題。<br /><br />
+
+		要注意的是，底下開始每一行的設定都會是這樣的：<br />
+		<ul><span class=text_import1>
+		[主機或領域名稱]  [TTL]  IN  [RR]  [RR 內容]
+		</span></ul>
+		中括號的內容是你要瞭解的，尤其是各項資源記錄標誌 [RR] 這個項目！
+		雖然我們在整體的設定當中可以直接指定 $TTL 了，不過針對每筆記錄還可以自行設定 TTL 啦！
+		但在這個設定當中， TTL 通常是省略掉的！
+		此外，我們稱 RR (Resource Record) 為標誌或記錄，各個 RR 的對應內容都不相同。
+		接下來讓我們看一看 master/slave DNS 伺服器之間是如何進行 zone file 資料庫的傳輸的？
+		那就是 SOA 那一行的內容囉！<br /><br />
+
+<a name="rr_soa"></a>
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>關於 master/slave 授權方面的設定值</td></tr>
+<tr bgcolor=lightblue align=center><td width=80>符號與 RR</td><td>說明</td></tr>
+<tr><td><span class=text_import1>@</span></td><td><span class=text_import2>這個符號代表 zone 的意思</span>！
+	以上面的 named.local 來說，
+	這個檔案由 /etc/named.conf 定義出 zone 為 localhost. ，因此在本檔案的 @ 就代表 localhost. 囉！</td></tr>
+<tr><td><span class=text_import1>.</span></td><td>這個點 (.) 很重要！因為他代表一個完整主機名稱 (FQDN) 
+	而不是僅有 hostname 而已。舉例來說，如果你在本設定檔上面規範一個主機名稱為 www 時，那部主機的 FQDN 為 www.localhost.
+	如果你寫出  www.localhost 時，<span class=text_import2>由於末了沒有那個小數點，則 zone 會主動加入該主機名稱</span>，
+	所以最終的 FQDN 會變成 www.localhost.localhost. 喔！</td></tr>
+<tr><td><span class=text_import1>SOA</span></td><td>Start of Authority 的意思。
+	這個標誌代表著 master/slave 相關的認證、授權資料。
+	不論你的 DNS 系統有沒有設定 master/slave 的架構，都需要含有這個設定才好。
+	SOA 後面共帶有三個參數，所以該行為：
+	<ul><span class=text_import2>[zone] IN SOA [主機名] [管理員 email] ([五組更新時間參數])</span></ul>
+	每個設定項目你可以這樣看：<ul>
+	<li>主機名：就是 master DNS 的主機名稱，通常填寫本身主機名即可。還是要注意那個小數點的存在與否喔！非常重要！
+	<li>管理員 email：本來應該是 "root@localhost." 的，不過因為 @ 已經被作為特殊代號 (zone)，
+		所以就用小數點來取代，因此 email 就成為 "root.localhost." 囉！
+	<li>(五組數字)：這五個數字分別代表 serial, refresh, retry, expire, ttl。
+	</ul>
+	至於那五個數字的意義是這樣的：<br />
+	<ol>
+	<li><b>Serial</b> ：只是一個序號，但這個序號可被用來作為 slave 與 master 更新的依據。
+		舉例來說， master 序號為 100 但 slave 序號為 90 時，那麼這個 zone file 的資料就會被傳送到 slave 來更新了。
+		由於這個序號代表新舊資料，通常我們建議你可以利用日期來設定！舉例來說，上面的資料是鳥哥在 2006/10/20 
+		所寫的第一次，所以鳥哥用 2006102001 作為序號代表！
+	<li><b>Refresh</b> ：除了根據 Serial 來判斷新舊之外，我們可以利用這個 refresh(更新) 命令 slave 多久進行一次主動更新；
+	<li><b>Retry</b> ：如果到了 Refresh 的時間，但是 slave 卻無法連接到 master 時， 那麼在多久之後，slave 
+		會再次的主動嘗試與主機連線；
+	<li><b>Expire</b> ：如果 slave 一直無法與 master 連接上，那麼經過多久的時間之後， 則命令 slave 不要再連接 master 了！
+		也就是說，此時我們假設 master DNS 可能遇到重大問題而無法上線，則等待系統管理員處理完畢後，
+		再重新來到 slave DNS 重新啟動 bind 吧！
+	<li><b>Minimun</b> ：這個就有點像是 TTL 啦！
+	</ol>
+	另外，這幾個數字的大小是有限制的！你必需要瞭解喔：<br />
+	<ul><span class=text_import2>
+	<li>Serial &lt;= 2^32 = 4294967296
+	<li>Refresh >= Retry * 2
+	<li>Refresh + Retry < Expire
+	<li>Expire >= Retry * 10
+	<li>Expire >= 7Days
+	</span></ul></td></tr>
+</table><br />
+
+		老實說，初次設定 DNS 的朋友大概都會被那個小數點 (.) 玩死～其實你不要太緊張，只要記住：『
+		<span class=text_import2>加上了 . 表示這個完整的主機名稱，亦即是 "hostname + domain name" 了，
+		如果沒有加上 . 的話，表示該名稱僅為 "hostname" 而已！</span>至於 SOA 
+		的話，那五個數字通常你可以照抄啦！只要改序號 (Serial) 即可！<br /><br />
+
+		接下來則是設定我們的 DNS 伺服器自己的領域與該領域的名稱解析器 (name server, NS) 囉！<br /><br />
+
+<a name="rr_ns"></a>
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>DNS 自己的領域之名稱解析器</td></tr>
+<tr bgcolor=lightblue align=center><td width=80>符號與 RR</td><td>說明</td></tr>
+<tr><td><span class=text_import1>NS</span></td><td>就是 name server 的縮寫，這個標誌的參數是：<br />
+	<ul><span class=text_import2>[zone] IN NS [主機名稱]</span></ul>
+	注意喔， NS 後面接的一定是主機名稱喔！代表的意思是說：『這個 zone 的查詢請向後面這部主機要求』的意思。
+	所以，如果你這個 zone 有兩部以上的 DNS 伺服器負責時，那就必需要寫兩個 NS 了！而 NS 
+	後面接的主機名稱必需要有 IP 的對應啊！因此就需要 A 這個標誌了！</td></tr>
+<tr><td><span class=text_import1>A</span></td><td>是正解的符號，參數是：<br />
+	<ul><span class=text_import2>[hostname] IN A [IP]</span></ul>
+	意思是說該部主機的 IP 對應之意！也是最常用的一個標誌了！</td></tr>
+</table><br />
+
+		要注意喔，每個 zone 至少要一個 NS 才行！而那個 NS 後面的主機可能是你自己，也可能是你的子網域授權啊！
+		你必需要很清楚知道 NS 的意義才行！上面三個部分是幾乎所有正反解檔案所必需要的標誌，
+		而我們最單純簡單的 localhost 領域只要這樣設定就妥當了！
+		接下來讓我們看一看 vbird.tsai 這個領域的主機名稱資料庫設定檔吧！<br />
+
+<a name="named.vbird.tsai"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/var/named/named.vbird.tsai</span>
+<span class=term_write>$TTL    600
+@ IN SOA linux.vbird.tsai. root.linux ( 2006102001 28800 14400 720000 86400 )
+<span class=term_say>; 本領域的 DNS 伺服器的主機名稱與 IP 的對應</span>
+@          IN   NS     linux.vbird.tsai.
+@          IN   NS     slave.vbird.tsai.
+linux      IN   A      192.168.1.254
+slave      IN   A      192.168.1.150
+@          IN   MX 10  linux
+
+<span class=term_say>; 其他 RR 可以加入的地方</span>
+www        IN   CNAME  linux
+ftp        IN   CNAME  linux
+forum      IN   CNAME  linux
+winxp      IN   A      192.168.1.100
+sun        IN   A      192.168.1.200
+sun        IN   TXT    "The sun solaris OS"
+sun        IN   HINFO  "Celeron 1G""Solaris 10"</span>
+</pre></td></tr></table>
+
+		上面的表格當中，TTL 與 SOA 幾乎都沒變，不過你要特別注意 SOA 後面接的第二個參數也就是 email 的部分，
+		可以發現鳥哥僅寫了個 root.linux 而已，因為最末了沒有小數點，所以 DNS 會主動的加上 zone 嘛！
+		所以 root.linux 相當於 root.linux.vbird.tsai 囉！^_^ ！另外，那五組數字只要用空白鍵隔開即可。<br /><br />
+
+		至於本領域的解析器方面，鳥哥使用了兩種寫法，分別是 "linux.vbird.tsai." 及 "linux" 
+		，注意到差異了？沒錯，就是那個小數點 (.) 啦！意義請自行參考前面提到的。
+		同時因為這個領域有兩個 DNS 負責，因此在這邊用了兩個 NS 喔！
+		我們這裡再寫出幾個常見的正解標誌囉：<br /><br />
+
+<a name="rr_name"></a>
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>關於正解的其他 RR 標誌</td></tr>
+<tr bgcolor=lightblue align=center><td width=80>符號與 RR</td><td>說明</td></tr>
+<tr><td><span class=text_import1>MX</span></td><td>就是 Mail eXchanger(MX) 的簡寫，他的參數是這樣寫的：<br />
+	<ul><span class=text_import2>[hostname] IN MX [順序] [主機名稱]</span></ul>
+	注意囉，這個 MX 與 mail server 有關，沒有 mail server 的朋友可以省略這個標誌，但是如果你的領域內有 mail server
+	時，就必需要設定這個 MX 才好。MX 的用途是在於『郵件轉遞』或者是經由上層郵件主機備份的一個機制，
+	後面設定的那個主機名稱通常是你的上游郵件主機，相關的意義我們會在 mail server 章節再跟大家詳談。
+	另外， MX 後面接的數值是越小越優先，而接的主機名稱必需要具有 A 的標誌才可以！<br /><br />
+	如果你不知道如何設定，通常建議你直接設定成你的 mail server 主機名稱即可</td></tr>
+<tr><td><span class=text_import1>CNAME</span></td><td>顧名思義，這個標誌在建立『主機別名』的啦！參數為：<br />
+	<ul><span class=text_import2>[hostname] IN CNAME [主機名稱]</span></ul>
+	注意一下， CNAME 後面接的是主機名稱喔。因為有好幾部主機名稱都對應到同一個 IP 上頭，
+	你當然可以針對每個主機名稱給予一個 A ，不過如果未來要改 IP 時，你就得改好幾個啦！
+	此時改為 CNAME 來處理就很簡單。如上表所示，如果我想要知道 ftp.vbird.tsai 的 IP 時，
+	DNS 會先告知 ftp.vbird.tsai 屬於 linux.vbird.tsai 的 CNAME ，然後再透過 linux.vbird.tsai 來得到正確的 IP。</td></tr>
+<tr><td><span class=text_import1>TXT</span></td><td>這個東西在進行『說明』而已！亦即是前面那部主機的一些資訊。
+	特別注意的是，沒事的話，『資訊不要寫得太詳細，有的時候甚至應該要寫些錯誤的訊息！』
+	為什麼呢？如果寫得太詳細的話，那麼那些個 cracker 不就很簡單的就可以將您的網站資訊取得，
+	並進而入侵了嗎？ @_@</td></tr>
+<tr><td><span class=text_import1>HINFO</span></td><td>這個東西後面接兩個咚咚，第一個接的是硬體的等級，
+	第二個接的則是作業系統，這兩個咚咚最好不要用在公開的 DNS 主機上面，跟 TXT 
+	一樣的問題啦！如果要設定的話， 最好使用雙引號分隔開來喔！</td></tr>
+</table><br />
+
+		這樣應該就設定妥當囉。在 DNS 的正解部分，他的重要資訊特別的多，就是比較難設定的意思～
+		所以，您需要特別留意每個設定值是否為正確喔！一般而言，我們會建議大家，設定完成並且執行完啟動的 
+		script ，<span class=text_import2>千萬要記得去 /var/log/messages 裡頭看一看有沒有錯誤訊息喔</span>！
+		接下來讓我們看看反解吧！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_ip"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">反解資料庫檔案的設定</span><br />
+	<div class=block2>
+		反解跟正解一樣，還都需要 SOA 的標號，也需要 NS 這個咚咚，唯一不同的大概就是由 IP 對應成為 
+		hostname 的不同了吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/var/named/named.127.0.0</span>
+<span class=term_write>$TTL    600
+@ IN SOA localhost. root.localhost. ( 2006102001 28800 14400 720000 86400 )
+
+<span class=term_say>; 本領域的 DNS 伺服器的主機名稱與 IP 的對應</span>
+@          IN   NS   localhost.
+1          IN   PTR  localhost.</span>
+</pre></td></tr></table>
+
+		反解通常只有一個需要注意的地方，那就是 PTR，這是啥？<br /><br />
+
+<a name="rr_ptr"></a>
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue><td colspan=2>關於反解的 RR 標誌</td></tr>
+<tr bgcolor=lightblue align=center><td width=80>符號與 RR</td><td>說明</td></tr>
+<tr><td><span class=text_import1>PTR</span></td><td>Pointer 的簡寫，他的參數是這樣寫的：<br />
+	<ul><span class=text_import2>[IP] IN PTR [主機名稱]</span></ul>
+	由於這個檔案的 zone 為 127.0.0 ，所以我們只要加一個數字 (最後一個 IP 的數字) 
+	就可以啦！而那個 1 表示的就成為了 127.0.0.1 囉！<br /><br />
+	那麼萬一今天我們規劃的是 B Class 的 zone 呢？例如 127.0 這樣的 zone 呢？很簡單啦！ 就填兩個數字即可！也就是 
+	0.1 囉！<br /><br />
+	最重要的地方就是：<span class=text_import2>後面的主機盡量使用完整 FQDN，亦即加上小數點 (.)</span>
+	！為什麼呢？因為反解的 zone
+	是 0.0.127.in-addr.arpa，所以如果你寫成 localhost 時，你的這個 IP 對應的主機名稱將會變成：
+	localhost.0.0.127.in-addr.arpa 之類的怪異主機名稱啊！</td></tr>
+</table><br />
+
+		至於 192.168.1.0/24 這個網域的 DNS 反解則成為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/var/named/named.192.168.1</span>
+<span class=term_write>$TTL    600
+@ IN SOA linux.vbird.tsai. root.linux.vbird.tsai. (
+        2006102001 28800 14400 720000 86400 )
+
+<span class=term_say>; 本領域的 DNS 伺服器的主機名稱與 IP 的對應</span>
+@          IN   NS   linux.vbird.tsai.
+@          IN   NS   slave.vbird.tsai.
+254        IN   PTR  linux.vbird.tsai.
+150        IN   PTR  slave.vbird.tsai.
+
+<span class=term_say>; 其他 RR 可以加入的地方。</span>
+100        IN   PTR  winxp.vbird.tsai.
+200        IN   PTR  sun.vbird.tsai.</span>
+</pre></td></tr></table>
+
+		反解很簡單吧！只要設定好 IP 對應的主機名稱即可！再次強調要使用 FQDN 在反解當中喔！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_start"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DNS
+	的啟動與觀察</span><br />
+	<div class=block2>
+		DNS 的啟動也太簡單了吧？就直接利用系統提供的啟動 script 即可！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/named start</span>  <span class=term_say>&lt;==也可能是需要 restart 喔</span>
+</pre></td></tr></table>
+
+		但是這個啟動可不見得是成功的！你『務必』要去 /var/log/messages 觀察過才行！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tail -n 20 /var/log/messages | grep named</span>
+named[28]: starting BIND 9.2.4 -u named -t /var/named/chroot
+<span class=term_say># 由這個說明我們可以知道 chroot 的目錄與 named 啟動的參數等資料</span>
+
+named[28]: using 1 CPU
+named[28]: loading configuration from '/etc/named.conf'
+<span class=term_say># 由這個說明，可知道主要的設定檔是由哪裡載入的！記得加上 chroot</span>
+
+named[28]: listening on IPv4 interface lo, 127.0.0.1#53
+named[28]: listening on IPv4 interface eth0, 192.168.1.254#53
+named[28]: command channel listening on 127.0.0.1#953
+named[28]: command channel listening on ::1#953
+<span class=term_say># 由這邊可以查出 DNS 相關的服務在哪幾個介面有提供！
+# 至於那個 command 我們將在後面再繼續說明。</span>
+
+named[28]: zone 0.0.127.in-addr.arpa/IN: loaded serial 2006102001
+named[28]: zone 1.168.192.in-addr.arpa/IN: loaded serial 2006102001
+named[28]: zone localhost/IN: loaded serial 2006102001
+named[28]: zone vbird.tsai/IN: loaded serial 2006102001
+<span class=term_say># 記得要有這些 loaded serial 的資料，並且不能出現任何錯誤喔！</span>
+
+named[28]: zone vbird.tsai/IN: sending notifies (serial 2006102001)
+named[28]: zone 1.168.192.in-addr.arpa/IN: sending notifies (serial 2006102001)
+<span class=term_say># 這個則是對於外部有其他 slave DNS 時，會發送注意訊息的說明。</span>
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		如果你在 /var/log/messages 裡面一直看到這樣的錯誤資訊：<br />
+		couldn't add command channel 127.0.0.1#953: not found<br />
+		那表示你還必需要加入 rndc key ，請參考本章後面的
+		<a href="#rndckey">利用 RNDC 指令管理 DNS 伺服器</a> 的介紹，將他加入你的 named.conf 中！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		在上述的輸出資料當中因為資訊太長了，所以鳥哥將時間與主機的欄位拿掉了！上面是順利啟動時的狀況，
+		如果出現問題怎辦？通常出現問題的原因是因為：<br />
+
+		<ul>
+		<li><span class=text_import2>語法設定錯誤：</span><br />
+		這個問題好解決，因為在 /var/log/messages 裡面有詳細的說明，按照內容去修訂即可；<br /><br />
+		<li><span class=text_import2>邏輯設定錯誤：</span><br />
+		這個就比較困擾了！為什麼呢？因為他主要發生在您設定 DNS 主機的時候，考慮不週所產生的問題！例如忘記加上 
+		(.) ， 系統不會顯示錯誤訊息，但是卻會造成查詢的誤判，而 MX 
+		設定的主機名稱錯誤，也不會出現有問題的訊息，但是 mail server 
+		就是會收不到信等等～這些錯誤都需要很詳細的 DNS client 的測試才能知道問題的所在。
+		</ul>
+
+		我們這裡先就語法設定錯誤方面進行介紹，至於邏輯設定的問題，那個就需要多多的進行測試才能知道了～
+		底下的錯誤訊息都會記錄在 /var/log/messages 裡面喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+named: <span class=term_write>/etc/named.conf:11</span>: missing ';' before '}'
+<span class=term_say># 注意到上面提到的檔案與數字嗎？說明的是 /etc/named.conf 的第 11 行，
+# 至於錯誤是因為缺少分號 (;) 所致！去修正一下即可。</span>
+
+dns_rdata_fromtext: <span class=term_write>named.vbird.tsai:5</span>: near eol: unexpected end of input
+zone vbird.tsai/IN: loading master file named.vbird.tsai: unexpected end of input
+<span class=term_say># 指的是 named.vbird.tsai 的第五行有問題，通常是 SOA 那五個數字沒有完全！
+# 趕緊去修訂一下即可啊！</span>
+
+dns_rdata_fromtext: <span class=term_write>named.vbird.tsai:12</span>: near 'linux': not a valid number
+zone vbird.tsai/IN: loading master file named.vbird.tsai: not a valid number
+<span class=term_say># 說明第 12 行在 linux 附近需要有一個合法的數字！趕緊去瞧瞧改改即可！</span>
+</pre></td></tr></table>
+
+		通常最大的問題是....打錯字！為了避免讓您打錯字，上面幾個檔案鳥哥將他打包了，
+		你可以在下列的連結下載上述的檔案喔！<br />
+		<ul><li><a href="0350dns/master_dns.tar.gz">http://linux.vbird.org0350dns/master_dns.tar.gz</a></ul>
+	</div>
+
+	<hr><a NAME="DNS_master_update"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">資料庫的更新</span><br />
+	<div class=block2>
+		再來談一談，那如果你的資料庫需要更新時，應該做哪些舉動啊？
+		舉例來說，你的某個主機 IP 或者主機名稱要變更，也可能是新增某個主機名稱與 IP 的對應呢！
+		很簡單啦，通常這樣做就好了：<br />
+
+		<ol>
+		<li>先針對要更改的那個 zone 的資料庫檔案去做更新，就是加入 RR 的標誌即是！
+		<li>更改該 zone file 的序號 (Serial) ，就是那個 SOA 的第一個數字，
+		因為這個數字會影響到 master/slave 的判定更新與否喔！
+		<li>重新啟動 named ，或者是讓 named 重新讀取設定檔即可。
+		</ol>
+
+		就這麼簡單啊！不過大家常常會忘記第二個步驟啦！就是將序號變大啊！
+		如果序號沒有變大，那 master/slave 的資料庫可能不會主動的更新，
+		會造成一些困擾喔！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_master_client"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">測試</span><br />
+	<div class=block2>
+		在上面的設定都搞定，並且啟動之後，你的 DNS 伺服器應該是已經妥當的在運作了。
+		那你怎麼知道你的設定是否合理？當然要作測試喔！測試有兩種方式，一種是藉由 client 端的查詢功能，
+		目的是檢驗你的資料庫設定有無錯誤；另外你也可以連上底下這個網站：<br />
+
+		<ul><li><a href="http://www.dnsreport.com/"
+		target="_blank">http://www.dnsreport.com/</a></ul>
+
+		這個網站可以幫你檢驗你的 DNS 伺服器的主要設定是否有問題！不過，這個網站的檢驗主要是以合法授權的 zone
+		為主，我們自己亂搞的 DNS 是沒有辦法檢查的啦！真是可惜～
+		接下來，請查閱 <a href="#DNS_resolver">在 Client 端的測試</a> 吧！
+	</div>
+</div>
+
+
+<hr><a NAME="DNS_slave"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Master/Slave 架構的詳細設定：</span><br />
+<div class=block1>
+	談完了 Master DNS 伺服器之後，接下來讓我們來瞭解一下 slave DNS 伺服器的架設方式吧！
+	在架設之前，你應該要曉得為何需要 slave DNS 呢？<br />
+	<ul><span class=text_import2>
+	<li>為了不間斷的提供 DNS 服務，你的領域至少需要有兩部 DNS 伺服器來提供查詢的功能；
+	<li>承上，這幾部 DNS 伺服器應該要分散在兩個以上的不同 IP 網域才好；
+	<li>為方便管理，通常除了一部主要 Master DNS 之外，其他的 DNS 會使用 slave 的模式；
+	<li>slave DNS 伺服器本身並沒有資料庫，他的資料庫是由 master DNS 所提供的；
+	<li>master/slave DNS 必需要可以相互傳輸 zone file 的相關資訊才行，這部份需要 /etc/named.conf 之設定輔助。
+	</span></ul>
+
+	好了，那麼讓我們繼續上一個案例的延續吧！前一小節是在 192.168.1.254 那部 master DNS 上面設定的，
+	底下的設定大部分都是在 192.168.1.150 那部 slave DNS 主機上設定的喔！假設我這部 slave.vbird.tsai
+	僅需要取得 vbird.tsai 以及 192.168.1 這兩個領域，其他的例如 named.root, named.localhost 及 
+	named.127.0.0 都需要自理喔！<br /><br />
+
+	<hr><a NAME="DNS_slave_master"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">master DNS
+	權限的開放</span><br />
+	<div class=block2>
+		我們在 <a href="#DNS_master_named.conf">/etc/named.conf</a> 設定檔當中的參數項目曾經設定過
+		allow-transfer ，並且設定所有人均不得使用 zone 的傳送 (transfer)。但是我們的 master DNS 
+		必須要讓 slave DNS 可以進行 zone 的傳送啊，因此你必須要針對 vbird.tsai 及 192.168.1 
+		這兩個 zone 來啟用 allow-transfer 的設定項目才行。整個過程很簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/named.conf</span>
+<span class=term_say>....前面省略....</span>
+zone "vbird.tsai" {
+        type master;
+        file "named.vbird.tsai";
+        <span class=term_write>allow-transfer { 192.168.1.150; };</span>
+};
+zone "1.168.192.in-addr.arpa" {
+        type master;
+        file "named.192.168.1";
+        <span class=term_write>allow-transfer { 192.168.1.150; };</span>
+};
+<span class=term_say>....後面省略....</span>
+</pre></td></tr></table>
+
+		除此之外，在上頭所列示的那兩個資料庫檔案當中，你必須要填入所需要的 NS 標誌才行！
+		這部份我們已經在<a href="#rr_ns">前一小節</a>提過了，請你自行參考喔！
+		設定完畢後請重新啟動 named 啦！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_slave_slave"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">slave DNS 的設定</span><br />
+	<div class=block2>
+		基本上， slave DNS 的 /etc/named.conf 與 master DNS 幾乎一模一樣啊！
+		唯一的差異在於兩個 zone 的類型 (type) 而已。設定方式唯一的差異在這裡：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@slave ~]# <span class=term_command>vi /etc/named.conf</span>
+<span class=term_say>....前面省略....</span>
+zone "vbird.tsai" {
+        <span class=term_write>type slave;</span>
+        file "named.vbird.tsai";
+        <span class=term_write>masters { 192.168.1.254; };</span>
+};
+zone "1.168.192.in-addr.arpa" {
+        <span class=term_write>type slave;</span>
+        file "named.192.168.1";
+        <span class=term_write>masters { 192.168.1.254; };</span>
+};
+<span class=term_say>....後面省略....</span>
+</pre></td></tr></table>
+
+		你得要特別留意類型是 slave 之外，那個主機來源 (master<b>s</b>) 是有加 "s" 喔！
+		這點很容易忘記啊！至於資料庫檔案裡面，必須要存在的有：<br />
+		<ul>
+		<li>named.root
+		<li>named.localhost
+		<li>named.127.0.0</ul>
+		在 slave DNS 當中，這三個 zone 的類型分別是 hint 與 master ，所以當然要預設存在，
+		<span class=text_import2>至於那個 named.vbird.tsai 及 named.192.168.1 就不要存在啦</span>！
+		因為這兩個 zone file 是由 master DNS 主機傳送過來的！只是你要注意 /var/named/chroot/var/named
+		這個目錄的權限必須要是 named 這個使用者可以寫入的狀態！這很重要喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@slave ~]# <span class=term_command>ls -l /var/named/chroot/var/named</span>
+-rw-r--r--  1 root  root   229 Oct 18 14:44 named.127.0.0
+-rw-r--r--  1 root  root   675 Oct 18 13:44 named.localhost
+-rw-r--r--  1 root  root  2517 Oct 18 00:34 named.root
+<span class=term_say># 注意，只要三個檔案即可，其他兩個 named.vbird.tsai 與
+# named.192.168.1 不可以存在！否則會有問題啊！</span>
+
+[root@slave ~]# <span class=term_command>ls -ld /var/named/chroot/var/named</span>
+<span class=term_write>drwxr-x---  4 named named</span> 4096 Oct 19 01:17 /var/named/chroot/var/named
+<span class=term_say># 注意到，這個目錄的使用者必須要是 named ，然後分數至少得 750 才行！</span>
+</pre></td></tr></table>
+
+		在這個最重要的權限問題處理完畢之後，接下來你可以在 slave DNS 這部伺服器上面啟動 DNS 啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@slave ~]# <span class=term_command>/etc/init.d/named start</span>
+
+[root@slave ~]# <span class=term_command>tail -n 20 /var/log/messages</span>
+zone 1.168.192.in-addr.arpa/IN: transferred serial 2006102001
+transfer of '1.168.192.in-addr.arpa/IN' from 192.168.1.254#53: end of transfer
+zone 1.168.192.in-addr.arpa/IN: sending notifies (serial 2006102001)
+zone vbird.tsai/IN: transferred serial 2006102001
+transfer of 'vbird.tsai/IN' from 192.168.1.254#53: end of transfer
+zone vbird.tsai/IN: sending notifies (serial 2006102001)
+<span class=term_say># 理論上，你應該會看到如上的輸出資訊才對！系統會告知 zone file 的傳輸結果</span>
+
+[root@slave ~]# <span class=term_command>ls -l /var/named/chroot/var/named</span>
+-rw-r--r--  1 root  root   229 Oct 18 14:44 named.127.0.0
+<span class=term_write>-rw-------  1 named named  472 Oct 19 01:29 named.192.168.1</span>
+-rw-r--r--  1 root  root   675 Oct 18 13:44 named.localhost
+-rw-r--r--  1 root  root  2517 Oct 18 00:34 named.root
+<span class=term_write>-rw-------  1 named named  580 Oct 19 01:29 named.vbird.tsai</span>
+</pre></td></tr></table>
+
+		您瞧！如此一來您的 zone file 就會主動的被建立起來喔！未來如果你的 master DNS 要更新資料庫時，
+		只要修改過序號，並重新啟動 named 後，這部 slave DNS 就會跟著更新啦！啊！真是『福氣啦！』！！<br /><br />
+
+		不過，如果你發現到啟動 slave DNS 時，你的登錄資訊竟然是這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_note>1</span>  dumping master file: tmp-XXXXEnDd9D: open: permission denied
+<span class=term_note>2</span>  transfer of 'vbird.tsai/IN' from 192.168.1.254#53: failed while receiving 
+   responses: permission denied
+<span class=term_note>3</span>  transfer of 'vbird.tsai/IN' from 192.168.1.254#53: end of transfer
+</pre></td></tr></table>
+
+		如果出現類似這樣的三行時，不必懷疑啦！肯定是權限錯誤啦！
+		請再次檢查你的資料庫檔案所放置的目錄權限是否可以讓 named 寫入啊！處理處理就好了！
+		至於上述的相關檔案可以在這裡下載：<br />
+
+		<ul><li><a 
+		href="0350dns/slave_dns.tar.gz">http://linux.vbird.org0350dns/slave_dns.tar.gz</a></li></ul>
+	</div>
+</div>
+
+
+<hr><a NAME="DNS_resolver"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Client 端的設定：</span><br />
+<div class=block1>
+	說完了在 DNS Server 端的設定，接下來，我們再來聊一聊關於 Client 端的設定與測試吧！<br /><br />
+
+	<hr><a NAME="DNS_resolver_file"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">相關設定檔</span><br />
+	<div class=block2>
+		從<a href="#Whatisdns">前面的說明</a>裡面，我們曉得主機名稱對應到 IP 
+		有兩種方法，早期的方法是直接寫在檔案裡面來對應，
+		後來比較新的方法則是透過 DNS 架構！那麼這兩種方法分別使用什麼設定檔？可不可以同時存在？
+		若同時存在時，那個方法優先？嗯！我們先來談一談幾個設定檔吧！
+
+		<ul><span class="text_import2">
+		<li>/etc/hosts ：剛剛上面就提過了，這個是最早的 hostname 對應 IP 的檔案；
+		<li>/etc/resolv.conf ：這個重要！就是 DNS 主機的 IP；
+		<li>/etc/nsswitch.conf：這個檔案則是在『決定』先要使用 
+		/etc/hosts 還是 /etc/resolv.conf 的設定！
+		</ul></span>
+
+		一般而言， Linux 的預設主機名稱與 IP 的對應搜尋都以 /etc/hosts 為優先，
+		為什麼呢？您可以查看一下 /etc/nsswitch.conf ，並找到 hosts 的項目：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">vi /etc/nsswitch.conf</span>
+hosts:      files dns
+</pre></td></tr></table>
+
+		上面那個 files 就是使用 /etc/hosts 而最後的 dns 則是使用 /etc/resolv.conf
+		的 DNS 主機 IP 搜尋啦！因此，您可以先以 /etc/hosts 來設定 IP 對應ㄋㄟ！
+		當然啦，您也可以將他調換過來，不過，總是
+		/etc/hosts 比較簡單，所以將他擺在前面比較好啦！<br /><br />
+
+		好啦，既然我們是要進行 DNS 測試的，那麼 /etc/resolv.conf 的內容，自然就要填寫我們自己的
+		IP 囉！所以您應該這樣寫：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">vi /etc/resolv.conf</span>
+<span class=term_write>nameserver 192.168.1.254</span>
+nameserver 168.95.1.1
+nameserver 139.175.10.20
+</pre></td></tr></table>
+
+		<span class=text_import2>DNS 主機的 IP 可以設定多個，這可以讓您的個人電腦有備援的功能</span>！舉例來說，
+		我上面共設定了三部主機作為我的 DNS 查詢，當 192.168.1.254 那部主機掛點時，
+		我的 Client 電腦會立刻以第二部主機作為 DNS 查詢的主要主機。所以，
+		通常我們都會建議人家在這個檔案內可以設定三個左右的 DNS 主機名稱！以保不時之需啊～<br /><br />
+
+		另外，<span class=text_import2>上面三個 DNS 的 IP 那個會先被使用？當然是照順序來的</span>～
+		所以會先以 192.168.1.254 那部主機來查詢，若 192.168.1.254 掛了，才會使用 168.95.1.1 那部來查詢。<br /><br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		盡量不要超過三部以上的 DNS IP ，因為 DNS 的查詢也是要時間的，假設現在你無法連接到 DNS 
+		主機是因為你自己的網路問題，而你設定了 10 部 DNS IP 在 /etc/resolv.conf 當中，那麼你的 Linux 就會花費
+		10 倍的時間去進行每一次無法成功的主機名稱與 IP 的對應喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在自家設的沒有經過合法授權的 DNS 最好不要以 Internet 上面已經存在的領域名稱來練習架設！
+		舉例來說，假設今天你以 192.168.1.254 那部機器來架設 *.yahoo.com 的領域，
+		因為我將 192.168.1.254 放置在第一位，導致每次的查詢其實 yahoo.com 
+		這個領域的資料都是直接由 192.168.1.254 所提供，這很不好～因為可能會造成您的用戶端的不便～
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	好了，我們要測試我們的 DNS 主機設定是否正確囉！<br /><br />
+	</div>
+
+	<hr><a NAME="DNS_resolver_cmd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">DNS 的查詢指令： host, 
+	nslookup, dig</span><br />
+	<div class=block2>
+		測試 DNS 的程式有很多，我們先來使用最簡單的 host 吧！然後還有 nslookup 及 dig 哩！<br /><br />
+
+		<hr /><li><a name="host"></a><span class=text_import1>host</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">語法：</span>
+[root@linux ~]# <span class="term_command">host [-a] [FQDN] [server]</span>
+[root@linux ~]# <span class="term_command">host -l [domain] [server]</span>
+<span class="term_say">參數說明：
+-a ：代表列出該主機所有的相關資訊，包括 IP、TTL 等等
+-l ：若後面接的那個 domain 設定允許 allow-transfer 時，則列出該 domain 
+     所管理的所有主機名稱對應資料！
+server：這個參數可有可無，當想要利用非 /etc/resolv.conf 內的 DNS 主機
+        來查詢主機名稱與 IP 的對應時，就可以利用這個參數了！</span>
+
+<span class="term_hd">範例一：強制以 192.168.1.254 這部 DNS 主機來查詢</span>
+[root@linux ~]# <span class="term_command">host www.vbird.tsai 192.168.1.254</span>
+Using domain server:
+Name: 192.168.1.254
+<span class=term_write>Address: 192.168.1.254#53</span>  <span class=term_say>&lt;==這裡重要！告知這筆記錄是哪部 DNS 伺服器去找的！</span>
+Aliases:
+
+www.vbird.tsai is an alias for linux.vbird.tsai.
+linux.vbird.tsai has address 192.168.1.254
+</pre></td></tr></table>
+
+		有注意到上面輸出的特殊字體部分嗎？很多朋友在測試自己的 DNS 時，常常會『指定到錯誤的 DNS 查詢主機』了～
+		因為他們的 /etc/reslov.conf 忘記改，所以老是找不到自己設定的資料庫 IP 資料。所以你要仔細看啊！
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：找出我們自己這個 vbird.tsai 領域的所有主機對應</span>
+[root@linux ~]# <span class="term_command">host -l vbird.tsai 192.168.1.254</span>
+Using domain server:
+Name: 192.168.1.254
+Address: 192.168.1.254#53
+Aliases:
+
+vbird.tsai name server linux.vbird.tsai.
+vbird.tsai name server slave.vbird.tsai.
+linux.vbird.tsai has address 192.168.1.254
+slave.vbird.tsai has address 192.168.1.150
+<span class=term_say>....後面省略....</span>
+</pre></td></tr></table>
+
+		上面的資訊可就熟悉多了吧？！沒錯！那就是我們在 named.vbird.tsai 裡面的設定值啊！
+		不過，並不是所有的 domain 都可以作這樣的事情～舉例來說，如果我們下達：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>host -l yahoo.com</span>
+Host yahoo.com not found: 5(REFUSED)
+; Transfer failed.
+</pre></td></tr></table>
+
+		這樣的回應是因為在對方的 /etc/named.conf 裡面並沒有設定 allow-transfer 那個設定選項的原因啊！
+		至於 host -a 的輸出資訊與 dig 是一模一樣的，所以我們先不介紹，在 dig  處再詳細說明。<br /><br />
+		</div>
+
+		<hr /><li><a name="nslookup"></a><span class=text_import1>nslookup</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">語法： </span>
+[root@linux ~]# <span class="term_command">nslookup [FQDN] [server]</span>
+[root@linux ~]# <span class="term_command">nslookup</span>
+<span class="term_say">參數說明：
+1. 可以直接在 nslookup 加上待查詢的主機名稱或者是 IP ，[server] 可有可無；
+2. 如果在 nslookup 後面沒有加上任何主機名稱或 IP ，那將進入 nslookup 的查詢功能
+   在 nslookup 的查詢功能當中，可以輸入其他參數來進行特殊查詢，例如：
+   set type=any ：列出所有的資訊『正解方面設定檔』
+   set type=mx  ：列出與 mx 相關的資訊！</span>
+
+<span class="term_hd">範例一：直接搜尋 winxp.vbird.tsai 的 IP 資訊 </span>
+[root@linux ~]# <span class="term_command">nslookup winxp.vbird.tsai 192.168.1.254</span>
+Server:         192.168.1.254
+Address:        192.168.1.254#53 <span class=term_say>&lt;==同樣的，請注意搜尋的 DNS IP 喔！</span>
+
+Name:   winxp.vbird.tsai
+Address: 192.168.1.100
+</pre></td></tr></table>
+
+		nslookup 可單純的將 hostname 與 IP 對應列出而已，不過，還是會將查詢的 DNS 主機的 IP 列出來的！
+		如果想要知道更多詳細的參數，那可以直接進入 nslookup 這個軟體的操作畫面中，如下範例：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">nslookup</span>  <span class="term_say">&lt;==進入 nslookup 查詢畫面</span>
+> <span class="term_command">192.168.1.254 </span>         <span class="term_say">&lt;==執行反解的查詢</span>
+> <span class="term_command">www.vbird.tsai</span>         <span class="term_say">&lt;==執行正解的查詢</span>
+<span class=term_say># 上面這兩個僅列出正反解的資訊，沒有啥了不起的地方啦！</span>
+> <span class="term_command">tw.yahoo.com  </span>         <span class="term_say">&lt;==執行非本機上的查詢</span>
+Server:         192.168.1.254
+Address:        192.168.1.254#53
+
+<span class=term_write>Non-authoritative answer: </span>
+<span class="term_say"># 注意這邊，因為不是自己的資料庫，所以是未認證過的資料(可能是快取)</span>
+tw.yahoo.com    canonical name = tw.yahoo-ap1.akadns.net.
+tw.yahoo-ap1.akadns.net canonical name = vip1.tw.tpe.yahoo.com.
+Name:   vip1.tw.tpe.yahoo.com
+Address: 202.43.195.52
+> <span class="term_command">set type=any</span>           <span class="term_say">&lt;==變更查詢，不是僅有 A，全部資訊都列出來</span>
+> <span class="term_command">sun.vbird.tsai</span>
+Server:         192.168.1.254
+Address:        192.168.1.254#53
+
+Name:   sun.vbird.tsai
+Address: 192.168.1.200
+sun.vbird.tsai  text = "The sun solaris OS" <span class="term_say">&lt;==看吧！更多資訊跑出來！</span>
+sun.vbird.tsai  hinfo = "Celeron 1G" "Solaris 10"
+> <span class="term_command">exit</span> <span class="term_say">&lt;==離開吧！皮卡丘</span>
+</pre></td></tr></table>
+
+		在上面的案例當中，請注意，如果您在 nslookup 的查詢畫面當中，輸入 set type=any 或其他參數，
+		那麼就無法再進行反解的查詢了！這是因為 any 或者是 mx 等等的標誌都是記錄在正解 zone 當中的緣故！<br /><br />
+		</div>
+
+		<hr /><li><a name="dig"></a><span class=text_import1>dig</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">語法： </span>
+[root @test root]# <span class="term_command">dig [@server] [FQDN] [type]</span>
+<span class="term_say">參數說明：
+@server ：如果不想以 /etc/resolv.conf 來作為 DNS 主機，則可在此填入其他的 IP
+type    ：預設是查詢 A 標誌，你可以在這裡入其他的標誌，如 mx, ns 等。
+          此功能亦可使用 [-t type] 來處理。</span>
+
+<span class="term_hd">範例一：查詢 linux.vbird.tsai 吧！</span>
+[root@linux ~]# <span class="term_command">dig @192.168.1.254 linux.vbird.tsai</span>
+; &lt;&lt;&gt;&gt; DiG 9.2.4 &lt;&lt;&gt;&gt; @192.168.1.254 linux.vbird.tsai
+; (1 server found)
+;; global options:  printcmd
+;; Got answer:
+;; -;&gt;&gt;<span class=term_write>HEADER</span>&lt;&lt;- opcode: QUERY, status: NOERROR, id: 8977
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+
+;; <span class=term_write>QUESTION SECTION</span>:
+;linux.vbird.tsai.              IN      A
+
+;; <span class=term_write>ANSWER SECTION</span>:
+linux.vbird.tsai.       600     IN      A       192.168.1.254
+
+;; <span class=term_write>AUTHORITY SECTION</span>:
+vbird.tsai.             600     IN      NS      slave.vbird.tsai.
+vbird.tsai.             600     IN      NS      linux.vbird.tsai.
+
+;; <span class=term_write>ADDITIONAL SECTION</span>:
+slave.vbird.tsai.       600     IN      A       192.168.1.150
+
+;; Query time: 4 msec
+;; SERVER: 192.168.1.254#53(192.168.1.254)
+;; WHEN: Thu Oct 19 15:34:23 2006
+;; MSG SIZE  rcvd: 100
+</pre></td></tr></table>
+
+		在這個範例當中，我們可以看到整個顯示出的訊息包括有幾個部分：<br />
+		<ul>
+		<li>HEADER(標題)：顯示查詢的內容有哪些，包括一個 query, 一個 answer 及兩個驗證部分。
+		<li>QUESTION(問題)：顯示所要查詢的內容，因為我們是查詢 linux.vbird.tsai 所以這裡自然就是顯示這個訊息。
+		<li>ANSWER(回應)：依據剛剛的 QUESTION 去查詢所得到的結果，因為在我們的設定當中僅有設定了 A
+			的標籤，所以這裡自然就....
+		<li>AUTHORITY(驗證)：由這裡我們可以查閱 vbird.tsai 這個領域是由 linux.vbird.tsai 及 slave.vbird.tsai
+			來設定的～裡面那個 600 是什麼呢？很簡單，他就是我們所設定的 ttl 那個數值啦！
+		</ul>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：查詢 vbird.tsai 這個領域的 MX 吧！</span>
+[root@linux ~]# <span class="term_command">dig @192.168.1.254 vbird.tsai mx</span>
+; &lt;&lt;&gt;&gt; DiG 9.2.4 &lt;&lt;&gt;&gt; @192.168.1.254 vbird.tsai mx
+; (1 server found)
+;; global options:  printcmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 3390
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
+
+;; QUESTION SECTION:
+;vbird.tsai.                    IN      MX  <span class=term_say>&lt;==瞧！要求的資料不一樣了喔！</span>
+
+;; ANSWER SECTION:
+vbird.tsai.             600     IN      MX      10 linux.vbird.tsai.
+
+;; AUTHORITY SECTION:
+vbird.tsai.             600     IN      NS      slave.vbird.tsai.
+vbird.tsai.             600     IN      NS      linux.vbird.tsai.
+
+;; ADDITIONAL SECTION:
+linux.vbird.tsai.       600     IN      A       192.168.1.254
+slave.vbird.tsai.       600     IN      A       192.168.1.150
+
+;; Query time: 4 msec
+;; SERVER: 192.168.1.254#53(192.168.1.254)
+;; WHEN: Thu Oct 19 15:45:58 2006
+;; MSG SIZE  rcvd: 116
+</pre></td></tr></table>
+
+		由於 dig 的輸出資訊實在是太豐富了，又分成多個部分去進行回報，因此很適合作為 DNS 追蹤回報的一個指令呢！
+		你可以透過這個指令來瞭解一下你所設定的 DNS 資料庫是否正確，並進行除錯喔！ ^_^<br />
+		</div>
+	</div>
+
+	<hr><a NAME="DNS_resolver_whois"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Domain 的資訊查詢： 
+	whois</span><br />
+	<div class=block2>
+	<span class="text_import1">whois</span>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>whois [domainname]</span>  <span class=term_say>&lt;==注意啊！是 domain 而不是 hostnam</span>
+[root@linux ~]# <span class=term_command>whois redhat.com</span>
+Registrant:
+Red Hat, Inc.
+   P.O. Box 13588
+   Research Triangle Park, NC 27709
+   US
+
+   Domain Name: REDHAT.COM
+
+   Administrative Contact, Technical Contact:
+      Network, Operations               noc@REDHAT.COM
+      Red Hat, Inc.
+      1801 Varsity Drive
+      ATTN Domain Administrator
+      Raleigh, NC 27606
+      US
+      919.754.3700 fax: 919-754-3704
+
+   Record expires on 25-May-2011.
+   Record created on 26-May-1994.
+   Database last updated on 19-Oct-2006 03:58:04 EDT.
+
+   Domain servers in listed order:
+
+   NS3.REDHAT.COM               66.187.229.10
+   NS2.REDHAT.COM               66.187.224.210
+   NS1.REDHAT.COM               66.187.233.210
+</pre></td></tr></table>
+
+		whois 這個指令可以查詢到當初註冊這個 domain 的使用者的相關資訊。不過，
+		由於近年來很多網路資訊安全的問題，這個 whois 所提供的資訊真的是太詳細了，
+		為了保護使用者的隱私權，所以，目前這個 whois 所查詢到的資訊已經不見得是完全正確的了～
+		而且，在顯示出 whois 的資訊之前，還會有一段宣告事項的告知呢～ ^_^y<br /><br />
+
+		如果使用 whois 來檢查鳥哥所註冊的合法 domain 會是如何呢？看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>whois vbird.idv.tw</span>
+[查詢 whois.twnic.net]
+[whois.twnic.net]
+Domain Name: vbird.idv.tw
+
+   Contact:
+      Der-Min Tsai
+      vbird@aerosol.ev.ncku.edu.tw
+
+   Record expires on 2008-09-17 (YYYY-MM-DD)
+   Record created on 2002-09-13 (YYYY-MM-DD)
+
+Registrar: HINET
+</pre></td></tr></table>
+
+		呵呵！這個 domain 會在 2008/09/17 失效的意思啦！報告完畢！<br /><br />
+
+		無論如何，我們都可以透過 nslookup, host, dig 等等的指令來查詢主機名稱與 IP 的對應，
+		這些指令的用法可以請您以 man command 來查詢更多的用法喔！<br />
+	</div>
+</div>
+
+
+<hr><a NAME="upgrade"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">DNS 伺服器的進階設定：</span><br />
+<div class=block1>
+	其實， DNS 主機的運作原理與架設方式的變化，真的很高深莫測的！在這裡，
+	我們額外的提出一些比較進階的內容給大家參考參考，例如子網域的授權問題，
+	以及架設一個合法授權的 DNS 主機。<br /><br />
+
+	<hr><a NAME="sub_net"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2"
+	>子網域授權問題</span><br />
+	<div class=block2>
+		好了，那麼萬一我的網路很大，我只想要負責上層的 DNS 而已，
+		下層希望直接交給各單位的負責人來負責，要怎麼設定呢？
+		舉個例子來說，以成大為例，成大計中僅管理各個系所的的主機 IP 
+		而已，由於各個系所的主機數量可能很大，如果每個人都要請計中來設定，
+		那麼管理員可能會瘋掉，而且在實際設計上也不太人性化。<br /><br />
+
+		所以囉，計中就將各個
+		subdomain (子網域) 的管理權交給各個系所的主機管理員去管理，如此一來，
+		各系所的設定上面會比較靈活，且上層 DNS 主機也不用太麻煩吶！<br /><Br>
+
+		好了，那麼如何開放子網域授權呢？我們以剛剛在 master 上面建立的 vbird.tsai 這個 zone 為例，
+		假設今天你是個 ISP ，有個人想要跟妳申請 domain name ，他要的 domain 是『 niki.vbird.tsai 』，
+		那你該如何處理？其實只要指定 NS 就好了啦！如下所示：<br /><br />
+
+		<li><span class="text_import1">上層主機端 vbird.tsai 的設定：</span></li>
+		<div class=block2>
+		上層 DNS 主機的設定其實很簡單啦！只要將子網域開放出來給別人使用就對了！
+		怎麼設定呢？您可以直接修改前面談到的 
+		<a href="#named.vbird.tsai">named.vbird.tsai</a> ，使他變成如下所示：
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">vi /var/named/chroot/var/named/named.vbird.tsai</span>
+<span class=term_say># 在這個檔案的最下方增加這兩行：</span>
+<span class=term_write>niki        IN  NS  niki.vbird.tsai.
+niki        IN  A   192.168.100.100</span>
+</pre></td></tr></table>
+
+		直接將 niki.vbird.tsai. 這個網域的 NS 權限 (name server) 轉給 
+		niki.vbird.tsai. 這部主機來管理，並同時列出 niki.vbird.tsai 的正解資訊！
+		那麼未來當有人要查詢類似 www.niki.vbird.tsai 時，我們的 linux.vbird.tsai. 
+		會直接將查詢的權限丟給 niki.vbird.tsai 去處理喔！<br /><br />
+		</div>
+
+		<li><span class="text_import1">下游主機 niki.vbird.tsai 的設定：</span></li>
+		<div class=block2>
+		這個設定就簡單啦！直接參考一下我們<a href="#DNS_master">上面寫的資料</a>，跟著設定，但是您的 
+		domain name 變成 niki.vbird.tsai 就是了！簡單的很吶！所以鳥哥就不再多說了～
+		</div>
+	</div>
+
+	<hr><a NAME="OK_DNS"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2"
+	>架設一個合法的授權的 DNS 主機：</span><br />
+	<div class=block2>
+		好啦！現在您應該知道什麼是『<span class="text_import2">經上游授權的合法 DNS 主機</span>』了吧？！
+		沒錯！就是上游的 DNS 主機將子網域的查核權開放給您來設定就對啦！嗯！雖然知道原理，
+		但是那麼我要如何來架設一個合法的 DNS 主機呢？好讓我自己管理自己的 domain 
+		！舉例來說，鳥哥的 vbird.idv.tw 就是鳥哥自己管理的哩～底下我們就來談一談，如何向
+		ISP 申請一個合法授權的 DNS 主機，或者是合法的主機名稱啊！<br /><br />
+
+		<hr /><li><span class="text_import1">申請一個合法的 domain name ...就是要花錢！</span></li>
+		<div class=block2>
+		既然是要建立一個合法的 domain name server ，自然就要向合法的 DNS 主機申請授權囉！
+		目前您可以到底下的地方去申請喔！<br />
+		<ul><li><a href="http://www.twnic.net/index3.htm" target="_blank">http://www.twnic.net/index3.htm</a>
+		</li></ul>
+		其實台灣地區的一些 domain 已經不再於 TWNIC 受理了，所以您連上上述的網站之後，
+		可以點選裡頭相關的連結到各大 ISP 去註冊！例如鳥哥就註冊了 vbird.idv.tw 這個網域！
+		現在鳥哥就以 Hinet 的註冊做為說明吧<br />
+
+		<ol>
+		<li><span class="text_import1">進入主畫面：</span><br />直接連結到底下的網頁去：
+		<a href="http://nweb.hinet.net" target="_blank">http://nweb.hinet.net</a></li><br />
+
+		<li><span class="text_import1">選擇需要的網域名稱，並查詢該網域是否已存在：</span><br />
+		因為網域必需是獨一無二的，所以您必需使用該網頁當中提供的查詢功能，
+		去查詢一下您想要的網域是否已經被註冊了呢？一定要沒有被註冊的網域才可以喔！</li><br />
+
+		<li><span class="text_import1">逐步進行註冊：</span><br />
+		你可以選擇很多種類的領域來註冊，如果想要註冊個人網站，請按下圖八所指的 (1) 處，
+		如果想要註冊類似 vbird.tw 這種網域的話，則可以選擇 (2) 所指的那個項目。
+		然後以該網站提供的功能一步一步的往下去進行，例如以鳥哥的『個人網址』之註冊為例，
+		按下個人網址之後，會出現流程步驟為：<br />
+		<center><img SRC="0350dns/hinet_01.png" border=1
+		title="以 Hinet 網站為依據介紹註冊 domain 的方法"
+		alt="以 Hinet 網站為依據介紹註冊 domain 的方法"><br />
+		圖八、以 Hinet 網站為依據介紹註冊 domain 的方法</center><br />
+		請依序一步一步的將他完成，最後你會得到一組帳號密碼，就能夠修改自己的領域啦！</li><br />
+
+		<li><span class="text_import1">選擇網站代管或架設 DNS 模式：</span><br />
+		還記得前面提到的觀念吧？對啦！我們可以直接請 ISP 幫我們設定好 host 對應 
+		IP 就好(最多三部)，當然也可以自行設定一下我們所需要的 DNS 主機啦！如果未來您可能會架設 
+		mail server ，所以還是自行設定 DNS 主機好了！你可以選擇圖八在 (3) 所指的『DNS異動與查詢』項目，
+		會出現下面圖示。記得選擇『DNS』及填寫您的 hostname 與正確的 IP 即可喔！注意：
+		要填選這個項目，最好您的 IP 是固定制的，浮動制的 IP 不建議用這個選項！
+		<center><img SRC="0350dns/hinet_02.png" border=1
+		title="以 Hinet 網站為依據介紹註冊 domain 的方法"
+		alt="以 Hinet 網站為依據介紹註冊 domain 的方法"><br />
+		圖九、以 Hinet 網站為依據介紹註冊 domain 的方法</center>
+		</ol>
+		</div>
+
+		<hr /><li><span class="text_import1">以 <a href="#DNS_master">DNS 主機的詳細設定</a>
+		之設定內容來設定您的主機：</span><br />
+		<div class=block2>
+		如果您已經以 DNS 主機的方式申請了一個 domain name ，那麼您就必須要設定您的 DNS 主機了！
+		請注意，這個情況之下，您只要設定您的註冊的網域的正解即可！
+		反解部分則先不要理會，當然，如果您有辦法的話，最好還是請上層的 ISP 幫您設定囉！<br /><br />
+		</div>
+
+		<hr /><li><span class="text_import1">測試：</span><br />
+		<div class=block2>
+		設定一部合法的 DNS 完畢後，建議你可以到這個網站去查詢一下你的設定是否妥當：<br />
+		<ul><li><a href="http://www.dnsreport.com/"
+		target="_blank">http://www.dnsreport.com/</a></li></ul>
+		如此一來，您的 DNS 主機上面設定的任何資訊，都可以透過 Internet 
+		上面的任何一部主機來查詢到喔！夠棒吧！心動了嗎？趕快去試看看吧！ ^_^
+		</div>
+	</div>
+
+	<hr><a NAME="Lame_server"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2"
+	>LAME Server 的問題：</span><br />
+	<div class=block2>
+		或許你曾經在 /var/log/messages 裡面看到類似這樣的訊息：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">more /var/log/messages</span>
+<span class=term_note>1</span> Oct  5 05:02:30 test named[432]: lame server resolving '68.206.244.205.
+  in-addr.arpa' (in '206.244.205.in-addr.arpa'?): 205.244.200.3#53
+<span class=term_note>2</span> Oct  5 05:02:31 test named[432]: lame server resolving '68.206.244.205.
+  in-addr.arpa' (in '206.244.205.in-addr.arpa'?): 206.105.201.35#53
+<span class=term_note>3</span> Oct  5 05:02:41 test named[432]: lame server resolving '68.206.244.205.
+  in-addr.arpa' (in '206.244.205.in-addr.arpa'?): 205.244.112.20#53
+</pre></td></tr></table>
+
+		這是什麼東西吶？！根據官方提供的文件資料來看 (<span class="text_vbird">
+		在您的 CentOS 4.x 的系統下，請察看這個檔案『/usr/share/doc/bind-9.2.4/arm/Bv9ARM.ch06.html』
+		</span> )，<span class=text_import2>當我們的 DNS 主機在向外面的 DNS 系統查詢某些正反解時，可能由於
+		『對方』 DNS 主機的設定錯誤，導致無法解析到預期的正反解結果</span>，這個時候就會發生所謂的 
+		lame server 的錯誤！<br /><br />
+
+		那麼這個錯誤會讓我們的 DNS 主機發生什麼嚴重的後果嗎？既然僅是對方的設定錯誤，
+		所以<span class="text_import2">自然就不會</span>影響我們的 DNS 主機的正常作業了。
+		只是我們的 DNS 主機在查詢時，會發生無法正確解析的警告訊息而已，
+		這個訊息雖然不會對我們的 Linux 主機發生什麼困擾，不過，對於系統管理員來說，
+		要天天查詢的 /var/log/messages 檔案竟然有這麼多的登錄資訊，這是很討厭的一件事！<br /><br />
+
+		好了，我們知道 lame server 是對方主機的問題，對我們主機沒有影響，
+		但是卻又不想要讓該訊息出現在我們的登錄檔 /var/log/messages 當中，
+		怎麼達到這樣的功能呢？呵呵！就直接利用 BIND 這個套件所提供的登錄檔參數啊！
+		動作很簡單，在您的 /etc/named.conf 檔案當中的最底下，加入這個參數即可： 
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">1. 修改 /etc/named.conf</span>
+[root@linux ~]# <span class="term_command">vi /etc/named.conf</span>
+<span class="term_say">// 加入底下這個參數：</span>
+<span class="term_write">logging {
+        category lame-servers { null; };
+};</span>
+
+<span class="term_hd">2. 重新啟動 bind</span>
+[root@linux ~]# <span class="term_command">/etc/init.d/named restart</span>
+</pre></td></tr></table>
+
+		基本上，那個 logging 是主機的登錄檔記錄的一個設定項目，因為我們不要 lame server 的資訊，
+		所以才將他設定為無 (null) ，這樣就改完了！
+		記得重新啟動 named 之後，還是要察看一下 /var/log/messages 喔！
+		以確定 named 的正確啟動與否！然後，嘿嘿，以後就不會看到 lame server 咯！<br /><br />
+	</div>
+
+	<hr><a NAME="rndckey"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 RNDC 指令管理 DNS 伺服器</span><br />
+	<div class=block2>
+		不知道您會不會覺得很奇怪，那就是為啥啟動 DNS 後，在 /var/log/messages 老是看到這一句話：<br />
+
+<table class="term"><tr><td class="term"><pre>
+command channel listening on 127.0.0.1#953
+</pre></td></tr></table>
+
+		而且在本機端的 TCP port 953 還多了個 named 所啟動的服務，那是啥？那就是所謂的 rndc 了。這個 rndc 是 
+		BIND version 9 以後所提供的功能啦，他可以讓你很輕鬆的管理你自己的 DNS 伺服器喔！
+		包括可以檢查已經存在 DNS 快取當中的資料、重新更新某個 zone 而不需要重新啟動整個 DNS ，
+		以及檢查 DNS 的狀態與統計資料等等的，挺有趣的！<br /><br />
+
+		不過，因為 rndc 可以很深入的管理你的 DNS 伺服器，所以當然要進行一些控管啦！
+		控管的方式是<span class=text_import2>經過 rndc 的設定來建立一支金鑰 
+		(rndc key)，並將這支金鑰相關的資訊寫入你的 named.conf 
+		設定檔當中</span>，重新啟動 DNS 後，你的 DNS 就能夠藉由 rndc 這個指令來管理囉！
+		事實上，新版的 distributions 通常已經幫你主動的建立好 rndc key 了，所以你不需要忙碌～
+		不過，如果你還是在登錄檔當中發現一些錯誤，例如：<br />
+
+<table class="term"><tr><td class="term"><pre>
+couldn't add command channel 127.0.0.1#953: not found
+</pre></td></tr></table>
+
+		那就表示你 DNS 的 rndc key  沒有設定好啦！那要如何設定好？很簡單～
+		只要先建立一把 rndc key ，然後加到 named.conf 當中去即可！
+		你可以使用 bind 提供的指令來進行這樣的工作喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先建立 rndc key 的相關資料吧！</span>
+[root@linux ~]# <span class=term_command>rndc-confgen</span>
+# Start of rndc.conf
+key "rndc-key" {
+        algorithm hmac-md5;
+        secret "aoIyK4uoiR1hEqedk2D2lw==";
+};
+
+options {
+        default-key "rndc-key";
+        default-server 127.0.0.1;
+        default-port 953;
+};
+# End of rndc.conf
+<span class=term_say># 上面的輸出請將他貼到 rndc.conf 檔案當中吧！</span>
+# Use with the following in named.conf, adjusting the allow list as needed:
+# key "rndc-key" {
+#       algorithm hmac-md5;
+#       secret "aoIyK4uoiR1hEqedk2D2lw==";
+# };
+#
+# controls {
+#       inet 127.0.0.1 port 953
+#               allow { 127.0.0.1; } keys { "rndc-key"; };
+# };
+# End of named.conf
+<span class=term_say># 至於上面的 key 及 controls 的項目則貼到 named.conf 當中去！
+# 請注意，這個 rndc-confgen 是利用亂數計算出加密的那把 key ，
+# 所以每次執行的結果都不一樣。所以上述的資料與你的螢幕會有點不同。</span>
+
+<span class=term_hd>2. 建立 rndc.conf 檔案</span>
+[root@linux ~]# <span class=term_command>vi /etc/rndc.conf</span>
+<span class=term_say># 在這個檔案當中將原本的資料全部刪除，並將剛剛得到的結果給他貼上去</span>
+<span class=term_write>key "rndc-key" {
+        algorithm hmac-md5;
+        secret "aoIyK4uoiR1hEqedk2D2lw==";
+};
+
+options {
+        default-key "rndc-key";
+        default-server 127.0.0.1;
+        default-port 953;
+};</span>
+[root@linux ~]# <span class=term_command>chmod 640 /etc/rndc.conf</span>  <span class=term_say>&lt;==必需要設定好權限！</span>
+[root@linux ~]# <span class=term_command>chown root.named /etc/rndc.conf</span>
+
+<span class=term_hd>3. 修改 named.conf</span>
+[root@linux ~]# <span class=term_command>vi /var/named/chroot/etc/named.conf</span>
+<span class=term_say># 找到如下的這一行：</span>
+include "/etc/rndc.key";
+
+<span class=term_say># 將上述資料刪除！因為該資料是舊的！然後加入這一段：</span>
+<span class=term_write>key "rndc-key" {
+      algorithm hmac-md5;
+      secret "aoIyK4uoiR1hEqedk2D2lw==";
+};
+
+controls {
+      inet 127.0.0.1 port 953
+              allow { 127.0.0.1; } keys { "rndc-key"; };
+};</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/named restart</span>
+</pre></td></tr></table>
+
+		建立了rndc key 並且啟動 DNS ，同時你的系統也已經有 port 953 之後，我們就可以在本機執行 rndc 
+		這個指令了。這個指令的用法請直接輸入 rndc 來查詢即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>rndc</span>
+Usage: rndc [-c config] [-s server] [-p port]
+        [-k key-file ] [-y key] [-V] command
+
+command is one of the following:
+
+  reload        Reload configuration file and zones.
+  stats         Write server statistics to the statistics file.
+  dumpdb        Dump cache(s) to the dump file (named_dump.db).
+  flush         Flushes all of the server's caches.
+  status        Display status of the server.
+<span class=term_say># 其他就給他省略啦！請自行輸入這個指令來參考囉！</span>
+</pre></td></tr></table>
+
+		那如何使用呢？我們舉幾個小例子來說明吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例一：將目前 DNS 伺服器的狀態顯示出來</span>
+[root@linux ~]# <span class=term_command>rndc status</span>
+number of zones: 6           <span class=term_say>&lt;==這部 DNS 管理的 zone 數量</span>
+debug level: 0               <span class=term_say>&lt;==是否具有 debug 及 debug 的等級</span>
+xfers running: 0
+xfers deferred: 0
+soa queries in progress: 0
+query logging is OFF         <span class=term_say>&lt;==是否將查詢的資料記錄下來？</span>
+server is up and running     <span class=term_say>&lt;==主機目前正在運作當中</span>
+
+<span class=term_hd>範例二：將目前系統的 DNS 統計資料記錄下來</span>
+[root@linux ~]# <span class=term_command>rndc stats</span>
+<span class=term_say># 此時，預設會在 /var/named/chroot/var/named/data 內產生新檔案，你可以去查閱：</span>
+[root@linux ~]# <span class=term_command>cat /var/named/chroot/var/named/data/named_stats.txt</span>
++++ Statistics Dump +++ (1161322745)
+success 22
+referral 0
+nxrrset 0
+nxdomain 3
+recursion 6
+failure 0
+--- Statistics Dump --- (1161322745)
+
+<span class=term_hd>範例三：將目前快取記憶體當中的資料記錄下來</span>
+[root@linux ~]# <span class=term_command>rndc dumpdb</span>
+<span class=term_say># 與 stats 類似，會將 cache 的資料放置成為一個檔案，你可以去查閱：
+# /var/named/chroot/var/named/data/cache_dump.db</span>
+</pre></td></tr></table>
+
+		如果你在執行 rndc 指令時老是出現如下錯誤：<br />
+
+<table class="term"><tr><td class="term"><pre>
+rndc: connection to remote host closed
+This may indicate that the remote server is using an older version of
+the command protocol, this host is not authorized to connect,
+or the key is invalid.
+</pre></td></tr></table>
+
+		這表示您的 /etc/rndc.conf 與 /var/named/chroot/etc/rndc.key 內金鑰的編碼不同所致。
+		請你自行以上述的 rndc-confgen 的方式自行處理你的 rndc key ，並重新啟動 named 即可啊！
+		用這東西管理，你就不需要每次都重新啟動 named 囉！ ^_^<br /><br />
+	</div>
+
+	<hr><a NAME="ddns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">架設動態 DNS 主機：
+	讓你成為 ISP 啦！</span><br />
+	<div class=block2>
+		什麼是動態 DNS (Dynamic DNS, DDNS) 主機呢？還記得我們在 <a href="0270dynamic_dns.htm">合法的 DNS 主機</a>
+		裡面提到，如果我們本身是以撥接制的 ADSL 連上 Internet 時，
+		我們的 IP 通常是 ISP 隨機提供的，因此每次上網的 IP 都不固定，所以，
+		我們沒有辦法以上面的 DNS 設定來給予這種連上 Internet 的方法一個適當的主機名稱。<br /><br />
+
+		也因此，如果我們想要利用這種沒有固定 IP 的連線方法架設網站時，就得要有特殊的管道了～
+		其中之一的方法就是利用 Internet 上面已經提供的免費動態 IP 對應主機名稱的服務！
+		例如： <a href="http://www.no-ip.org" target="_blank">http://www.no-ip.org</a> 。<br /><br />
+
+		提供這樣的服務利用的是什麼原理呢？基本上， DNS 主機還是得要提供 Internet 相關的 zone 
+		的主機名稱與 IP 的對應資料才行，所以，<span class=text_import2>DDNS 主機
+		就必須要提供一個機制，讓用戶端可以透過這個機制來修改他們在 DDNS 主機上面的
+		zone file 內的資料才行</span>。<br /><br />
+
+		那會不會很難啊？不會啊！我們的 BIND 9 就有提供類似的機制啦！那就是利用 
+		update-policy 這個選項，配合認證用的 key 
+		來進行資料檔案的更新。簡單的說，<span class="text_import2">
+		1) 我們的 DDNS 主機先提供 Client 一把 Key (就是認證用的資料，
+		你可以將他想成是帳號與密碼的概念)， 2) Client 端利用這把 Key ，並配合 BIND 9 的 nsupdate 指令，
+		就可以連上 DDNS 主機，並且修改主機上面的 Zone file 內的對應表了。</span>感覺上很像很簡單喔！
+		沒錯啊！架設上真的很簡單的～底下我們就來嘗試設定一下喔：<br /><br />
+
+		<hr /><li><span class="text_import1">DDNS Server 端的設定：</span></li>
+		<div class=block2>
+		假設我有一個朋友，他使用的 Linux 主機的 IP 是會隨時變動的，但是他想要架設 Web 網站，
+		所以他向我申請了一個領域名稱，那就是 web.vbird.tsai ，此時我必需要給他一把金鑰，
+		並且設定我的 named.conf 讓 vbird.tsai 這個 zone 能夠接受來自用戶端的資料更新才行！
+		首先來建立這把金鑰吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>dnssec-keygen -a [演算法] -b [密碼長度] -n [類型] 名稱</span>
+<span class=term_say>參數：
+-a ：後面接的 [type] 為演算方式的意思，主要有 RSAMD5, RSA, DSA, DH
+     與 HMAC-MD5 等。建議你可以使用常見的 HMAC-MD5 來演算密碼；
+-b ：你的密碼長度為多少？通常給予 128 位元就可以了；
+-n ：後面接的則是用戶端能夠更新的類型，主要有底下兩種，建議給 HOST 即可：
+     ZONE：用戶端可以更新任何標誌及整個 ZONE；
+     HOST：用戶端僅可以針對他的主機名稱來更新。</span>
+
+[root@linux ~]# <span class=term_command>mkdir -p /var/named/keys; cd /var/named/keys</span>
+[root@linux keys]# <span class=term_command>dnssec-keygen -a HMAC-MD5 -b 128 -n HOST web</span>
+Kweb.+157+50096
+[root@linux keys]# <span class=term_command>ls -l K*</span>
+-rw-------  1 root root 47 Oct 20 14:20 Kweb.+157+50096.key
+-rw-------  1 root root 81 Oct 20 14:20 Kweb.+157+50096.private
+<span class=term_say># 上面那把是公鑰，下面那把則是私鑰檔案！</span>
+
+[root@linux keys]# <span class=term_command>cat Kweb.+157+50096.key</span>
+web. IN KEY 512 3 157 <span class=term_write>+j8TSooNNIUPb3OR9Rh53Q==</span>
+<span class=term_say># 注意到最右邊的那個密碼長度，等一下我們要複製的僅有那個地方！</span>
+</pre></td></tr></table>
+
+		接下來你必需要：<span class=text_import2>將公鑰的密碼複製到 /etc/named.conf 當中，將私鑰傳給你的
+		web.vbird.tsai 那部主機上！</span>好了，那就開始來修改 named.conf 內的相關設定吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class="term_command">vi /etc/named.conf</span>
+<span class="term_say">// 先在任意地方加入這個 Key 的相關密碼資訊！</span>
+<span class="term_write">key "web" {
+	algorithm hmac-md5;
+	secret "+j8TSooNNIUPb3OR9Rh53Q==";
+};</span>
+
+<span class="term_say">// 然後將你原本的 zone 加入底下這一段宣示</span>
+zone "vbird.tsai" {
+        type master;
+        file "named.vbird.tsai";
+        allow-transfer { 192.168.1.150; };
+        <span class="term_write">update-policy {
+                grant web name web.vbird.tsai. A;
+        };</span>
+};
+
+[root@linux ~]# <span class="term_command">chown named /var/named/chroot/var/named</span>
+[root@linux ~]# <span class="term_command">/etc/init.d/named restart</span>
+</pre></td></tr></table>
+
+		注意到上頭的 <span class="text_import1">grant web name web.vbird.tw. A;</span> 那一行，
+		grant 後面接的就是 key 的名稱，也就是說，我這把 web 的 key 
+		在這個 zone (vbird.tsai) 裡面可以修改主機名稱 web.vbird.tsai
+		的 A 的標誌，亦即是修改主機的 IP 對應啦！語法也就是：
+		<span class="text_import2">grant [key_name] name [hostname] 標籤</span>
+		也就是說，我的一把 key 其實可以給予多種權限喔！就看您如何規範了。<br /><br />
+
+		設定好之後，由於未來用戶端傳來的資訊是由我們主機的 named 所寫入，
+		寫入的目錄在 /var/named/chroot/var/named/ 當中，所以你必需要修改一下權限喔！
+		給他重新啟動 DNS，然後觀察一下 /var/log/messages 裡面有沒有錯誤即可！
+		如此一來，DDNS 主機端就設定妥當囉！<br /><br />
+		</div>
+
+		<hr><li><span class="text_import1">Client 端的更新：</span><br />
+		<div class=block2>
+		接下來則是 DDNS Client 端的更新了。首先，您必須要由 Server 端取得剛剛建立的那兩個檔案，
+		請將剛剛建立的 Kweb.+157+50096.key 及 Kweb.+157+50096.private 利用 SSH 的 sftp 傳送到用戶端，
+		亦即是那部 web.vbird.tsai 主機上頭，
+		假設你已經將這兩個檔案放置到 /usr/local/ddns 裡面去，然後測試看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@web ~]# <span class=term_command>cd /usr/local/ddns</span>
+[root@web ddns]# <span class=term_command>nsupdate -k Kweb.+157+50096.key</span>
+> <span class="term_command">server 192.168.1.254</span>
+> <span class="term_command">update delete web.vbird.tsai                 </span>  <span class=term_say>&lt;==刪除原有的</span>
+> <span class="term_command">update add web.vbird.tsai 600 A 192.168.1.222</span>  <span class=term_say>&lt;==更新到最新的</span>
+> <span class="term_command">send</span>
+> <span class="term_say">最後在此按下 [ctrl]+D 即可</span>
+</pre></td></tr></table>
+
+		請注意到『 <span class=text_import2>update add web.vbird.tsai 600 A 192.168.1.222</span> 』這行，
+		他的意義說的是，新增一筆資料， ttl 是 600 ，給予 A 的標籤，
+		對應到 192.168.1.222 的意思～
+		至於 nsupdate -k 後面加的則是我們在 Server 端產生的那個 key 檔案！<br /><br />
+
+
+		然後您就會發現到在 DNS 主機端的 /var/named/chroot/var/named/ 
+		裡面多出一個暫存檔，那就是 named.vbird.tsai.jnl
+		當然，/var/named/chroot/var/named/named.vbird.tsai 就會隨著用戶端的要求而更新資料喔！<br /><br />
+
+		由於手動更新好像挺麻煩的，我們就讓 Client 自動更新吧！利用底下這個 script 即可！
+
+<table class="term"><tr><td class="term"><pre>
+[root@web ~]# <span class="term_command">vi /usr/local/ddns/ddns_update.sh</span>
+#!/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+export PATH
+
+# 0. keyin your parameters
+<span class="term_write">basedir="/usr/local/ddns"                  # 基本工作目錄
+keyfile="$basedir"/"Kvbird.+157+05841.key" # 將檔名填進去吧！
+ttl=600                                    # 你可以指定 ttl 的時間喔！
+outif="ppp0"                               # 對外的連線介面！
+hostname="web.vbird.tsai"                  # 你向 ISP 取得的那個主機名稱啦！
+servername="192.168.1.254"                 # 就是你的 ISP 啊！</span>
+
+# Get your new IP
+newip=`ifconfig "$outif" | grep 'inet addr' | \
+        awk '{print $2}' | sed -e "s/addr\://"`
+checkip=`echo $newip | grep "^[0-9]"`
+if [ "$checkip" == "" ]; then
+        echo "$0: The interface can't connect internet...."
+        exit 1
+fi
+
+# create the temporal file
+tmpfile=$basedir/tmp.txt
+cd $basedir
+echo "server $servername"                       >  $tmpfile
+echo "update delete $hostname A "               >> $tmpfile
+echo "update add    $hostname $ttl A $newip"    >> $tmpfile
+echo "send"                                     >> $tmpfile
+
+# send your IP to server
+nsupdate -k $keyfile -v $tmpfile
+</pre></td></tr></table>
+
+		您只要將上述的程式裡面，特殊字體的部分給他修改一下，就能夠以 /etc/crontab 
+		的方式在您的系統內自動執行了！這支程式你也可以在底下的連結下載：<br />
+
+		<ul><li><a href="0350dns/ddns_update.sh">http://linux.vbird.org0350dns/ddns_update.sh</a></ul>
+
+		利用 BIND 9 所提供的這個服務，我們只要具有一組固定的 IP ，並向 ISP 申請一個合法授權的 domain name，
+		就可以提供不論是固定或者是非固定的 IP 使用者，一個合法的主機名稱了！
+		並且，使用者也可以自行透過 nsupdate 來修改自己的 IP 對應！以讓自己的主機 IP 
+		永遠與主機名稱保持正確的對應！這對只有撥接制上網的用戶來說，真是方便啊！<br />
+		</div>
+	</div>
+</div>
+
+
+<hr><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧：</span><br />
+<div class=block1>
+<ul><span class="text_import2">
+	<li>在 Internet 當中，任何一部合法的主機都具有獨一無二的主機名稱，這個主機名稱包含了 hostname 與 
+		domain name ，並稱為 Fully Qualified Domain Name (FQDN)；
+        <li>為了克服人類對於 IP 不易記憶的困擾，而有名稱解析器的產生，首先是 /etc/hosts ，而後則是 DNS 系統的產生；
+        <li>目前 Unix Like 的機器當中，都是以 BIND 這個柏克萊大學發展的套件來架設 DNS 伺服器；
+	<li>DNS 是個協定的名稱，BIND 則是一個套件，這個套件提供的程式為 named ！
+	<li>在 DNS 當中，每一筆記錄我們就稱他為 RR (Resource Record)。
+        <li>在 DNS 系統中，正解為由 hostname 找 IP ，而反解則是由 IP 找 hostname ，至於 zone 則是一個或者是部分網域的設定值；
+	<li>在 bind 9 之後，預設的情況下 named 已經作了 chroot 的動作。
+        <li>DNS 伺服器的類型主要分為 master, slave 以及只進行快取記錄的 cache-only 的 DNS 主機；
+        <li>Master/Slave 架構下的 DNS 主機系統，不論是 Master/Slave 主機均需要能夠正確的提供 hostname 與 IP 的對應才行。
+	<li>Slave 主機本身並沒有自行設定 zone file ，其 zone file 是由 Master 主機傳送而來，因此， 
+		master 主機必須要針對 slave 主機開放 allow-transfer 的設定項目才行。
+	<li>整個 DNS 搜尋的流程當中，若找不到本身的資料，則會向 root(.) 要求資料；
+        <li>bind 的設定檔為 /etc/named.conf ，而 named.conf 可以規範出正反解 zone 的檔案所在；
+        <li>正解的紀錄(record)主要有：SOA, A, MX, NS, CNAME, TXT 及 HINFO 等；
+        <li>反解的紀錄主要有： SOA, PTR 等；
+        <li>在 client 端設定 DNS 查詢順序與相關功能的幾個重要檔案為： /etc/nsswitch.conf, /etc/hosts, /etc/resolv.conf 等；
+        <li>DNS 查詢的指令主要有： host, nslookup, dig, whois 等等；
+        <li>在載入了 named 這個 daemon 之後，請務必前往 /var/log/messages 察看此 daemon 的成功與否。
+	<li>CentOS (Red Hat 系統) 的 /etc/sysconfig/named 可以指定 chroot 的目錄或取消 chroot 的功能等等。
+	<li>Cache only DNS 伺服器常被使用於防火牆上，用來代理內部 LAN 的主機名稱解析要求！
+	<li>本章與 LPI 考試的關係：<br />
+	在 LPI 網站 <a href="http://www.lpi.org" target="_blank">http://www.lpi.org</a>
+	裡面提到的，關於 NFS 的考試題庫的地方，只有在 LPI level 1 的 102 ，裡面的
+	topic 113 Networking Services ，第五點當中，簡易的 DNS 設定。強調的是『應試者需瞭解何謂正、反解、Zone
+	與 cache-only 的 DNS 主機』至於會考的檔案與指令可能有這些：
+	<ul>
+	<li>/etc/hosts</li>
+	<li>/etc/nsswitch.conf</li>
+	<li>/etc/resolv.conf</li>
+	<li>/etc/named.boot(V4)及 /etc/named.conf(V8)</li>
+	<li>named (這個 daemon )</li>
+	</ul>
+</span></ul>
+</div>
+
+
+<hr><a NAME="FAQ"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+	<ul>
+	<li>為何要有 DNS 系統：
+	<div class=block2><font color=white size=-1>
+		最主要的功能其實在於 Hostname 對應 IP 的查詢，可以讓我們人類以電腦主機名稱連上 Internet ，而不必背誦 IP 哩！
+	</font></div>
+
+        <li>那麼請教 Unix Like 系統當中，主要使用那個套件做為 DNS 主機的架設，同時，他又是使用那個 daemon 來啟動 DNS 系統？
+	<div class=block2><font color=white size=-1>
+		在 Unix Like 系統當中，使用 BIND 這個套件做為 DNS 的架設，至於 daemon 則是使用 named 這個 daemon ！
+	</font></div>
+
+        <li>最早的 Internet 其實是為了政府人員可以連上網路以進行資源的分享，另外，則是電子郵件的使用。
+	而在早期使用的重要檔案只有 /etc/hosts 這個，請教這個 hosts 檔案的內容含有什麼項目？
+	<div class=block2><font color=white size=-1>
+		這個檔案的『格式』為『 [IP] [主機名稱] [主機別名(aliase)]』，而，這個檔案裡面放置了至少一行，也就是：<br />
+		127.0.0.1 localhost localhost.localdomain<br />
+		另外，也可以將經常連接的主機 IP 與 HOSTNAME 的對應給他寫進來！ 
+	</font></div>
+
+        <li>請說明 DNS 的三種類型與相關的內容：
+	<div class=block2><font color=white size=-1>
+		DNS 主機主要分為： master, slave 與 cache-only 三種類型！在 master 當中，master 主機裡面即有設定 
+		DNS 資料檔案，例如在 /var/named 裡面的正反解檔案。至於 slave 的 DNS 主機則主要在進行 master 
+		主機的資料備份，同時也提供 Internet 上面的查詢功能。使用 master/slave 的最大優點在於「單點維護」的能力！
+		利用修改 master 即可讓 slave 的資料同時更新，減少人力的浪費。至於 
+		cache-only 僅進行快取的紀錄，本身並無資料庫檔案！ 
+	</font></div>
+
+        <li>正解檔案(forward)反解檔案(reverse)與內部迴圈使用的檔案(loopback)主要的紀錄功能為：
+	<div class=block2><font color=white size=-1>
+		正解檔在設定 hostname 對應到 IP 的紀錄，主要的紀錄有 A, NS, SOA, MX, CNAME 等等；
+		反解檔主要設定 IP 對應到 Hostname 的紀錄，主要的紀錄為 SOA, NS 與 PTR 等。
+		內部迴圈則是 localhost 與 127.0.0.1 的對應啦！ 
+	</font></div>
+
+        <li>在主要的 DNS 設定檔 /etc/named.conf 當中，有一個較為特殊的檔案，他的類型為 hint ，請問這個檔案的功能為何？
+	<div class=block2><font color=white size=-1>
+		這個檔案主要是由 rs.internic.net 所下載下來的，主要記錄了 root (.) 這個 zone 的 IP ！可以讓我們的 
+		DNS Server 在找不到資料庫時，可以到這個 root 去查詢資料！
+	</font></div>
+
+        <li>在 client 端搜尋 HOSTNAME 對應到 IP 的查詢時，最重要的檔案，以及該檔案的主要用途為何？
+	<div class=block2><font color=white size=-1>
+		/etc/nsswitch.conf ：可以用來設定查詢主機名稱的順序！例如先查詢 /etc/hosts 再查詢 DNS 系統；<br />
+		/etc/hosts ：最早的名稱解析器；<br />
+		/etc/resolv.conf：這就是 DNS 系統的 resolver (解析器)了。
+	</font></div>
+
+        <li>一般來說，在 Client 端使用的查詢 HOSTNAME 的指令大多使用什麼？
+	<div class=block2><font color=white size=-1>
+		nslookup ：可以用來收集一部主機的相關資訊；<br />
+		dig：可以用來收集詳細的主機資訊；<br />
+		whois ：可以用來收集詳盡的 DNS 主機資訊。<br />
+		host 則較為簡單喔！ <br />
+	</font></div>
+
+        <li>請問 named 重要的資訊登錄在在那個檔案中？
+	<div class=block2><font color=white size=-1>
+		在 /var/log/messages 當中
+	</font></div>
+</ul>
+</div>
+
+
+<hr><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資源：</span><br />
+<div class=block1>
+	<ul>
+	<li>BIND 官方網站：<a href="http://www.isc.org/products/BIND/" 
+		target="_blank">http://www.isc.org/products/BIND/</a></li>
+	<li>Study Area 學習網站：<a href="http://www.study-area.org/linux/servers/linux_dns.htm" 
+		target="_blank">http://www.study-area.org/linux/servers/linux_dns.htm</a></li>
+	<li>優客筆記：<a href="http://turtle.ee.ncku.edu.tw/~tung/dns/dnsintro.html" 
+		target="_blank">http://turtle.ee.ncku.edu.tw/~tung/dns/dnsintro.html</a></li>
+	<li>lame server 的簡易說明：<a href="http://linux.cvf.net/lame_server.html" 
+		target="_blank">http://linux.cvf.net/lame_server.html</a></li>
+	<li>DDNS 架設：<a href="http://www.study-area.org/tips/ddns.htm" 
+		target="_blank">http://www.study-area.org/tips/ddns.htm</a></li>
+	<li>Hinet 反解申請單：<a href="http://hidomain.hinet.net/top1.html"
+		target="_blank">http://hidomain.hinet.net/top1.html</a></li>
+	<li>合法 DNS 伺服器設定的檢查網站：<a href="http://www.dnsreport.com/"
+		target="_blank">http://www.dnsreport.com/</a></li>
+	<li>對於想要架設內外部不同 DNS 查詢功能的朋友來說，可以參考 view 這個參數，請參考：<br />
+		<a href="http://www.study-area.org/tips/bind9_view.htm" 
+		target="_blank">http://www.study-area.org/tips/bind9_view.htm</a></li>
+	<li>來自 Red Hat 公司的一份教學：<br />
+		<a href="http://www.redhat.com/magazine/026dec06/features/dns/?sc_cid=bcm_edmsept_007"
+		target="_blank">http://www.redhat.com/magazine/026dec06/features/dns/?sc_cid=bcm_edmsept_007</a></li>
+
+	</ul>
+</div>
+
+
+<hr><span class="text_history">2002/12/10：首次完成<br />
+2003/03/10：修改部分內容，並且新增 LPI 相關性與重點整理部分！<br />
+2003/09/10：修改了部分的版面，並將 slave DNS 的錯誤修訂完畢！<br />
+2003/10/08：新增了<a href="#Lame_server"> lame server </a>的說明，與解決之道！ <br />
+2004/10/29：新增了<a href="#rndckey"> rndckey </a>的說明與解決之道！<br />
+2004/10/30：新增了<a href="#DNS_slave"> Master/Slave </a>的架構設定<br />
+2004/10/31：新增了<a href="#ddns"> 動態 DNS 主機的設定 </a>。<br />
+2005/07/19：增加了 SOA 內五個數字的大小<br />
+2006/10/17：將之前的舊文章移動到<a href="0350dns/0350dns.htm">此處</a><br />
+2006/10/20：終於～不容易～將一些資料給他修訂完畢啦！<br />
+2007/06/25：小州大大來信告知 Forwarding 與 cache-only 的介紹可以加以修改。已經處理成為<a href="#20070625">這樣</a>。<br />
+</span>
+
+<hr><span class="text_date">2002/12/10 以來統計人數</span><br />
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0350dns.dat" NOSAVE height=15 width=60 align=ABSCENTER>
+
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,1984 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW"><!-- InstanceBegin template="/Templates/tp_basic.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+    <title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    <!-- InstanceEndEditable -->
+    <!-- InstanceBeginEditable name="head" -->
+    <!-- InstanceEndEditable -->
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  
+  <!-- InstanceBeginEditable name="content" -->
+<td width="718">
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十三章、學習<span class="text_head_en"> Shell Scripts</span></span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/02/18</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	如果你真的很想要走資訊這條路，並且想要管理好屬於你的主機，那麼，別說鳥哥不告訴你，
+	可以自動管理系統的好工具： Shell scripts！這傢伙真的是得要好好學習學習的！
+	基本上， shell script 有點像是早期的批次檔，亦即是將一些指令彙整起來一次執行，但是 Shell script 
+	擁有更強大的功能，那就是他可以進行類似程式 (program) 的撰寫，並且不需要經過編譯 (compile) 就能夠執行，
+	真的很方便。加上我們可透過 shell script 來簡化我們日常的工作管理，
+	而且，整個 Linux 環境中，一些服務 (services) 的啟動都是透過 shell script 的，
+	如果你對於 script 不瞭解，嘿嘿！發生問題時，可真是會求助無門喔！所以，好好的學一學他吧！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+
+<div class="block1">
+<span class="text_h1">
+1. <a href="#script">什麼是 Shell Script</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#script_why">幹嘛學習 shell scripts</a><br />
+	　　1.2 <a href="#script_1st">第一支 script 的撰寫與執行</a><br />
+	　　1.3 <a href="#script_be">撰寫 shell script 的良好習慣建立</a><br />
+
+	</span>
+2. <a href="#some_ex">簡單的 shell script 練習</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#some_ex_simple">簡單範例</a>： <a href="#ex_read">對談式腳本</a>, 
+		<a href="#ex_date">隨日期變化</a>, <a href="#ex_cal">數值運算</a><br />
+
+	　　2.2 <a href="#some_ex_run">script 的執行方式差異 (source, sh script, ./script)</a><br />
+	</span>
+3. <a href="#dis">善用判斷式</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#test">利用 test 指令的測試功能</a><br />
+	　　3.2 <a href="#test_2">利用判斷符號 [ ]</a><br />
+
+	　　3.3 <a href="#dis3">Shell script 的預設變數($0, $1...)</a>： <a href="#shift">shift</a><br />
+	</span>
+4. <a href="#rule">條件判斷式</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#ifthen">利用 if .... then</a>： <a href="#ifthen_simple">單層簡單條件</a>,
+		<a href="#ifthen_multi">多重複雜條件</a>, <a href="#check_1">檢驗$1內容</a>, <a href="#netstat">網路狀態</a>,
+		<a href="#retire">退伍</a><br />
+
+	　　4.2 <a href="#case">利用 case ..... esac 判斷</a><br />
+	　　4.3 <a href="#function">利用 function 功能</a><br />
+	</span>
+5. <a href="#loop">迴圈 (loop)</a><br />
+	<span class="text_h2">
+	　　5.1 <a href="#while">while...do...done, until...do...done (不定迴圈)</a><br />
+
+	　　5.2 <a href="#for">for...do...done (固定迴圈)</a>： <a href="#for_account">帳號檢查</a>,
+		<a href="#for_ping">網路狀態 $(seq )</a><br />
+	　　5.3 <a href="#for_2">for...do...done 的數值處理</a><br />
+	</span>
+6. <a href="#debug">shell script 的追蹤與 debug</a><br />
+
+7. <a href="#hint">重點回顧</a><br />
+8. <a href="#ex">本章習題</a><br />
+9. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+10. <a href="http://phorum.vbird.org/viewtopic.php?t=23886"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23886</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="script"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是 Shell scripts</span><br />
+<div class="block1">
+	<p>什麼是 shell script (程式化腳本) 呢？就字面上的意義，我們將他分為兩部份。
+	在『 shell 』部分，我們在 <a href="/linux_basic/0320bash.php">十一章的 BASH</a>
+	當中已經提過了，那是一個文字介面底下讓我們與系統溝通的一個工具介面。那麼『 script 』是啥？
+	字面上的意義， script 是『腳本、劇本』的意思。整句話是說， shell script 是針對 shell 所寫的『劇本！』</p>
+
+	<p>什麼東西啊？其實， <span class="text_import2">shell script 是利用 shell 的功能所寫的一個『程式 
+	(program)』，這個程式是使用純文字檔，將一些 shell 的語法與指令(含外部指令)寫在裡面，
+	搭配正規表示法、管線命令與資料流重導向等功能，以達到我們所想要的處理目的。</span></p>
+
+	<p>所以，簡單的說， shell script 就像是早期 DOS 年代的批次檔 (.bat) ，最簡單的功能就是將許多指令彙整寫在一起，
+	讓使用者很輕易的就能夠 one touch 的方法去處理複雜的動作 (執行一個檔案 "shell script" ，就能夠一次執行多個指令)。
+	而且 shell script 更提供陣列、迴圈、條件與邏輯判斷等重要功能，讓使用者也可以直接以 shell 
+	來撰寫程式，而不必使用類似 C 程式語言等傳統程式撰寫的語法呢！</p>
+
+	<p>這麼說你可以瞭解了嗎？是的！ shell script 可以簡單的被看成是批次檔，
+	也可以被說成是一個程式語言，且這個程式語言由於都是利用 shell 與相關工具指令，
+	所以不需要編譯即可執行，且擁有不錯的除錯 (debug) 工具，所以，他可以幫助系統管理員快速的管理好主機。<br /><br /></p>
+
+	<hr /><a name="script_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">幹嘛學習 shell scripts</span><br />
+	<div class="block2">
+		<p>這是個好問題：『我又幹嘛一定要學 shell script ？我又不是資訊人，沒有寫程式的概念，
+		那我幹嘛還要學 shell script 呢？不要學可不可以啊？』呵呵～如果 Linux 對你而言，
+		你只是想要『會用』而已，那麼，不需要學 shell script 也還無所謂，這部分先給他跳過去，
+		等到有空的時候，再來好好的瞧一瞧。但是，如果你是真的想要玩清楚 Linux 的來龍去脈，
+		那麼 shell script 就不可不知，為什麼呢？因為：</p>
+
+		<ul style="padding-left: 25px">
+
+		<li><span class="text_import1">自動化管理的重要依據</span>：<br /><br />
+		不用鳥哥說你也知道，管理一部主機真不是件簡單的事情，每天要進行的任務就有：
+		查詢登錄檔、追蹤流量、監控使用者使用主機狀態、主機各項硬體設備狀態、
+		主機軟體更新查詢、更不要說得應付其他使用者的突然要求了。而這些工作的進行可以分為：
+		(1)自行手動處理，或是 (2)寫個簡單的程式來幫你每日自動處理分析這兩種方式，你覺得哪種方式比較好？
+		當然是讓系統自動工作比較好，對吧！呵呵～這就得要良好的 shell script 來幫忙的啦！<br /><br /></li>
+
+		<li><span class="text_import1">追蹤與管理系統的重要工作</span>：<br /><br />
+		雖然我們還沒有提到服務啟動的方法，不過，這裡可以先提一下，我們 Linux 系統的服務 
+		(services) 啟動的介面是在 /etc/init.d/ 這個目錄下，目錄下的所有檔案都是 scripts ；
+		另外，包括開機 (booting) 過程也都是利用 shell script 來幫忙搜尋系統的相關設定資料，
+		然後再代入各個服務的設定參數啊！舉例來說，如果我們想要重新啟動系統登錄檔，
+		可以使用：『/etc/init.d/syslogd restart』，那個 syslogd 檔案就是 script 啦！<br /><br />
+
+		另外，鳥哥曾經在某一代的 Fedora 上面發現，啟動 MySQL 這個資料庫服務時，確實是可以啟動的，
+		但是螢幕上卻老是出現『failure』！後來才發現，原來是啟動 MySQL 那個 script 
+		會主動的以『空的密碼』去嘗試登入 MySQL ，但為了安全性鳥哥修改過 MySQL 的密碼囉～當然就登入失敗～
+		後來改了改 script ，就略去這個問題啦！如此說來， script 確實是需要學習的啊！<br /><br /></li>
+
+		<li><span class="text_import1">簡單入侵偵測功能</span>：<br /><br />
+		當我們的系統有異狀時，大多會將這些異狀記錄在系統記錄器，也就是我們常提到的『系統登錄檔』，
+		那麼我們可以在固定的幾分鐘內主動的去分析系統登錄檔，若察覺有問題，就立刻通報管理員，
+		或者是立刻加強防火牆的設定規則，如此一來，你的主機可就能夠達到『自我保護』的聰明學習功能啦～
+		舉例來說，我們可以通過 shell script 去分析『當該封包嘗試幾次還是連線失敗之後，就予以抵擋住該
+		IP』之類的舉動，例如鳥哥寫過一個關於<a 
+		href="/linux_server/0360apache.php#security_teleport">抵擋砍站軟體的 shell script</a> ，
+		就是用這個想法去達成的呢！<br /><br /></li>
+
+		<li><span class="text_import1">連續指令單一化</span>：<br /><br />
+
+		其實，對於新手而言， script 最簡單的功能就是：『<span class="text_import2">彙整一些在 
+		command line 下達的連續指令，將他寫入 scripts 當中，而由直接執行 scripts 
+		來啟動一連串的 command line 指令輸入！</span>』例如： 防火牆連續規則 
+		(iptables)，開機載入程序的項目 (就是在 /etc/rc.d/rc.local 裡頭的資料)
+		，等等都是相似的功能啦！ 其實，說穿了，如果不考慮 program 的部分，那麼 
+		scripts 也可以想成『僅是幫我們把一大串的指令彙整在一個檔案裡面，
+		而直接執行該檔案就可以執行那一串又臭又長的指令段！』就是這麼簡單啦！<br /><br /></li>
+
+		<li><span class="text_import1">簡易的資料處理</span>：<br /><br />
+		由前一章<a href="/linux_basic/0330regularex.php">正規表示法</a>的 awk 程式說明中，
+		你可以發現， awk 可以用來處理簡單的數據資料呢！例如薪資單的處理啊等等的。
+		shell script 的功能更強大，例如鳥哥曾經用 shell script 直接處理數據資料的比對啊，
+		文字資料的處理啊等等的，撰寫方便，速度又快(因為在 Linux 效能較佳)，真的是很不錯用的啦！<br /><br /></li>
+
+		<li><span class="text_import1">跨平台支援與學習歷程較短</span>：<br /><br />
+
+		幾乎所有的 Unix Like 上面都可以跑 shell script ，連 MS Windows 系列也有相關的 script 模擬器可以用，
+		此外， shell script 的語法是相當親和的，看都看的懂得文字 (雖然是英文)，而不是機器碼，
+		很容易學習～這些都是你可以加以考量的學習點啊！</li>
+		</ul>
+
+		<p>上面這些都是你考慮學習 shell script 的特點～此外， shell script 還可以簡單的以 vim 
+		來直接編寫，實在是很方便的好東西！所以，還是建議你學習一下啦。</p>
+
+		<p>不過，雖然 shell script 號稱是程式 (program) ，但實際上， shell script 
+		處理資料的速度上是不太夠的。因為 shell script 用的是外部的指令與 bash shell 
+		的一些預設工具，所以，他常常會去呼叫外部的函式庫，因此，運算速度上面當然比不上傳統的程式語言。
+		所以囉，<span class="text_import2"> shell script 用在系統管理上面是很好的一項工具，但是用在處理大量數值運算上，
+		就不夠好了，因為 Shell scripts 的速度較慢，且使用的 CPU 資源較多，造成主機資源的分配不良。</span>還好，
+		我們通常利用 shell script 來處理伺服器的偵測，倒是沒有進行大量運算的需求啊！所以不必擔心的啦！</p>
+	</div>
+
+	<hr /><a name="script_1st"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">第一支 script 的撰寫與執行</span><br />
+	<div class="block2">
+		<p>如同前面講到的，shell script 其實就是純文字檔，我們可以編輯這個檔案，然後讓這個檔案來幫我們一次執行多個指令，
+		或者是利用一些運算與邏輯判斷來幫我們達成某些功能。所以啦，要編輯這個檔案的內容時，當然就需要具備有 bash 
+		指令下達的相關認識。下達指令需要注意的事項在<a 
+		href="/linux_basic/0160startlinux.php#cmd_cmd">第五章的開始下達指令</a>小節內已經提過，有疑問請自行回去翻閱。
+		在 shell script 的撰寫中還需要用到底下的注意事項：</p>
+
+		<ol class="text_import2">
+		<li>指令的執行是從上而下、從左而右的分析與執行；</li>
+
+		<li>指令的下達就如同<a href="/linux_basic/0160startlinux.php#cmd_cmd">第五章</a>內提到的：
+			指令、選項與參數間的多個空白都會被忽略掉；</li>
+		<li>空白行也將被忽略掉，並且 [tab] 按鍵所推開的空白同樣視為空白鍵；</li>
+		<li>如果讀取到一個 Enter 符號 (CR) ，就嘗試開始執行該行 (或該串) 命令；</li>
+		<li>至於如果一行的內容太多，則可以使用『 \[Enter] 』來延伸至下一行；</li>
+		<li>『 # 』可做為註解！任何加在 # 後面的資料將全部被視為註解文字而被忽略！</li>
+
+		</ol>
+
+		<p>如此一來，我們在 script 內所撰寫的程式，就會被一行一行的執行。現在我們假設你寫的這個程式檔名是
+		/home/dmtsai/shell.sh 好了，那如何執行這個檔案？很簡單，可以有底下幾個方法：</p>
+
+		<a name="script_run"></a>
+		<ul class="text_import2">
+		<li>直接指令下達： shell.sh 檔案必須要具備可讀與可執行 (rx) 的權限，然後：
+			<ul>
+			<li>絕對路徑：使用 /home/dmtsai/shell.sh 來下達指令；</li>
+
+			<li>相對路徑：假設工作目錄在 /home/dmtsai/ ，則使用 ./shell.sh 來執行</li>
+			<li>變數『PATH』功能：將 shell.sh 放在 PATH 指定的目錄內，例如： ~/bin/</li>
+			</ul><br /></li>
+		<li>以 bash 程式來執行：透過『 bash shell.sh 』或『 sh shell.sh 』來執行</li>
+		</ul>
+
+		<p>反正<span class="text_import2">重點就是要讓那個 shell.sh 內的指令可以被執行</span>的意思啦！
+		咦！那我為何需要使用 『./shell.sh 』來下達指令？忘記了嗎？回去<a 
+		href="/linux_basic/0320bash.php#settings_path">第十一章內的指令搜尋順序</a>察看一下，
+		你就會知道原因了！同時，由於 CentOS 預設使用者家目錄下的 ~/bin 目錄會被設定到 $PATH 內，所以你也可以將 shell.sh 
+		建立在 /home/dmtsai/bin/ 底下 ( ~/bin 目錄需要自行設定) 。此時，若 <span class="text_import2">shell.sh 在 ~/bin 
+		內且具有 rx 的權限，那就直接輸入 shell.sh 即可執行該腳本程式</span>！</p>
+
+		<p>那為何『 sh shell.sh 』也可以執行呢？這是因為 /bin/sh 其實就是 /bin/bash (連結檔)，使用 sh shell.sh 
+		亦即告訴系統，我想要直接以 bash 的功能來執行 shell.sh 這個檔案內的相關指令的意思，所以<span 
+		class="text_import2">此時你的 shell.sh 只要有 r 的權限即可被執行喔</span>！而我們也可以利用 sh 的參數，如 -n 及 -x
+		來檢查與追蹤 shell.sh 的語法是否正確呢！ ^_^<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">撰寫第一支 script</li></ul>
+
+		<p>在武俠世界中，不論是那個門派，要學武功要從掃地做起，那麼要學程式呢？呵呵，肯定是由『秀出 Hello World！』
+		這個字眼開始的！OK！那麼鳥哥就先寫一支 script 給大家瞧一瞧：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkdir scripts; cd scripts</span>
+
+[root@www scripts]# <span class="term_command">vi sh01.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#       This program shows "Hello World!" in your screen.
+# History:
+# 2005/08/23	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+echo -e "Hello World! \a \n"
+exit 0</span>
+</pre></td></tr></table>
+
+		<p>在本章當中，請將所有撰寫的 script 放置到你家目錄的 ~/scripts 這個目錄內，
+		未來比較好管理啦！上面的寫法當中，鳥哥主要將整個程式的撰寫分成數段，大致是這樣：</p>
+
+		<ol>
+		<li><span class="text_import2">第一行 #!/bin/bash 在宣告這個 script 使用的 shell 名稱：</span><br />
+		因為我們使用的是 bash ，所以，必須要以『 <b>#!/bin/bash</b> 』來宣告這個檔案內的語法使用
+		bash 的語法！那麼當這個程式被執行時，他就能夠載入 bash 的相關環境設定檔 (一般來說就是 <a
+		href="/linux_basic/0320bash.php#settings_bashrc_shell">non-login shell 的 ~/.bashrc</a>)，
+		並且執行 bash 來使我們底下的指令能夠執行！這很重要的！(在很多狀況中，如果沒有設定好這一行，
+		那麼該程式很可能會無法執行，因為系統可能無法判斷該程式需要使用什麼 shell 來執行啊！)<br /><br /></li>
+
+		<li><span class="text_import2">程式內容的說明：<br /></span>
+		整個 script 當中，除了第一行的『 #! 』是用來宣告 shell 的之外，其他的 # 都是『註解』用途！
+		所以上面的程式當中，第二行以下就是用來說明整個程式的基本資料。一般來說，
+		建議你一定要養成說明該 script 的：1. 內容與功能； 2. 版本資訊； 3. 作者與聯絡方式； 
+		4. 建檔日期；5. 歷史紀錄 等等。這將有助於未來程式的改寫與 debug 呢！<br /><br /></li>
+
+		<li><span class="text_import2">主要環境變數的宣告：</span><br />
+		建議務必要將一些重要的環境變數設定好，鳥哥個人認為， PATH 與 LANG (如果有使用到輸出相關的資訊時) 是當中最重要的！
+		如此一來，則可讓我們這支程式在進行時，可以直接下達一些外部指令，而不必寫絕對路徑呢！比較好啦！<br /><br /></li>
+
+		<li><span class="text_import2">主要程式部分</span><br />
+
+		就將主要的程式寫好即可！在這個例子當中，就是 echo 那一行啦！<br /><br /></li>
+
+		<li><span class="text_import2">執行成果告知 (定義回傳值)</span><br />
+		是否記得我們在<a href="/linux_basic/0320bash.php">第十一章</a>裡面要討論一個指令的執行成功與否，可以使用 
+		<a href="/linux_basic/0320bash.php#redirect_com">$?</a> 這個變數來觀察～
+		<span class="text_import2">那麼我們也可以利用 exit 這個指令來讓程式中斷，並且回傳一個數值給系統</span>。
+		在我們這個例子當中，鳥哥使用 exit 0 ，這代表<span class="text_import2">離開 script 並且回傳一個 0 給系統</span>，
+		所以我執行完這個 script 後，若接著下達 echo $? 則可得到 0 的值喔！
+		更聰明的讀者應該也知道了，呵呵！利用這個 exit n (n 是數字) 的功能，我們還可以自訂錯誤訊息，
+		讓這支程式變得更加的 smart 呢！</li>
+
+		</ol>
+
+		<p>接下來透過剛剛上頭介紹的執行方法來執行看看結果吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">sh sh01.sh</span>
+Hello World !
+</pre></td></tr></table>
+
+		<p>你會看到螢幕是這樣，而且應該還會聽到『咚』的一聲，為什麼呢？還記得前一章提到的 
+		<a href="0330regularex.php#printf">printf</a> 吧？用 echo 接著那些特殊的按鍵也可以發生同樣的事情～
+		不過， echo 必須要加上 -e 的選項才行！呵呵！在你寫完這個小 script 之後，你就可以大聲的說：『我也會寫程式了』！哈哈！
+		很簡單有趣吧～ ^_^</p>
+
+		<p>另外，你也可以利用：『chmod a+x sh01.sh; ./sh01.sh』來執行這個 script 的呢！</p>
+	</div>
+
+	<hr /><a name="script_be"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">撰寫 shell script 的良好習慣建立</span><br />
+	<div class="block2">
+		<p>一個良好習慣的養成是很重要的～大家在剛開始撰寫程式的時候，最容易忽略這部分，
+		認為程式寫出來就好了，其他的不重要。其實，如果程式的說明能夠更清楚，那麼對你自己是有很大的幫助的。</p>
+
+		<p>舉例來說，鳥哥自己為了自己的需求，曾經撰寫了不少的 script 來幫我進行主機 IP 的偵測啊、
+		登錄檔分析與管理啊、自動上傳下載重要設定檔啊等等的，不過，早期就是因為太懶了，
+		管理的主機又太多了，常常同一個程式在不同的主機上面進行更改，到最後，到底哪一支才是最新的都記不起來，
+		而且，重點是，我到底是改了哪裡？為什麼做那樣的修改？都忘的一乾二淨～真要命～</p>
+
+		<p>所以，後來鳥哥在寫程式的時候，通常會比較仔細的將程式的設計過程給他記錄下來，而且還會記錄一些歷史紀錄，
+		如此一來，好多了～至少很容易知道我修改了哪些資料，以及程式修改的理念與邏輯概念等等，
+		在維護上面是輕鬆很多很多的喔！</p>
+
+		<p>另外，在一些環境的設定上面，畢竟每個人的環境都不相同，為了取得較佳的執行環境，
+		我都會自行先定義好一些一定會被用到的環境變數，例如 PATH 這個玩意兒！
+		這樣比較好啦～所以說，建議你一定要養成良好的 script 撰寫習慣，在每個 script 的檔頭處記錄好：</p>
+
+		<ul class="text_import2">
+		<li>script 的功能；</li>
+		<li>script 的版本資訊；</li>
+
+		<li>script 的作者與聯絡方式；</li>
+		<li>script 的版權宣告方式；</li>
+		<li>script 的 History (歷史紀錄)；</li>
+		<li>script 內較特殊的指令，使用『絕對路徑』的方式來下達；</li>
+		<li>script 運作時需要的環境變數預先宣告與設定。</li></ul>
+
+		<p>除了記錄這些資訊之外，在較為特殊的程式碼部分，個人建議務必要加上註解說明，可以幫助你非常非常多！
+		此外，程式碼的撰寫最好使用巢狀方式，在<span class="text_import2">包覆的內部程式碼最好能以 [tab] 按鍵的空格向後推</span>，
+		這樣你的程式碼會顯的非常的漂亮與有條理！在查閱與 debug 上較為輕鬆愉快喔！
+		另外，使用<span class="text_import2">撰寫 script 的工具最好使用 vim 而不是 vi</span>
+
+		，因為 vim 會有額外的語法檢驗機制，能夠在第一階段撰寫時就發現語法方面的問題喔！</p>
+	</div>
+</div>
+
+
+<hr /><a name="some_ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">簡單的 shell script 練習</span><br />
+<div class="block1">
+	<p>在第一支 shell script 撰寫完畢之後，相信你應該具有基本的撰寫功力了。
+	接下來，在開始更深入的程式概念之前，我們先來玩一些簡單的小範例好了。
+	底下的範例中，達成結果的方式相當的多，建議你先自行撰寫看看，寫完之後再與鳥哥寫的內容比對，
+	這樣才能更加深概念喔！好！不囉唆，我們就一個一個來玩吧！<br /><br /></p>
+
+	<hr /><a name="some_ex_simple"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">簡單範例</span><br />
+
+	<div class="block2">
+		<p>底下的範例在很多的腳本程式中都會用到，而底下的範例又都很簡單！值得參考看看喔！<br /><br /></p>
+
+		<a name="ex_read"></a>
+		<hr /><ul class="list1"><li class="text_import1">對談式腳本：變數內容由使用者決定</li></ul>
+
+		<p>很多時候我們需要使用者輸入一些內容，好讓程式可以順利運作。
+		簡單的來說，大家應該都有安裝過軟體的經驗，安裝的時候，他不是會問你『要安裝到那個目錄去』嗎？
+		那個讓使用者輸入資料的動作，就是讓使用者輸入變數內容啦。</p>
+
+		<p>你應該還記得在<a href="/linux_basic/0320bash.php">十一章 bash</a> 的時候，我們有學到一個 
+		<a href="/linux_basic/0320bash.php#read">read</a> 指令吧？現在，請你以 read 指令的用途，撰寫一個 
+		script ，他可以讓使用者輸入：1. first name 與 2. last name，
+		最後並且在螢幕上顯示：『Your full name is: 』的內容：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh02.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	User inputs his first name and last name.  Program shows his full name.
+# History:
+# 2005/08/23	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+read -p "Please input your first name: " firstname  <span class="term_note"># 提示使用者輸入</span>
+read -p "Please input your last name:  " lastname   <span class="term_note"># 提示使用者輸入</span>
+echo -e "\nYour full name is: $firstname $lastname" <span class="term_note"># 結果由螢幕輸出</span></span>
+</pre></td></tr></table>
+
+		<p>將上面這個 sh02.sh 執行一下，你就能夠發現使用者自己輸入的變數可以讓程式所取用，並且將他顯示到螢幕上！
+		接下來，如果想要製作一個每次執行都會依據不同的日期而變化結果的腳本呢？<br /><br /></p>
+
+		<a name="ex_date"></a>
+		<hr /><ul class="list1"><li class="text_import1">隨日期變化：利用 date 進行檔案的建立</li></ul>
+
+		<p>想像一個狀況，假設我的伺服器內有資料庫，資料庫每天的資料都不太一樣，因此當我備份時，
+		希望將每天的資料都備份成不同的檔名，這樣才能夠讓舊的資料也能夠保存下來不被覆蓋。
+		哇！不同檔名呢！這真困擾啊？難道要我每天去修改 script ？</p>
+
+		<p>不需要啊！考慮每天的『日期』並不相同，所以我可以將檔名取成類似： backup.2009-02-14.data ，
+		不就可以每天一個不同檔名了嗎？呵呵！確實如此。那個 2009-02-14 怎麼來的？那就是重點啦！接下來出個相關的例子：
+		假設我想要建立三個空的檔案 (透過 <a href="/linux_basic/0220filemanager.php#touch">touch</a>)
+		，檔名最開頭由使用者輸入決定，假設使用者輸入 filename 好了，那今天的日期是 2009/02/14 ，
+		我想要以前天、昨天、今天的日期來建立這些檔案，亦即 filename_20090212, filename_20090213, filename_20090214 
+		，該如何是好？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh03.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Program creates three files, which named by user's input 
+#	and date command.
+# History:
+# 2005/08/23	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+<span class="term_say"># 1. 讓使用者輸入檔案名稱，並取得 fileuser 這個變數；</span>
+echo -e "I will use 'touch' command to create 3 files." <span class="term_note"># 純粹顯示資訊</span>
+read -p "Please input your filename: " fileuser         <span class="term_note"># 提示使用者輸入</span>
+
+<span class="term_say"># 2. 為了避免使用者隨意按 Enter ，利用<a href="/linux_basic/0320bash.php#variable_other_re">變數功能</a>分析檔名是否有設定？</span>
+
+filename=${fileuser:-"filename"}           <span class="term_note"># 開始判斷有否設定檔名</span>
+
+<span class="term_say"># 3. 開始利用 date 指令來取得所需要的檔名了；</span>
+date1=$(date --date='2 days ago' +%Y%m%d)  <span class="term_note"># 前兩天的日期</span>
+date2=$(date --date='1 days ago' +%Y%m%d)  <span class="term_note"># 前一天的日期</span>
+date3=$(date +%Y%m%d)                      <span class="term_note"># 今天的日期</span>
+file1=${filename}${date1}                  <span class="term_note"># 底下三行在設定檔名</span>
+
+file2=${filename}${date2}
+file3=${filename}${date3}
+
+<span class="term_say"># 4. 將檔名建立吧！</span>
+touch "$file1"                             <span class="term_note"># 底下三行在建立檔案</span>
+touch "$file2"
+touch "$file3"</span>
+</pre></td></tr></table>
+
+		<p>上面的範例鳥哥使用了很多在<a href="/linux_basic/0320bash.php">十一章</a>介紹過的概念：
+		包括小指令『 $(command) 』的取得訊息、變數的設定功能、變數的累加以及利用 touch 指令輔助！
+		如果你開始執行這個 sh03.sh 之後，你可以進行兩次執行：一次直接按 [Enter] 來查閱檔名是啥？
+		一次可以輸入一些字元，這樣可以判斷你的腳本是否設計正確喔！<br /><br /></p>
+
+		<a name="ex_cal"></a>
+
+		<hr /><ul class="list1"><li class="text_import1">數值運算：簡單的加減乘除</li></ul>
+
+		<p>各位看官應該還記得，我們可以使用 <a href="/linux_basic/0320bash.php#declare">declare</a> 來定義變數的類型吧？
+		當變數定義成為整數後才能夠進行加減運算啊！此外，我們也可以利用『 $((計算式)) 』來進行數值運算的。
+		可惜的是， bash shell 裡頭預設僅支援到整數的資料而已。OK！那我們來玩玩看，如果我們要使用者輸入兩個變數，
+		然後將兩個變數的內容相乘，最後輸出相乘的結果，那可以怎麼做？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh04.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	User inputs 2 integer numbers; program will cross these two numbers.
+# History:
+# 2005/08/23	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+echo -e "You SHOULD input 2 numbers, I will cross them! \n"
+read -p "first number:  " firstnu
+read -p "second number: " secnu
+total=$(($firstnu*$secnu))
+echo -e "\nThe result of $firstnu x $secnu is ==&gt; $total"</span>
+
+</pre></td></tr></table>
+
+		<p>在數值的運算上，我們可以使用『 <span class="text_import2">declare -i total=$firstnu*$secnu</span> 』
+		也可以使用上面的方式來進行！基本上，鳥哥比較建議使用這樣的方式來進行運算：</p>
+
+		<blockquote class="text_import2">var=$((運算內容))</blockquote>
+
+		<p>不但容易記憶，而且也比較方便的多，因為兩個小括號內可以加上空白字元喔！
+		未來你可以使用這種方式來計算的呀！至於數值運算上的處理，則有：『
+		<span class="text_import2" style="font-family: '細明體'">+, -, *, /, %</span> 』等等。
+		那個 % 是取餘數啦～舉例來說， 13 對 3 取餘數，結果是 13=4*3+1，所以餘數是 1 啊！就是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">echo $(( 13 % 3 ))</span>
+1
+</pre></td></tr></table>
+
+		<p>這樣瞭解了吧？多多學習與應用喔！ ^_^</p>
+	</div>
+
+
+	<hr /><a name="some_ex_run"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">script 的執行方式差異
+	 (source, sh script, ./script)</span><br />
+
+	<div class="block2">
+		<p>不同的 script 執行方式會造成不一樣的結果喔！尤其影響 bash 的環境很大呢！腳本的執行方式除了<a
+		href="#script_run">前面小節談到的方式</a>之外，還可以利用 <a href="/linux_basic/0320bash.php#source">source</a>
+		或小數點 (.) 來執行喔！那麼這種執行方式有何不同呢？當然是不同的啦！讓我們來說說！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">利用直接執行的方式來執行 script</li></ul>
+
+		<p>當使用前一小節提到的直接指令下達 (不論是絕對路徑/相對路徑還是 $PATH 內)，或者是利用 bash (或 sh) 來下達腳本時，
+		該 script 都會使用一個新的 bash 環境來執行腳本內的指令！也就是說，使用者種執行方式時，
+		其實 script 是在子程序的 bash 內執行的！我們在<a href="/linux_basic/0320bash.php">第十一章 BASH</a> 內談到
+		<a href="/linux_basic/0320bash.php#export">export</a> 的功能時，曾經就父程序/子程序談過一些概念性的問題，
+		重點在於：『<span class="text_import2">當子程序完成後，在子程序內的各項變數或動作將會結束而不會傳回到父程序中</span>』！
+		這是什麼意思呢？</p>
+
+		<p>我們舉剛剛提到過的 sh02.sh 這個腳本來說明好了，這個腳本可以讓使用者自行設定兩個變數，分別是 firstname 與 
+		lastname，想一想，如果你直接執行該指令時，該指令幫你設定的 firstname 會不會生效？看一下底下的執行結果：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">echo $firstname $lastname</span>
+    <span class="term_note">&lt;==確認了，這兩個變數並不存在喔！</span>
+[root@www scripts]# <span class="term_command">sh sh02.sh</span>
+Please input your first name: <span class="term_write">VBird</span> <span class="term_note">&lt;==這個名字是鳥哥自己輸入的</span>
+
+Please input your last name:  <span class="term_write">Tsai </span>
+
+Your full name is: <u>VBird Tsai</u>      <span class="term_note">&lt;==看吧！在 script 運作中，這兩個變數有生效</span>
+[root@www scripts]# <span class="term_command">echo $firstname $lastname</span>
+    <span class="term_note">&lt;==事實上，這兩個變數在父程序的 bash 中還是不存在的！</span>
+</pre></td></tr></table>
+
+		<p>上面的結果你應該會覺得很奇怪，怎麼我已經利用 sh02.sh 設定好的變數竟然在 bash 環境底下無效！怎麼回事呢？
+		如果將程序相關性繪製成圖的話，我們以下圖來說明。當你使用直接執行的方法來處理時，系統會給予一支新的 bash
+		讓我們來執行 sh02.sh 裡面的指令，因此你的 firstname, lastname 等變數其實是在下圖中的子程序 bash 內執行的。
+		當 sh02.sh 執行完畢後，子程序 bash 內的所有資料便被移除，因此上表的練習中，在父程序底下 echo $firstname 時，
+		就看不到任何東西了！這樣可以理解嗎？</p>
+
+		<center><img src="0340bashshell-scripts/non-source.gif" alt="sh02.sh 在子程序中運作" 
+		title="sh02.sh 在子程序中運作" border="0" /><br />
+		圖 2.2.1、sh02.sh 在子程序中運作<br /></center><br />
+
+		<hr /><ul class="list1"><li class="text_import1">利用 source 來執行腳本：在父程序中執行</li></ul>
+
+		<p>如果你使用 source 來執行指令那就不一樣了！同樣的腳本我們來執行看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">source sh02.sh</span>
+Please input your first name: <span class="term_write">VBird</span>
+Please input your last name:  <span class="term_write">Tsai</span>
+
+Your full name is: <u>VBird Tsai</u>
+[root@www scripts]# <span class="term_command">echo $firstname $lastname</span>
+
+VBird Tsai  <span class="term_note">&lt;==嘿嘿！有資料產生喔！</span>
+</pre></td></tr></table>
+
+		<p>竟然生效了！沒錯啊！因為 source 對 script 的執行方式可以使用底下的圖示來說明！
+		sh02.sh 會在父程序中執行的，因此各項動作都會在原本的 bash 內生效！這也是為啥你不登出系統而要讓某些寫入 ~/.bashrc 
+		的設定生效時，需要使用『 source ~/.bashrc 』而不能使用『 bash ~/.bashrc 』是一樣的啊！</p>
+
+		<center><img src="0340bashshell-scripts/source.gif" alt="sh02.sh 在父程序中運作" 
+		title="sh02.sh 在父程序中運作" border="0" /><br />
+		圖 2.2.2、sh02.sh 在父程序中運作<br /></center>
+	</div>
+</div>
+
+
+<hr /><a name="dis"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">善用判斷式</span><br />
+<div class="block1">
+	<p>在第十一章中，我們提到過 <a href="/linux_basic/0320bash.php#returnvar">$?</a> 這個變數所代表的意義，
+	此外，也透過 <a href="/linux_basic/0320bash.php#redirect_com">&amp;&amp; 及 ||</a>
+	來作為前一個指令執行回傳值對於後一個指令是否要進行的依據。第十一章的討論中，如果想要判斷一個目錄是否存在，
+	當時我們使用的是 ls 這個指令搭配資料流重導向，最後配合 $? 來決定後續的指令進行與否。
+	但是否有更簡單的方式可以來進行『條件判斷』呢？有的～那就是『 test 』這個指令。<br /><br /></p>
+
+	<hr /><a name="test"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 test 指令的測試功能</span><br />
+	<div class="block2">
+		<p>當我要檢測系統上面某些檔案或者是相關的屬性時，利用 test 這個指令來工作真是好用得不得了，
+		舉例來說，我要檢查 /dmtsai 是否存在時，使用：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">test -e /dmtsai</span>
+</pre></td></tr></table>
+
+		<p>執行結果並不會顯示任何訊息，但最後我們可以透過 $? 或 &amp;&amp; 及 || 來展現整個結果呢！
+		例如我們在將上面的例子改寫成這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">test -e /dmtsai &amp;&amp; echo "exist" || echo "Not exist"</span>
+Not exist  <span class="term_note">&lt;==結果顯示不存在啊！</span>
+</pre></td></tr></table>
+
+		<p>最終的結果可以告知我們是『exist』還是『Not exist』呢！那我知道 -e 是測試一個『東西』在不在，
+		如果還想要測試一下該檔名是啥玩意兒時，還有哪些標誌可以來判斷的呢？呵呵！有底下這些東西喔！</p>
+
+<table width="85%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+
+<tr bgcolor="lightblue" align="center"><td width="100">測試的標誌</td><td>代表意義</td></tr>
+<tr bgcolor="lightblue"><td colspan="2">1. 關於某個檔名的『檔案類型』判斷，如 test -e filename 表示存在否</td></tr>
+<tr><td align="center">-e</td><td>該『檔名』是否存在？(常用)</td></tr>
+<tr><td align="center">-f</td><td>該『檔名』是否存在且為檔案(file)？(常用)</td></tr>
+<tr><td align="center">-d</td><td>該『檔名』是否存在且為目錄(directory)？(常用)</td></tr>
+<tr><td align="center">-b</td><td>該『檔名』是否存在且為一個 block device 裝置？</td></tr>
+
+<tr><td align="center">-c</td><td>該『檔名』是否存在且為一個 character device 裝置？</td></tr>
+<tr><td align="center">-S</td><td>該『檔名』是否存在且為一個 Socket 檔案？</td></tr>
+<tr><td align="center">-p</td><td>該『檔名』是否存在且為一個 FIFO (pipe) 檔案？</td></tr>
+<tr><td align="center">-L</td><td>該『檔名』是否存在且為一個連結檔？</td></tr>
+<tr bgcolor="lightblue"><td colspan="2">2. 關於檔案的權限偵測，如 test -r filename 表示可讀否 (但 root 權限常有例外)</td></tr>
+<tr><td align="center">-r</td><td>偵測該檔名是否存在且具有『可讀』的權限？</td></tr>
+
+<tr><td align="center">-w</td><td>偵測該檔名是否存在且具有『可寫』的權限？</td></tr>
+<tr><td align="center">-x</td><td>偵測該檔名是否存在且具有『可執行』的權限？</td></tr>
+<tr><td align="center">-u</td><td>偵測該檔名是否存在且具有『SUID』的屬性？</td></tr>
+<tr><td align="center">-g</td><td>偵測該檔名是否存在且具有『SGID』的屬性？</td></tr>
+<tr><td align="center">-k</td><td>偵測該檔名是否存在且具有『Sticky bit』的屬性？</td></tr>
+<tr><td align="center">-s</td><td>偵測該檔名是否存在且為『非空白檔案』？</td></tr>
+
+<tr bgcolor="lightblue"><td colspan="2">3. 兩個檔案之間的比較，如： test file1 -nt file2</td></tr>
+<tr><td align="center">-nt</td><td>(newer than)判斷 file1 是否比 file2 新</td></tr>
+<tr><td align="center">-ot</td><td>(older than)判斷 file1 是否比 file2 舊</td></tr>
+<tr><td align="center">-ef</td><td>判斷 file1 與 file2 是否為同一檔案，可用在判斷 hard link 的判定上。
+				主要意義在判定，兩個檔案是否均指向同一個 inode 哩！</td></tr>
+<tr bgcolor="lightblue"><td colspan="2">4. 關於兩個整數之間的判定，例如 test n1 -eq n2</td></tr>
+<tr><td align="center">-eq</td><td>兩數值相等 (equal)</td></tr>
+<tr><td align="center">-ne</td><td>兩數值不等 (not equal)</td></tr>
+
+<tr><td align="center">-gt</td><td>n1 大於 n2 (greater than)</td></tr>
+<tr><td align="center">-lt</td><td>n1 小於 n2 (less than)</td></tr>
+<tr><td align="center">-ge</td><td>n1 大於等於 n2 (greater than or equal)</td></tr>
+<tr><td align="center">-le</td><td>n1 小於等於 n2 (less than or equal)</td></tr>
+<tr bgcolor="lightblue"><td colspan="2">5. 判定字串的資料</td></tr>
+<tr><td align="center">test -z string</td><td>判定字串是否為 0 ？若 string 為空字串，則為 true</td></tr>
+
+<tr><td align="center">test -n string</td><td>判定字串是否非為 0 ？若 string 為空字串，則為 false。<br />註： -n 亦可省略</td></tr>
+<tr><td align="center">test str1 = str2</td><td>判定 str1 是否等於 str2 ，若相等，則回傳 true</td></tr>
+<tr><td align="center">test str1 != str2</td><td>判定 str1 是否不等於 str2 ，若相等，則回傳 false</td></tr>
+<tr bgcolor="lightblue"><td colspan="2">6. 多重條件判定，例如： test -r filename -a -x filename</td></tr>
+<tr><td align="center">-a</td><td>(and)兩狀況同時成立！例如 test -r file -a -x file，則 file 同時具有 r 與
+				x 權限時，才回傳 true。</td></tr>
+<tr><td align="center">-o</td><td>(or)兩狀況任何一個成立！例如 test -r file -o -x file，則 file 具有 r 或
+				x 權限時，就可回傳 true。</td></tr>
+
+<tr><td align="center">!</td><td>反相狀態，如 test ! -x file ，當 file 不具有 x 時，回傳 true</td></tr>
+</table>
+
+		<p>OK！現在我們就利用 test 來幫我們寫幾個簡單的例子。首先，判斷一下，讓使用者輸入一個檔名，我們判斷：</p>
+
+		<ol>
+		<li>這個檔案是否存在，若不存在則給予一個『Filename does not exist』的訊息，並中斷程式；</li>
+		<li>若這個檔案存在，則判斷他是個檔案或目錄，結果輸出『Filename is regular file』或
+			『Filename is directory』</li>
+
+		<li>判斷一下，執行者的身份對這個檔案或目錄所擁有的權限，並輸出權限資料！</li>
+		</ol>
+		<p>你可以先自行創作看看，然後再跟底下的結果討論討論。注意利用 test 與 &amp;&amp; 還有 || 等標誌！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh05.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	User input a filename, program will check the flowing:
+#	1.) exist? 2.) file/directory? 3.) file permissions 
+# History:
+# 2005/08/25	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+<span class="term_say"># 1. 讓使用者輸入檔名，並且判斷使用者是否真的有輸入字串？</span>
+
+echo -e "Please input a filename, I will check the filename's type and \
+permission. \n\n"
+read -p "Input a filename : " filename
+test -z $filename &amp;&amp; echo "You MUST input a filename." &amp;&amp; exit 0
+<span class="term_say"># 2. 判斷檔案是否存在？若不存在則顯示訊息並結束腳本</span>
+test ! -e $filename &amp;&amp; echo "The filename '$filename' DO NOT exist" &amp;&amp; exit 0
+<span class="term_say"># 3. 開始判斷檔案類型與屬性</span>
+test -f $filename &amp;&amp; filetype="regulare file"
+test -d $filename &amp;&amp; filetype="directory"
+test -r $filename &amp;&amp; perm="readable"
+test -w $filename &amp;&amp; perm="$perm writable"
+test -x $filename &amp;&amp; perm="$perm executable"
+
+<span class="term_say"># 4. 開始輸出資訊！</span>
+echo "The filename: $filename is a $filetype"
+echo "And the permissions are : $perm"</span>
+</pre></td></tr></table>
+
+		<p>如果你執行這個腳本後，他會依據你輸入的檔名來進行檢查喔！先看是否存在，再看為檔案或目錄類型，最後判斷權限。
+		但是你必須要注意的是，<span class="text_import2">由於 root 在很多權限的限制上面都是無效的，所以使用 root 執行這個腳本時，
+		常常會發現與 ls -l 觀察到的結果並不相同</span>！所以，建議使用一般使用者來執行這個腳本試看看。
+		不過你必須要使用 root 的身份先將這個腳本搬移給使用者就是了，不然一般使用者無法進入 /root 目錄的。
+		很有趣的例子吧！你可以自行再以其他的案例來撰寫一下可用的功能呢！</p>
+	</div>
+
+	<hr /><a name="test_2"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用判斷符號 [ ]</span><br />
+
+	<div class="block2">
+		<p>除了我們很喜歡使用的 test 之外，其實，我們還可以利用判斷符號『 [ ] 』(就是中括號啦) 來進行資料的判斷呢！
+		舉例來說，如果我想要知道 $HOME 這個變數是否為空的，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">[ -z "$HOME" ] ; echo $?</span>
+</pre></td></tr></table>
+
+		<p>使用中括號必須要特別注意，因為中括號用在很多地方，包括萬用字元與正規表示法等等，所以如果要在 bash 
+		的語法當中使用中括號作為 shell 的判斷式時，必須要注意<span 
+		class="text_import2">中括號的兩端需要有空白字元來分隔喔</span>！
+		假設我空白鍵使用『□』符號來表示，那麼，在這些地方你都需要有空白鍵：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[  "$HOME"  ==  "$MAIL"  ]
+[□"$HOME"□==□"$MAIL"□]
+ ↑       ↑  ↑       ↑
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		你會發現鳥哥在上面的判斷式當中使用了兩個等號『 == 』。其實在 bash 當中使用一個等號與兩個等號的結果是一樣的！
+		不過在一般慣用程式的寫法中，一個等號代表『變數的設定』，兩個等號則是代表『邏輯判斷 (是否之意)』。
+		由於我們在中括號內重點在於『判斷』而非『設定變數』，因此鳥哥建議您還是使用兩個等號較佳！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>上面的例子在說明，兩個字串 $HOME 與 $MAIL 是否相同的意思，相當於 test $HOME = $MAIL 的意思啦！
+		而如果沒有空白分隔，例如 [$HOME==$MAIL] 時，我們的 bash 就會顯示錯誤訊息了！這可要很注意啊！
+		所以說，你最好要注意：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>在中括號 [] 內的每個元件都需要有空白鍵來分隔；</li>
+
+		<li>在中括號內的變數，最好都以雙引號括號起來；</li>
+		<li>在中括號內的常數，最好都以單或雙引號括號起來。</li>
+		</ul>
+
+		<p>為什麼要這麼麻煩啊？直接舉例來說，假如我設定了 name="VBird Tsai" ，然後這樣判定：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">name="VBird Tsai"</span>
+
+[root@www ~]# <span class="term_command">[ $name == "VBird" ]</span>
+bash: [: too many arguments
+</pre></td></tr></table>
+
+		<p>見鬼了！怎麼會發生錯誤啊？bash 還跟我說錯誤是由於『太多參數 (arguments)』所致！
+		為什麼呢？因為 $name 如果沒有使用雙引號刮起來，那麼上面的判定式會變成：</p>
+
+		<blockquote class="text_import2" style="font-family: '細明體'">[ VBird Tsai == "VBird" ] </blockquote>
+
+		<p>上面肯定不對嘛！因為一個判斷式僅能有兩個資料的比對，上面 VBird 與 Tsai 還有 "VBird" 就有三個資料！
+		這不是我們要的！我們要的應該是底下這個樣子：</p>
+
+		<blockquote class="text_import2" style="font-family: '細明體'">[ "VBird Tsai" == "VBird" ] </blockquote>
+
+		<p>這可是差很多的喔！另外，中括號的使用方法與 test 幾乎一模一樣啊～
+		只是中括號比較常用在<a href="#rule">條件判斷式 if ..... then ..... fi</a> 的情況中就是了。
+		好，那我們也使用中括號的判斷來做一個小案例好了，案例設定如下：</p>
+		<ol>
+		<li>當執行一個程式的時候，這個程式會讓使用者選擇 Y 或 N ，</li>
+		<li>如果使用者輸入 Y 或 y 時，就顯示『 OK, continue 』</li>
+
+		<li>如果使用者輸入 n 或 N 時，就顯示『 Oh, interrupt ！』</li>
+		<li>如果不是 Y/y/N/n 之內的其他字元，就顯示『 I don't know what your choice is 』</li>
+		</ol>
+		利用中括號、 &amp;&amp; 與 || 來繼續吧！<br />
+
+<a name="sh06"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh06.sh</span>
+
+<span class="term_write">#!/bin/bash
+# Program:
+# 	This program shows the user's choice
+# History:
+# 2005/08/25	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+read -p "Please input (Y/N): " yn
+[ "$yn" == "Y" -o "$yn" == "y" ] &amp;&amp; echo "OK, continue" &amp;&amp; exit 0
+[ "$yn" == "N" -o "$yn" == "n" ] &amp;&amp; echo "Oh, interrupt!" &amp;&amp; exit 0
+echo "I don't know what your choice is" &amp;&amp; exit 0</span>
+</pre></td></tr></table>
+
+		<p>由於輸入正確 (Yes) 的方法有大小寫之分，不論輸入大寫 Y 或小寫 y  都是可以的，此時判斷式內就得要有兩個判斷才行！
+		由於是任何一個成立即可 (大小或小寫的 y) ，所以這裡使用 -o (或) 連結兩個判斷喔！
+		很有趣吧！利用這個字串判別的方法，我們就可以很輕鬆的將使用者想要進行的工作分門別類呢！
+		接下來，我們再來談一些其他有的沒有的東西吧！</p>
+
+	</div>
+
+	<hr /><a name="dis3"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Shell script 的預設變數($0, $1...)</span><br />
+	<div class="block2">
+		<p>我們知道指令可以帶有選項與參數，例如 ls -la 可以察看包含隱藏檔的所有屬性與權限。那麼 shell script 
+		能不能在腳本檔名後面帶有參數呢？很有趣喔！舉例來說，如果你想要重新啟動系統登錄檔的功能，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">file /etc/init.d/syslog</span>
+/etc/init.d/syslog: Bourne-Again shell script text executable
+
+<span class="term_say"># 使用 file 來查詢後，系統告知這個檔案是個 bash 的可執行 script 喔！</span>
+[root@www ~]# <span class="term_command">/etc/init.d/syslog restart</span>
+</pre></td></tr></table>
+
+		<p>restart 是除新啟動的意思，上面的指令可以『重新啟動 /etc/init.d/syslog 這支程式』的意思！
+		唔！那麼如果你在 /etc/init.d/syslog 後面加上 stop 呢？沒錯！就可以直接關閉該服務了！這麼神奇啊？
+		沒錯啊！如果你要依據程式的執行給予一些變數去進行不同的任務時，本章一開始是使用 <a href="#ex_read">read</a>
+		的功能！但 read 功能的問題是你得要手動由鍵盤輸入一些判斷式。如果透過指令後面接參數，
+		那麼一個指令就能夠處理完畢而不需要手動再次輸入一些變數行為！這樣下達指令會比較簡單方便啦！</p>
+
+		<p>script 是怎麼達成這個功能的呢？其實 script 針對參數已經有設定好一些變數名稱了！對應如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_write">/path/to/scriptname  opt1  opt2  opt3  opt4 
+       $0             $1    $2    $3    $4</span>
+</pre></td></tr></table>
+
+		<p>這樣夠清楚了吧？執行的腳本檔名為 $0 這個變數，第一個接的參數就是 $1 啊～
+		所以，只要我們在 script 裡面善用 $1 的話，就可以很簡單的立即下達某些指令功能了！除了這些數字的變數之外，
+		我們還有一些較為特殊的變數可以在 script 內使用來呼叫這些參數喔！</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>$# ：代表後接的參數『個數』，以上表為例這裡顯示為『 4 』；</li>
+		<li>$@ ：代表『 "$1" "$2" "$3" "$4" 』之意，每個變數是獨立的(用雙引號括起來)；</li>
+
+		<li>$* ：代表『 "$1<u>c</u>$2<u>c</u>$3<u>c</u>$4" 』，其中 <u>c</u> 為分隔字元，預設為空白鍵，
+			所以本例中代表『 "$1 $2 $3 $4" 』之意。</li>
+		</ul>
+
+		<p>那個 $@ 與 $* 基本上還是有所不同啦！不過，一般使用情況下可以直接記憶 $@ 即可！
+		好了，來做個例子吧～假設我要執行一個可以攜帶參數的 script ，執行該腳本後螢幕會顯示如下的資料：</p>
+
+		<ul>
+		<li>程式的檔名為何？</li>
+		<li>共有幾個參數？</li>
+		<li>若參數的個數小於 2 則告知使用者參數數量太少</li>
+		<li>全部的參數內容為何？</li>
+		<li>第一個參數為何？</li>
+
+		<li>第二個參數為何</li>
+		</ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh07.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Program shows the script name, parameters...
+# History:
+# 2009/02/17	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+echo "The script name is        ==&gt; $0"
+echo "Total parameter number is ==&gt; $#"
+[ "$#" -lt 2 ] &amp;&amp; echo "The number of parameter is less than 2.  Stop here." \
+	&amp;&amp; exit 0
+echo "Your whole parameter is   ==&gt; '$@'"
+echo "The 1st parameter         ==&gt; $1"
+echo "The 2nd parameter         ==&gt; $2"</span>
+
+</pre></td></tr></table>
+
+		<p>執行結果如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">sh sh07.sh theone haha quot</span>
+The script name is        ==&gt; sh07.sh            <span class="term_note">&lt;==檔名</span>
+Total parameter number is ==&gt; 3                  <span class="term_note">&lt;==果然有三個參數</span>
+
+Your whole parameter is   ==&gt; 'theone haha quot' <span class="term_note">&lt;==參數的內容全部</span>
+The 1st parameter         ==&gt; theone             <span class="term_note">&lt;==第一個參數</span>
+The 2nd parameter         ==&gt; haha               <span class="term_note">&lt;==第二個參數</span>
+</pre></td></tr></table><br />
+
+		<a name="shift"></a>
+		<hr /><ul class="list1"><li class="text_import1">shift：造成參數變數號碼偏移</li></ul>
+
+		<p>除此之外，腳本後面所接的變數是否能夠進行偏移 (shift) 呢？什麼是偏移啊？我們直接以底下的範例來說明好了，
+		用範例說明比較好解釋！我們將 sh07.sh 的內容稍作變化一下，用來顯示每次偏移後參數的變化情況：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh08.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Program shows the effect of shift function.
+# History:
+# 2009/02/17	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+echo "Total parameter number is ==&gt; $#"
+echo "Your whole parameter is   ==&gt; '$@'"
+shift   <span class="term_note"># 進行第一次『一個變數的 shift 』</span>
+
+echo "Total parameter number is ==&gt; $#"
+echo "Your whole parameter is   ==&gt; '$@'"
+shift 3 <span class="term_note"># 進行第二次『三個變數的 shift 』</span>
+echo "Total parameter number is ==&gt; $#"
+echo "Your whole parameter is   ==&gt; '$@'"</span>
+</pre></td></tr></table>
+
+		<p>這玩意的執行成果如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">sh sh08.sh one two three four five six</span> <span class="term_note">&lt;==給予六個參數</span>
+Total parameter number is ==&gt; 6   <span class="term_note">&lt;==最原始的參數變數情況</span>
+Your whole parameter is   ==&gt; 'one two three four five six'
+Total parameter number is ==&gt; 5   <span class="term_note">&lt;==第一次偏移，看底下發現第一個 one 不見了</span>
+
+Your whole parameter is   ==&gt; 'two three four five six'
+Total parameter number is ==&gt; 2   <span class="term_note">&lt;==第二次偏移掉三個，two three four 不見了</span>
+Your whole parameter is   ==&gt; 'five six'
+</pre></td></tr></table>
+
+		<p>光看結果你就可以知道啦，那個 shift 會移動變數，而且 shift 後面可以接數字，代表拿掉最前面的幾個參數的意思。
+		上面的執行結果中，第一次進行 shift 後他的顯示情況是『 <span style="text-decoration: line-through">one</span> two three 
+		four five six』，所以就剩下五個啦！第二次直接拿掉三個，就變成『
+		<span style="text-decoration: line-through">two three four</span> five six 』啦！
+		這樣這個案例可以瞭解了嗎？理解了 shift 的功能了嗎？</p>
+
+		<p>上面這8個例子都很簡單吧？幾乎都是利用 bash 的相關功能而已～
+		不難啦～底下我們就要使用條件判斷式來進行一些分別功能的設定了，好好瞧一瞧先～</p>
+	</div>
+</div>
+
+
+<hr /><a name="rule"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">條件判斷式</span><br />
+<div class="block1">
+	<p>只要講到『程式』的話，那麼條件判斷式，亦即是『 if then 』這種判別式肯定一定要學習的！
+	因為很多時候，我們都必須要依據某些資料來判斷程式該如何進行。舉例來說，我們在上頭的 <a href="#sh06">sh06.sh</a>
+	範例中不是有練習當使用者輸入 Y/N 時，必須要執行不同的訊息輸出嗎？簡單的方式可以利用 &amp;&amp; 與 
+	|| ，但如果我還想要執行一堆指令呢？那真的得要 if then 來幫忙囉～底下我們就來聊一聊！<br /><br /></p>
+
+	<hr /><a name="ifthen"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 if .... then</span><br />
+	<div class="block2">
+		<p>這個 if .... then 是最常見的條件判斷式了～簡單的說，就是當符合某個條件判斷的時候，
+		就予以進行某項工作就是了。這個 if ... then 的判斷還有多層次的情況！我們分別介紹如下：<br /><br /></p>
+
+		<a name="ifthen_simple"></a>
+		<hr /><ul class="list1"><li class="text_import1">單層、簡單條件判斷式</li></ul>
+
+		<p>如果你只有一個判斷式要進行，那麼我們可以簡單的這樣看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">if [</span> 條件判斷式 <span class="term_command">]; then</span>
+	當條件判斷式成立時，可以進行的指令工作內容；
+<span class="term_command">fi</span>   <span class="term_note">&lt;==將 if 反過來寫，就成為 fi 啦！結束 if 之意！</span>
+</pre></td></tr></table>
+
+		<p>至於條件判斷式的判斷方法，與前一小節的介紹相同啊！較特別的是，如果我有多個條件要判別時，
+		除了 <a href="#sh06">sh06.sh</a> 那個案例所寫的，也就是『將多個條件寫入一個中括號內的情況』之外，
+		我還可以有多個中括號來隔開喔！而括號與括號之間，則以 &amp;&amp; 或 || 來隔開，他們的意義是：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>&amp;&amp; 代表 AND ；</li>
+		<li>|| 代表 or ；</li>
+		</ul>
+		<p>所以，在使用中括號的判斷式中， &amp;&amp; 及 || 就與指令下達的狀態不同了。舉例來說，
+		sh06.sh 裡面的判斷式可以這樣修改：</p>
+		<blockquote style="font-family:'細明體'">
+
+		[ "$yn" == "Y" -o "$yn" == "y" ]<br />上式可替換為<br />
+		[ "$yn" == "Y" ] || [ "$yn" == "y" ]</blockquote>
+
+		<p>之所以這樣改，很多人是習慣問題！很多人則是喜歡一個中括號僅有一個判別式的原因。好了，
+		現在我們來將 sh06.sh 這個腳本修改成為 if ... then 的樣式來看看：</p>
+
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">cp sh06.sh sh06-2.sh</span>  <span class="term_note">&lt;==用改的比較快！</span>
+
+[root@www scripts]# <span class="term_command">vi sh06-2.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#       This program shows the user's choice
+# History:
+# 2005/08/25    VBird   First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+read -p "Please input (Y/N): " yn
+
+if [ "$yn" == "Y" ] || [ "$yn" == "y" ]; then
+	echo "OK, continue"
+	exit 0
+fi
+if [ "$yn" == "N" ] || [ "$yn" == "n" ]; then
+	echo "Oh, interrupt!"
+	exit 0
+fi
+echo "I don't know what your choice is" &amp;&amp; exit 0</span>
+</pre></td></tr></table>
+
+		<p>不過，由這個例子看起來，似乎也沒有什麼了不起吧？ sh06.sh 還比較簡單呢～
+		但是如果以邏輯概念來看，其實上面的範例中，我們使用了兩個條件判斷呢！明明僅有一個 $yn 的變數，為何需要進行兩次比對呢？
+		此時，多重條件判斷就能夠來測試測試囉！<br /><br /></p>
+
+		<a name="ifthen_multi"></a>
+		<hr /><ul class="list1"><li class="text_import1">多重、複雜條件判斷式</li></ul>
+
+		<p>在同一個資料的判斷中，如果該資料需要進行多種不同的判斷時，應該怎麼作？舉例來說，上面的
+		<a href="#sh06">sh06.sh</a> 腳本中，我們只要進行一次 $yn 的判斷就好 (僅進行一次 if )，不想要作多次 if 的判斷。
+		此時你就得要知道底下的語法了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 一個條件判斷，分成功進行與失敗進行 (else)</span>
+<span class="term_command">if [</span> 條件判斷式 <span class="term_command">]; then</span>
+	當條件判斷式成立時，可以進行的指令工作內容；
+
+<span class="term_command">else</span>
+	當條件判斷式不成立時，可以進行的指令工作內容；
+<span class="term_command">fi</span>
+</pre></td></tr></table>
+
+		<p>如果考慮更複雜的情況，則可以使用這個語法：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 多個條件判斷 (if ... elif ... elif ... else) 分多種不同情況執行</span>
+<span class="term_command">if [</span> 條件判斷式一 <span class="term_command">]; then</span>
+
+	當條件判斷式一成立時，可以進行的指令工作內容；
+<span class="term_command">elif [</span> 條件判斷式二 <span class="term_command">]; then</span>
+	當條件判斷式二成立時，可以進行的指令工作內容；
+<span class="term_command">else</span>
+	當條件判斷式一與二均不成立時，可以進行的指令工作內容；
+<span class="term_command">fi</span>
+</pre></td></tr></table>
+
+		<p>你得要注意的是， elif 也是個判斷式，因此出現 elif 後面都要接 then 來處理！但是 else 已經是最後的沒有成立的結果了，
+		所以 else 後面並沒有 then 喔！好！我們來將 sh06-2.sh 改寫成這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">cp sh06-2.sh sh06-3.sh</span>
+[root@www scripts]# <span class="term_command">vi sh06-3.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#       This program shows the user's choice
+# History:
+# 2005/08/25    VBird   First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+read -p "Please input (Y/N): " yn
+
+if [ "$yn" == "Y" ] || [ "$yn" == "y" ]; then
+	echo "OK, continue"
+elif [ "$yn" == "N" ] || [ "$yn" == "n" ]; then
+	echo "Oh, interrupt!"
+else
+	echo "I don't know what your choice is"
+fi</span>
+</pre></td></tr></table>
+
+		<p>是否程式變得很簡單，而且依序判斷，可以避免掉重複判斷的狀況，這樣真的很容易設計程式的啦！ ^_^！
+		好了，讓我們再來進行另外一個案例的設計。一般來說，如果你不希望使用者由鍵盤輸入額外的資料時，
+		可以使用<a href="#dis3">上一節提到的參數功能 ($1)</a>！讓使用者在下達指令時就將參數帶進去！
+		現在我們想讓使用者輸入『 hello 』這個關鍵字時，利用參數的方法可以這樣依序設計：</p>
+
+		<a name="check_1"></a>
+		<ol>
+		<li>判斷 $1 是否為 hello，如果是的話，就顯示 "Hello, how are you ?"；</li>
+		<li>如果沒有加任何參數，就提示使用者必須要使用的參數下達法；</li>
+		<li>而如果加入的參數不是 hello ，就提醒使用者僅能使用 hello 為參數。</li>
+		</ol>
+
+		<p>整個程式的撰寫可以是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh09.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Check $1 is equal to "hello"
+# History:
+# 2005/08/28	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+if [ "$1" == "hello" ]; then
+	echo "Hello, how are you ?"
+elif [ "$1" == "" ]; then
+	echo "You MUST input parameters, ex&gt; {$0 someword}"
+else
+	echo "The only parameter is 'hello', ex&gt; {$0 hello}"
+fi</span>
+</pre></td></tr></table>
+
+		<p>然後你可以執行這支程式，分別在 $1 的位置輸入 hello, 沒有輸入與隨意輸入，
+		就可以看到不同的輸出囉～是否還覺得挺簡單的啊！ ^_^。事實上，
+		學到這裡，也真的很厲害了～好了，底下我們繼續來玩一些比較大一點的計畫囉～</p>
+
+		<a name="netstat"></a>
+		<p>我們在第十一章已經學會了 <a href="/linux_basic/0320bash.php#grep">grep</a>
+		這個好用的玩意兒，那麼多學一個叫做 netstat 的指令，這個指令可以查詢到目前主機有開啟的網路服務埠口 (service ports)，
+		相關的功能我們會在<a href="/linux_server">伺服器架設篇</a>繼續介紹，這裡你只要知道，我可以利用『 
+		<span class="text_import2">netstat -tuln</span> 』來取得目前主機有啟動的服務，
+		而且取得的資訊有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+
+[root@www ~]# <span class="term_command">netstat -tuln</span>
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address     Foreign Address   State
+tcp        0      0 0.0.0.0:111       0.0.0.0:*         LISTEN
+tcp        0      0 127.0.0.1:631     0.0.0.0:*         LISTEN
+tcp        0      0 127.0.0.1:25      0.0.0.0:*         LISTEN
+tcp        0      0 :::22             :::*              LISTEN
+udp        0      0 0.0.0.0:111       0.0.0.0:*
+udp        0      0 0.0.0.0:631       0.0.0.0:*
+<span class="term_say">#封包格式           本地IP:埠口       遠端IP:埠口       是否監聽</span>
+</pre></td></tr></table>
+
+		<p>上面的重點是『Local Address (本地主機的IP與埠口對應)』那個欄位，他代表的是本機所啟動的網路服務！
+		IP的部分說明的是該服務位於那個介面上，若為 127.0.0.1 則是僅針對本機開放，若是 0.0.0.0 或 ::: 
+		則代表對整個 Internet 開放 (更多資訊請參考伺服器架設篇的介紹)。
+		每個埠口 (port) 都有其特定的網路服務，幾個常見的 port 與相關網路服務的關係是：</p>
+
+		<ul class="text_import2" style="font-family:'細明體'">
+		<li>80: WWW</li>
+
+		<li>22: ssh</li>
+		<li>21: ftp</li>
+		<li>25: mail</li>
+		<li>111: RPC(遠端程序呼叫)</li>
+		<li>631: CUPS(列印服務功能)</li>
+		</ul>
+
+		<p>假設我的主機有興趣要偵測的是比較常見的 port 21, 22, 25及 80 時，那我如何透過 netstat 
+		去偵測我的主機是否有開啟這四個主要的網路服務埠口呢？由於每個服務的關鍵字都是接在冒號『 : 』後面，
+		所以可以藉由擷取類似『 :80 』來偵測的！那我就可以簡單的這樣去寫這個程式喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh10.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+# 	Using netstat and grep to detect WWW,SSH,FTP and Mail services.
+# History:
+# 2005/08/28	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+<span class="term_say"># 1. 先作一些告知的動作而已～</span>
+echo "Now, I will detect your Linux server's services!"
+echo -e "The www, ftp, ssh, and mail will be detect! \n"
+
+<span class="term_say"># 2. 開始進行一些測試的工作，並且也輸出一些資訊囉！</span>
+testing=$(netstat -tuln | grep ":80 ")   <span class="term_note"># 偵測看 port 80 在否？</span>
+
+if [ "$testing" != "" ]; then
+	echo "WWW is running in your system."
+fi
+testing=$(netstat -tuln | grep ":22 ")   <span class="term_note"># 偵測看 port 22 在否？</span>
+if [ "$testing" != "" ]; then
+	echo "SSH is running in your system."
+fi
+testing=$(netstat -tuln | grep ":21 ")   <span class="term_note"># 偵測看 port 21 在否？</span>
+if [ "$testing" != "" ]; then
+	echo "FTP is running in your system."
+fi
+testing=$(netstat -tuln | grep ":25 ")   <span class="term_note"># 偵測看 port 25 在否？</span>
+if [ "$testing" != "" ]; then
+	echo "Mail is running in your system."
+fi</span>
+</pre></td></tr></table>
+
+		<a name="retire"></a>
+		<p>實際執行這支程式你就可以看到你的主機有沒有啟動這些服務啦！是否很有趣呢？
+		條件判斷式還可以搞的更複雜！舉例來說，在台灣當兵是國民應盡的義務，不過，在當兵的時候總是很想要退伍的！
+		那你能不能寫個腳本程式來跑，讓使用者輸入他的退伍日期，讓你去幫他計算還有幾天才退伍？</p>
+
+		<p>由於日期是要用相減的方式來處置，所以我們可以透過使用 date 顯示日期與時間，將他轉為由 1970-01-01 累積而來的秒數，
+		透過秒數相減來取得剩餘的秒數後，再換算為日數即可。整個腳本的製作流程有點像這樣：</p>
+
+		<ol>
+		<li>先讓使用者輸入他們的退伍日期；</li>
+		<li>再由現在日期比對退伍日期；</li>
+		<li>由兩個日期的比較來顯示『還需要幾天』才能夠退伍的字樣。</li>
+		</ol>
+
+		<p>似乎挺難的樣子？其實也不會啦，利用『 <span class="text_import2">date --date="YYYYMMDD" 
+		+%s</span> 』轉成秒數後，接下來的動作就容易的多了！如果你已經寫完了程式，對照底下的寫法試看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh11.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	You input your demobilization date, I calculate how many days
+#	before you demobilize.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+<span class="term_say"># 1. 告知使用者這支程式的用途，並且告知應該如何輸入日期格式？</span>
+echo "This program will try to calculate :"
+echo "How many days before your demobilization date..."
+read -p "Please input your demobilization date (YYYYMMDD ex&gt;20090401): " date2
+
+
+<span class="term_say"># 2. 測試一下，這個輸入的內容是否正確？利用正規表示法囉～</span>
+date_d=$(echo $date2 |grep '[0-9]\{8\}')   <span class="term_note"># 看看是否有八個數字</span>
+if [ "$date_d" == "" ]; then
+	echo "You input the wrong date format...."
+	exit 1
+fi
+
+<span class="term_say"># 3. 開始計算日期囉～</span>
+declare -i date_dem=`date --date="$date2" +%s`    <span class="term_note"># 退伍日期秒數</span>
+declare -i date_now=`date +%s`                    <span class="term_note"># 現在日期秒數</span>
+declare -i date_total_s=$(($date_dem-$date_now))  <span class="term_note"># 剩餘秒數統計</span>
+
+declare -i date_d=$(($date_total_s/60/60/24))     <span class="term_note"># 轉為日數</span>
+if [ "$date_total_s" -lt "0" ]; then              <span class="term_note"># 判斷是否已退伍</span>
+	echo "You had been demobilization before: " $((-1*$date_d)) " ago"
+else
+	declare -i date_h=$(($(($date_total_s-$date_d*60*60*24))/60/60))
+	echo "You will demobilize after $date_d days and $date_h hours."
+fi</span>
+</pre></td></tr></table>
+
+		<p>瞧一瞧，這支程式可以幫你計算退伍日期呢～如果是已經退伍的朋友，
+		還可以知道已經退伍多久了～哈哈！很可愛吧～腳本中的 date_d 變數宣告那個 /60/60/24 
+		是來自於一天的總秒數 (24小時*60分*60秒) 。瞧～全部的動作都沒有超出我們所學的範圍吧～ ^_^
+		還能夠避免使用者輸入錯誤的數字，所以多了一個正規表示法的判斷式呢～
+		這個例子比較難，有興趣想要一探究竟的朋友，可以作一下<a href="#ex">課後練習題</a>
+		關於計算生日的那一題喔！～加油！</p>
+
+	</div>
+
+	<hr /><a name="case"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 case ..... esac 判斷</span><br />
+	<div class="block2">
+		<p>上個小節提到的『 if .... then .... fi 』對於變數的判斷是以『比對』的方式來分辨的，
+		如果符合狀態就進行某些行為，並且透過較多層次 (就是 elif ...) 的方式來進行多個變數的程式碼撰寫，譬如 
+		<a href="#check_1">sh09.sh</a> 那個小程式，就是用這樣的方式來撰寫的囉。
+		好，那麼萬一我有多個既定的變數內容，例如 sh09.sh 當中，我所需要的變數就是 "hello" 及空字串兩個，
+		那麼我只要針對這兩個變數來設定狀況就好了，對吧？那麼可以使用什麼方式來設計呢？呵呵～就用 
+		case ... in .... esac 吧～，他的語法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">case  $</span>變數名稱 <span class="term_command">in</span>   <span class="term_note">&lt;==關鍵字為 case ，還有變數前有錢字號</span>
+
+  "第一個變數內容"<span class="term_command">)</span>   <span class="term_note">&lt;==每個變數內容建議用雙引號括起來，關鍵字則為小括號 )</span>
+	程式段
+	<span class="term_command">;;</span>            <span class="term_note">&lt;==每個類別結尾使用兩個連續的分號來處理！</span>
+  "第二個變數內容"<span class="term_command">)</span>
+	程式段
+	<span class="term_command">;;</span>
+
+  *<span class="term_command">)</span>                  <span class="term_note">&lt;==最後一個變數內容都會用 * 來代表所有其他值</span>
+	不包含第一個變數內容與第二個變數內容的其他程式執行段
+	exit 1
+	<span class="term_command">;;</span>
+<span class="term_command">esac</span>                  <span class="term_note">&lt;==最終的 case 結尾！『反過來寫』思考一下！</span>
+</pre></td></tr></table>
+
+		<p>要注意的是，這個語法以 case (實際案例之意) 為開頭，結尾自然就是將 case 的英文反過來寫！就成為 esac 囉！
+		不會很難背啦！另外，每一個變數內容的程式段最後都需要兩個分號 (;;) 來代表該程式段落的結束，這挺重要的喔！
+		至於為何需要有 * 這個變數內容在最後呢？這是因為，如果使用者不是輸入變數內容一或二時，
+		我們可以告知使用者相關的資訊啊！廢話少說，我們拿 sh09.sh 的案例來修改一下，他應該會變成這樣喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh09-2.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+# 	Show "Hello" from $1.... by using case .... esac
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+case $1 in
+  "hello")
+	echo "Hello, how are you ?"
+	;;
+  "")
+	echo "You MUST input parameters, ex&gt; {$0 someword}"
+	;;
+  *)   <span class="term_note"># 其實就相當於萬用字元，0~無窮多個任意字元之意！</span>
+	echo "Usage $0 {hello}"
+	;;
+esac</span>
+</pre></td></tr></table>
+
+		<p>在上面這個 sh09-2.sh 的案例當中，如果你輸入『 sh sh09-2.sh test 』來執行，
+		那麼螢幕上就會出現『Usage sh09-2.sh {hello}』的字樣，告知執行者僅能夠使用 hello 喔～
+		這樣的方式對於需要某些固定字串來執行的變數內容就顯的更加的方便呢！
+		這種方式你真的要熟悉喔！這是因為<span class="text_import2">系統的很多服務的啟動 scripts 都是使用這種寫法的</span>，
+		舉例來說，我們 Linux 的服務啟動放置目錄是在 /etc/init.d/ 當中，我已經知道裡頭有個
+		syslog 的服務，我想要重新啟動這個服務，可以這樣做：</p>
+
+		<blockquote class="text_import2" style="font-family:'細明體'">/etc/init.d/syslog restart</blockquote>
+
+		<p>重點是那個 restart 啦！如果你使用『 less /etc/init.d/syslog 』去查閱一下，就會看到他使用的是 case 語法，
+		並且會規定某些既定的變數內容，你可以直接下達 /etc/init.d/syslog ，
+		該 script 就會告知你有哪些後續接的變數可以使用囉～方便吧！ ^_^</p>
+
+		<p>一般來說，使用『 case $變數 in 』這個語法中，當中的那個『 $變數 』大致有兩種取得的方式：</p>
+
+		<ul>
+		<li><span class="text_import1">直接下達式</span>：例如上面提到的，利用『 script.sh variable 』
+			的方式來直接給予 $1 這個變數的內容，這也是在 /etc/init.d 目錄下大多數程式的設計方式。<br /><br /></li>
+
+		<li><span class="text_import1">互動式</span>：透過 read 這個指令來讓使用者輸入變數的內容。</li></ul>
+
+		<p>這麼說或許你的感受性還不高，好，我們直接寫個程式來玩玩：讓使用者能夠輸入 one, two, three ，
+		並且將使用者的變數顯示到螢幕上，如果不是 one, two, three 時，就告知使用者僅有這三種選擇。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh12.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	This script only accepts the flowing parameter: one, two or three.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+echo "This program will print your selection !"
+# read -p "Input your choice: " choice <span class="term_note"># 暫時取消，可以替換！</span>
+# case $choice in                      <span class="term_note"># 暫時取消，可以替換！</span>
+
+case $1 in                             <span class="term_note"># 現在使用，可以用上面兩行替換！</span>
+  "one")
+	echo "Your choice is ONE"
+	;;
+  "two")
+	echo "Your choice is TWO"
+	;;
+  "three")
+	echo "Your choice is THREE"
+	;;
+  *)
+	echo "Usage $0 {one|two|three}"
+	;;
+esac</span>
+</pre></td></tr></table>
+
+		<p>此時，你可以使用『 sh sh12.sh two 』的方式來下達指令，就可以收到相對應的回應了。
+		上面使用的是直接下達的方式，而如果使用的是互動式時，那麼將上面第 10, 11 行的 "#" 拿掉，
+		並將 12 行加上註解 (#)，就可以讓使用者輸入參數囉～這樣是否很有趣啊？</p>
+	</div>
+
+	<hr /><a name="function"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 function 功能</span><br />
+
+	<div class="block2">
+		<p>什麼是『<span class="text_import2">函數 (function)</span>』功能啊？簡單的說，其實，
+		函數可以在 shell script 當中做出一個類似自訂執行指令的東西，最大的功能是，
+		可以簡化我們很多的程式碼～舉例來說，上面的 sh12.sh 當中，每個輸入結果 one, two, three 
+		其實輸出的內容都一樣啊～那麼我就可以使用 function 來簡化了！ function 的語法是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">function</span> fname<span class="term_command">() {</span>
+	程式段
+<span class="term_command">}</span>
+
+</pre></td></tr></table>
+
+		<p>那個 fname 就是我們的自訂的執行指令名稱～而程式段就是我們要他執行的內容了。
+		要注意的是，<span class="text_import2">因為 shell script 的執行方式是由上而下，由左而右，
+		因此在 shell script 當中的 function 的設定一定要在程式的最前面</span>，
+		這樣才能夠在執行時被找到可用的程式段喔！好～我們將 sh12.sh 改寫一下，自訂一個名為 printit 的函數來使用喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh12-2.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Use function to repeat information.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+function printit(){
+	echo -n "Your choice is "     <span class="term_note"># 加上 -n 可以不斷行繼續在同一行顯示</span>
+}
+
+echo "This program will print your selection !"
+case $1 in
+  "one")
+	<b>printit</b>; echo $1 | tr 'a-z' 'A-Z'  <span class="term_note"># 將參數做大小寫轉換！</span>
+
+	;;
+  "two")
+	<b>printit</b>; echo $1 | tr 'a-z' 'A-Z'
+	;;
+  "three")
+	<b>printit</b>; echo $1 | tr 'a-z' 'A-Z'
+	;;
+  *)
+	echo "Usage $0 {one|two|three}"
+	;;
+esac</span>
+</pre></td></tr></table>
+
+		<p>以上面的例子來說，鳥哥做了一個函數名稱為 printit ，所以，當我在後續的程式段裡面，
+		只要執行 printit 的話，就表示我的 shell script 要去執行『 function printit .... 』
+		裡面的那幾個程式段落囉！當然囉，上面這個例子舉得太簡單了，所以你不會覺得 function 有什麼好厲害的，
+		不過，如果某些程式碼一再地在 script 當中重複時，這個 function 可就重要的多囉～
+		不但可以簡化程式碼，而且可以做成類似『模組』的玩意兒，真的很棒啦！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		建議讀者可以使用類似 vim 的編輯器到 /etc/init.d/ 目錄下去查閱一下你所看到的檔案，
+		並且自行追蹤一下每個檔案的執行情況，相信會更有心得！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+		<p>另外， <span class="text_import2">function 也是擁有內建變數的～他的內建變數與 shell script 很類似，
+		函數名稱代表示 $0 ，而後續接的變數也是以 $1, $2... 來取代的</span>～
+		這裡很容易搞錯喔～因為『 function fname() { 程式段 } 』內的 $0, $1... 等等與 shell script 
+		的 $0 是不同的。以上面 sh12-2.sh 來說，假如我下達：『 sh sh12-2.sh one 』
+		這表示在 shell script 內的 $1 為 "one" 這個字串。但是在 printit() 內的 $1 則與這個 one 無關。
+		我們將上面的例子再次的改寫一下，讓你更清楚！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh12-3.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Use function to repeat information.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+function printit(){
+	echo "Your choice is $1"   <span class="term_note"># 這個 $1 必須要參考底下指令的下達</span>
+}
+
+echo "This program will print your selection !"
+case $1 in
+  "one")
+	<b>printit 1</b>  <span class="term_note"># 請注意， printit 指令後面還有接參數！</span>
+
+	;;
+  "two")
+	<b>printit 2</b>
+	;;
+  "three")
+	<b>printit 3</b>
+	;;
+  *)
+	echo "Usage $0 {one|two|three}"
+	;;
+esac</span>
+</pre></td></tr></table>
+
+		<p>在上面的例子當中，如果你輸入『 sh sh12-3.sh one 』就會出現『 Your choice is 1 』的字樣～
+		為什麼是 1 呢？因為在程式段落當中，我們是寫了『 printit 1 』那個 1 就會成為 function 當中的 $1 喔～
+		這樣是否理解呢？ function 本身其實比較困難一點，如果你還想要進行其他的撰寫的話。
+		不過，我們僅是想要更加瞭解 shell script 而已，所以，這裡看看即可～瞭解原理就好囉～ ^_^</p>
+	</div>
+
+</div>
+
+
+<hr /><a name="loop"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">迴圈 (loop)</span><br />
+<div class="block1">
+	<p>除了 if...then...fi 這種條件判斷式之外，迴圈可能是程式當中最重要的一環了～
+	<span class="text_import2">迴圈可以不斷的執行某個程式段落，直到使用者設定的條件達成為止。</span>
+	所以，重點是那個『條件的達成』是什麼。除了這種依據判斷式達成與否的不定迴圈之外，
+	還有另外一種已經固定要跑多少次的迴圈形態，可稱為固定迴圈的形態呢！底下我們就來談一談：<br /><br /></p>
+
+	<a name="while"></a>
+	<hr /><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">while do done, until do done (不定迴圈)</span><br />
+
+	<div class="block2">
+		<p>一般來說，不定迴圈最常見的就是底下這兩種狀態了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">while [</span> condition <span class="term_command">]  <span class="term_note">&lt;==中括號內的狀態就是判斷式</span>
+do</span>            <span class="term_note">&lt;==do 是迴圈的開始！</span>
+
+	程式段落
+<span class="term_command">done</span>          <span class="term_note">&lt;==done 是迴圈的結束</span>
+</pre></td></tr></table>
+
+		<p>while 的中文是『當....時』，所以，這種方式說的是『<span class="text_import2">當 condition 
+		條件成立時，就進行迴圈，直到 condition 的條件不成立才停止</span>』的意思。還有另外一種不定迴圈的方式：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">until [</span> condition <span class="term_command">]
+do</span>
+
+	程式段落
+<span class="term_command">done</span>
+</pre></td></tr></table>
+
+		<p>這種方式恰恰與 while 相反，它說的是『<span class="text_import2">當 condition 條件成立時，就終止迴圈，
+		否則就持續進行迴圈的程式段。</span>』是否剛好相反啊～我們以 while 來做個簡單的練習好了。
+		假設我要讓使用者輸入 yes 或者是 YES 才結束程式的執行，否則就一直進行告知使用者輸入字串。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh13.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Repeat question until user input correct answer.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+while [ "$yn" != "yes" -a "$yn" != "YES" ]
+do
+	read -p "Please input yes/YES to stop this program: " yn
+done
+echo "OK! you input the correct answer."</span>
+
+</pre></td></tr></table>
+
+		<p>上面這個例題的說明是『當 $yn 這個變數不是 "yes" 且 $yn 也不是 "YES" 時，才進行迴圈內的程式。』
+		而如果 $yn 是 "yes" 或 "YES" 時，就會離開迴圈囉～那如果使用 until 呢？呵呵有趣囉～
+		他的條件會變成這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh13-2.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Repeat question until user input correct answer.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+until [ "$yn" == "yes" -o "$yn" == "YES" ]
+do
+	read -p "Please input yes/YES to stop this program: " yn
+done
+echo "OK! you input the correct answer."</span>
+</pre></td></tr></table>
+
+		<p>仔細比對一下這兩個東西有啥不同喔！ ^_^再來，如果我想要計算 1+2+3+....+100 這個數據呢？
+		利用迴圈啊～他是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh14.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	Use loop to calculate "1+2+3+...+100" result.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+s=0  <span class="term_note"># 這是加總的數值變數</span>
+i=0  <span class="term_note"># 這是累計的數值，亦即是 1, 2, 3....</span>
+while [ "$i" != "100" ]
+do
+	i=$(($i+1))   <span class="term_note"># 每次 i 都會增加 1 </span>
+	s=$(($s+$i))  <span class="term_note"># 每次都會加總一次！</span>
+
+done
+echo "The result of '1+2+3+...+100' is ==&gt; $s"</span>
+</pre></td></tr></table>
+
+		<p>嘿嘿！當你執行了『 sh sh14.sh 』之後，就可以得到 5050 這個數據才對啊！這樣瞭呼～
+		那麼讓你自行做一下，如果想要讓使用者自行輸入一個數字，讓程式由 1+2+... 直到你輸入的數字為止，
+		該如何撰寫呢？應該很簡單吧？答案可以參考一下<a href="#ex">習題練習</a>裡面的一題喔！</p>
+	</div>
+
+	<hr /><a name="for"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">for...do...done (固定迴圈)</span><br />
+
+	<div class="block2">
+		<p>相對於 while, until 的迴圈方式是必須要『符合某個條件』的狀態， for 這種語法，則是『
+		<span class="text_import2">已經知道要進行幾次迴圈</span>』的狀態！他的語法是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">for</span> var <span class="term_command">in</span> con1 con2 con3 ...
+<span class="term_command">do</span>
+
+	程式段
+<span class="term_command">done</span>
+</pre></td></tr></table>
+
+		<p>以上面的例子來說，這個 $var 的變數內容在迴圈工作時：</p>
+		<ol>
+		<li>第一次迴圈時， $var 的內容為 con1 ；</li>
+		<li>第二次迴圈時， $var 的內容為 con2 ；</li>
+
+		<li>第三次迴圈時， $var 的內容為 con3 ；</li>
+		<li>....</li>
+		</ol>
+
+		<p>我們可以做個簡單的練習。假設我有三種動物，分別是 dog, cat, elephant 三種，
+		我想每一行都輸出這樣：『There are dogs...』之類的字樣，則可以：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh15.sh</span>
+
+<span class="term_write">#!/bin/bash
+# Program:
+# 	Using for .... loop to print 3 animals
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+for animal in dog cat elephant
+do
+	echo "There are ${animal}s.... "
+done</span>
+</pre></td></tr></table>
+
+		<a name="for_account"></a>
+		<p>等你執行之後就能夠發現這個程式運作的情況啦！讓我們想像另外一種狀況，由於系統上面的各種帳號都是寫在 
+		/etc/passwd 內的第一個欄位，你能不能透過管線命令的 <a href="/linux_basic/0320bash.php#cut">cut</a>
+		捉出單純的帳號名稱後，以 <a href="/linux_basic/0410accountmanager.php#id">id</a> 及 
+		<a href="/linux_basic/0410accountmanager.php#finger">finger</a> 
+		分別檢查使用者的識別碼與特殊參數呢？由於不同的 Linux 系統上面的帳號都不一樣！此時實際去捉 /etc/passwd
+		並使用迴圈處理，就是一個可行的方案了！程式可以如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh16.sh</span>
+<span class="term_write">#!/bin/bash
+# Program
+#       Use id, finger command to check system account's information.
+# History
+# 2009/02/18    VBird   first release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+users=$(cut -d ':' -f1 /etc/passwd)  <span class="term_note"># 擷取帳號名稱</span>
+for username in $users               <span class="term_note"># 開始迴圈進行！</span>
+do
+        id $username
+        finger $username
+done</span>
+</pre></td></tr></table>
+
+		<a name="for_ping"></a>
+
+		<p>執行上面的腳本後，你的系統帳號就會被捉出來檢查啦！這個動作還可以用在每個帳號的刪除、重整上面呢！
+		換個角度來看，如果我現在需要一連串的數字來進行迴圈呢？舉例來說，我想要利用 ping 這個可以判斷網路狀態的指令，
+		來進行網路狀態的實際偵測時，我想要偵測的網域是本機所在的 192.168.1.1~192.168.1.100，由於有 100 台主機，
+		總不會要我在 for 後面輸入 1 到 100 吧？此時你可以這樣做喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh17.sh</span>
+<span class="term_write">#!/bin/bash
+# Program
+#       Use ping command to check the network's PC state.
+# History
+# 2009/02/18    VBird   first release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+network="192.168.1"              <span class="term_note"># 先定義一個網域的前面部分！</span>
+for sitenu in $(seq 1 100)       <span class="term_note"># seq 為 sequence(連續) 的縮寫之意</span>
+do
+	<span class="term_note"># 底下的程式在取得 ping 的回傳值是正確的還是失敗的！</span>
+
+        ping -c 1 -w 1 ${network}.${sitenu} &amp;&gt; /dev/null &amp;&amp; result=0 || result=1
+	<span class="term_note"># 開始顯示結果是正確的啟動 (UP) 還是錯誤的沒有連通 (DOWN)</span>
+        if [ "$result" == 0 ]; then
+                echo "Server ${network}.${sitenu} is UP."
+        else
+                echo "Server ${network}.${sitenu} is DOWN."
+        fi
+done</span>
+</pre></td></tr></table>
+
+		<p>上面這一串指令執行之後就可以顯示出 192.168.1.1~192.168.1.100 共 100 部主機目前是否能與你的機器連通！
+		如果你的網域與鳥哥所在的位置不同，則直接修改上頭那個 network 的變數內容即可！其實這個範例的重點在 $(seq ..) 
+		那個位置！那個 seq 是連續 (sequence) 的縮寫之意！代表後面接的兩個數值是一直連續的！
+		如此一來，就能夠輕鬆的將連續數字帶入程式中囉！</p>
+
+		<p>最後，讓我們來玩判斷式加上迴圈的功能！我想要讓使用者輸入某個目錄檔名，
+		然後我找出某目錄內的檔名的權限，該如何是好？呵呵！可以這樣做啦～</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh18.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+#	User input dir name, I find the permission of files.
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+<span class="term_say"># 1. 先看看這個目錄是否存在啊？</span>
+read -p "Please input a directory: " dir
+if [ "$dir" == "" -o ! -d "$dir" ]; then
+	echo "The $dir is NOT exist in your system."
+	exit 1
+fi
+
+<span class="term_say"># 2. 開始測試檔案囉～</span>
+filelist=$(ls $dir)        <span class="term_note"># 列出所有在該目錄下的檔案名稱</span>
+
+for filename in $filelist
+do
+	perm=""
+	test -r "$dir/$filename" &amp;&amp; perm="$perm readable"
+	test -w "$dir/$filename" &amp;&amp; perm="$perm writable"
+	test -x "$dir/$filename" &amp;&amp; perm="$perm executable"
+	echo "The file $dir/$filename's permission is $perm "
+done</span>
+</pre></td></tr></table>
+
+		<p>呵呵！很有趣的例子吧～利用這種方式，你可以很輕易的來處理一些檔案的特性呢。接下來，讓我們來玩玩另一種 for 
+		迴圈的功能吧！主要用在數值方面的處理喔！</p>
+	</div>
+
+	<hr /><a name="for_2"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">for...do...done 的數值處理</span><br />
+
+	<div class="block2">
+		<p>除了上述的方法之外，for 迴圈還有另外一種寫法！語法如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">for ((</span> 初始值<span class="term_command">;</span> 限制值<span class="term_command">;</span> 執行步階 <span class="term_command">))
+do</span>
+
+	程式段
+<span class="term_command">done</span>
+</pre></td></tr></table>
+
+		<p>這種語法適合於數值方式的運算當中，在 for 後面的括號內的三串內容意義為：</p>
+		<ul class="text_import2">
+		<li>初始值：某個變數在迴圈當中的起始值，直接以類似 i=1 設定好；</li>
+		<li>限制值：當變數的值在這個限制值的範圍內，就繼續進行迴圈。例如 i&lt;=100；</li>
+
+		<li>執行步階：每作一次迴圈時，變數的變化量。例如 i=i+1。</li>
+		</ul>
+
+		<p>值得注意的是，在『執行步階』的設定上，如果每次增加 1 ，則可以使用類似『i++』的方式，亦即是 i 
+		每次迴圈都會增加一的意思。好，我們以這種方式來進行 1 累加到使用者輸入的迴圈吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www scripts]# <span class="term_command">vi sh19.sh</span>
+<span class="term_write">#!/bin/bash
+# Program:
+# 	Try do calculate 1+2+....+${your_input}
+# History:
+# 2005/08/29	VBird	First release
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+read -p "Please input a number, I will count for 1+2+...+your_input: " nu
+
+s=0
+for (( i=1; i&lt;=$nu; i=i+1 ))
+do
+	s=$(($s+$i))
+done
+echo "The result of '1+2+3+...+$nu' is ==&gt; $s"</span>
+
+</pre></td></tr></table>
+
+		<p>一樣也是很簡單吧！利用這個 for 則可以直接限制迴圈要進行幾次呢！</p>
+	</div>
+</div>
+
+
+<hr /><a name="debug"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">shell script 的追蹤與 debug</span><br />
+<div class="block1">
+	<p>scripts 在執行之前，最怕的就是出現語法錯誤的問題了！那麼我們如何 debug 呢？有沒有辦法不需要透過直接執行該 
+	scripts 就可以來判斷是否有問題呢？呵呵！當然是有的！我們就直接以 bash 的相關參數來進行判斷吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sh [-nvx] scripts.sh</span>
+<span class="term_say">選項與參數：
+-n  ：不要執行 script，僅查詢語法的問題；
+-v  ：再執行 sccript 前，先將 scripts 的內容輸出到螢幕上；
+-x  ：將使用到的 script 內容顯示到螢幕上，這是很有用的參數！</span>
+
+<span class="term_hd">範例一：測試 sh16.sh 有無語法的問題？</span>
+[root@www ~]# <span class="term_command">sh -n sh16.sh </span>
+<span class="term_say"># 若語法沒有問題，則不會顯示任何資訊！</span>
+
+<span class="term_hd">範例二：將 sh15.sh 的執行過程全部列出來～</span>
+
+[root@www ~]# <span class="term_command">sh -x sh15.sh </span>
+<span class="term_say">+ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/root/bin
++ export PATH
++ for animal in dog cat elephant
++ echo 'There are dogs.... '</span>
+There are dogs....
+<span class="term_say">+ for animal in dog cat elephant
++ echo 'There are cats.... '</span>
+There are cats....
+<span class="term_say">+ for animal in dog cat elephant
++ echo 'There are elephants.... '</span>
+There are elephants....
+</pre></td></tr></table>
+
+	<p>請注意，上面範例二中執行的結果並不會有顏色的顯示！鳥哥為了方便說明所以在 + 號之後的資料都加上顏色了！
+	在輸出的訊息中，<span class="text_import2">在加號後面的資料其實都是指令串，由於 sh -x 的方式來將指令執行過程也顯示出來，
+	如此使用者可以判斷程式碼執行到哪一段時會出現相關的資訊！</span>這個功能非常的棒！透過顯示完整的指令串，
+	你就能夠依據輸出的錯誤資訊來訂正你的腳本了！</p>
+
+	<p>熟悉 sh 的用法，將可以使你在管理 Linux 的過程中得心應手！至於在 Shell scripts
+	的學習方法上面，需要『<span class="text_import2">多看、多模仿、並加以修改成自己的樣式！</span>』
+	是最快的學習手段了！網路上有相當多的朋友在開發一些相當有用的
+	scripts ，若是你可以將對方的 scripts 拿來，並且改成適合自己主機的樣子！那麼學習的效果會是最快的呢！</p>
+
+	<p>另外，我們 Linux 系統本來就有很多的服務啟動腳本，如果你想要知道每個 script 所代表的功能是什麼？
+	可以直接以 vim 進入該 script 去查閱一下，通常立刻就知道該 script 的目的了。
+	舉例來說，我們之前一直提到的 /etc/init.d/syslog ，這個 script 是幹嘛用的？
+	利用 vi 去查閱最前面的幾行字，他出現如下資訊：</p>
+
+<table class="term"><tr><td class="term"><pre>
+# description: Syslog is the facility by which many daemons use to log \
+# messages to various system log files.  It is a good idea to always \
+# run syslog.
+### BEGIN INIT INFO
+# Provides: $syslog
+### END INIT INFO
+</pre></td></tr></table>
+
+	<p>簡單的說，這個腳本在啟動一個名為 syslog 的常駐程式 (daemon)，這個常駐程式可以幫助很多系統服務記載她們的登錄檔 (log file)，
+	我們的 Linux 建議你一直啟動 syslog 是個好主意！嘿嘿！簡單的看看您就知道啥是啥啦！</p>
+
+	<p>另外，本章所有的範例都可以在 <a href="/linux_basic/0340bashshell-scripts/scripts-v3.tar.bz2" 
+	target="_blank">http://linux.vbird.org/linux_basic/0340bashshell-scripts/scripts-v3.tar.bz2</a>
+	裡頭找到喔！加油～</p>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>shell script 是利用 shell 的功能所寫的一個『程式 (program)』，這個程式是使用純文字檔，將一些 shell 的語法與指令(含外部指令)寫在裡面， 搭配正規表示法、管線命令與資料流重導向等功能，以達到我們所想要的處理目的</li>
+
+	<li> shell script 用在系統管理上面是很好的一項工具，但是用在處理大量數值運算上， 就不夠好了，因為 Shell scripts 的速度較慢，且使用的 CPU 資源較多，造成主機資源的分配不良。</li>
+	<li>在 Shell script 的檔案中，指令的執行是從上而下、從左而右的分析與執行；</li>
+	<li>shell script 的執行，至少需要有 r 的權限，若需要直接指令下達，則需要擁有 r  與 x 的權限；</li>
+	<li>良好的程式撰寫習慣中，第一行要宣告 shell (#!/bin/bash) ，第二行以後則宣告程式用途、版本、作者等</li>
+	<li>對談式腳本可用 read 指令達成；</li>
+	<li>要建立每次執行腳本都有不同結果的資料，可使用 date 指令利用日期達成；</li>
+
+	<li>script 的執行若以 source 來執行時，代表在父程序的 bash 內執行之意！</li>
+	<li>若需要進行判斷式，可使用 test 或中括號 ( [] ) 來處理；</li>
+	<li>在 script 內，$0, $1, $2..., $@ 是有特殊意義的！</li>
+	<li>條件判斷式可使用 if...then 來判斷，若是固定變數內容的情況下，可使用 case $var in ... esac 來處理</li>
+	<li>迴圈主要分為不定迴圈 (while, until) 以及固定迴圈 (for) ，配合 do, done 來達成所需任務！</li>
+	<li>我們可使用 sh -x script.sh 來進行程式的 debug </li>
+
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+底下皆為實作題，請自行撰寫出程式喔！
+<ul>
+	<li>請建立一支 script ，當你執行該 script 的時候，該 script 可以顯示： 1. 你目前的身份 (用 whoami )
+	2. 你目前所在的目錄 (用 pwd)<br />
+	<div class="blockex"><span style="font-family:'細明體'">
+		#!/bin/bash<br />
+
+		echo -e "Your name is ==&gt; $(whoami)"<br />
+		echo -e "The current directory is ==&gt; $(pwd)"<br />
+	</span></div></li>
+
+	<li>請自行建立一支程式，該程式可以用來計算『你還有幾天可以過生日』啊？<br />
+	<div class="blockex"><span style="font-family:'細明體'">
+
+		#!/bin/bash<br />
+		read -p "Pleas input your birthday (MMDD, ex&gt; 0709): " bir<br />
+		now=`date +%m%d`<br />
+		if [ "$bir" == "$now" ]; then<br />
+		        echo "Happy Birthday to you!!!"<br />
+
+		elif [ "$bir" -gt "$now" ]; then<br />
+		        year=`date +%Y`<br />
+		        total_d=$(($((`date --date="$year$bir" +%s`-`date +%s`))/60/60/24))<br />
+		        echo "Your birthday will be $total_d later"<br />
+		else<br />
+		        year=$((`date +%Y`+1))<br />
+
+		        total_d=$(($((`date --date="$year$bir" +%s`-`date +%s`))/60/60/24))<br />
+		        echo "Your birthday will be $total_d later"<br />
+		fi<br />
+	</span></div></li>
+
+	<li>讓使用者輸入一個數字，程式可以由 1+2+3... 一直累加到使用者輸入的數字為止。<br />
+	<div class="blockex"><span style="font-family:'細明體'">
+
+	#!/bin/bash<br />
+	read -p "Please input an integer number: " number<br />
+	i=0<br />
+	s=0<br />
+	while [ "$i" != "$number" ]<br />
+	do<br />
+
+	        i=$(($i+1))<br />
+	        s=$(($s+$i))<br />
+	done<br />
+	echo "the result of '1+2+3+...$number' is ==&gt; $s"<br />
+	</span></div></li>
+
+	<li>撰寫一支程式，他的作用是: 1.) 先查看一下 /root/test/logical 這個名稱是否存在；
+	2.) 若不存在，則建立一個檔案，使用 touch 來建立，建立完成後離開；
+	3.) 如果存在的話，判斷該名稱是否為檔案，若為檔案則將之刪除後建立一個目錄，檔名為 logical ，之後離開；
+	4.) 如果存在的話，而且該名稱為目錄，則移除此目錄！<br />
+	<div class="blockex"><span style="font-family:'細明體'">
+	#!/bin/bash<br />
+	if [ ! -e logical ]; then<br />
+	        touch logical<br />
+        	echo "Just make a file logical"<br />
+
+	        exit 1<br />
+	elif [ -e logical ] &amp;&amp; [ -f logical ]; then<br />
+	        rm logical<br />
+	        mkdir logical<br />
+	        echo "remove file ==&gt; logical"<br />
+
+	        echo "and make directory logical"<br />
+	        exit 1<br />
+	elif [ -e logical ] &amp;&amp; [ -d logical ]; then<br />
+	        rm -rf logical<br />
+	        echo "remove directory ==&gt; logical"<br />
+
+	        exit 1<br />
+	else<br />
+	        echo "Does here have anything?"<br />
+	fi<br />
+	</span></div></li>
+
+	<li>我們知道 /etc/passwd 裡面以 : 來分隔，第一欄為帳號名稱。請寫一隻程式，可以將 /etc/passwd 
+	的第一欄取出，而且每一欄都以一行字串『The 1 account is "root" 』來顯示，那個 1 表示行數。<br />
+
+	<div class="blockex"><span style="font-family:'細明體'">
+	#!/bin/bash<br />
+	accounts=`cat /etc/passwd | cut -d':' -f1`<br />
+	for account in $accounts<br />
+	do<br />
+	        declare -i i=$i+1<br />
+
+	        echo "The $i account is \"$account\" "<br />
+	done<br />
+	</span></div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li>臥龍小三大師的文件：<a href="http://linux.tnc.edu.tw/techdoc/shell/book1.html"
+		target="_blank">http://linux.tnc.edu.tw/techdoc/shell/book1.html</a></li>
+
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/06/27：第一次完成<br />
+2003/02/10：重新編排與加入 FAQ<br />
+2005/08/29：將舊的文章移動到 <a href="0340bashshell-scripts/0340bashshell-scripts.php">這裡</a> 了。<br />
+2005/08/29：呼呼～加入了一些比較有趣的練習題～比第一版要難的多～大家多多玩一玩喔～<br />
+
+2009/02/10：將舊的基於 FC4 版本的文章移動到<a href="0340bashshell-scripts/0340bashshell-scripts-fc4.php">此處</a><br />
+2009/02/17：加入 <a href="#shift">shift</a> 的介紹<br />
+2009/02/18：加入了一些額外的練習，包括 <a href="#for_ping">for 的 ping</a> 處理！<br />
+</span>
+<hr />
+<br /><br />
+
+    </td>
+  <!-- InstanceEndEditable -->
+  
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+<!-- InstanceEnd --></html>

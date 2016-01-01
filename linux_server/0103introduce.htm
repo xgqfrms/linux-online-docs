@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 伺服器篇--作者序</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0103introduce.htm">
+    <span class="text_head0">作者再版序</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0103introduce.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2007/03/01</span>
+    </div>
+
+
+<!-- 本文的正式部分 -->
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">初版序：</span><br>
+<div class=block1 style="text-align:justify">
+	筆者在 2002 年底寫完了『<a href="../linux_basic/">鳥哥的 Linux 私房菜 -- 基礎學習篇</a>』以來，
+	接到很多朋友們的鼓勵，很感謝大家的支持吶！另外也有很多的來信要鳥哥將接下來的伺服器架設篇趕緊給他寫一寫，
+	其實鳥哥也覺得應該早點將架站篇的內容也給他完成的，這樣才能夠連貫的起來啊！不過，
+	架站篇比起基礎篇來說，說實在的，要複雜的很多！怎麼說呢？如果說
+	『<span class=text_import2>架站篇</span>』就單純的講架站流程，呵呵！
+	那麼隨便幾個鐘頭就可以將好幾個不同的伺服器的架設方法寫完了，因為這些架設的方法都有資料可以參考，而且，
+	Linux 本身就有極為豐富的說明文件了！所以說，如果架站篇只是寫架設的流程，鳥哥實在覺得不夠過癮～<br><br>
+
+	而且，網站的架設其實由網站成立之初的規劃開始，到實際硬碟的分割
+	( partition )，軟體的選擇與安裝，架設完成之後的後續監測與維護，還有那個挺重要的備份工作等等，
+	其實是需要『<span class=text_import2>一貫作業程序</span>』的，什麼是
+	『<span class=text_import2>一貫</span>』作業程序呢？其實就是上面所有的工作都需要
+	『<span class=text_import2>全部一起搭配來思考</span>』的意思，您不能單純的只想到某個比較重要的地方而已。<br><br>
+
+	舉個例子來說好了，假如您想要架設一個給學生使用的檔案伺服器
+	( File Server, 一般使用 SAMBA )，那麼在架設之前，您想到，嘿嘿！學生數很多，所以我的硬碟要很大，也因此，您就在
+	Linux 上面安裝了一款 120 GB 的硬碟，然後，很高興的將硬碟分割為『<span class=text_import2>只有
+	/ + Swap </span>』這樣的懶人分割法。等到實際上機運作之後，卻發現有的學生佔用了主機硬碟好幾
+	GB 的空間，使得其他同學無法使用主機所提供的檔案服務！等到發現這樣的情況，要再加以使用
+	Quota 解決的時候，卻發現當初硬碟規劃的不好(因為只有 / 啊！)，使得無法進行較佳的
+	quota 設定。還有，備份也成了一個大問題，因為沒有多餘的額外空間來存放備份資料了～
+	這樣可以瞭解一貫作業程序了吧？！是的！您必需要視自己的需要來規劃主機，並且規劃的時候，
+	就需要從頭到尾的做一個整體的設計了呢！<br><br>
+
+	這些整體搭配的架設網站流程，其實都是網站架設者所需要進行的工作，不過，
+	目前大家常見的書籍在這方面談的都不多，而大多純粹的講一些技巧性的架站手法，嗯！
+	這樣的書籍也是有需要的啦！不過，鳥哥認為，如果可以談的更深入一點，
+	將網站從架設之前所需要考慮的事情以及架設完成後的後續工作都一起談進去的話，
+	那麼對於網站維護者來說，應該會有一個比較容易入門的管理與維護方法的認識吧！
+	所以囉，這一本書的內容，除了基本的網站架設流程之外，
+	還會談到許多的網路基礎概念、網站的相關維護技巧以及鳥哥平時維護主機時所認為較佳的維護經驗談。
+</div>
+
+
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">再版序：</span><br>
+<div class=block1 style="text-align:justify">
+	筆者在去年 (2006/03) 修改完基礎篇第二版後，很多朋友來信問到那麼伺服器篇是否也需要修改呢？
+	本來鳥哥覺得這個伺服器篇並沒有什麼需要修改的地方，尤其第一版已經談過很多基礎協定的介紹，
+	雖然寫的並不好，不過，應該符合大部分朋友們的需求了。然而伺服器篇第一版的內容由於基於較舊的 Red Hat 9
+	作業系統來撰寫的，因此很多伺服器軟體的設定鳥哥是以 Tarball 的方式來進行安裝與設定，
+	這在當時應該是個不錯的選擇。<br /><br />
+
+	不過時至今日，由於各家 Linux distributions 的線上升級與支援時限都有很不錯的改進，
+	包括 RHEL, SuSE, Ubuntu 等都已經支援完善的線上升級，且支援時限都可達數年之久，
+	在這樣的條件下，使用 Tarball 來安裝設定伺服器軟體，就有點說不過去了！
+	因為人都是有惰性的，如果能夠讓咱們的 Linux server 自動升級與自動維護伺服器軟體，
+	那不是省時又省力嗎？<br /><br />
+
+	因此，在這個伺服器篇第二版當中，鳥哥幾乎完全使用 Linux distributions 所提供的軟體與機制來進行伺服器的設定，
+	當然囉，基礎的概念還是會加以強調的！如此一來朋友們還是可以讀到一些網路協定的基礎概念，
+	並且可以很輕鬆的就搞定您的伺服器軟體，而不需要下載一堆 Tarball 的原始碼來安裝了！<br /><br />
+
+	由於這次改版的幅度其實也不小，例如拿掉 sendmail 主要改以 postfix 這個郵件伺服器軟體來說明，
+	拿掉比較不常用的 wu-ftpd 與 proftpd ，改以 vsftpd 來說明。礙於篇幅有限，因此這一版的內容拿掉了 proxy server,
+	apt server 等等，這是考慮到這本書主要是給小型企業想要利用單部 Linux 主機來進行網站架設的緣故。
+	未來如果有機會且有時間，鳥哥或許會將其餘的伺服器以企業使用的角度來談一談呢！^_^<br /><br />
+</div>
+
+
+
+
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">誰適合這本書：</span><br>
+<div class=block1 style="text-align:justify">
+	這本書既然是談論比較深入的架站規劃、流程、技巧與維護等工作，那麼比較基礎的
+	Linux 操作與相關的 Shell 語法，在這本書裡面就不可能談論的很多，畢竟， 
+	<a href="../linux_basic/">Linux 基礎篇</a> 已經完成了，沒有必要在這本書裡面再次的重複提及的。
+	所以，當您嘗試閱讀這本書的時候，請注意，<span class=text_import1>您最好已經具備有
+	Linux 作業系統的相關知識，以及文字介面 ( BASH Shell ) 的相關技巧，還有，必需要能夠瞭解一些
+	Unix-Like 的工作流程，例如登錄檔的產生與放置的地點、服務的啟動與關閉方式、
+	工作排程的使用方法、以及其他種種相關的事項</span>。也就是說，如果您從未接觸過
+	Linux ，那麼建議您由『<a href="../linux_basic/">鳥哥的 Linux 私房菜 --
+	基礎學習篇</a>』開始 Linux 的探索歷程，否則，這本書對您而言，可能會過於難以理解。<br><br>
+
+	另外，這本書的內容很多時候會提到一些簡單的概念而不是僵化的流程，
+	尤其每個人對於網站的要求都不相同，也就是說，每個人的網站其實都是帶有個人風格的，
+	因此僵化的流程並沒有太大的意義～只要能夠依據這些簡單的概念來進行網站的架設，鳥哥認為，
+	您的主機設定應該都不會有太大的問題。怕的是什麼呢？都沒有碰過
+	Linux ，卻想直接參考架站的程序來完成網站的架設的朋友，這些朋友最容易忽略後續的維護與管理了！
+	這也容易造成網站的不穩定或者是造成被網路怪客 ( Cracker ) 入侵的問題啊！<br><br>
+
+	這本書主要的目的是引導使用者進入 Linux 強大的網路功能的世界，
+	書內的範例都是鳥哥自己實際測試過沒有問題才寫上來的，不過，畢竟每個人的網路環境與操作習慣都不相同，
+	因此，鳥哥不敢說我書內的範例一定可以在您的系統上操作成功的！
+	然而，書內都會提到一些基本概念的問題，只要理解這些基本的概念，並且對於
+	Linux 的操作熟悉，相信您一定可以利用書內的範例來開發出適合您自己的伺服器設定的！不過，對於沒有碰過
+	Linux 的朋友，還是建議從頭學起，至於為什麼一定得從頭學起，在本書的第一章內會仔細談論喔。
+</div>
+
+
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">章節安排：</span><br>
+<div class=block1 style="text-align:justify">
+	本書在章節的規劃上面，主要分為三大部分，分別是『網路基礎篇』、
+	『簡易防火措施篇』與『伺服器架設篇』，前兩篇的所有內容與『伺服器架設篇』都具有很高的相關性，
+	所以，您在開始伺服器的架設之前，請務必將前面兩篇共十二章先唸過一遍才好吶！<br><br>
+
+	在『<span class=text_import2>網路基礎篇</span>』當中，我們會介紹簡易的網路基礎，
+	這包含了硬體的選擇與佈線。此外，還有在
+	Linux 上面連上 Internet 的方法，以及在 Linux 發生無法連接網際網路的問題時，簡易的查驗方法。
+	看完了這一篇之後，您的 Linux 不論以何種方式來進行 Internet 
+	的連接，就應該都不成問題囉，而且，鳥哥希望看完這一篇之後，您可以瞭解
+	Linux 的網路問題，並自行解決喔！<br><br>
+
+	在『<span class=text_import2>簡易防火措施篇</span>』中，我們會簡單的介紹
+	Linux 的強大網路功能下，可能會發生的網路入侵問題。
+	接下來，瞭解了問題後，當然就是需要來解決他囉！所以，我們會就
+	TCP/IP, port, 套件漏洞的修補與防火牆等來推敲一下，該如何做好 Linux 主機的防備呢？
+	『<span class=text_import2>沒有永遠安全的主機</span>』是正確的言論，所以，
+	即使您的主機只是一個小小的網站，也千萬不能忽略這個防火牆的認識喔！<br><br>
+
+	在『<span class=text_import2>伺服器架設篇</span>』當中，我們會介紹
+	WWW, dns, mail, ftp, dhcp, samba.....等等的伺服器，在這一篇內的文章您就可以跳著看了！
+	因為不想玩的伺服器，當然就不需要去看他啊！唯一一個例外的就是
+	DNS 伺服器 ( 領域名稱伺服器 ) 囉， DNS 是所有伺服器能否正常工作的基礎，因此，您雖然不需要架設
+	DNS 伺服器，但是得瞭解 DNS 的整體運作流程呢！<br><br>
+
+	章節的安排主要仍然是由淺入深來進行編排的，因此，還是希望讀者們可以由前面慢慢的往下看，
+	不要著急的直接翻到後面去抄一些架設流程喔！而且，幾乎每一章節後面都會具有一些簡單的課後練習題，
+	這些練習題有的是鳥哥參加過的考試內容，有的是鳥哥想到的一些資料，很適合大家思考喔！
+	不要錯過這些練習題的訓練喔！<br /><br />
+</div>
+
+
+<hr><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">感謝：</span><br>
+<div class=block1 style="text-align:justify">
+	這本書是由網站資料整理來的，網站的內容其實受惠於很多前輩的指點，
+	這也是這本書能夠成冊的原因，很感謝許多網路上的大哥前輩的幫忙，包括：
+	Netman、ZMAN、小州、梁楓、沙易蔡大哥、果正兄等，鳥站討論區的伙伴們：日京三子、Jou、James Wu、HaWay、
+	DR、bono、thyme、wilson、老妖怪等版主群們，酷學園的伙伴們：sakana、ericshei、black_cat、Darkhero、lzy、
+	damon、duncan、逸晨、Jerry Wu、哈克、twu2等等，當然還有更多不及備載的朋友們的協助，
+	感謝您們的扶持！此外，當然還有更多的讀者們的支持，沒有大家的支持，就沒有鳥哥的私房菜啊！<br><br>
+
+	在寫作的過程當中是快樂的，但是當鬆懈下來後，過日子的生活多虧了數十年老友們：士杰、玉南、景陽、耀東以及
+	Honda 夫婦、宓志夫婦、大維夫婦的鼓勵；
+	家人俊明、秀明、瑞明幫忙打點家裡的事情，讓鳥哥無後顧之憂來全心處理自己的工作；
+	多虧邱爸爸與邱媽媽一家人對我的照應，否則生活白癡的鳥哥肯定無法過活！
+	還要感謝崑山科大資傳系的世熙主任與維珍小姐，讓鳥哥的工作更加順利；以及感謝成大環工510研究室的伙伴們，尤其是乙原，
+	謝謝你老是聽我發牢騷！最要感謝女友慧真在身邊幫我打理所有的雜務，讓單工思考的鳥哥得以不必花腦筋在其他的事物上。
+	最後，僅將這本書獻給我所有的朋友以及讀者們，感謝你們的支持與鼓勵！鳥哥會繼續努力的！<br /><br />
+
+	<font color="#000066">鳥哥 2007/03/01</font><br /><br />
+
+	另外，關於本書的戡誤資訊，請參考：<br />
+	<li><a href="http://linux.vbird.org/book/">http://linux.vbird.org/book/</a><br />
+</div>
+
+
+<hr><span class="text_history">
+2003/07/14：第一次完成日期！<br />
+2003/09/18：加入一些說明，尤其是各個伺服器的簡介。a<br />
+2007/03/01：取消各個伺服器的簡介，太佔篇幅了！修改初版序的內容，增加再版序的部分。<br />
+2007/03/01：初版序我將他拿到 <a href="0103introduce/0103introduce.htm">這裡</a> <br />
+</span>
+<hr><span class="text_date">2003/07/14以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0103introduce.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

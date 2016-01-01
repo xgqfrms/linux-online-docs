@@ -1,0 +1,1328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- NIS 伺服器</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0430nis.htm">
+    <span class="text_head0"><span class="text_head_en">NIS </span>伺服器</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0430nis.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/10/11</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	有沒有想過，如果我有十部 Linux 主機，這十部主機僅負責不同的功能，事實上，
+	所有的主機帳號與對應的密碼都相同！那麼我是將帳號與密碼分別設定置在十部電腦上面，
+	還是可以透過一部主機做為帳號管理的功能，然後其他的主機只要當用戶用登入時，
+	就必須要到管理帳號的主機上面確認其帳號與密碼呢？哪一個比較方便而且靈活？
+	當然是找一個帳號管理的主機比較方便的多啦！如果有使用者要修改密碼，不必要去到十部主機修改密碼啦！
+	只要到主要管理主機去修改，其他的主機根本就不需要更動！哈哈！輕鬆又愉快呢！這個功能的達成有很多的方式，
+	在這裡，我們介紹一個很簡單的方式，那就是
+	Network Information Service 這個 NIS 伺服器的架設啦！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#whatisnis">NIS 的由來與功能</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#whatisnis_use">NIS 的主要功能</a><br />
+	　　2.2 <a href="#whatisnis_process">NIS 的運作流程</a><br />
+	</span>
+3. <a href="#nis_server">NIS server 端的設定</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#nis_server_pack">所需要的套件</a><br />
+	　　3.2 <a href="#nis_server_nis">NIS 的套件結構</a><br />
+	　　3.3 <a href="#nis_server_case">一個實作案例</a><br />
+	　　3.4 <a href="#nis_server_master">NIS master 的設定與啟動</a><br />
+	　　3.5 <a href="#nis_server_slave">NIS slave 的設定與啟動 (optional)</a><br />
+	　　3.6 <a href="#nis_server_fire">防火牆設置</a><br />
+	</span>
+4. <a href="#nis_client">NIS client 端的設定</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#nis_client_pack">NIS client 所需套件與套件結構</a><br />
+	　　4.2 <a href="#nis_client_setup">NIS client 的設定與啟動</a><br />
+	　　4.3 <a href="#nis_client_check">NIS client 端的檢驗</a>：
+		<a href="#yptest">yptest</a>, <a href="#ypwhich">ypwhich</a>, 
+		<a href="#ypcat">ypcat</a><br />
+	　　4.4 <a href="#nis_client_user">使用者參數修改： yppasswd, ypchfn, ypchsh</a><br />
+	</span>
+5. <a href="#nis_nfs">NIS 與 NFS 的設定與叢集電腦運用</a><br />
+6. <a href="#command">指令對應資料</a><br />
+7. <a href="#review">重點回顧</a><br />
+8. <a href="#FAQ">課後練習</a><br />
+9. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+10.<a href="http://phorum.vbird.org/viewtopic.htm?p=115269"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=115269</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	NIS 最大的用途在於提供用戶端的使用者相關參數查詢，舉例來說，使用者的帳號、密碼、UID、家目錄、shell 
+	等等的，都可以透過 NIS 伺服器來查詢的。但 NIS 所能提供的也就是這樣了，他並沒有辦法提供使用者家目錄的空間，
+	因此，一般在高效能運算電腦當中，如果想要讓所有的機器都擁有相同的帳號密碼，
+	通常使用 NIS 提供身份驗證，配合 NFS 提供所需要的磁碟空間的吶！
+	因此在這一章開始前，你最好知道：<br />
+
+	<ul>
+	<li>瞭解<a href="0110network_basic.htm">網路基礎</a>，防火牆與<a
+	href="0240network-secure-1.htm#packet_flow_protect">關閉 SELinux 模組</a>等等。
+	<li>一定要認識 <a href="0330nfs.htm">NFS</a> 伺服器；
+	<li>需要瞭解 RPC 這個玩意兒；
+	<li>需要瞭解使用者帳號相關知識，可以參考基礎篇的<a href="../linux_basic/0410accountmanager.htm">使用者帳號管理章節</a>。
+	<li>建立 NIS 資料庫會使用到 make/Makefile 功能，請參考<a 
+		href="../linux_basic/0520source_code_and_tarball.htm">基礎篇原始碼與 tarball</a>章節。
+	</ul>
+</div>
+
+<hr /><a NAME="whatisnis"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NIS 的由來與功能</span><br />
+<div class=block1>
+	在一個大型的網域當中，如果有多部 Linux 主機，萬一要每部主機都需要設定相同的帳號與密碼時，還真是囉唆。
+	此時，如果能夠有一部主控伺服器 (master server) 來管理網域中所有主機的帳號，
+	當其他的主機有使用者登入的需求時，才到這部主控伺服器上面要求相關的帳號、密碼等使用者資訊資料，
+	如此一來，如果想要增加、修改、刪除使用者資料，只要到這部主控伺服器上面處理即可，
+	這樣就能夠降低重複設定使用者帳號的步驟了。<br /><br />
+
+	這樣的功能有很多的伺服器軟體可以達成，這裡我們要介紹的則是 <span class=text_import2>Network Information 
+	Services (NIS server)</span> 這個伺服器軟體喔！底下就先來談一談這個 NIS 的相關功能吧！<br /><br />
+
+	<hr /><a NAME="whatisnis_use"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS 的主要功能</span><br />
+	<div class=block2>
+		通常我們都會建議，<span class=text_import2>一部 Linux 主機的功能越簡單越好</span>，也就是說，一部 
+		Linux 就專門進行一項服務。這樣有許多的好處，這包含功能簡單所以系統資源得以完整運用，
+		並且在發生入侵或者是系統產生狀況的時候，也比較容易追查問題所在。因此，一個公司內部常常會有好幾部 
+		Linux 主機，有的專門負責 WWW 、有的專門負責 Mail 、有的專門負責 SAMBA 等等的服務。<br /><br />
+
+		不過，這樣雖然有分散風險、容易追蹤問題的好處，但是，由於是同一個公司內的多部主機，所以事實上所有的 
+		Linux 主機的帳號與密碼都是一樣的！哇！那如果公司裡面有 100 的人的話，
+		我們就需要針對這麼多部的主機去設定帳號密碼了！而且，如果未來還有新進員工的話，
+		那麼光是設定密碼就會使系統管理員抓狂了！<br /><br />
+
+		這個時候，讓我們換一個角度來思考：如果我設計了一部專門管理帳號與密碼的主機，而其他的 
+		Linux 主機當有用戶端要登入的時候，就必須要到這部管理密碼的主機來查尋使用者的帳號與密碼，
+		如此一來，我要管理所有的 Linux 主機的帳號與密碼，只要到那部主要主機上面去進行設定即可！
+		包括新進人員的設定，反正其他的 Linux 主機都是向他查尋的嘛！沒錯！真是好～這個就是 
+		Network Information Service, NIS 主機的主要功能啦！<br /><br />
+
+		事實上，<span class=text_import2>Network Information Service 最早應該是稱為 Sun Yellow Pages 
+		(簡稱 yp)</span>，也就是 Sun 這家公司出的一個名為 Yellow Pages 的伺服器軟體，請注意， 
+		<span class=text_import2>NIS 與 YP 是一模一樣的咚咚喔</span>！這個 Yellow Pages 
+		名字取的真是好！怎麼說呢？知道黃頁 (Yellow Pages) 是什麼嗎？就是我們家裡的電話簿啦！
+		今天如果你要查尋一家廠商的電話號碼，通常就是直接去查黃頁上面的紀錄來取得電話號碼啊！而這個 NIS 
+		也一樣，當使用者要登入時， Linux 系統就會到 NIS 主機上面去找尋這個使用的帳號與密碼資訊來加以比對，
+		以提供使用者登入之用的檢驗啊！很棒吧！ ^_^ <br /><br />
+
+		那麼 NIS 主機提供了哪些資訊呢？還記得帳號與密碼放置在哪裡吧？NIS 就是提供那些資料啦！
+		主要有底下這些基本的資料提供給有登入需求的主機喔：<br /><br />
+
+<table width=90% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width=130>伺服器端檔案名稱</td><td>檔案內容</td></tr>
+<tr><td>/etc/passwd</td><td>提供使用者帳號、UID、GID、家目錄所在、Shell 等等</td></tr>
+<tr><td>/etc/group</td><td>提供群組資料以及 GID 的對應，還有該群組的加入人員</td></tr>
+<tr><td>/etc/hosts</td><td>主機名稱與 IP 的對應，常用於 private IP 的主機名稱對應</td></tr>
+<tr><td>/etc/services</td><td>每一種服務 (daemons) 所對應的埠口 (port number)</td></tr>
+<tr><td>/etc/protocols</td><td>基礎的 TCP/IP 封包協定，如 TCP, UDP, ICMP 等</td></tr>
+<tr><td>/etc/netgroup</td><td>網路群組的定義與使用 (NIS 可能會需要)</td></tr>
+<tr><td>/etc/rpc</td><td>每種 RPC 伺服器所對應的程式號碼</td></tr>
+<tr><td>/var/yp/ypservers</td><td>NIS 伺服器所提供的資料庫</td></tr>
+</table><br />
+
+		至少可以提供上述這些功能，當然啦，妳也可以自行定義哪些資料庫需要，哪些資料庫不需要！<br /><br />
+	</div>
+
+	<hr /><a NAME="whatisnis_process"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS 的運作流程</span><br />
+	<div class=block2>
+		由於 NIS 伺服器主要是提供使用者登入的資訊給用戶端主機來查詢之用，所以，
+		<span class=text_import2>NIS 伺服器所提供的資料當然就需要用到傳輸與讀寫比較快速的 "資料庫" 檔案系統，
+		而不是傳統的純文字資料</span>。為了要達到這個目的，所以 <span class=text_import2>NIS 
+		伺服器就必須要將前一小節提到的那些檔案製作成為資料庫檔案</span>，
+		然後使用網路通訊協定讓用戶端主機來查詢囉。至於所使用的通訊協定與前一章的
+		<a href="0330nfs.htm">NFS</a> 相同，都使用遠端程序呼叫 (RPC) 這個玩意兒喔！<br /><br />
+
+		此外，如果在一個很大型的網域裡面，萬一所有的 Linux 主機都向同一部 NIS 伺服器要求使用者資料時，
+		這部 NIS 伺服器的負載 (loading) 可能會過大。甚至如果考慮到資料使用的風險，
+		要是這單一的一部 NIS 伺服器掛點時，那其他的 Linux 主機還要不要讓 users 登入啊？
+		所以囉，在較為大型的企業環境當中， <span class=text_import2>NIS 伺服器可以使用 master/slave 
+		(主控/次要伺服器) 架構的</span>。<br /><br />
+
+		Master NIS 伺服器提供系統管理者製作的資料庫， slave 則取得來自 master 的資料，並藉以提供其他用戶端的查詢。
+		用戶端可以向整個網域要求使用者資料的回應，master 與 slave 皆可回答，
+		由於 slave 的資料來自於 master ，所以使用者帳號資料本身是同步的！
+		如此一方面可以分散 NIS 伺服器的負載，
+		而且也可以避免因 NIS 伺服器掛點而導致的無法登入的風險。<br /><br />
+
+
+		<a name="fig_01"></a><center><img src="0430nis/nis_run.png"
+		title="NIS 的運作流程"
+		alt="NIS 的運作流程"><br />
+		圖一、NIS 的運作流程</center><br />
+
+		整個 NIS 的運作就如同上圖，首先必須要有 NIS server 的存在，之後才會有 NIS Client 的存在。
+		那麼當使用者有登入的需求時，整個 NIS 的運作程序是：<br />
+
+		<ul>
+		<li>關於 NIS Server (master/slave) 的運作程序：</li>
+		<ol><span class=text_import2>
+		<li>NIS Master 先將本身的帳號密碼相關檔案製作成為資料庫檔案；
+		<li>NIS Master 可以主動的告知 NIS slave server 來更新；
+		<li>NIS slave 亦可主動的前往 NIS master server 取得更新後的資料庫檔案；
+		<li>若有帳號密碼的異動時，需要重新製作 database  與重新同步化 master/slave。
+		</span></ol><br />
+
+		<li>關於當 NIS Client 有任何登入查詢的需求時：
+		<ol><span class=text_import2>
+		<li>NIS client 若有登入需求時，會先查詢其本機的 /etc/passwd, /etc/shadow 等檔案；
+		<li>若在 NIS Client 本機找不到相關的帳號資料，才開始向整個 NIS 網域的主機廣播查詢；
+		<li>每部 NIS server (不論 master/slave) 都可以回應，基本上是『先回應者優先』。
+		</span></ol>
+		</ul>
+
+		從上面的流程當中，你會發現 NIS client 還是會先針對本機的帳號資料進行查詢，
+		查不到才到 NIS server  上頭尋找。因此，如果你的 NIS client 本身就有很多一般使用者的帳號時，
+		那跟 NIS server 所提供的帳號就可能產生一定程度的差異囉！
+		所以，一般來說，在這樣的環境下，<span class=text_import2>NIS client 或 NIS slave server 
+		會主動拿掉本機本身的一般使用者帳號，僅會保留系統所需要的 root 及系統所需帳號而已。</span>
+		如此一來，一般使用者才都會經由 NIS master server 所控管啊！ ^_^<br /><br />
+
+		根據上面<a href="#fig_01">圖一</a>的說明，我們的 NIS 環境大致上需要設定的基本元件就有：<br />
+		<ul><span class=text_import2>
+		<li>NIS Master server ：將檔案建置成資料庫，並提供 slave server 來更新；
+		<li>NIS Slave server ：以 Master server 的資料庫作為本身的資料庫來源；
+		<li>NIS client ：向 master/server 要求登入者的驗證資料。
+		</span></ul>
+
+		就讓我們開始來玩一玩這個 NIS 的設定吧！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="nis_server"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NIS Server 端的設定</span><br />
+<div class=block1>
+	NIS 伺服器端主要在於提供資料庫給用戶端作為驗證之用，並且伺服器端因為資料庫的來源又可分為
+	master/slave 兩大類。底下我們將會介紹這兩種伺服器的安裝方式哩！<br /><br />
+
+	<hr /><a NAME="nis_server_pack"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需要的套件</span><br />
+	<div class=block2>
+		由於 NIS 伺服器需要使用 RPC 協定，且 NIS 伺服器同時也可以當成用戶端，
+		因此他需要的套件就有底下這幾個：<br />
+		<ul><span class=text_import2><font face="細明體">
+		<li>yp-tools ：提供 NIS 相關的查尋指令功能
+		<li>ypbind &nbsp;&nbsp;：提供 NIS Client 端的設定套件
+		<li>ypserv &nbsp;&nbsp;：提供 NIS Server 端的設定套件
+		<li>portmap &nbsp;：就是 RPC 一定需要的資料啊！
+		</font></span></ul>
+		如果你是使用 Red Hat 的系統，例如我們的 CentOS 4.x 的話，那你可以利用『 rpm -qa | grep '^yp' 』
+		來檢查是否有安裝上述的套件。一般來說 yp-tools, ypbind 都會主動的安裝，不過 ypserv 可能就不會安裝了。
+		此時建議你直接使用『 <a href="0220upgrade.htm#yum">yum</a> install 
+		ypserv 』來安裝吧！立刻就裝好了。底下立刻來設定囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="nis_server_nis"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS 的套件結構</span><br />
+	<div class=block2>
+		在 NIS 伺服器上最重要的就是 ypserv 這個套件了，而 ypserv 主要則是提供了底下這些重要資料：<br /><br />
+
+		設定檔方面：
+		<ul>
+		<li><span class=text_import1>/etc/ypserv.conf</span>：這是最主要的設定檔，
+			可以規範 NIS 用戶端是否可登入的權限。
+		<li><span class=text_import1>/etc/hosts</span>：非常重要！每一部主機都需要記錄才行！！
+		<li><span class=text_import1>/etc/netgroup</span>：設定信任的主機與網域；
+		<li><span class=text_import1>/var/yp/Makefile</span>：與建立資料庫有關的動作設定檔；
+		<li><span class=text_import1>/etc/sysconfig/network</span>：可以在這個檔案內指定 NIS 的網域 (nisdomainname)。
+		</ul>
+
+		伺服器提供的主要服務方面：
+		<ul>
+		<li><span class=text_import1>/usr/sbin/ypserv</span>：就是 NIS 伺服器的主要提供服務；
+		<li><span class=text_import1>/usr/sbin/rpc.ypxfrd</span>：用來作為 master/slave 主機之間傳輸資料庫的服務；
+		<li><span class=text_import1>/usr/sbin/rpc.yppasswdd</span>：提供額外的 NIS 用戶端之使用者密碼修改服務，
+		透過這個服務， NIS 用戶端可以直接修改在 NIS 伺服器上的密碼。相關的使用程式則是 yppasswd 指令；
+		</ul>
+
+		與資料庫有關的指令方面：
+		<ul>
+		<li><span class=text_import1>/usr/sbin/yppush</span>：master 主機將資料庫直接送至 slave 的指令；
+		<li><span class=text_import1>/usr/lib/yp/ypinit</span>：建立資料庫的指令，非常常用；
+		<li><span class=text_import1>/usr/lib/yp/ypxfr</span>：傳送資料庫的指令，在該目錄下尚有
+			ypxfr_1perday, ypxfr_1perhour, ypxfr_2perday 等等。
+		</ul>
+	</div>
+
+	<hr /><a NAME="nis_server_case"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個實作案例</span><br />
+	<div class=block2>
+		如果您有觀察過<a href="#fig_01">圖一</a>的話，你會發現到我們的 NIS 需要設定 Master/Slave 及 client 等，
+		鳥哥這裡提供一個案例，裡頭就包括這三個元件啦！不過如果你的網域是比較小的環境，
+		那底下提供的 NIS slave server 你可以略過不看！鳥哥在這裡的假設是這樣的：<br />
+
+		<ul><span class=text_import2>
+		<li>NIS 的網域名稱為 vbirdnis
+		<li>整個內部的信任網域為 192.168.1.0/24
+		<li>NIS master server 的 IP 為 192.168.1.2 ，主機名稱為 master.vbirdnis
+		<li>NIS slave server  的 IP 為 192.168.1.10，主機名稱為 slave.vbirdnis
+		<li>NIS client 的 IP 為 192.168.1.100，主機名稱為 client.vbirdnis
+		</span></ul>
+
+		底下我們就一個一個來設定吧！<br /><br />
+	</div>
+
+	<hr /><a NAME="nis_server_master"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS master 的設定與啟動</span><br />
+	<div class=block2>
+		NIS 的設定真是很簡單，首先，你必須要在 NIS master 這部伺服器上面搞定你的帳號與密碼相關資料，
+		這包括 /etc/passwd, /etc/shadow, /etc/hosts, /etc/group .... 等等，都得要先搞定才行！
+		詳細的帳號相關資料請參考<a href="../linux_basic/0410accountmanager.htm">基礎篇的帳號管理</a>章節。
+		等到搞定之後你就可以繼續 NIS 伺服器的設定了：<br /><br />
+
+		<hr /><li><span class=text_import1>設定 NIS 的網域名稱 (NIS domain name)</span></li>
+		<div class=block2>
+		因為所有的 NIS server/client 都需要設定 NIS 領域名稱才行，所以就設定吧！設定的方式很簡單，
+		直接以 nisdomainname 這個指令來下達即可。(其實 nisdomainname 與 ypdomainname 及 domainname 
+		都是一模一樣的指令啦！你只要記住一個指令名稱即可。請自行 man domainname 吧！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nisdomainname [NIS 領域名稱]</span>
+<span class=term_say>參數：
+若沒有加上領域名稱，則會顯示出目前的 NIS 領域；</span>
+
+[root@linux ~]# <span class=term_command>nisdomainname vbirdnis</span>
+[root@linux ~]# <span class=term_command>nisdomainname</span>
+vbirdnis  <span class=term_say>&lt;==瞧！已經設定了 NIS 領域名稱囉！</span>
+</pre></td></tr></table>
+
+		如果確定每次開機時都需要啟動這個 NIS 領域名稱的話，直接寫到 /etc/rc.d/rc.local 去：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>/bin/nisdomainname vbirdnis</span>
+</pre></td></tr></table>
+
+		若是想要在啟動 NIS 時就自動設定好 NIS 領域的話，可以利用 /etc/sysconfig/network 
+		這個檔案，寫成如下所示的模樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>NISDOMAIN=vbirdnis</span>
+</pre></td></tr></table>
+
+		如此一來，你的伺服器就會在開機時，或者是在啟動 NIS 相關服務時，就能夠自行設定好 NIS 領域囉！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>主要設定檔 /etc/ypserv.conf</span></li>
+		<div class=block2>
+		這個設定檔就是 NIS 伺服器最主要的設定檔啦！內容其實很簡單，你可以保留預設值即可。
+		不過，也可以作一些更動啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/ypserv.conf</span>
+<span class=term_write>dns: no</span>
+<span class=term_say># NIS 伺服器的使用時機絕大部分都是在區域網路內而已，所以不需要 DNS 系統，
+# 只要 /etc/hosts 設定正確即可！！</span>
+
+<span class=term_write>files: 30</span>
+<span class=term_say># 預設會有 30 個資料庫被讀入記憶體當中，因為我們的帳號檔案其實不多，
+# 30 個已經足夠使用了！</span>
+
+<span class=term_write>slp: no
+slp_timeout: 3600</span>
+<span class=term_say># 這兩個與 SLP 服務有關，因為我們僅使用單純的 NIS ，所以不需要啟動。</span>
+
+<span class=term_write>xfr_check_port: yes</span>
+<span class=term_say># 這個與 master/slave 有關，將同步更新的資料庫比對所使用的埠口，
+# 放置於小於 1024 的埠口內。</span>
+
+<span class=term_say># 底下則是設定限制用戶端或 slave server 查詢的權限，利用冒號隔成四部分，分別為：
+# <b>[主機名稱/IP] : [NIS網域名稱] : [可用資料庫名稱] : [安全限制]</b>
+# [主機名稱/IP]   ：可以使用 network/netmask 如 192.168.1.0/255.255.255.0 
+# [NIS網域名稱]   ：例如本案例中的 vbirdnis
+# [可用資料庫名稱]：就是由 NIS 製作出來的資料庫名稱；
+# [安全限制]      ：包括沒有限制 (none)、僅能使用 &lt;1024 (port) 及拒絕 (deny)
+# 一般來說，你可以依照我們的網域來設定成為底下的模樣：</span>
+<span class=term_write>127.0.0.0/255.255.255.0   : * : * : none</span>
+<span class=term_write>192.168.1.0/255.255.255.0 : * : * : none</span>
+<span class=term_write>*                         : * : * : deny</span>
+<span class=term_say># 星號 (*) 代表任何資料都接受的意思。上面三行的意思是，開放 lo 內部介面、
+# 開放內部 LAN 網域，且杜絕所有其他來源的 NIS 要求的意思。</span>
+
+<span class=term_say># 萬一上面這三行權限相關的設定無法讓你的 NIS 順利的生效時，
+# 你可以先將上面三行註解，然後加入底下這一行：</span>
+<span class=term_write>*                         : * : * : none</span>
+<span class=term_say># 這樣應該就能夠讓 NIS 順利的連線了。</span>
+</pre></td></tr></table>
+
+		</div>
+		<hr /><li><span class=text_import1>設定主機名稱 (/etc/hosts) 與建立信任群組 (/etc/netgroup)</span></li>
+		<div class=block2>
+		在 /etc/ypserv.conf 的設定當中我們談到 NIS 大部分是給區域網路內的主機使用的，
+		所以當然就不需要 DNS 的設定了。不過，由於 NIS 使用到很多的主機名稱，
+		<span class=text_import2>所以你一定要設定好 /etc/hosts 對應，否則會無法成功連線 NIS ！</span>
+		這個很重要，絕大部分的朋友無法達成 NIS server/client 的連線都是這裡出問題而已。
+		依據<a href="#nis_server_case">本案例的設定值</a>，你應該這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+<span class=term_write>192.168.1.2    master.vbirdnis
+192.168.1.10   slave.vbirdnis
+192.168.1.100  client.vbirdnis</span>
+</pre></td></tr></table>
+
+		注意！如果你的主機名稱與 NIS 的主機名稱不一樣，那麼在這個檔案當中還是需要將你的主機名稱給他設定進來！
+		否則在後面資料庫的設定時，肯定會發生問題。當然啦，你也可以直接在 /etc/sysconfig/network 
+		當中直接重新設定主機名稱，然後重新開機，或者是利用 hostname 這個指令重新設定你的主機名稱也可以。<br /><br />
+
+		除了這個設定之外，有時候你可能需要設定 /etc/netgroup ，雖然比較新的 distributions 
+		都可以略過這個檔案的檢查了，不過建議您還是可以瞭解一下的啦！這個 /etc/netgroup 
+		檔案可以記錄在我們網域裡面被信任的群，這個檔案的內容當中，每一行都有三個欄位，分別以逗號『,』隔開，意義為：<br />
+
+<table class="term"><tr><td class="term"><pre>
+&lt;host>,&lt;user>,&lt;domain>
+主機,使用者帳號,領域名稱
+</pre></td></tr></table>
+
+		事實上，如果這個檔案是『空的』的話，那麼代表著『全部的主機、帳號與領域名稱都接受』的意思，因為我們已經在 
+		/etc/ypserv.conf 裡頭設定好了關於安全的項目了，所以這個檔案只要建立即可(本來是不存在的！)：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>touch /etc/netgroup</span>
+</pre></td></tr></table>
+
+		</div>
+
+		<hr /><li><span class=text_import1>啟動所有相關的服務</span></li>
+		<div class=block2>
+		接下來當然是先啟動所有相關的服務囉，這包括 RPC, ypserv 以及 yppasswdd 囉！
+		不過，如果你的 RPC 本來就已經啟動的話，那就不要重新啟動 portmap 了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/portmap start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/ypserv start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/yppasswdd start</span>
+</pre></td></tr></table>
+
+		注意，主要的 NIS 服務是 ypserv ，不過，如果要提供 NIS 用戶端的密碼修改功能的話，
+		最好還是得要啟動 yppasswdd 這個服務才好。在啟動完畢後，我們可以利用 rpcinfo 來檢查看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>rpcinfo -p localhost</span>
+   program vers proto   port
+    100000    2   tcp    111  portmapper
+    100000    2   udp    111  portmapper
+    100004    2   udp    942  ypserv
+    100004    1   udp    942  ypserv
+    100004    2   tcp    945  ypserv
+    100004    1   tcp    945  ypserv
+    100009    1   udp    950  yppasswdd
+
+[root@linux ~]# <span class=term_command>rpcinfo -u localhost ypserv</span>
+program 100004 version 1 ready and waiting
+program 100004 version 2 ready and waiting
+</pre></td></tr></table>
+
+		要出現上述的畫面才表示正確的啟動了 ypserv 喔！若有需要開機立即啟動 ypserv 的話，請使用 
+		chkconfig 來處理吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>建立資料庫</span></li>
+		<div class=block2>
+		在完成了上面的所有步驟後，接下來我們得要開始將主機上面的帳號檔案轉成資料庫檔案啦！
+		轉換的動作直接透過 /usr/lib/yp/ypinit 這個指令來處理即可！整個步驟是這樣做的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/usr/lib/yp/ypinit -m</span>
+At this point, we have to construct a list of the hosts which will run NIS
+servers.  master.vbirdnis is in the list of NIS server hosts.  Please continue 
+to add the names for the other hosts, one per line.  When you are done with the
+list, type a <span class=term_write>&lt;control</span> D>.
+        next host to add:  <span class=term_write>master.vbirdnis</span>  <span class=term_say>&lt;==這個地方系統會主動捉到</span>
+        next host to add:                   <span class=term_say>&lt;==按下 [ctrl]-d</span>
+The current list of NIS servers looks like this:
+
+master.vbirdnis
+
+Is this correct?  [y/n: y] <span class=term_command>y</span>
+We need a few minutes to build the databases...
+Building <span class=term_write>/var/yp/vbirdnis/ypservers</span>...
+Running /var/yp/Makefile...
+gmake[1]: Entering directory `/var/yp/vbirdnis'
+Updating passwd.byname...
+<span class=term_say>....中間省略....</span>
+gmake[1]: Leaving directory `/var/yp/vbirdnis'
+
+master.vbirdnis has been set up as a NIS master server.
+
+Now you can run <span class=term_write>ypinit -s master.vbirdnis</span> on all slave server.
+</pre></td></tr></table>
+
+		要注意出現的資訊當中，在告知你可以直接輸入 [ctrl]-d 以結束的那個地方，
+		你的主機名稱會主動的被捉出來，注意！這個主機名稱務必需要在 /etc/hosts 可以被找到 IP 的對應，
+		否則會出現問題。另外，萬一在執行 ypinit -m 時，出現如下的錯誤，那肯定就是有些資料沒有被建立了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+gmake[1]: *** No rule to make target `/etc/aliases', needed by 
+`mail.aliases'.  Stop.
+gmake[1]: Leaving directory `/var/yp/vbirdnis'
+make: *** [target] Error 2
+Error running Makefile.
+Please try it by hand.
+
+[root@linux ~]# <span class=term_command>touch /etc/aliases</span>
+<span class=term_say># 解決方法很簡單吶！缺少什麼檔案，就 touch 他就是了！</span>
+[root@linux ~]# <span class=term_command>/usr/lib/yp/ypinit -m</span>
+<span class=term_say># 然後再重新執行一次即可！</span>
+</pre></td></tr></table>
+
+		如果是如下的錯誤，那可能是因為：<br />
+		<ul><span class=text_import2>
+		<li>你的 ypserv 沒有順利啟動，請利用 rpcinfo 檢查看看；
+		<li>你的主機名稱沒有對應好，請檢查 /etc/hosts
+		</span></ul>
+
+<table class="term"><tr><td class="term"><pre>
+gmake[1]: Entering directory `/var/yp/vbirdnis'
+Updating passwd.byname...
+failed to send 'clear' to local ypserv: RPC: Program not 
+registeredUpdating passwd.byuid...
+failed to send 'clear' to local ypserv: RPC: Program not 
+registeredUpdating group.byname...
+....
+</pre></td></tr></table>
+
+		建立了資料庫後，你必需要通知 ypserv 與 yppasswdd 這兩支服務，告知資料庫已經被更改了，
+		所以你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/ypserv restart</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/yppasswdd restart</span>
+</pre></td></tr></table>
+
+		要注意啊，如果你的使用者密碼有變動過，那麼你就得要重新製作資料庫，重新啟動 ypserv 及 yppasswdd 喔！
+		注意注意啊！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>與 slave server 及資料庫有關的一些設定 (optional)</span></li>
+		<div class=block2>
+		當我們執行了 ypinit -m 之後，所有的主機上面的帳號相關檔案會被轉成資料庫檔案，
+		這些資料庫會被放置到 /var/yp/"nisdomainname" 當中，我們的 nisdomainname 是 vbirdnis ，
+		所以被建立的資料庫通通被放置到 /var/yp/vbirdnis/ 目錄中囉！您可以自行去檢查看看。<br /><br />
+
+		事實上，我們的 ypinit 其實是透過 /var/yp/Makefile 來進行資料庫的建立的呢！
+		所以，我們當然也就可以藉由該檔案內的功能來處理某些特定檔案的更新囉！
+		舉例來說，若妳僅修改了一個使用者的帳號參數而已，所以僅有 /etc/passwd 有被變更過，
+		那麼如何僅針對這個檔案進行資料庫的更新呢？你可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /var/yp</span>
+[root@linux yp]# <span class=term_command>make passwd</span>
+Updating passwd.byname...
+Updating passwd.byuid...
+</pre></td></tr></table>
+
+		這樣做就能夠更新了，只不過更新後的資料庫會被放置到 /var/yp 當中，而不是 /var/yp/vbirdnis 當中，
+		或許妳還得需要手動移動一下該檔案就是了。<br /><br />
+
+		再者，如果你有 slave 伺服器的話，總是需要進行 master/slave 的同步化吧？
+		那如何告知我們的 master 伺服器將資料庫提供給 slave 呢？這個時候就得要修改 /var/yp/Makefile 囉！
+		您可以自行進入該檔案內查閱一些資料，不過，基本上你只要改一個地方就好了：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/yp/Makefile</span>
+<span class=term_say># 找到底下這一行：</span>
+NOPUSH=true
+<span class=term_say># 將他改成這樣：</span>
+NOPUSH=<span class=term_write>false</span>
+</pre></td></tr></table>
+
+		這個設定值可以將資料庫給他『推 (push)』到其他的 slave 伺服器上頭！接下來，你必需要告知 master
+		要推出去的資料庫是給哪部伺服器？所以，你還得要修改這裡：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /var/yp/ypservers</span>
+master.vbirdnis
+<span class=term_write>slave.vbirdnis</span>
+<span class=term_say># 增加上頭這一行！</span>
+</pre></td></tr></table>
+
+		你可以將所有的 slave 伺服器都加到 /var/yp/ypservers 檔案當中，只要記得該伺服器的 IP
+		必需要在 /etc/hosts 內可以找到對應才行喔！如果你要提供 master/slave 伺服器的資料庫檔案傳輸時，
+		那麼還需要啟動 ypxfrd 這個服務才行！這個服務可以讓 slave 伺服器主動連結上 ypxfrd 來更新資料庫，
+		可以免除系統管理原自己手動更新啦！啟動方式太簡單了吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/ypxfrd start</span>
+</pre></td></tr></table>
+
+		做到這裡就 OK 啦！您的 NIS Master 伺服器已經搞定囉！接下來，您就可以準備處理 slave 伺服器，或是直接處理
+		NIS client 端囉！此外，如果您的 master 機器想要直接將某些特定的資料庫直接傳給 slave 主機的話，
+		那麼可以使用 yppush 這個指令喔！例如下列範例：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yppush -h slave.vbirdnis passwd.*</span>
+</pre></td></tr></table>
+
+		如果 master/slave 的資料庫不符合的話，那麼該 passwd.byname 及 passwd.byuid 就會同步更新了！
+		很簡單吧！ ^_^！也就是說，您得先要製作資料庫，然後再利用 yppush 來處理資料庫的同步啊！
+		亦即是：<br />
+		<ol><span class=text_import2>
+		<li>先以 useradd username 或 passwd username 等製作出 master 上面的實體用戶；
+		<li>再以 make 或者直接以 /usr/lib/yp/ypinit -m 來製作出最新的資料庫；
+		<li>利用 yppush 這個指令功能來進行資料庫的傳輸。
+		</span></ol>
+		如此一來，您就不需要進行 slave 上面的其他資料庫處理啦！方便又簡單！
+		</div>
+	</div>
+
+	<hr /><a NAME="nis_server_slave"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS slave 
+	的設定與啟動 (optional)</span><br />
+	<div class=block2>
+		參考<a href="#fig_01">圖一</a>的 NIS 運作流程當中，我們知道由於 
+		<span class=text_import2>NIS 伺服器預設還是會先搜尋自己的 /etc/passwd, /etc/shadow 等資訊，因此你最好先將 NIS
+		slave 的帳號與密碼資料作個簡單的修訂，讓他保留在比較乾淨的帳號資料，例如僅有系統帳號 (UID 小於 500
+		內的系統帳號) 就是一個不錯的環境</span>。這樣可以避免 UID 重複出現的問題 (在 /etc/passwd 及 NIS
+		的環境中都出現相同的 UID ，但其相關參數卻並相同時，可能有困擾)。<br /><br />
+
+		NIS slave 的設定要比 NIS master 簡單多了，事實上，很多設定都一樣！你甚至可以複製 NIS master 
+		的很多設定檔哩！在你處理完 NIS slave 伺服器的帳號密碼相關檔案後，接下來你可以這樣設定喔：<br /><br />
+
+		<hr /><li><span class=text_import1>設定網域</span></li>
+		<div class=block2>
+		同樣的， NIS slave 也需要設定相同的網域，設定方式可以參考前一小節的介紹，我們這裡很快的介紹一遍：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 直接建立領域名稱</span>
+[root@linux ~]# <span class=term_command>nisdomainname vbirdnis</span>
+
+<span class=term_hd>2. 開機立即啟動此一領域名稱</span>
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>/bin/nisdomainname vbirdnis</span>
+
+<span class=term_hd>3. 預設在啟動 ypserv 時，設定 NIS 領域名</span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>NISDOMAIN=vbirdnis</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>主要設定檔 /etc/ypserv.conf</span></li>
+		<div class=block2>
+		這個設定檔也是很簡單的啦！可以與前面的 NIS master 相同即可。在鳥哥的這個例子當中，
+		我是直接在該檔案加入這三行而已喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/ypserv.conf</span>
+<span class=term_write>127.0.0.0/255.255.255.0   : * : * : none
+192.168.1.0/255.255.255.0 : * : * : none
+*                         : * : * : deny</span>
+</pre></td></tr></table>
+
+		</div>
+
+		<hr /><li><span class=text_import1>/etc/hosts 及 /etc/netgroup</span></li>
+		<div class=block2>
+		這兩個檔案不陌生吧？直接設定他吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>touch /etc/netgroup</span>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+<span class=term_write>192.168.1.2    master.vbirdnis
+192.168.1.10   slave.vbirdnis
+192.168.1.100  client.vbirdnis</span>
+</pre></td></tr></table>
+
+		</div>
+
+		<hr /><li><span class=text_import1>啟動所有服務及建立資料庫</span></li>
+		<div class=block2>
+		還記得吧？我們需要 portmap 與 ypserv 喔！至於 yppasswdd 這個功能主要是在修改主控伺服器 (master) 
+		上面的帳號密碼，而 slave 只是在取得 master 的資料庫而已，本身並不具備修改資料庫的能力的，
+		所以 slave 當然就不需要這個東西啦！所以你可以這樣設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/portmap start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/ypserv start</span>
+</pre></td></tr></table>
+
+		那如何取得來自 master 伺服器的資料庫檔案呢？還是一樣得要透過 /usr/lib/yp/ypinit 這支程式啦！
+		只是他的指令下達會變成這樣喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/usr/lib/yp/ypinit -s master.vbirdnis</span>
+<span class=term_say>參數：
+-s ：後面接預計取得的 master 主機名稱！</span>
+We will need a few minutes to copy the data from master.vbirdnis.
+Transferring hosts.byname...
+Trying ypxfrd ... not running
+
+Transferring services.byname...
+Trying ypxfrd ... not running
+<span class=term_say>....中間省略....</span>
+</pre></td></tr></table>
+
+		雖然使用上頭的指令事實上會出現有錯誤的資訊，就是那個『Trying ypxfrd ... not running』的資訊，
+		但事實上資料庫的轉移還是成功的！不相信的話，你可以使用底下這個指令來測試一下資料庫是否正確：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ypcat -h localhost passwd.byname</span>
+</pre></td></tr></table>
+
+		如果有正確的輸出帳號/密碼資料的話，呵呵！那就是 OK 的啦！如此一來，您的 NIS slave 就啟動 OK 啦！
+		不過，由於您的 master 伺服器可能隨時都會有帳號/密碼的改變，所以你其實是可以使用 ypxfrd
+		這個服務來幫助資料庫在 master/slave 間轉移的！如果你有在 master 伺服器啟動 ypxfrd 的話，
+		那麼你可以在 slave 的工作排程上這樣處理的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/crontab</span>
+<span class=term_say># 在最後加入以 ypxfr 傳輸資料的 script 喔！</span>
+<span class=term_write>20    * * * * root /usr/lib/yp/ypxfr_1perhour
+40    6 * * * root /usr/lib/yp/ypxfr_2perday
+55 6,18 * * * root /usr/lib/yp/ypxfr_2perday</span>
+<span class=term_say># 事實上，這三支程式只是利用 /usr/lib/yp/ypxfr 來進行資料庫的更新，
+# 不過鳥哥實際進行時，似乎有點小問題，或許需要修改一下上述三個檔案，
+# 我們以 /usr/lib/yp/ypxfr_1perhour 為例來說明好了：</span>
+
+[root@linux ~]# <span class=term_command>vi /usr/lib/yp/ypxfr_1perhour</span>
+<span class=term_say># 找到這一行：</span>
+  $YPBINDIR/ypxfr $map
+<span class=term_say># 將他改成這樣：</span>
+  $YPBINDIR/ypxfr $map <span class=term_write>-h master.vbirdnis</span>
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上，如果 master 伺服器有啟動 ypxfrd 的話，那麼下達 ypinit -s master.vbirdnis 時，
+		就不會有錯誤訊息囉！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		如此一來，系統將會針對不同的資料庫來與 master 伺服器進行比對，若發現 master 
+		的資料較新時，則會進行更新！很方便吧！當然啦，您也可以直接透過系統管理員執行 
+		ypinit -s master.vbirdnis 來處理就是了。此外，直接利用 master 機器上的 yppush 
+		也是個不錯的思考方向！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>啟動 ypbind ，讓 slave 也可以查詢帳號/密碼</span></li>
+		<div class=block2>
+		如果你的 slave 並沒有啟動 ypbind 的話，那麼 slave 將無法以 master 所提供的帳號來登入的！
+		所以接下來，<span class=text_import2>妳必須要啟動 ypbind
+		這個查詢的功能</span>，好讓我們的 slave 伺服器也可以針對我們自己的 NIS 網域 (vbirdnis) 進行查詢。
+		至於 <a href="#ypbind">ypbind</a> 的啟動方式則請參考下一小節的 
+		<a href="#ypbind">NIS client 設定方式</a>吧！<br /><br />
+
+		至此為止，你就已經具有一部 NIS master 及多部 NIS slave 的伺服器囉！接下來就來玩玩 NIS client 吧！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="nis_server_fire"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">防火牆設置</span><br />
+	<div class=block2>
+		又來到了防火牆的規劃了！要注意的是，我們的 NIS 與 NFS 都是使用 RPC Server 的，所以囉，都可以直接管制 
+		111 這個 port 即可！能夠直接以 iptables 管理 111 這個 port ，例如僅允許 192.168.1.0/24 
+		這個網域進來的話，可以在你的防火牆規則上面加上：<br />
+
+<table class="term"><tr><td class="term"><pre>
+/sbin/iptables -A -s 192.168.1.0/24 --dport 111 -j ACCEPT
+/sbin/iptables -A --dport 111 -j DROP
+</pre></td></tr></table>
+	</div>
+</div>
+
+
+<hr /><a NAME="nis_client"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NIS Client 端的設定</span><br />
+<div class=block1>
+	我們知道網路連線是雙向的，所以 NIS server 提供資料庫檔案，NIS client 當然也需要提供一些連線的軟體囉！
+	這個連線的軟體就是 ypbind 啦！此外，如同<a href="#fig_01">圖一</a>的介紹，在 NIS client 端有登入需求時，
+	NIS client 基本上還是先搜尋自己的 /etc/passwd, /etc/group 等資料後才再去找 NIS server 的資料庫啊！
+	<span class=text_import2>所以 NIS client 最好能夠將本身的帳號密碼刪除到僅剩下系統帳號，亦即 
+	UID, GID 均小於 500 以下的帳號即可</span>，
+	如此一來既可讓系統執行無誤，也能夠讓登入者的資訊完全來自 NIS server ，比較單純啦！<br />
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	事實上，你想要讓 NIS 伺服器寫入的各項帳號資料都在 NIS server 的 /var/yp/Makefile 那個檔案設定的！
+	您可以進入該檔案搜尋一下 UID 就知道了！ ^_^
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<hr /><a NAME="nis_client_pack"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS client 
+	所需套件與套件結構</span><br />
+	<div class=block2>
+		NIS client 端所需要的套件僅有：<br />
+		<ul>
+		<li>ypbind
+		<li>yp-tools</ul>
+		即可，yp-tools 提供查詢的軟體，至於 ypbind 則是與 ypserv 互相溝通的用戶端連線軟體啦！
+		另外，在 CentOS 當中我們還有很多設定檔是與認證有關的，包含 ypbind 的設定檔時，
+		在設定 NIS client 你可能需要動到底下的檔案：<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/sysconfig/network</span>
+			：裡頭主要設定了 NIS 領域名稱，讓 ypbind 啟動時可以設定好；
+		<li><span class=text_import1>/etc/hosts</span> ：很重要吧！至少需要有各個 NIS 伺服器的 IP 與主機名對應；
+		<li><span class=text_import1>/etc/yp.conf</span> ：這個則是 ypbind 的主要設定檔，裡面主要規範 NIS server ；
+		<li><span class=text_import1>/etc/sysconfig/authconfig</span> ：規範帳號登入時的允許認證機制；
+		<li><span class=text_import1>/etc/pam.d/system-auth</span> ：這個最容易忘記！因為帳號通常由 PAM 模組所管理，
+			所以你必須要在 PAM 模組內加入 NIS 的支援才行！
+		<li><span class=text_import1>/etc/nsswitch.conf</span> 
+			：這個檔案重要到不行！可以規範帳號密碼與相關資訊的查詢順序，預設是 /etc/passwd 再 NIS 等等；
+		</ul>
+
+		另外， NIS 還提供了幾個有趣的程式給 NIS 用戶端來進行帳號相關參數的修改，例如密碼、shell 等等，
+		主要有底下這幾個指令：<br />
+		<ul><span class=text_import2><font face="細明體">
+		<li>/usr/bin/yppasswd ：更改你在 NIS database (NIS Server 所製作的資料庫) 的密碼
+		<li>/usr/bin/ypchsh &nbsp; ：同上，但是是更改 shell
+		<li>/usr/bin/ypchfn &nbsp; ：同上，但是是更改一些使用者的訊息！
+		</font></span></ul>
+		OK！那麼底下就讓我們開始來設定 NIS 用戶端吧！^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="nis_client_setup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS client 
+	的設定與啟動</span><br />
+	<div class=block2>
+		啟動 NIS client 的設定就簡單多了！最主要是加入 NIS domain 當中，然後再啟動 ypbind 即可。
+		整個設定過程是這樣的：<br /><br />
+
+		<hr /><li><span class=text_import1>設定好 NIS domain 以及 /etc/hosts 主機名對應</span></li>
+		<div class=block2>
+		設定 NIS domain 就利用 nisdomainname 來處理即可啊：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 直接建立領域名稱</span>
+[root@linux ~]# <span class=term_command>nisdomainname vbirdnis</span>
+
+<span class=term_hd>2. 開機立即啟動此一領域名稱</span>
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>/bin/nisdomainname vbirdnis</span>
+
+<span class=term_hd>3. 預設在啟動 ypbind 時，設定 NIS 領域名</span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>NISDOMAIN=vbirdnis</span>
+</pre></td></tr></table>
+
+		然後則是主機名稱與 IP 的對應設定檔，重要的很！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+<span class=term_write>192.168.1.2    master.vbirdnis
+192.168.1.10   slave.vbirdnis
+192.168.1.100  client.vbirdnis</span>
+</pre></td></tr></table>
+
+		這樣就好了！繼續下一步！ <br /><br />
+		</div>
+
+		<a name="ypbind"></a><hr /><li><span class=text_import1>啟動 ypbind 來連結至 NIS server </span></li>
+		<div class=block2>
+		<span class=text_import2>要啟動 ypbind 必須要設定很多的檔案，實在很麻煩～不過不打緊， 
+		CentOS 提供給我們一個工具『authconfig』</span>，
+		透過這個工具我們可以很快的將 ypbind 設定起來。妳只要在終端機環境下下達
+		authconfig 就能夠設定了。設定的方式如下所示：<br /><br />
+
+		<a name="authconfig"></a>
+		<center>
+		<img src="0430nis/authconfig_01.png"
+		alt="authconfig 的使用說明" 
+		title="authconfig 的使用說明"><br />
+		圖二、authconfig 的使用說明</center><br />
+
+		系統原本就會有 MD5 及 Shadow 的加密編碼，您只要選擇上圖的 NIS 項目，然後按下 OK 
+		便進入到如下所示畫面：<br /><br />
+
+		<center>
+		<img src="0430nis/authconfig_02.png"
+		alt="authconfig 的使用說明" 
+		title="authconfig 的使用說明"><br />
+		圖三、authconfig 的使用說明(續)</center><br />
+
+		在你輸入了正確的 NIS 領域名稱 (Domain) 以及正確的主機名稱 (就是主控主機) ，
+		並且按下 OK 後，<span class=text_import2>你的 CentOS 就會自動的幫你啟動 portmap 以及 ypbind 這兩支程式，
+		同時還會自動的使用 chkconfig 的功能幫您在開機時自動啟動 portmap 及 ypbind 喔！</span>
+		真的是很方便吧！這樣你就啟動了 ypbind 了！很簡單吧！<br /><br />
+
+		如果妳真的想要手動處理的話，那麼妳必須要手動的修改底下這些檔案：<br />
+		<ul><span class=text_import2>
+		<li>/etc/nsswitch.conf (修改許多主機驗證功能的順序)
+		<li>/etc/sysconfig/authconfig (CentOS 的認證機制)
+		<li>/etc/pam.d/system-auth (許多登入所需要的 PAM 認證過程)
+		<li>/etc/yp.conf (亦即是 ypbind 的設定檔)
+		</span></ul>
+
+		事實上， <a href="#authconfig">authconfig</a> 指令也是在處理這些檔案而已。
+		我們就來談一談這個小細節吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. /etc/nsswitch.conf</span>
+[root@linux ~]# <span class=term_command>vi /etc/nsswitch.conf</span>
+<span class=term_say># 這個檔案的內容有相當多，不過如果你只想要進行登入驗證，可以這樣：</span>
+passwd:     files <span class=term_write>nis</span>
+shadow:     files <span class=term_write>nis</span>
+group:      files <span class=term_write>nis</span>
+hosts:      files <span class=term_write>nis</span> dns
+<span class=term_say># 亦即只要加入 nis 即可！這幾個設定的意義是：
+# 1. passwd: 就是使用者相關資訊查尋，分別為 /etc/passwd, nis
+# 2. shadow: 就是使用者密碼的查尋， /etc/shadow, nis
+# 3. group:  就是使用者的群組資訊查尋， /etc/group, nis
+# 4. hosts:  就是主機名稱與IP對應的查尋，/etc/hosts, nis 及 /etc/resolv.conf</span>
+
+<span class=term_hd>2. /etc/sysconfig/authconfig</span>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/authconfig</span>
+USENIS=no
+<span class=term_say># 這個檔案的內容很好修改！只要將上面 NIS 部分改成 yes 即可：</span>
+USENIS=<span class=term_write>yes</span>
+
+<span class=term_hd>3. /etc/pam.d/system-auth</span>
+[root@linux ~]# <span class=term_command>vi /etc/pam.d/system-auth</span>
+<span class=term_say># 這個部分也很重要！很容易忘記啦！修改 PAM 的設定檔找到如下一行：</span>
+password    sufficient    /lib/security/$ISA/pam_unix.so nullok 
+use_authtok md5 shadow
+<span class=term_say># 上面可是同一行喔！將他改成：</span>
+password    sufficient    /lib/security/$ISA/pam_unix.so nullok 
+use_authtok md5 shadow <span class=term_write>nis</span>
+
+<span class=term_hd>4. /etc/yp.conf</span>
+[root@linux ~]# <span class=term_command>vi /etc/yp.conf</span>
+<span class=term_say># 這個是 ypbind 的主要設定檔，主要語法是這樣的：
+# domain [NIS領域] server [主機名稱]
+# 或者是透過廣播，適合用於大網域有多部 NIS 伺服器時：
+# domain [NIS領域] broadcast</span>
+<span class=term_write>domain vbirdnis broadcast</span>
+</pre></td></tr></table>
+
+		這樣設定完成後，再給他啟動 ypbind 即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/portmap start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/ypbind start</span>
+</pre></td></tr></table>
+
+		你可以手動處理，也可以直接使用 <a href="#authconfig">authconfig</a> 啦！
+		鳥哥這裡倒是建議您可以直接使用 authconfig 比較簡單啊！ ^_^！<br /><br />
+
+		另外，那些手動處理的檔案當中，
+		/etc/nsswitch.conf 是很重要的，因為他規範了 Linux 本機要使用某些服務時，例如帳號/密碼的資料、
+		主機名稱的對應資料、port number 對應服務名稱的資料等等，這些資料的搜尋順序！
+		更多的資料請自行進入該檔案內查閱，我們也會在 DNS 伺服器章節再次提到這個檔案的。<br /><br />
+
+		至於其他兩個設定檔， /etc/sysconfig/authconfig, /etc/pam.d/system-auth 則是與使用者帳號的驗證有關，
+		這是 CentOS (Red Hat 系統) 所慣用的設定檔，如果沒有修改設定的話，那麼順利啟動 ypbind 也是無法登入的啦！
+		這樣說，可以瞭解吧！ ^_^
+		</div>
+	</div>
+
+	<hr /><a NAME="nis_client_check"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NIS client 端的檢驗：
+	yptest, ypwhich, ypcat</span><br />
+	<div class=block2>
+		如何確定 NIS client 已經連上 NIS server 呢？簡單的要命啊！你可以利用 id 這個指令直接檢查 NIS server
+		有的，但是 NIS client 沒有的帳號，如果有出現該帳號的相關 UID/GID 資訊時，那表示有連接上啊！
+		除此之外，我們還可以透過 NIS 提供的相關檢驗功能來檢查喔！底下分別來瞧一瞧：<br /><br />
+
+		<a name="yptest"></a><hr /><li><span class=text_import1>利用 yptest 檢驗資料庫之測試：</span></li>
+		<div class=block2>
+		直接輸入 yptest 即可檢查相關的測試資料，如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yptest</span>
+Test 1: domainname
+Configured domainname is "vbirdnis"
+
+Test 2: ypbind
+Used NIS server: master.vbirdnis
+
+Test 3: yp_match
+WARNING: No such key in map (Map passwd.byname, key nobody)
+<span class=term_say>....中間省略....</span>
+
+Test 8: yp_maplist
+hosts.byname
+group.byname
+passwd.byuid
+group.bygid
+passwd.byname
+hosts.byaddr
+<span class=term_say>....中間省略....</span>
+
+Test 9: yp_all
+<span class=term_say>....中間省略....</span>
+1 tests failed
+</pre></td></tr></table>
+
+		從這個測試當中我們可以發現一些錯誤，<span class=text_import2>重點在第九個步驟 yp_all 必須要有列出您 NIS server 
+		上頭的所有帳號資訊，如果有出現帳號相關資料的話，那麼應該就算驗證成功了</span>！比較有問題的是第三步驟，
+		他會出現在 passwd.byname 當中找不到 nobody 的字樣。這是因為早期的 nobody 之 UID 都設定在 
+		65534 ，但 CentOS 則將 nobody 設定為系統帳號的 99 ，所以當然不會被記錄，
+		也就出現這一個警告。不過，這個錯誤是可忽略的啦！ ^_^<br /><br />
+		</div>
+
+		<a name="ypwhich"></a><hr /><li><span class=text_import1>利用 ypwhich 檢驗資料庫數量</span></li>
+		<div class=block2>
+		單純使用 ypwhich 的時候顯示的是『NIS Client 的 domain』名稱，而當加入 -x 這個參數時，
+		則是顯示『NIS Client 與 Server 之間溝通的資料庫有哪些？』你可以這樣測試哩！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ypwhich -x</span>
+Use "hosts"     for map "hosts.byname"
+Use "group"     for map "group.byname"
+Use "passwd"    for map "passwd.byname"
+<span class=term_say>....以下省略....</span>
+</pre></td></tr></table>
+
+		由上面我們可以很清楚的就看到相關的檔案啦！這些資料庫檔案則是放置在我的 NIS Server 的 
+		/var/yp/vbirdnis/* 裡面囉！<br /><br />
+		</div>
+
+		<a name="ypcat"></a><hr /><li><span class=text_import1>利用 ypcat 讀取資料庫內容</span></li>
+		<div class=block2>
+		除了 yptest 之外，你還可以直接利用 ypcat 讀取資料庫的內容喔！一般作法是這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ypcat [-h nisserver] [資料庫名稱]</span>
+<span class=term_say>參數：
+-h nisserver ：如果有設定的話，指向某一部特定的 NIS 伺服器，
+               如果沒有指定的話，就以 ypbind 之設定為主；
+資料庫名稱：亦即在 /var/yp/vbirdnis/ 內的檔名啊！例如 passwd.byname</span>
+
+<span class=term_hd>範例：讀出 passwd.byname 的資料庫內容</span>
+[root@linux ~]# <span class=term_command>ypcat passwd.byname</span>
+</pre></td></tr></table>
+		</div>
+
+		這三個指令在進行 NIS Client 端的檢驗時，是相當有用的喔！不要忽略了他的存在啊！尤其是剛架設好
+		NIS Client 時，一定要使用 yptest 去檢查看看有沒有設定錯誤喔！根據螢幕顯示的訊息去一個一個校正錯誤才行啊！
+		<br /><br />
+	</div>
+
+	<hr /><a NAME="nis_client_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用者參數修改： yppasswd,
+	ypchfn, ypchsh</span><br />
+	<div class=block2>
+		好了，完成了上述的設定後，你的 NIS server/client 的帳號已經同步了！真是高興不是嗎？
+		不過，還有個挺大的問題，那就是....
+		使用者如何在 NIS client 修改他自己的登入參數，例如密碼、shell 等等？
+		因為 NIS client 是藉由資料庫來取得使用者的帳號密碼，那如何在 NIS 用戶端處理帳號密碼的訂正？<br /><br />
+
+		問的好！這也是為何我們需要在 NIS server 啟動 yppasswdd 這支服務的主要用意！
+		因為 yppasswdd 可以接收 NIS client 端傳來的密碼修改，藉此而處理 NIS server 的 /etc/passwd, /etc/shadow ，
+		然後 yppasswdd 還能夠重建密碼資料庫，讓 NIS server 同步更新資料庫！真是很不錯啊！ ^_^<br /><br />
+
+		那該如何下達指令呢？很簡單啊！透過 yppasswd, ypchsh, ypchfn 來處理即可。這三個指令的對應是：<br />
+		<ul><span class=text_import2>
+		<li>yppasswd ：與 passwd 指令相同功能；
+		<li>ypchfn   ：與 chfn 相同功能；
+		<li>ypchsh   ：與 chsh 相同功能。
+		</span></ul>
+
+		因為功能相當，所以鳥哥這裡僅說明一下 yppasswd 而已。假設你已經登入 NIS client 那部主機，
+		並且是以 nistest 這個使用者登入的，記住，這個使用者相關資料僅在 NIS server 上。
+		接下來，這個使用者可以下達 yppasswd ，如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[nistest@linux ~]$ <span class=term_command>yppasswd</span>
+Changing NIS account information for nistest on master.vbirdnis. 
+Please enter old password:  <span class=term_say>&lt;==這裡輸入舊密碼</span>
+Changing NIS password for nistest on master.vbirdnis.
+Please enter new password:  <span class=term_say>&lt;==這裡輸入新密碼</span>
+Please retype new password: <span class=term_say>&lt;==再輸入一遍</span>
+
+The NIS password has been changed on master.vbirdnis.
+</pre></td></tr></table>
+
+		嘿嘿！如何，這樣就更新了 NIS server 上頭的 /etc/shadow 以及 /var/yp/vbirdnis/passwd.by* 的資料庫，
+		簡單吧！一下子就同步化了。不過，如果要教育使用者使用 yppasswd 的話，他可能不太能適應，
+		不要緊，你可以透過修改 alias 或者是置換掉 /usr/bin/passwd 這支程式即可！
+		<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="nis_nfs"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">NIS 與 NFS 的設定與叢集電腦運用</span><br />
+<div class=block1>
+	不曉得您有沒有發現一件事情啊！那就是：我們的 NIS Server 設定的使用者家目錄是在 /home 底下，例如 
+	nistest 這個人的家目錄在 /home/nistest (這個目錄在 master.vbirdnis 這部主機上面才有)。問題是，當我們登入 
+	NIS Client 主機時，那麼我們取得的家目錄資料還是在 /home/nistest ，不過事實上
+	NIS Client 主機並沒有 /home/test 這個目錄啊，也就是說：<br />
+
+	<ul><span class=text_import2>
+	<li>nistest 這個使用者是在 NIS server 上面建立的，所以有 /home/nistest 這個目錄；
+	<li>在 NIS Client 上面沒有真正的 nistest 這個帳號，因為他是由 NIS server 上面取得的，所以自然也就沒有 
+	/home/nistest 這個目錄在 NIS client 上面。
+	</span></ul>
+
+	這樣會造成什麼問題呢？呵呵！就是你的 nistest 這個使用者，登入 NIS client 的時候，『會找不到自己的家目錄』！
+	真是糟糕～而且，因為我們的 NIS client 可能有很多部，要是每次登入 NIS Clients 主機的時候，
+	所擁有的家目錄都是個別 NIS client 上面的目錄，那麼就沒有達到 NIS 的功能啦！您說是吧！所以，
+	如果你需要『<span class=text_import2>同一個帳號登入的每個 NIS Client 所擁有的家目錄都是相同的</span>！』
+	的一個情況，呵呵！就可以使用 NFS 來加以設定啦！<a href="0330nfs.htm">詳細的 NFS 設定</a>我們之前已經提過了，
+	這裡不在贅言，單純談一下簡單的設定技巧：<br />
+
+	<ul><span class=text_import2>
+	<li>在 NIS Server 上面開放 /home 這個目錄出來；
+	<li>在 NIS Client 上面， mount NIS 主機的 /home 到自己的 /home 裡面去！
+	<li>如此一來，不論登入哪一部 NIS Server 或 client ，使用者都是進入到 NIS Server 的 /home 裡面的家目錄囉！
+	</span></ul>
+
+	事實上，<span class=text_import2>使用者的資訊除了 /home 之外，像是 /var/spool/mail 以及
+	/var/spool/cron 也都是可能會有資料存放的目錄，你的 NFS 主機應該也要提供這兩個目錄才好。</span>
+	設定的方法也不難，我們就簡單的談一談吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 設定 NIS server 主機的 NFS 開放目錄：</span>
+[root@linux ~]# <span class=term_command>vi /etc/exports</span>
+<span class=term_write>/home  192.168.1.0/24(rw,async)</span>
+
+[root@linux ~]# <span class=term_command>exportfs -rv</span>
+exporting 192.168.1.0/24:/home
+
+[root@linux ~]# <span class=term_command>/etc/init.d/nfs start</span>
+[root@linux ~]# <span class=term_command>chkconfig --level 35 nfs on</span>
+
+<span class=term_hd>2. 設定 NIS Client 的 mount 資料！</span>
+[root@linux ~]# <span class=term_command>mount -t nfs -o bg,soft 192.168.1.2:/home /home</span>
+<span class=term_say># 如果這個指令沒有問題，可以將他加入 /etc/rc.d/rc.local 當中啊！</span>
+</pre></td></tr></table>
+
+		這樣一來，您的 NIS Clients 就具有和 NIS Server 主機一模一樣的家目錄了！現在您可以立刻登入看看喔！<br /><br />
+
+		事實上，現階段由於個人電腦的相關設備不但便宜，而且運算效能並不比一般大型電腦慢，
+		因此很多人就在想：『那我可否將許多個人電腦透過網路串接起來，讓好幾部個人電腦同步運作一個程式，
+		那麼該程式就能夠在很短的時間內運算出結果囉！』呵呵！這就是所謂的叢集式個人電腦 (PC cluster) 啦！<br /><br />
+
+		要實作 PC cluster 需要很多元件的配合，作業系統也是一個很重要的參數！目前較常使用的當然就是 Linux 啦！
+		不過我們知道 Linux 系統的運作需要用到使用者的相關參數，例如 UID, GID 等等，所以囉，
+		在 PC cluster 當中的每一部 Linux 的帳號密碼以及『檔案系統 (filesystem) 』都需要相同才行！
+		為何檔案系統需要相同呢？因為你得要讓每部主機都使用到相同的一支程式吧？所以囉，
+		這就需要 NIS 與 NFS 的同步配合了！<br /><br />
+
+		由於『預測』這個玩意兒越來越重要，比如說氣象預報、空氣品質預報等等，
+		而預測需要一個很龐大的模式來進行模擬的工作，這麼龐大的模擬工作需要大量的運算，
+		在學校單位要買一部很貴的大型主機實在很不容易！不過，如果能夠串接十部雙核心的個人電腦的話，
+		那麼可能只需要不到 20 萬便能夠組成相當於具有 20 顆 CPU 的大型主機的運算能力了！
+		所以說，在未來 PC cluster 是一個可以發展的課題喔！<br /><br />
+
+		鳥哥也有寫過一篇不是很成熟的 PC cluster 簡易架設，有興趣的話請自行參考：<br />
+		<ul><li><a href="http://linux.vbird.org0600cluster.htm" 
+		target="_blank">http://linux.vbird.org0600cluster.htm</a></li></ul>
+</div>
+
+
+<hr /><a NAME="command"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">指令對應資料</span><br />
+<div class=block1>
+	咱們前面總共講到 NIS master server, NIS slave server, NIS client 這三個元件，
+	偏偏每個元件所需要啟動的服務以及可使用的指令都不相同，
+	所以這裡鳥哥幫大家彙整一下幾個常見的指令吧！ ^_^<br /><br />
+
+<table width=95% border=1 cellspacing=0 cellpadding=3 bgcolor=lightyellow>
+<tr bgcolor=lightblue align=center><td width=150>相關的動作</td><td>NIS Master</td><td>NIS slave</td><td>NIS client</td></tr>
+<tr><td align=center bgcolor=lightblue>所需要啟動的服務</td>
+	<td>ypserv</td>
+	<td>ypserv<br />ypbind</td>
+	<td>ypbind</td></tr>
+<tr><td align=center bgcolor=lightblue>使用者能夠修改密碼</td><td>yppasswdd</td><td>　</td>
+	<td>yppasswd<br />ypchfn<br />ypchsh</td></tr>
+<tr><td align=center bgcolor=lightblue>資料庫傳輸服務</td><td>ypxfrd<br />yppush</td><td>ypxfr</td><td>　</td></tr>
+<tr><td align=center bgcolor=lightblue>資料庫測試讀取</td><td>　</td>
+	<td>yptest<br />ypwhich<br />ypcat</td>
+	<td>yptest<br />ypwhich<br />ypcat</td></tr>
+<tr><td align=center bgcolor=lightblue>資料庫的建立</td><td>ypinit -m</td><td>ypinit -s server</td><td>　</td></tr>
+</table>
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>Network Information Service (NIS) 也可以稱為 Sun Yellow Pages (yp)，主要是負責在網域當中幫忙 
+		NIS Client 端查尋帳號與密碼以及其他相關網路參數的服務；</li>
+	<li>NIS server 其實就是提供本身的 /etc/passwd, /etc/shadow, /etc/group, /etc/hosts 
+		等帳號密碼資料，以及相關的網路參數等，以提供網域當中 NIS Client 的搜尋之用；
+	<li>NIS 為 server/client 架構，當 NIS client 有帳號登入需求時，該主機會 (1)先找自己的 /etc/passwd,
+		(2)再前往 NIS server 搜尋相關帳號資料。</li>
+	<li>NIS 使用的套件就是 yp 這個套件，主要分為兩部份， ypserv 用在 NIS Server，至於 ypbind 與 yp-tools 
+		則用在 NIS Client 上面。
+	<li>為加快 NIS 查詢的速度，因此 NIS server 會將本機的帳號資料製成傳輸較快的資料庫檔案，
+		並放置於 /var/yp/(nisdomainname)/ 目錄當中；
+	<li>不論是 NIS 或者是 NFS 都是藉由 RPC Server 所啟用的，因此都可以使用 rpcinfo 來查尋 NIS 是否已經啟動，以及該 
+		daemon 是否已經向 portmapper (RPC server) 註冊了！
+	<li>在 NIS Server 的設定當中，最重要的一個步驟就是將帳號、密碼、網路參數等 ASCII 
+		格式檔案轉成資料庫檔案 (database file)，以提供 NIS client 的查尋！而啟動 ASCII 轉成 
+		database 的程式可以使用 /usr/lib/yp/ypinit -m 或者到 /var/yp 底下執行 make 均可。
+	<li>NIS client 端的設定當中，最重要的為 /etc/nsswitch.conf 及 /etc/sysconfig/authconfig 
+		裡面的設定，另外， CentOS 的 /etc/pam.d/system-auth 也很重要！；
+	<li>由於 NIS 通常使用於內部網域當中，因此 /etc/hosts 這個檔案的設定相當重要！
+	<li>在 NIS master/slave server 當中，建立資料庫的方法為 ypinit -m 及 ypinit -s；
+	<li>在 NIS master/slave server 當中，可以藉由 ypxfrd/ypxfr 以及 yppush 來進行主動的更新資料庫；
+	<li>若想讓使用者在任一部 NIS 管轄的主機登入都可以使用同一份家目錄，則需開啟 NFS 提供 /home 給所有的主機掛載使用；
+</span></ul>
+</div>
+
+
+<hr /><a NAME="FAQ"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>請簡單說明 NIS server 的功能與工作流程</li>
+	<div class=block2><font color=white size=-1>
+	當您有多部具有相同帳號的 Linux 主機時，即可利用 NIS 所提供的服務，來利用一部 NIS 主機掌控所有的 
+	linux 主機的登入時所需查閱的帳號與密碼驗證。流程如下：<br />
+	<ol>
+	<li>NIS Server 將自己系統內的 /etc/passwd, /etc/group, /etc/hosts 等製作成為 DBM 的資料庫格式檔案；
+	<li>NIS Client 若有用戶登入的要求時，會前往 NIS Server 搜尋資料庫裡面的資料做為驗證之用。
+	<li>每次更動 NIS Server 上面的用戶資料時，則 NIS Server 需要重新製作 DBM 資料庫檔案才行！</ol>
+	</font></div>
+
+	<li>請簡單說明 NIS Server/client 的架構</li>
+	<div class=block2><font color=white size=-1>
+	NIS master/client 的特色為：<br />
+	<ol>
+	<li>NIS Server 的 master 先將自己的帳號、密碼相關檔案製作成為資料庫檔案(database file)；
+	<li>NIS Server 的 master 將自己的資料庫檔案傳送到 slave 上面；
+	<li>NIS Server 的 slave 接收來自『信任的 NIS Server master 主機』的資料後，更新自己的資料庫，使自己的資料庫與 
+	master 主機的資料同步；
+	<li>網域當中的所有 NIS Client 查尋 NIS Server 時，會找尋『最先回應的那一部 NIS 主機的資料庫內容』。</ol>
+	也就是說，架設 slave NIS server 可以分擔區域內 NIS 的工作！ 
+	</font></div>
+
+	<li>NIS 啟動之前需要先啟動那個服務，否則就無法啟動成功 (提示：RPC Server)</li>
+	<div class=block2><font color=white size=-1>
+	因為 NIS 是 RPC Server 的一種，所以必須要啟動 portmap 這個 daemon 才行！
+	</font></div>
+
+	<li>我的 NIS 網域名稱為 bird ，另外，我主機的 IP 與主機名稱為
+	192.168.5.1/bird.nis.org ，請問要這些資訊需要設定在 NIS Server 的哪些檔案之內？</li>
+	<div class=block2><font color=white size=-1>
+	網域名稱可以直接手動下達『 nisdomainname bird 』也可以寫入 /etc/sysconfig/network 裡面『NISDOMAIN=bird』；
+	IP 與 主機名稱 需要寫入在 /etc/hosts 裡面。 
+	</font></div>
+
+	<li>/etc/nsswitch.conf 的功能為何？如果我想要讓密碼查尋先本地的密碼檔，再查尋 NIS ，需要如何設定？</li>
+	<div class=block2><font color=white size=-1>
+	該檔案的功能很多，在 DNS 方面，可以用來決定正、反解的順序，至於密碼則可以用來判斷何者為先！如果需要先查本機再查 
+	NIS 的密碼時，需要的參數：<br />
+	passwd:     files nis<br />
+	shadow:     files nis
+	</font></div>
+
+	<li>NIS Server 將密碼等檔案做成資料庫以提供 NIS client
+	來查尋，那麼請問使用什麼動作後，可以將密碼檔案轉成 NIS 的資料庫格式檔案？</li>
+	<div class=block2><font color=white size=-1>
+	/usr/lib/yp/ypinit -m
+	</font></div>
+
+	<li>如果我想要增加網域當中一個新的帳號：newaccount，並且這個
+	newaccount 可以讓 NIS Client 查尋到他的帳號與密碼，需要進行哪些步驟？</li>
+	<div class=block2><font color=white size=-1>
+	<ol>
+	<li>先登入 NIS Server 以 useradd newaccount 以及 passwd newaccount 來新增帳號；
+	<li>製作密碼資料庫：『/usr/lib/yp/ypinit -m』
+	<li>重新啟動：『/etc/rc.d/init.d/ypserv restart ; /etc/rc.d/init.d/yppasswdd restart』。
+	</ol>
+	</font></div>
+
+	<li>實作範例題：底下是我的網域參數特徵：<br />
+		network/netmask:192.168.1.0/255.255.255.0<br />
+		NIS server : 192.168.1.100 (hostname: server.nis.test)<br />
+		NIS cient: 192.168.1.200 (hostname: client1.nis.test)<br />
+		NIS domain name: nis.test<br />
+		利用上面的參數來設定 NIS 架構，請一步一步的寫下你的設定。</li>
+	<div class=block2><font color=white size=-1>
+	請自行參考本章節的內容設定
+	</font></div>
+
+	<li>承上題：如果我的網域太大了，所以有一部 NIS slave
+	主機，這部主機的 IP 為 192.168.1.50 ，請問這部主機該如何設定？</li>
+	<div class=block2><font color=white size=-1>
+	請參考本章節的 NIS slave server 的相關說明！
+	</font></div>
+
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>Study Area 之 NIS 伺服器架設：<a href="http://www.study-area.org/linux/servers/linux_nfs.htm" 
+		target="_blank">http://www.study-area.org/linux/servers/linux_nfs.htm</a></li>
+	<li>NIS 官方網站：<a href="http://www.linux-nis.org/" 
+		target="_blank">http://www.linux-nis.org/</a></li>
+	<li>NIS HOW-TO：<a href="http://www.linux-nis.org/nis-howto/HOWTO/index.html" 
+		target="_blank">http://www.linux-nis.org/nis-howto/HOWTO/index.html</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2003/05/06：第一次完成日期！<br />
+2003/09/16：稍微加入一些資訊與微幅修改版面！<br />
+2006/09/22：將舊的文章移動到 <a href="0430nis/0430nis.htm">此處</a><br />
+2006/10/11：啊！過了好久了！修改過程當中歷經搬家，所以文章產生較慢啊！這次多加入 NIS slave server 說！<br />
+</span>
+<hr><span class="text_date">2003/05/06以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0430nis.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

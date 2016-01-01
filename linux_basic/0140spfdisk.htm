@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 一個簡單的 spfdisk 分割硬碟實例</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">一個簡單的<span class="text_head_en"> SPFdisk </span>分割實例</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2005/06/12</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	磁碟分割是個很重要的學習知識！尤其是在您原本的硬碟空間不足了，或者是新增硬碟了，
+	或者是為了增加磁碟效能而必須要規劃出比較適當大小的磁碟空間等等。
+	市面上很多工具可以讓我們來進行磁碟的分割的，不過，都需要錢～
+	當然，您也可以使用 Linux 的 fdisk 程式，不過，純文字介面的方式，可能您也不容易學～
+	相較之下，由台灣人自行開發的 spfdisk (special fdisk) 程式，不但純中文介面，
+	使用圖形介面的顯示，耗用的系統資源又少！還可以作為開機管理程式！太完美了！趕緊來看看！
+</td></tr></table><br>
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#fdisk">什麼是硬碟分割</a>？<br>
+2. <a href="#spfdisk">SPFdisk</a><br>
+	<span class=text_h2>
+	　　2.1 <a href="#1">刪除原有分割</a><br>
+	　　2.2 <a href="#2">建立主要分割磁區</a><br>
+	　　2.3 <a href="#3">儲存分割表</a><br>
+	　　2.4 <a href="#4">格式化硬碟</a><br>
+	</span>
+<span class=text_h2>
+3. <a href="http://phorum.vbird.org/viewtopic.php?t=23875"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23875</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr><a NAME="fdisk"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是硬碟分割(Partition)</span><br>
+<div class=block1>
+	在開始進行 Linux 之前，應該有很多的工作要做的！最重要的就如同前面『<a href="0130designlinux.php">Linux
+	主機規劃</a>』當中說的，要如何規劃硬碟呢？！到底要如何分割硬碟才好！是要將
+	swap （虛擬記憶體）規劃的大一點比較好？或者是只要一個根目錄就可以了呢？另外，如果我的硬碟上面已經有
+	Windows 系統，我又不想要將 Windows 殺掉，想使用多重開機來安裝我的多個作業系統，那要怎麼做呢？！況且，由於
+	DOS 的 fdisk 不認識 Linux 的檔案格式，那麼我要如何將 Linux 完全的從我的硬碟中移除呢？！呵呵！
+	這裡就來說一下該如何是好吧！<br><br>
+
+	由於不同的作業系統所使用的檔案系統架構(file system)並不相同，有些甚至是不相容的，例如
+	Windows 所使用的是 FAT 表，而 Linux 所使用的是 ext2 這個檔案格式，這兩種格式完全不相同，在
+	Linux 底下還可以藉由編輯核心來支援 Windows 的 FAT 檔案格式，但是 Windows
+	則完全無法讀取 Linux 的檔案格式了！此外， Windows 使用的磁碟分割工具 fdisk
+	，很抱歉的，並不認識 Linux 的 ext2 這個檔案格式，所以如果您有一棵已經安裝有
+	Linux 系統的硬碟，呵呵，使用 Windows 的 fdisk 是完全無法分割這塊硬碟的！<br><br>
+
+	那麼到底什麼是硬碟分割呢？真的要將硬碟用刀子割一割嗎？！不是這樣的，實際上，硬碟是以
+	sectors(磁區), cylinder(磁柱), partitions(分割槽) 這些東西來作為儲存的單位，而最底層的實體硬碟單位就是
+	sectors 了，通常一個 sector 大約是 512 bytes 左右。不過，在磁碟進行格式化的時候，可以將數個 sector 
+	格式化成為一個邏輯磁區(logical block)，通稱為 block。blocks 為一個檔案系統(filesystem)存取的最小量。
+	那麼 partition 是什麼？簡單的來說，你知道你的
+	Windows 有所謂的 C:, D: 是吧！其實他們是同一顆硬碟，只是利用<span class=text_import2>『磁碟分割表』(partition
+	table)</span>來將實體的硬碟規劃出不同的區塊。<br><br>
+
+	舉個例子說，假設你的硬碟總共有 1024 個 cylinder （利用 blocks 結合而成的硬碟計算單位），
+	那麼你在這塊硬碟的檔頭地方 （就是磁碟分割表，可以想成要讀取一塊硬碟時最先讀取的地方）如果寫入你的
+	partitions 共有兩塊，一塊是 primary 一塊是 extended ，而且 extended 也只規劃成一個
+	logical ，那麼你的硬碟就是只有兩個槽啦（對於系統來說，真正能使用的有 Primary
+	與 Logical 的磁區， Extended 並無法直接使用的！需要再加以規劃成為 Logical
+	才行！ ) ，而且在 partition table 也會記錄 primary 是由『第 n1 個 cylinder
+	到第 n2 個 cylinder 』，所以囉，這樣子一來，當系統要去讀取 primary （就是
+	c 槽）的時後，就只會在！n1~n2 之間的實體硬碟當中活動囉！<br><br>
+
+	基本上， Windows 98 系統中的 Fdisk 這支程式僅支援一個 primary
+	與一個 extended ，其中， extended 可以再細分成多個 logical 的硬碟槽。NT
+	很抱歉，小弟不熟，所以就不提了！<span class=text_import2>那麼 Linux 呢？嗯！基本上最多可以有
+	4 個 primary 的硬碟，而可以支援到 3 個 primary 與一個 extended ，其中，
+	extended 若再細分成 logical 的話，則全部 primary + extended + logical 應該可以支援到
+	64 個之多。</span>底下我們將以 spfdisk 這個全中文介面的
+	fdisk 磁碟分割工具來介紹如何分割硬碟！(註：更多詳細的磁碟與磁碟分割資訊，可以參考 SPFdisk 的官方網站喔！
+	在最底下的參考資料當中有提供連結呢！)<br>
+</div>
+
+<hr><a NAME="spfdisk"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">硬碟分割 ==> SPFdisk</span><br>
+<div class=block1>
+	SPFdisk 是一套由國人開發完成的全中文介面的硬碟分割工具，他要比微軟出的 Fdisk 功能強多了，
+	他的好處有：
+	<ul><span class=text_import2>
+		<li>全中文介面讓你一定可以看的懂之外，簡單的類圖形介面可以讓你輕易的進行硬碟分割；
+		<li>除此之外，這套軟體的『DOS工具』內的『格式化工具』格式化硬碟的速度真是 DOS 比不上的，
+		    我格式化一個 30GB 的硬碟不用十秒就可以格式化完全！
+	</ul></span>
+	另外，其他的優點我在此也不多說了，若有需要你可以自行自一些搜尋網站下載最新的程式，
+	或從 <a href="http://linux.vbird.org/download/index.php?action=detail&fileid=3">這裡</a> 
+	下載鳥哥有的程式，不過可能舊一點。<br><br>
+
+	另外，由於 DOS 的 Fdisk 並不認識 Linux 的分割表，所以用 DOS
+	的 Fdisk 是無法將 Linux 的分割表去除的。因此，你要刪除 Linux 的分割表，只有兩個比較快的方法，一個是以
+	Linux 直接再分割，一個則是使用 SPfdisk 分割啦！<br>
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		由於您正在閱讀的這個頁面的影像檔案很大，有時候會有沒辦法顯示的情況發生，
+		這時請在畫面上『按滑鼠右鍵』，再選擇『顯示圖片』這個選項，即可顯示畫面啦！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	硬碟分割主要可分為下面幾個步驟：
+	<ol>
+		<li><a href="#1">將舊有的分割表刪除</a>；</li>
+		<li><a href="#2">建立新的主分割及擴充分割（若有需要的話）</a>；</li>
+		<li><a href="#3">貯存分割表</a>；</li>
+		<li><a href="#4">以 DOS 工具格式化已分割的硬碟</a>。</li>
+	</ol>
+
+	<hr><a name="1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>1. 刪除原有的分割：</span>
+	<div class=block2>
+		假設你的主機中沒有任何系統存在，則請以 Windows98 製作開機片後，將
+		spfdisk 拷貝至開機片。以此磁片開機之後，執行：<br>
+
+<table class="term"><tr><td class="term"><pre>
+A:\><span class=term_command>spfdisk</span>
+</pre></td></tr></table>
+
+		會出現如下歡迎畫面。<br>
+		<img SRC="0140spfdisk/spfdisk-1.jpg"><br><br>
+
+		按任意鍵後出現下面畫面：<br>
+		<img SRC="0140spfdisk/spfdisk-2.jpg"><br><br>
+
+		以方向鍵移動游標至『<span class=text_import2>硬碟分割工具</span>』按
+		Enter 鍵後會出現畫面如下：<br>
+		<img SRC="0140spfdisk/spfdisk-3.jpg"><br><br>
+
+		這是向你詢問是否需要使用 FAT32 的檔案系統，由於 Windows 98
+		支援的長檔名及相關的檔案型態是以 <span class=text_import2>FAT32</span> 為準，所以當然按
+		『<span class=text_import2>Y</span>』！按了 Y 之後會出現硬碟的資訊，如下所示：<br>
+		<img SRC="0140spfdisk/spfdisk-4.jpg"><br><br>
+
+		因為我是在我原有的機器上執行這個程式，所以會有兩顆硬碟，如果你的系統只有一顆硬碟的話，
+		則只會顯示你有的硬碟資料，在上圖中，1.19GB
+		的硬碟其總磁柱僅有 621 單位，比可開機磁區範圍（0 ~ 1023）小得多，所以可以隨意分割。將游標以方向鍵移動至
+		1.19GB 這顆硬碟後，按 Enter ：<br>
+		<img SRC="0140spfdisk/spfdisk-5.jpg"><br><br>
+
+		因為這顆硬碟之前被我灌過 Linux ，所以會顯示 Linux 的磁區劃分情況。上面的意義為：
+		<ul>
+		<li><span class=text_import2>啟動</span>：由於系統開機時會去先去找分割表，
+		由分割表所設定的『可開機磁區』進行開機程序，
+		因此若這個磁區為開機磁區，則『啟動』項目會有一個心型的符號存在！</li>
+		<li><span class=text_import2>起始磁柱與結束磁柱</span>：這一個被分割的磁區的開始與結束磁區。</li>
+		<li><span class=text_import2>MBytes</span>：這個磁區的硬碟容量。</li>
+		<li><span class=text_import2>系統 ID 與系統種類</span>：這一個分割表的類型。因為這是 Linux 的分割類型，所以其
+		ID 顯示為 83，若是 FAT32 的話，則為 0b。</li>
+		</ul>
+		將游標以方向鍵移動至這個磁區後，按 Enter ：<br>
+		<img SRC="0140spfdisk/spfdisk-6.jpg"><br><br>
+
+		在這個畫面中，將游標以方向鍵移動至『刪除分割』這個項目，並按下 Enter ：<br>
+		<img SRC="0140spfdisk/spfdisk-7.jpg"><br><br>
+
+		出現此畫面後，確定要刪除這個分割就按『<span class=text_import2>[Y]是</span>』這個項目。<br>
+		<img SRC="0140spfdisk/spfdisk-8.jpg"><br><br>
+
+		刪除分割之後你的硬碟中就沒有分割表的存在了，所以這個硬碟的系統種類則變成了
+		<span class=text_import1>未規劃</span>。<br>
+	</div>
+
+	<hr><a name="2"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>2. 建立主要分割磁區：</span>
+	<div class=block2>
+		在上面的畫面中，按下 Enter 鍵，會出現下面畫面。<br>
+		<img SRC="0140spfdisk/spfdisk-9.jpg"><br><br>
+
+		由於這一顆硬碟的分割表被刪除了，所以『系統ID』與『刪除分割』被取消了。這時按下『建立分割』會出現如下畫面：<br>
+		<img SRC="0140spfdisk/spfdisk-10.jpg"><br><br>
+
+		然後選擇『<span class=text_import2>建立主分割</span>』，那何謂主分割與擴充分割呢？所謂的主分割在
+		windows 系統下即是 『<span class=text_import2>C槽</span>』 啦！
+		但是擴充分割並非『<span class=text_import2>邏輯分割</span>』，這裡要注意一下，
+		所謂的『邏輯分割』是包含在擴充分割中的，例如當你的擴充分割共有
+		10GB 但是你想將之分為兩槽，則可以使用邏輯分割將擴充分割分為兩槽，
+		這兩槽即稱為『邏輯分割』。所以這裡要注意啦，建立擴充分割的時候就要選擇『配置整個區域』啦！
+		好！下一步按下『建立主分割』：<br>
+		<img SRC="0140spfdisk/spfdisk-11.jpg"><br><br>
+
+		這裡會問你是否要將整個硬碟分割為僅有一個磁碟區？由於我們要將硬碟分為兩槽，
+		所以這裡當然選擇『<span class=text_import2>[N]否</span>』啦！<br>
+		<img SRC="0140spfdisk/spfdisk-12.jpg"><br><br>
+
+		由於你選擇了『不要配置整個區域為一塊磁區』，所以這時程式要你輸入你所需要的磁區。
+		通常在第一步是輸入『<span class=text_import2>啟始磁柱</span>』，這時只要按
+		Enter 就可以啦，然後會要你輸入『<span class=text_import2>結束磁柱</span>』，
+		結束磁柱的輸入方法有兩種模式，一種是輸入磁柱區，一種是輸入你所需要的
+		MB 數，通常我是輸入 MB 數啦，例如如上所示，我所需要的空間大小是 600MB ，
+		所以輸入『+600』即可，而如果你的硬碟很大，你要輸入
+		4GB 時，則需要輸入 『+4000』，以此類推！輸入『+600』並按 Enter 之後出現如下畫面。<br>
+		<img SRC="0140spfdisk/spfdisk-13.jpg"><br><br>
+
+		這時出現了你剛剛劃分的硬碟資訊啦，由於我們是劃分為 DOS 分割區，所以系統種類是
+		FAT-32 ，而 ID 則為 0b 。至於另外尚未劃分的就會顯示為 <span class=text_import2>&lt;未規劃></span>
+		啦！如果你還需要再繼續劃分的話，這時將游標移動至 <span class=text_import2>&lt;未規劃></span>
+		的那一個磁區按 Enter 後選擇『擴充分割』即可繼續劃分。如果劃分完畢之後，
+		當然就是貯存分割表囉。這裡注意一下，因為剛剛的動作均尚未完成貯存的工作，所以要反悔還來得及！<br>
+	</div>
+
+	<hr><a name="3"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>3. 貯存分割表：</span>
+	<div class=block2>
+		接下來要做貯存的動作了，按下『<span class=text_import2>Esc</span>』鍵
+		（鍵盤左上角那個鍵）後會出現如下畫面：<br>
+		<img SRC="0140spfdisk/spfdisk-14.jpg"><br><br>
+
+		按『<span class=text_import2>[Y]是</span>』，將剛分割好的分割表貯存至硬碟中！
+		然後出現如下畫面：<br>
+		<img SRC="0140spfdisk/spfdisk-15.jpg"><br><br>
+		<img SRC="0140spfdisk/spfdisk-16.jpg"><br><br>
+		<img SRC="0140spfdisk/spfdisk-17.jpg"><br><br>
+		<img SRC="0140spfdisk/spfdisk-18.jpg"><br><br>
+		<img SRC="0140spfdisk/spfdisk-19.jpg"><br><br>
+
+		這裡的動作是連續的：
+		<ol>
+		<li>程式會先跟你確認你的硬碟有沒有錯誤，這裡還可以反悔。</li>
+		<li>然後程式會問你是否需要使用破壞貯存，一般來說是需要使用『破壞貯存』的，
+		因為需要將你的硬碟劃分完全啦！所以要按 [Y]；</li>
+		<li>為了可以讓你以後回復分割情況，所以你可以選擇 『建立 UNDO』檔，所謂的 UNDO
+		檔即是記錄你之前硬碟分割表資訊的檔案啦。</li>
+		</ol>
+
+		這樣一來你的硬碟就劃分完畢而且貯存啦！這時要做的就是重新開機並格式化硬碟。格式化硬碟可以使用
+		DOS 的 Format ，當然也可以使用 spfdisk 的內建功能喔！<br>
+	</div>
+
+	<hr><a name="4"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class=text_h2>4. 格式化硬碟：</span>
+	<div class=block2>
+		再進入剛剛你劃分完畢的那個硬碟區，按下 Enter 之後會出現一串選單，然後最下方的選單為
+		『<span class=text_import2>DOS 工具』</span>，選擇這一項並按 Enter 後，會出現另一個選單：<br>
+		<img SRC="0140spfdisk/spfdisk-13.jpg"><br><br>
+
+		在這個次選單中的第二項即是快速格式化，這個格式化的動作非常的快喔！比
+		DOS 的格式化快多了！不過，這裡也必須指出一個問題，那就是若你的硬碟有壞軌的話，那最好還是使用
+		DOS 的 format 比較完整一點。<br>
+		<img SRC="0140spfdisk/spfdisk-20.jpg"><br>
+	</div>
+</div>
+
+<hr><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br>
+<div class=block1>
+<ul>
+	<li><a href="http://spfdisk.sourceforge.net/" target="_blank">SPFdisk http://spfdisk.sourceforge.net/</a><br>
+	事實上， SFPdisk 能作的事情還很多，包括最為人所熟知的 boot loader 的應用！
+	建議您一定要到 SPFdisk 的官方網站上面瞧一瞧喔！ ^_^
+</ul>
+</div>
+
+<hr><span class="text_history">2002/04/09：第一次完成吧？<br>
+2003/02/03：重新編排<br>
+2005/06/12：將舊文移動到 <a href="0140spfdisk/0140spfdisk.php">這裡</a> 。並且約略編排了一下版面！<br>
+2005/07/18：原本文章當中的 cluster 為錯誤的，應該是 cylinder 才對～<br>
+<hr>
+<br><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

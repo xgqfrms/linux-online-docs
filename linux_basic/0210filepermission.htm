@@ -1,0 +1,1510 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW"><!-- InstanceBegin template="/Templates/tp_basic.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+    <title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    <!-- InstanceEndEditable -->
+    <!-- InstanceBeginEditable name="head" -->
+    <!-- InstanceEndEditable -->
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  
+  <!-- InstanceBeginEditable name="content" -->
+  <td width="718">
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第六章、<span class="text_head_en">Linux </span>的檔案權限與目錄配置</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/08/18</span>
+</div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	Linux最優秀的地方之一，就在於他的多人多工環境。而為了讓各個使用者具有較保密的檔案資料，因此檔案的權限管理就變的很重要了。
+	Linux一般將檔案可存取的身份分為三個類別，分別是 owner/group/others，且三種身份各有 read/write/execute 
+	等權限。若管理不當，你的Linux主機將會變的很『不蘇服！@_@』。另外，你如果首次接觸Linux的話，那麼，
+	在Linux底下這麼多的目錄/檔案，到底每個目錄/檔案代表什麼意義呢？底下我們就來一一介紹呢！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#UserandGroup">使用者與群組</a><br />
+2. <a href="#filepermission">Linux檔案權限概念</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#filepermission_perm">Linux檔案屬性</a><br />
+	　　2.2 <a href="#filepermission_ch">如何改變檔案屬性與權限：</a> <a href="#chgrp">chgrp</a>, 
+		<a href="#chown">chown</a>, <a href="#chmod">chmod</a><br />
+
+	　　2.3 <a href="#filepermission_dir">目錄與檔案之權限意義</a><br />
+	　　2.4 <a href="#filepermission_type">Linux檔案種類與副檔名</a><br />
+	</span>
+3. <a href="#dir">Linux目錄配置</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#dir_fhs">Linux目錄配置的依據--FHS</a>：<a href="#dir_fhs_root">/</a>, 
+		<a href="#dir_fhs_usr">/usr</a>, <a href="#dir_fhs_var">/var</a><br />
+
+	　　3.2 <a href="#dir_tree">目錄樹(directory tree)</a><br />
+	　　3.3 <a href="#dir_path">絕對路徑與相對路徑</a><br />
+	　　3.4 <a href="#dir_lsb">CentOS 的觀察：</a> <a href="#lsb_release">lsb_release</a><br />
+	</span>
+4. <a href="#hint">重點回顧</a><br />
+
+5. <a href="#ex">本章練習</a><br />
+6. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+7. <a href="http://phorum.vbird.org/viewtopic.php?t=23878"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23878</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="UserandGroup"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">使用者與群組</span><br />
+
+<div class="block1">
+	<p>經過<a href="/linux_basic/0160startlinux.php">第五章</a>的洗禮之後，你應該可以在Linux的指令列模式底下輸入指令了吧？
+	接下來，當然是要讓你好好的瀏覽一下Linux系統裡面有哪些重要的檔案囉。
+	不過，每個檔案都有相當多的屬性與權限，其中最重要的可能就是檔案的擁有者的概念了。
+	所以，在開始檔案相關資訊的介紹前，鳥哥先就簡單的(1)使用者及(2)群組與(3)非本群組外的其他人等概念作個說明吧～
+	好讓你快點進入狀況的哩！ ^_^</p>
+
+	<ol>
+	<li><span class="text_import1">檔案擁有者</span><br /><br />
+		初次接觸Linux的朋友大概會覺得很怪異，怎麼『<span class="text_import2">Linux有這麼多使用者，
+		還分什麼群組，有什麼用？</span>』。這個『使用者與群組』的功能可是相當健全而好用的一個安全防護呢！怎麼說呢？
+		由於Linux是個多人多工的系統，因此可能常常會有多人同時使用這部主機來進行工作的情況發生，
+		為了考慮每個人的隱私權以及每個人喜好的工作環境，因此，這個『檔案擁有者』的角色就顯的相當的重要了！<br /><br />
+
+		例如當你將你的e-mail情書轉存成檔案之後，放在你自己的家目錄，你總不希望被其他人看見自己的情書吧？
+		這個時候，你就把該檔案設定成『只有檔案擁有者，就是我，才能看與修改這個檔案的內容』，
+		那麼即使其他人知道你有這個相當『有趣』的檔案，不過由於你有設定適當的權限，
+		所以其他人自然也就無法知道該檔案的內容囉！<br /><br /></li>
+
+	<li><span class="text_import1">群組概念</span><br /><br />
+		那麼群組呢？為何要設定檔案還有所屬的群組？其實，<span 
+		class="text_import2">群組最有用的功能之一，就是當你在團隊開發資源的時候啦</span>！
+		舉例來說，假設有兩組專題生在我的主機裡面，第一個專題組別為projecta，裡面的成員有
+		class1, class2, class3三個；第二個專題組別為projectb，裡面的成員有class4, class5, class6。
+		這兩個專題之間是有競爭性質的，但卻要繳交同一份報告。每組的組員之間必須要能夠互相修改對方的資料，
+		但是其他組的組員則不能看到本組自己的檔案內容，此時該如何是好？<br /><br />
+
+		在Linux底下這樣的限制是很簡單啦！我可以經由簡易的檔案權限設定，就能限制非自己團隊(亦即是群組囉)
+		的其他人不能夠閱覽內容囉！而且亦可以讓自己的團隊成員可以修改我所建立的檔案！
+		同時，如果我自己還有私人隱密的文件，仍然可以設定成讓自己的團隊成員也看不到我的檔案資料。
+		很方便吧！<br /><br />
+
+		另外，如果teacher這個帳號是projecta與projectb這兩個專題的老師，
+		他想要同時觀察兩者的進度，因此需要能夠進入這兩個群組的權限時，你可以設定teacher這個帳號，
+		『同時支援projecta與projectb這兩個群組！』，也就是說：<span 
+		class="text_import2">每個帳號都可以有多個群組的支援呢</span>！<br /><br />
+
+		這樣說或許你還不容易理解這個使用者與群組的關係吧？沒關係，我們可以使用目前『家庭』的觀念來進行解說喔！
+		假設有一家人，家裡只有三兄弟，分別是王大毛、王二毛與王三毛三個人，
+		而這個家庭是登記在王大毛的名下的！所以，『王大毛家有三個人，分別是王大毛、王二毛與王三毛』，
+		而且這三個人都有自己的房間，並且共同擁有一個客廳喔！<br /><br />
+
+		<ul>
+		<li><span class="text_import2">使用者的意義</span>：由於王家三人各自擁有自己的房間，所以，
+		王二毛雖然可以進入王三毛的房間，但是二毛不能翻三毛的抽屜喔！那樣會被三毛K的！
+		因為抽屜裡面可能有三毛自己私人的東西，例如情書啦，日記啦等等的，這是『私人的空間』，所以當然不能讓二毛拿囉！
+		<br /><br /></li>
+
+		<li><span class="text_import2">群組的概念</span>：由於共同擁有客廳，所以王家三兄弟可以在客廳打開電視機啦、
+		翻閱報紙啦、坐在沙發上面發呆啦等等的！	反正，只要是在客廳的玩意兒，三兄弟都可以使用喔！
+		因為大家都是一家人嘛！<br /><br /></li></ul>
+
+		這樣說來應該有點曉得了喔！那個『王大毛家』就是所謂的『群組』囉，
+		至於三兄弟就是分別為三個『使用者』，而這三個使用者是在同一個群組裡面的喔！
+		而三個使用者雖然在同一群組內，但是我們可以設定『權限』，
+		好讓某些使用者個人的資訊不被群組的擁有者查詢，以保有個人『私人的空間』啦！
+		而設定群組共享，則可讓大家共同分享喔！<br /><br /></li>
+
+	<li><span class="text_import1">其他人的概念</span><br /><br />
+		好了，那麼今天又有個人，叫做張小豬，他是張小豬家的人，與王家沒有關係啦！
+		這個時候，除非王家認識張小豬，然後開門讓張小豬進來王家，否則張小豬永遠沒有辦法進入王家，
+		更不要說進到王三毛的房間啦！不過，如果張小豬透過關係認識了三毛，並且跟王三毛成為好朋友，
+		那麼張小豬就可以透過三毛進入王家啦！呵呵！沒錯！那個張小豬就是所謂的『其他人，Others』囉！<br /><br />
+
+		因此，我們就可以知道啦，在Linux裡面，任何一個檔案都具有『User, Group及Others』三種身份的個別權限，
+		我們可以將上面的說明以底下的圖示來解釋：<br /><br />
+
+		<center><img src="0210filepermission/0210filepermission_1.jpg"
+		title="每個檔案的擁有者、群組與 others 的示意圖" border="1"
+		alt="每個檔案的擁有者、群組與 others 的示意圖" /><br />
+		圖1.1、每個檔案的擁有者、群組與其他人的示意圖</center><br />
+
+		我們以王三毛為例，王三毛這個『檔案』的擁有者為王三毛，他屬於王大毛這個群組，
+		而張小豬相對於王三毛，則只是一個『其他人(others)』而已。<br /><br />
+
+		不過，這裡有個特殊的人物要來介紹的，那就是『萬能的天神』！這個天神具有無限的神力，
+		所以他可以到達任何他想要去的地方，呵呵！那個人在Linux系統中的身份代號是『 root 』啦！所以要小心喔！<span 
+		class="text_import2">那個root可是『萬能的天神』喔！</span><br /><br />
+
+		無論如何，『使用者身份』，與該使用者所支援的『群組』概念，在Linux的世界裡面是相當的重要的，
+		他可以幫助你讓你的多工Linux環境變的更容易管理！更詳細的
+		『身份與群組』 設定，我們將在<a href="/linux_basic/0410accountmanager.php">第十四章、帳號管理</a>再進行解說。
+		底下我們將針對檔案系統與檔案權限來進行說明。<br /></li></ol>
+
+	<hr /><ul class="list1"><li class="text_import1">Linux 使用者身份與群組記錄的檔案</li></ul>
+	<p>在我們Linux系統當中，預設的情況下，所有的系統上的帳號與一般身份使用者，還有那個root的相關資訊，
+	都是記錄在/etc/passwd這個檔案內的。至於個人的密碼則是記錄在/etc/shadow這個檔案下。
+	此外，Linux所有的群組名稱都紀錄在/etc/group內！這三個檔案可以說是Linux系統裡面帳號、密碼、群組資訊的集中地囉！
+	不要隨便刪除這三個檔案啊！ ^_^</p>
+
+	<p>至於更多的與帳號群組有關的設定，還有這三個檔案的格式，不要急，我們在<a 
+	href="/linux_basic/0410accountmanager.php">第十四章的帳號管理</a>時，會再跟大家詳細的介紹的！這裡先有概念即可。</p>
+</div>
+
+<hr /><a name="filepermission"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 檔案權限概念</span><br />
+
+<div class="block1">
+	<p>大致瞭解了Linux的使用者與群組之後，接著下來，我們要來談一談，
+	這個檔案的權限要如何針對這些所謂的『使用者』與『群組』來設定呢？
+	這個部分是相當重要的，尤其對於初學者來說，因為檔案的權限與屬性是學習Linux的一個相當重要的關卡，
+	如果沒有這部份的概念，那麼你將老是聽不懂別人在講什麼呢！尤其是當你在你的螢幕前面出現了『Permission
+	deny』的時候，不要擔心，『肯定是權限設定錯誤』啦！呵呵！好了，閒話不多聊，趕快來瞧一瞧先。<br /><br /></p>
+
+	<hr /><a name="filepermission_perm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux檔案屬性</span><br />
+	<div class="block2">
+		<p>嗯！既然要讓你瞭解Linux的檔案屬性，那麼有個重要的也是常用的指令就必須要先跟你說囉！那一個？就是『
+		<span class="text_import2">ls</span> 』這一個察看檔案的指令囉！在你以root的身份登入Linux之後，下達『
+		ls -al 』看看，會看到底下的幾個咚咚：</p>
+
+<a name="table2.1.1"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -al</span>
+total 156
+drwxr-x---   4    root   root     4096   Sep  8 14:06 .
+drwxr-xr-x  23    root   root     4096   Sep  8 14:21 ..
+-rw-------   1    root   root     1474   Sep  4 18:27 anaconda-ks.cfg
+-rw-------   1    root   root      199   Sep  8 17:14 .bash_history
+-rw-r--r--   1    root   root       24   Jan  6  2007 .bash_logout
+-rw-r--r--   1    root   root      191   Jan  6  2007 .bash_profile
+-rw-r--r--   1    root   root      176   Jan  6  2007 .bashrc
+-rw-r--r--   1    root   root      100   Jan  6  2007 .cshrc
+<span style="text-decoration: underline">drwx------   3    root   root     4096   Sep  5 10:37 .gconf</span>      <span class="term_note">&lt;=範例說明處</span>
+drwx------   2    root   root     4096   Sep  5 14:09 .gconfd
+<span style="text-decoration: underline">-rw-r--r--   1    root   root    42304   Sep  4 18:26 install.log</span> <span class="term_note">&lt;=範例說明處</span>
+-rw-r--r--   1    root   root     5661   Sep  4 18:25 install.log.syslog<span class="term_write">
+
+[    1   ][  2 ][   3  ][  4 ][    5   ][     6     ][       7          ]
+[  權限  ][連結][擁有者][群組][檔案容量][  修改日期 ][      檔名        ]</span>
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		由於本章後續的chgrp, chown等指令可能都需要使用root的身份才能夠處理，所以這裡建議您以root的身份登入Linux來學習本章。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>ls是『list』的意思，重點在顯示檔案的檔名與相關屬性。而選項『-al』則表示列出所有的檔案詳細的權限與屬性
+		(包含隱藏檔，就是檔名第一個字元為『 . 』的檔案)。如上所示，在你第一次以root身份登入Linux時，
+		如果你輸入上述指令後，應該有上列的幾個東西，先解釋一下上面七個欄位個別的意思：</p>
+
+		<center><img src="0210filepermission/0210filepermission_2.gif"
+		title="檔案屬性的示意圖" border="1"
+		alt="檔案屬性的示意圖" /><br />
+		圖2.1.1、檔案屬性的示意圖</center><br />
+
+		<a name="permission"></a>
+		<ul class="list1"><li class="text_import1">第一欄代表這個檔案的類型與權限(permission)：</li></ul>
+		<p>這個地方最需要注意了！仔細看的話，你應該可以發現這一欄其實共有十個字元：(圖2.1.1及圖2.1.2內的權限並無關係)</p>
+		<center><img src="0210filepermission/0210filepermission_3.gif" 
+		title="檔案的類型與權限之內容" border="1"
+		alt="檔案的類型與權限之內容" /><br />
+		圖2.1.2、檔案的類型與權限之內容</center><br />
+		<ul>
+		<li>第一個字元代表這個檔案是『<span class="text_import2">目錄、檔案或連結檔</span>等等』：<br /><br />
+
+		<ul>
+		<li>當為[<span class="text_import1"> d</span> ]則是目錄，例如<a 
+			href="#table2.1.1">上表</a>檔名為『.gconf』的那一行；</li>
+		<li>當為[<span class="text_import1"> -</span> ]則是檔案，例如<a
+			href="#table2.1.1">上表</a>檔名為『install.log』那一行；</li>
+
+		<li>若是[<span class="text_import1"> l</span> ]則表示為連結檔(link file)；</li>
+		<li>若是[<span class="text_import1"> b</span> ]則表示為裝置檔裡面的可供儲存的周邊設備(可隨機存取裝置)；</li>
+		<li>若是[<span class="text_import1"> c</span> ]則表示為裝置檔裡面的序列埠設備，例如鍵盤、滑鼠(一次性讀取裝置)。</li>
+
+		</ul><br /></li>
+		<li>接下來的字元中，以三個為一組，且均為『<span class="text_import2">rwx</span>』
+		的三個參數的組合。其中，[ r ]代表可讀(read)、[ w ]代表可寫(write)、[ x ]代表可執行(execute)。
+		要注意的是，這三個權限的位置不會改變，如果沒有權限，就會出現減號[ - ]而已。<br /><br />
+		<ul>
+		<li>第一組為『<span class="text_import2">檔案擁有者的權限</span>』，以『install.log』那個檔案為例，
+		該檔案的擁有者可以讀寫，但不可執行；</li>
+		<li>第二組為『<span class="text_import2">同群組的權限</span>』；</li>
+
+		<li>第三組為『<span class="text_import2">其他非本群組的權限</span>』。</li>
+		</ul></li>
+		</ul><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+若有一個檔案的類型與權限資料為『<span class="text_import2">-rwxr-xr--</span>』，請說明其意義為何？
+</div>
+
+答：<div class="block2">
+先將整個類型與權限資料分開查閱，並將十個字元整理成為如下所示：<br />
+<blockquote class="text_import2" style="font-family: '細明體'">[-][rwx][r-x][r--]<br />&nbsp;1&nbsp;&nbsp;234&nbsp;&nbsp;567&nbsp;&nbsp;890</blockquote>
+<span style="font-family: '細明體'">
+&nbsp;1 為：代表這個檔名為目錄或檔案，本例中為檔案(-)；<br />
+234為：擁有者的權限，本例中為可讀、可寫、可執行(rwx)；<br />
+567為：同群組使用者權限，本例中為可讀可執行(rx)；<br />
+
+890為：其他使用者權限，本例中為可讀(r)</span><br /><br />
+同時注意到，rwx所在的位置是不會改變的，有該權限就會顯示字元，沒有該權限就變成減號(-)就是了。
+</div>
+</td></tr></table><br />
+
+		<p>另外，目錄與檔案的權限意義並不相同，這是因為目錄與檔案所記錄的資料內容不相同所致。
+		由於目錄與檔案的權限意義非常的重要，所以鳥哥將他獨立到<a 
+		href="#filepermission_dir">2.3節目錄與檔案之權限意義</a>中再來談。</p>
+
+		<ul class="list1"><li class="text_import1">第二欄表示有多少檔名連結到此節點(i-node)：</li></ul>
+		<p>每個檔案都會將他的權限與屬性記錄到檔案系統的i-node中，不過，我們使用的目錄樹卻是使用檔名來記錄，
+		因此每個檔名就會連結到一個i-node囉！這個屬性記錄的，就是有多少不同的檔名連結到相同的一個i-node號碼去就是了。
+		關於i-node的相關資料我們會在<a href="/linux_basic/0230filesystem.php">第八章</a>談到檔案系統時再加強介紹的。</p>
+
+		<ul class="list1"><li class="text_import1">第三欄表示這個檔案(或目錄)的『擁有者帳號』</li></ul>
+
+		<ul class="list1"><li class="text_import1">第四欄表示這個檔案的所屬群組</li></ul>
+		<p>在Linux系統下，你的帳號會附屬於一個或多個的群組中。舉剛剛我們提到的例子，class1, class2, 
+		class3均屬於projecta這個群組，假設某個檔案所屬的群組為projecta，且該檔案的權限如圖2.1.2所示(-rwxrwx---)，
+		則class1, class2, class3三人對於該檔案都具有可讀、可寫、可執行的權限(看群組權限)。
+		但如果是不屬於projecta的其他帳號，對於此檔案就不具有任何權限了。</p>
+
+		<ul class="list1"><li class="text_import1">第五欄為這個檔案的容量大小，預設單位為bytes；</li></ul>
+
+		<ul class="list1"><li class="text_import1">第六欄為這個檔案的建檔日期或者是最近的修改日期：</li></ul>
+
+		<p>這一欄的內容分別為日期(月/日)及時間。如果這個檔案被修改的時間距離現在太久了，那麼時間部分會僅顯示年份而已。
+		如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -l /etc/termcap /root/install.log</span>
+-rw-r--r-- 1 root root 807103 <span class="term_write">Jan  7  2007</span> /etc/termcap
+-rw-r--r-- 1 root root  42304 <span class="term_write">Sep  4 18:26</span> /root/install.log
+<span class="term_say"># 如上所示，/etc/termcap 為 2007 年所修改過的檔案，離現在太遠之故；
+# 至於 install.log 是今年 (2009) 所建立的，所以就顯示完整的時間了。</span>
+
+</pre></td></tr></table>
+
+		<p>如果想要顯示完整的時間格式，可以利用ls的選項，亦即：『<span 
+		class="text_import2">ls -l --full-time</span>』就能夠顯示出完整的時間格式了！包括年、月、日、時間喔。
+		另外，如果你當初是以繁體中文安裝你的Linux系統，那麼日期欄位將會以中文來顯示。
+		可惜的是，<span class="text_import2">中文並沒有辦法在純文字的終端機模式中正確的顯示，所以此欄會變成亂碼。</span>
+		那你就得要使用『LANG=en_US』來修改語系喔！</p>
+
+		<p>如果想要讓系統預設的語系變成英文的話，那麼你可以修改系統設定檔『<span 
+		class="text_import2">/etc/sysconfig/i18n</span>』，利用第五章談到的<a 
+		href="/linux_basic/0160startlinux.php#nano">nano</a>來修改該檔案的內容，使LANG這個變數成為上述的內容即可。</p>
+
+		<ul class="list1"><li class="text_import1">第七欄為這個檔案的檔名</li></ul>
+		<p>這個欄位就是檔名了。比較特殊的是：<span 
+		class="text_import2">如果檔名之前多一個『 . 』，則代表這個檔案為『隱藏檔』</span>，例如<a 
+		href="#table2.1.1">上表中的.gconf那一行</a>，該檔案就是隱藏檔。
+		你可以使用『ls』及『ls -a』這兩個指令去感受一下什麼是隱藏檔囉！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		對於更詳細的 ls 用法，還記得怎麼查詢嗎？對啦！使用
+		man ls 或 info ls 去看看他的基礎用法去！自我進修是很重要的，
+		因為『師傅帶進門，修行看個人！』，自古只有天才學生，沒有天才老師呦！加油吧！^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+		<p>這七個欄位的意義是很重要的！務必清楚的知道各個欄位代表的意義！尤其是第一個欄位的九個權限，
+		那是整個Linux檔案權限的重點之一。底下我們來做幾個簡單的練習，你就會比較清楚囉！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假設test1, test2, test3同屬於testgroup這個群組，如果有下面的兩個檔案，請說明兩個檔案的擁有者與其相關的權限為何？<pre style="font-family: '細明體'; color: #000088">
+-rw-r--r--  1 root     root          238 Jun 18 17:22 test.txt 
+-rwxr-xr--  1 test1    testgroup    5238 Jun 19 10:25 ping_tsai</pre>
+</div>
+答：<ul>
+<li>檔案test.txt的擁有者為root，所屬群組為root。至於權限方面則只有root這個帳號可以存取此檔案，其他人則僅能讀此檔案；<br /><br /></li>
+<li>另一個檔案ping_tsai的擁有者為test1，而所屬群組為testgroup。其中：<ul>
+
+	<li>test1 可以針對此檔案具有可讀可寫可執行的權力；</li>
+	<li>而同群組的test2, test3兩個人與test1同樣是testgroup的群組帳號，則僅可讀可執行但不能寫(亦即不能修改)；</li>
+	<li>至於非testgoup這一個群組的人則僅可以讀，不能寫也不能執行！</li></ul></li>
+</ul>
+</td></tr></table><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+如果我的目錄為底下的樣式，請問testgroup這個群組的成員與其他人(others)是否可以進入本目錄？
+<pre><span class="text_import2">    drwxr-xr--   1 test1    testgroup    5238 Jun 19 10:25 groups/</span></pre>
+
+</div>
+答：<ul>
+<li>檔案擁有者test1[rwx]可以在本目錄中進行任何工作；</li>
+<li>而testgroup這個群組[r-x]的帳號，例如test2, test3亦可以進入本目錄進行工作，但是不能在本目錄下進行寫入的動作；</li>
+<li>至於other的權限中[r--]雖然有r ，但是由於沒有x的權限，因此others的使用者，並不能進入此目錄！</li>
+</ul>
+</td></tr></table><br />
+
+		<ul class="list1"><li class="text_import1">Linux檔案權限的重要性：</li></ul>
+		<p>與Windows系統不一樣的是，在Linux系統當中，每一個檔案都多加了很多的屬性進來，尤其是群組的概念，這樣有什麼用途呢？
+		其實，最大的用途是在『資料安全性』上面的。</p>
+
+		<ul>
+		<li><span class="text_import2">系統保護的功能：</span><br />
+		舉個簡單的例子，在你的系統中，關於系統服務的檔案通常只有root才能讀寫或者是執行，例如<span 
+		class="text_import2">/etc/shadow</span>這一個帳號管理的檔案，由於該檔案記錄了你系統中所有帳號的資料，
+		因此是很重要的一個設定檔，當然不能讓任何人讀取(否則密碼會被竊取啊)，只有root才能夠來讀取囉！所以該檔案的權限就會成為[
+		<span style="font-family: '細明體'; color: #000088">-rw-------</span> ]囉！<br /><br /></li>
+
+		<li><span class="text_import2">團隊開發軟體或資料共用的功能：</span><br />
+
+		此外，如果你有一個軟體開發團隊，在你的團隊中，你希望每個人都可以使用某一些目錄下的檔案，
+		而非你的團隊的其他人則不予以開放呢？以上面的例子來說，testgroup的團隊共有三個人，分別是test1, test2, 
+		test3，那麼我就可以將團隊所需的檔案權限訂為[ <span style="font-family: '細明體'; color: #000088">-rwxrwx---</span>
+		 ]來提供給testgroup的工作團隊使用囉！<br /><br /></li>
+
+		<li><span class="text_import2">未將權限設定妥當的危害：</span><br />
+		再舉個例子來說，如果你的目錄權限沒有作好的話，可能造成其他人都可以在你的系統上面亂搞囉！
+		例如本來只有root才能做的開關機、ADSL的撥接程式、新增或刪除使用者等等的指令，若被你改成任何人都可以執行的話，
+		那麼如果使用者不小心給你重新開機啦！重新撥接啦！等等的！那麼你的系統不就會常常莫名其妙的掛掉囉！
+		而且萬一你的使用者的密碼被其他不明人士取得的話，只要他登入你的系統就可以輕而易舉的執行一些root的工作！</li>
+		</ul>
+		<p>可怕吧！因此，<span class="text_import2">在你修改你的linux檔案與目錄的屬性之前，一定要先搞清楚，
+		什麼資料是可變的，什麼是不可變的</span>！千萬注意囉！接下來我們來處理一下檔案屬性與權限的變更吧！</p>
+
+	</div>
+
+	<hr /><a name="filepermission_ch"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">如何改變檔案屬性與權限</span><br />
+	<div class="block2">
+		<p>我們現在知道檔案權限對於一個系統的安全重要性了，也知道檔案的權限對於使用者與群組的相關性，
+		那麼如何修改一個檔案的屬性與權限呢？又！有多少檔案的權限我們可以修改呢？
+		其實一個檔案的屬性與權限有很多！我們先介紹幾個常用於群組、擁有者、各種身份的權限之修改的指令，如下所示：</p>
+		<ul style="font-family:'細明體'; color: #000088">
+		<li>chgrp ：改變檔案所屬群組</li>
+		<li>chown ：改變檔案擁有者</li>
+
+		<li>chmod ：改變檔案的權限, SUID, SGID, SBIT等等的特性</li></ul>
+
+		<hr /><ul class="list1"><li><a name="chgrp"></a><span class="text_import1">改變所屬群組, chgrp</span></li></ul>
+		<p>改變一個檔案的群組真是很簡單的，直接以chgrp來改變即可，咦！這個指令就是change 
+		group的縮寫嘛！這樣就很好記了吧！ ^_^。不過，請記得，要被改變的群組名稱必須要在<span 
+		class="text_import2">/etc/group</span>檔案內存在才行，否則就會顯示錯誤！</p>
+
+		<p>假設你是以root的身份登入Linux系統的，那麼在你的家目錄內有一個install.log的檔案，
+		如何將該檔案的群組改變一下呢？假設你已經知道在/etc/group裡面已經存在一個名為users的群組，
+		但是testing這個群組名字就不存在/etc/group當中了，此時改變群組成為users與testing分別會有什麼現象發生呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chgrp [-R] dirname/filename ...</span>
+<span class="term_say">選項與參數：
+-R : 進行遞迴(recursive)的持續變更，亦即連同次目錄下的所有檔案、目錄
+     都更新成為這個群組之意。常常用在變更某一目錄內所有的檔案之情況。
+範例：</span>
+[root@www ~]# <span class="term_command">chgrp users install.log</span>
+[root@www ~]# <span class="term_command">ls -l</span>
+-rw-r--r--  1 root <span class="term_write">users</span> 68495 Jun 25 08:53 install.log
+[root@www ~]# <span class="term_command">chgrp testing install.log</span>
+
+chgrp: invalid group name `testing' <span class="term_note">&lt;== 發生錯誤訊息囉～找不到這個群組名～</span>
+</pre></td></tr></table>
+		<p>發現了嗎？檔案的群組被改成users了，但是要改成testing的時候，
+		就會發生錯誤～注意喔！發生錯誤訊息還是要努力的查一查錯誤訊息的內容才好！
+		將他英文翻譯成為中文，就知道問題出在哪裡了。<br /><br /></p>
+
+		<hr /><ul class="list1"><li><a name="chown"></a><span class="text_import1">改變檔案擁有者, chown</span></li></ul>
+		<p>如何改變一個檔案的擁有者呢？很簡單呀！既然改變群組是change
+		 group，那麼改變擁有者就是change owner囉！BINGO！那就是chown這個指令的用途，要注意的是，
+		使用者必須是已經存在系統中的帳號，也就是在<span class="text_import2">/etc/passwd</span>
+		這個檔案中有紀錄的使用者名稱才能改變。</p>
+
+		<p>chown的用途還滿多的，他還可以順便直接修改群組的名稱呢！此外，<span 
+		class="text_import2">如果要連目錄下的所有次目錄或檔案同時更改檔案擁有者的話，直接加上
+		-R </span>的選項即可！我們來看看語法與範例：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chown [-R] 帳號名稱 檔案或目錄</span>
+[root@www ~]# <span class="term_command">chown [-R] 帳號名稱:群組名稱 檔案或目錄</span>
+<span class="term_say">選項與參數：
+-R : 進行遞迴(recursive)的持續變更，亦即連同次目錄下的所有檔案都變更</span>
+
+<span class="term_hd">範例：將install.log的擁有者改為bin這個帳號：</span>
+[root@www ~]# <span class="term_command">chown bin install.log</span>
+[root@www ~]# <span class="term_command">ls -l</span>
+-rw-r--r--  1 <span class="term_write">bin</span>  users 68495 Jun 25 08:53 install.log
+
+<span class="term_hd">範例：將install.log的擁有者與群組改回為root：</span>
+[root@www ~]# <span class="term_command">chown root:root install.log</span>
+
+[root@www ~]# <span class="term_command">ls -l</span>
+-rw-r--r--  1 <span class="term_write">root root</span> 68495 Jun 25 08:53 install.log
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上，chown也可以使用『<b>chown user.group file</b>』，亦即在擁有者與群組間加上小數點『.』也行！
+		不過很多朋友設定帳號時，喜歡在帳號當中加入小數點(例如vbird.tsai這樣的帳號格式)，這就會造成系統的誤判了！
+		所以我們比較建議使用冒號『:』來隔開擁有者與群組啦！此外，chown也能單純的修改所屬群組呢！
+		例如『<b>chown .sshd install.log</b>』就是修改群組～看到了嗎？就是那個小數點的用途！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+		<p>知道如何改變檔案的群組與擁有者了，那麼什麼時候要使用chown或chgrp呢？或許你會覺得奇怪吧？
+		是的，確實有時候需要變更檔案的擁有者的，最常見的例子就是在複製檔案給你之外的其他人時，
+		我們使用最簡單的cp指令來說明好了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cp 來源檔案 目的檔案</span>
+</pre></td></tr></table>
+
+		<p>假設你今天要將.bashrc這個檔案拷貝成為.bashrc_test檔名，且是要給bin這個人，你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cp .bashrc .bashrc_test</span>
+
+[root@www ~]# <span class="term_command">ls -al .bashrc*</span>
+-rw-r--r--  1 root root 395 Jul  4 11:45 .bashrc
+-rw-r--r--  1 <span class="term_write">root root</span> 395 Jul 13 11:31 .bashrc_test  <span class="term_note">&lt;==新檔案的屬性沒變</span>
+</pre></td></tr></table>
+
+		<p>由於複製行為(cp)會複製執行者的屬性與權限，所以！怎麼辦？.bashrc_test還是屬於root所擁有，
+		如此一來，即使你將檔案拿給bin這個使用者了，那他仍然無法修改的(看屬性/權限就知道了吧)，
+		所以你就必須要將這個檔案的擁有者與群組修改一下囉！知道如何修改了吧？<br /><br /></p>
+
+		<hr /><ul class="list1"><li><a name="chmod"></a><span class="text_import1">改變權限, chmod</span></li></ul>
+
+		<p>檔案權限的改變使用的是chmod這個指令，但是，權限的設定方法有兩種，
+		分別可以使用數字或者是符號來進行權限的變更。我們就來談一談：</p>
+
+		<ul><li><span class="text_import1">數字類型改變檔案權限</span><br /><br />
+		Linux檔案的基本權限就有九個，分別是owner/group/others三種身份各有自己的read/write/execute權限，
+		先複習一下剛剛上面提到的資料：檔案的權限字元為：『<span class="text_import2">-rwxrwxrwx</span>』，
+		這九個權限是三個三個一組的！其中，我們可以使用數字來代表各個權限，各權限的分數對照表如下：<br />
+
+		<blockquote class="text_import2" style="font-family: '細明體'">r:4<br />w:2<br />x:1</blockquote>
+
+		每種身份(owner/group/others)各自的三個權限(r/w/x)分數是需要累加的，例如當權限為：
+		[-rwxrwx---] 分數則是：<blockquote class="text_import2" style="font-family: '細明體'">
+		owner = rwx = 4+2+1 = 7<br />
+		group = rwx = 4+2+1 = 7<br />
+		others= --- = 0+0+0 = 0</blockquote>
+
+		所以等一下我們設定權限的變更時，該檔案的權限數字就是770啦！變更權限的指令chmod的語法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chmod [-R] xyz 檔案或目錄</span>
+<span class="term_say">選項與參數：
+xyz : 就是剛剛提到的數字類型的權限屬性，為 rwx 屬性數值的相加。
+-R : 進行遞迴(recursive)的持續變更，亦即連同次目錄下的所有檔案都會變更</span>
+</pre></td></tr></table>
+
+		舉例來說，如果要將.bashrc這個檔案所有的權限都設定啟用，那麼就下達： <br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+
+<span class="term_write">-rw-r--r--</span>  1 root root 395 Jul  4 11:45 .bashrc
+[root@www ~]# <span class="term_command">chmod 777 .bashrc</span>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+<span class="term_write">-rwxrwxrwx</span>  1 root root 395 Jul  4 11:45 .bashrc
+</pre></td></tr></table>
+
+		那如果要將權限變成『 <span class="text_import2">-rwxr-xr--</span> 』呢？那麼權限的分數就成為
+		<span class="text_import2">[4+2+1][4+0+1][4+0+0]=754</span> 囉！所以你需要下達『
+		<span class="text_import2" style="font-family: '細明體'">chmod 754 filename</span>』。
+		另外，在實際的系統運作中最常發生的一個問題就是，常常我們以<a
+		href="0310vi.php">vim</a>編輯一個shell的文字批次檔後，他的權限通常是 -rw-rw-r-- 也就是664，
+		如果要將該檔案變成可執行檔，並且不要讓其他人修改此一檔案的話，
+		那麼就需要-rwxr-xr-x這樣的權限，此時就得要下達：『
+		<span class="text_import2" style="font-family: '細明體'">chmod 755 test.sh</span> 』的指令囉！<br /><br />
+
+		另外，如果有些檔案你不希望被其他人看到，那麼應該將檔案的權限設定為例如：『-rwxr-----』，那就下達『
+		<span class="text_import2" style="font-family: '細明體'">chmod 740 filename</span> 』吧！ <br /><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+將剛剛你的.bashrc這個檔案的權限修改回-rw-r--r--的情況吧！
+</div>
+答：<div class="block2">
+-rw-r--r--的分數是644，所以指令為：<br />
+
+chmod 644 .bashrc
+</div>
+</td></tr></table><br />
+
+		</li>
+
+		<li><span class="text_import1">符號類型改變檔案權限</span><br /><br />
+		還有一個改變權限的方法呦！從之前的介紹中我們可以發現，基本上就九個權限分別是(1)user 
+		(2)group (3)others三種身份啦！那麼我們就可以藉由<span class="text_import1">u, g, 
+		o</span>來代表三種身份的權限！此外， <span class="text_import1">a</span> 則代表 all 
+		亦即全部的身份！那麼讀寫的權限就可以寫成r, w, x囉！也就是可以使用底下的方式來看：<br /><br />
+
+		<table width="80%" cellspacing="0" cellpadding="2" border="1" style="color: #000088 ;">
+		<tr align="center">
+		<td>chmod</td><td>u<br />g<br />o<br />a</td>
+		<td style="font: 11pt '細明體'">+(加入)<br />-(除去)<br />=(設定)</td>
+
+		<td>r<br />w<br />x</td><td>檔案或目錄</td></tr></table><br />
+
+		來實作一下吧！假如我們要『設定』一個檔案的權限成為『-rwxr-xr-x』時，基本上就是：<br /><br />
+		<ul><li>user (u)：具有可讀、可寫、可執行的權限；</li>
+		<li>group 與 others (g/o)：具有可讀與執行的權限。</li></ul><br />
+		所以就是：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chmod  u=rwx,go=rx  .bashrc</span>
+<span class="term_say"># 注意喔！那個 u=rwx,go=rx 是連在一起的，中間並沒有任何空白字元！</span>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+-rwxr-xr-x  1 root root 395 Jul  4 11:45 .bashrc
+</pre></td></tr></table>
+
+		那麼假如是『 -rwxr-xr-- 』這樣的權限呢？可以使用『 <span class="text_import2">chmod u=rwx,g=rx,o=r filename</span>
+
+		 』來設定。此外，如果我不知道原先的檔案屬性，而我只想要增加.bashrc這個檔案的每個人均可寫入的權限，
+		那麼我就可以使用：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+<span class="term_write">-rwxr-xr-x</span>  1 root root 395 Jul  4 11:45 .bashrc
+[root@www ~]# <span class="term_command">chmod  a+w  .bashrc</span>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+<span class="term_write">-rwxrwxrwx</span>  1 root root 395 Jul  4 11:45 .bashrc
+
+</pre></td></tr></table>
+
+		而如果是要將權限去掉而不更動其他已存在的權限呢？例如要拿掉全部人的可執行權限，則：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chmod  a-x  .bashrc</span>
+[root@www ~]# <span class="term_command">ls -al .bashrc</span>
+<span class="term_write">-rw-rw-rw-</span>  1 root root 395 Jul  4 11:45 .bashrc
+</pre></td></tr></table>
+
+		知道 +, -, = 的不同點了嗎？對啦！ + 與 – 的狀態下，只要是沒有指定到的項目，則該權限『不會被變動』，
+		例如上面的例子中，由於僅以 – 拿掉 x 則其他兩個保持當時的值不變！多多實作一下，你就會知道如何改變權限囉！
+		這在某些情況底下很好用的～舉例來說，你想要教一個朋友如何讓一個程式可以擁有執行的權限，
+		但你又不知道該檔案原本的權限為何，此時，利用『<span class="text_import2">chmod a+x 
+		filename</span>』 ，就可以讓該程式擁有執行的權限了。是否很方便？
+		</li>
+		</ul>
+	</div>
+
+	<hr /><a name="filepermission_dir"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">目錄與檔案之權限意義：</span><br />
+	<div class="block2">
+		<p>現在我們知道了Linux系統內檔案的三種身份(擁有者、群組與其他人)，知道每種身份都有三種權限(rwx)，
+		已知道能夠使用chown, chgrp, chmod去修改這些權限與屬性，當然，利用ls -l去觀察檔案也沒問題。
+		前兩小節也談到了這些檔案權限對於資料安全的重要性。那麼，這些檔案權限對於一般檔案與目錄檔案有何不同呢？
+		有大大的不同啊！底下就讓鳥哥來說清楚，講明白！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">權限對檔案的重要性</li></ul>
+
+		<p>檔案是實際含有資料的地方，包括一般文字檔、資料庫內容檔、二進位可執行檔(binary program)等等。
+		因此，權限對於檔案來說，他的意義是這樣的：</p>
+		<ul>
+		<li><span class="text_import2">r (read)</span>：可讀取此一檔案的實際內容，如讀取文字檔的文字內容等；</li>
+		<li><span class="text_import2">w (write)</span>：可以編輯、新增或者是修改該檔案的內容(但不含刪除該檔案)；</li>
+
+		<li><span class="text_import2">x (eXecute)</span>：該檔案具有可以被系統執行的權限。</li>
+		</ul>
+		<p>那個可讀(r)代表讀取檔案內容是還好瞭解，那麼可執行(x)呢？這裡你就必須要小心啦！
+		因為在Windows底下一個檔案是否具有執行的能力是藉由『 <span class="text_import2">副檔名</span> 』來判斷的，
+		例如：.exe, .bat, .com 等等，但是在Linux底下，<span 
+		class="text_import2">我們的檔案是否能被執行，則是藉由是否具有『x』這個權限來決定的！跟檔名是沒有絕對的關係的</span>！</p>
+
+		<p>至於最後一個w這個權限呢？當你對一個檔案具有w權限時，你可以具有寫入/編輯/新增/修改檔案的內容的權限，
+		<span class="text_import2">但並不具備有刪除該檔案本身的權限！</span>對於檔案的rwx來說，
+		主要都是針對『檔案的內容』而言，與檔案檔名的存在與否沒有關係喔！因為檔案記錄的是實際的資料嘛！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">權限對目錄的重要性</li></ul>
+
+		<p>檔案是存放實際資料的所在，那麼目錄主要是儲存啥玩意啊？<span 
+		class="text_import2">目錄主要的內容在記錄檔名清單，檔名與目錄有強烈的關連</span>啦！
+		所以如果是針對目錄時，那個 r, w, x 對目錄是什麼意義呢？</p>
+
+		<ul><li><span class="text_import1">r (read contents in directory)</span>：<br /><br />
+		表示具有讀取目錄結構清單的權限，所以當你具有讀取(r)一個目錄的權限時，表示你可以查詢該目錄下的檔名資料。
+		所以你就可以利用 ls 這個指令將該目錄的內容列表顯示出來！<br /><br /></li>
+
+		<li><span class="text_import1">w (modify contents of directory)</span>：<br /><br />
+		這個可寫入的權限對目錄來說，是很了不起的！<span class="text_import2">
+		因為他表示你具有異動該目錄結構清單的權限</span>，也就是底下這些權限：<br /><br /><ul class="text_import2">
+		<li>建立新的檔案與目錄；</li>
+		<li>刪除已經存在的檔案與目錄(不論該檔案的權限為何！)</li>
+
+		<li>將已存在的檔案或目錄進行更名；</li>
+		<li>搬移該目錄內的檔案、目錄位置。</li></ul><br />
+		總之，目錄的w權限就與該目錄底下的檔名異動有關就對了啦！<br /><br /></li>
+
+		<li><span class="text_import1">x (access directory)</span>：<br /><br />
+		咦！目錄的執行權限有啥用途啊？目錄只是記錄檔名而已，總不能拿來執行吧？沒錯！目錄不可以被執行，<span 
+		class="text_import2">目錄的x代表的是使用者能否進入該目錄成為工作目錄</span>的用途！
+		所謂的工作目錄(work directory)就是你目前所在的目錄啦！舉例來說，當你登入Linux時，
+		你所在的家目錄就是你當下的工作目錄。而變換目錄的指令是『cd』(change directory)囉！</li></ul>
+
+		<p>大致的目錄權限概念是這樣，底下我們來看幾個範例，讓你瞭解一下啥是目錄的權限囉！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+有個目錄的權限如下所示：
+<pre style="font-family:'細明體'; color: #000088">drwxr--r--  3  root  root  4096   Jun 25 08:35   .ssh</pre>
+系統有個帳號名稱為vbird，這個帳號並沒有支援root群組，請問vbird對這個目錄有何權限？是否可切換到此目錄中？
+</div>
+答：<div class="block2">
+vbird對此目錄僅具有r的權限，因此vbird可以查詢此目錄下的檔名列表。因為vbird不具有x的權限，
+因此vbird並不能切換到此目錄內！(相當重要的概念！)
+</div>
+
+</td></tr></table><br />
+
+		<p>上面這個例題中因為vbird具有r的權限，因為是r乍看之下好像就具有可以進入此目錄的權限，其實那是錯的。
+		能不能進入某一個目錄，只與該目錄的x權限有關啦！此外，
+		工作目錄對於指令的執行是非常重要的，<span class="text_import2">如果你在某目錄下不具有x的權限，
+		那麼你就無法切換到該目錄下，也就無法執行該目錄下的任何指令，即使你具有該目錄的r的權限。</span></p>
+
+		<p>很多朋友在架設網站的時候都會卡在一些權限的設定上，他們開放目錄資料給網際網路的任何人來瀏覽，
+		卻只開放r的權限，如上面的範例所示那樣，那樣的結果就是導致網站伺服器軟體無法到該目錄下讀取檔案(最多只能看到檔名)，
+		最終用戶總是無法正確的查閱到檔案的內容(顯示權限不足啊！)。要注意：<span
+		class="text_import2">要開放目錄給任何人瀏覽時，應該至少也要給予r及x的權限，但w權限不可隨便給！</span>
+		為什麼w不能隨便給，我們來看下一個例子：</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+
+假設有個帳號名稱為dmtsai，他的家目錄在/home/dmtsai/，dmtsai對此目錄具有[rwx]的權限。
+若在此目錄下有個名為the_root.data的檔案，該檔案的權限如下：
+<pre style="font-family:'細明體'; color: #000088">-rwx------ 1 root  root  4365 Sep 19 23:20  the_root.data</pre>
+請問dmtsai對此檔案的權限為何？可否刪除此檔案？
+</div>
+答：<div class="block2">
+如上所示，由於dmtsai對此檔案來說是『others』的身份，因此這個檔案他無法讀、無法編輯也無法執行，
+也就是說，他無法變動這個檔案的內容就是了。<br /><br />但是由於這個檔案在他的家目錄下，
+他在此目錄下具有rwx的完整權限，因此對於the_root.data這個『檔名』來說，他是能夠『刪除』的！
+結論就是，dmtsai這個用戶能夠刪除the_root.data這個檔案！
+</div>
+</td></tr></table><br />
+
+		<p>還是看不太懂？有聽沒有懂喔！沒關係～我們底下就來設計一個練習，
+		讓你實際玩玩看，應該就能夠比較近入狀況啦！不過，由於很多指令我們還沒有教，
+		所以底下的指令有的先瞭解即可，詳細的指令用法我們會在後面繼續介紹的。</p>
+
+		<ul class="list1"><li class="text_import2">先用root的身份建立所需要的檔案與目錄環境</li></ul>
+
+		<p>我們用root的身份在所有人都可以工作的/tmp目錄中建立一個名為testing的目錄，
+		該目錄的權限為744且目錄擁有者為root。另外，在testing目錄下在建立一個空的檔案，
+		檔名亦為testing。建立目錄可用mkdir(make directory)，建立空檔案可用<a 
+		href="/linux_basic/0220filemanager.php#touch">touch(下一章會說明)</a>來處理。
+		所以過程如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cd /tmp                     </span><span class="term_note">&lt;==切換工作目錄到/tmp</span>
+[root@www tmp]# <span class="term_command">mkdir testing             </span><span class="term_note">&lt;==建立新目錄</span>
+[root@www tmp]# <span class="term_command">chmod 744 testing         </span><span class="term_note">&lt;==變更權限</span>
+
+[root@www tmp]# <span class="term_command">touch testing/testing     </span><span class="term_note">&lt;==建立空的檔案</span>
+[root@www tmp]# <span class="term_command">chmod 600 testing/testing </span><span class="term_note">&lt;==變更權限</span>
+[root@www tmp]# <span class="term_command">ls -ald testing testing/testing</span>
+drwxr--r-- 2 root root 4096 Sep 19 16:01 testing
+-rw------- 1 root root    0 Sep 19 16:01 testing/testing
+<span class="term_say"># 仔細看一下，目錄的權限是 744 ，且所屬群組與使用者均是 root 喔！
+# 那麼在這樣的情況底下，一般身份使用者對這個目錄/檔案的權限為何？</span>
+</pre></td></tr></table>
+
+		<ul class="list1"><li class="text_import2">一般用戶的讀寫權限為何？觀察中</li></ul>
+
+		<p>在上面的例子中，雖然目錄是744的權限設定，一般用戶應該能有 r 的權限，
+		但這樣的權限使用者能做啥事呢？假設鳥哥的系統中含有一個帳號名為 vbird 的，
+		我們可以透過『 su - vbird 』這個指令來變換身份喔！看看底下的操作先！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www tmp]# <span class="term_command">su - vbird</span> <span class="term_note">&lt;==切換身份成為 vbird 囉！</span>
+[vbird@www ~]$ <span class="term_command">cd /tmp    </span> <span class="term_note">&lt;==看一下，身份變了喔！提示字元也變成 $ 了！</span>
+[vbird@www tmp]$ <span class="term_command">ls -l testing/</span>
+
+?--------- ? ? ? ?             ? testing
+<span class="term_say"># 因為具有 r 的權限可以查詢檔名。不過權限不足(沒有x)，所以會有一堆問號。</span>
+[vbird@www tmp]$ <span class="term_command">cd testing/</span>
+-bash: cd: testing/: Permission denied
+<span class="term_say"># 因為不具有 x ，所以當然沒有進入的權限啦！有沒有呼應前面的權限說明啊！</span>
+</pre></td></tr></table>
+
+		<ul class="list1"><li class="text_import2">如果該目錄屬於用戶本身，會有什麼狀況？</li></ul>
+
+		<p>上面的練習我們知道了只有r確實可以讓使用者讀取目錄的檔名列表，不過詳細的資訊卻還是讀不到的，
+		同時也不能將該目錄變成工作目錄(用 cd 進入該目錄之意)。那如果我們讓該目錄變成使用者的，
+		那麼使用者在這個目錄底下是否能夠刪除檔案呢？底下的練習做看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[vbird@www tmp]$ <span class="term_command">exit              </span> <span class="term_note">&lt;==讓 vbird 變回原本的 root 身份喔！</span>
+[root@www tmp]# <span class="term_command">chown vbird testing</span> <span class="term_note">&lt;==修改權限，讓vbird擁有此目錄</span>
+[root@www tmp]# <span class="term_command">su - vbird         </span> <span class="term_note">&lt;==再次變成vbird來操作</span>
+
+[vbird@www ~]$ <span class="term_command">cd /tmp/testing     </span> <span class="term_note">&lt;==可以進入目錄了呢！</span>
+[vbird@www testing]$ <span class="term_command">ls -l</span>
+-rw------- 1 root root 0 Sep 19 16:01 testing  <span class="term_note">&lt;==檔案不是vbird的！</span>
+[vbird@www testing]$ <span class="term_command">rm testing    </span> <span class="term_note">&lt;==嘗試殺掉這個檔案看看！</span>
+rm: remove write-protected regular empty file `testing'? <span class="term_command">y</span>
+
+<span class="term_say"># 竟然可以刪除！這樣理解了嗎？！</span>
+</pre></td></tr></table>
+
+		<p>透過上面這個簡單的步驟，你就可以清楚的知道， x 在目錄當中是與『能否進入該目錄』有關，
+		至於那個 w 則具有相當重要的權限，因為他可以讓使用者刪除、更新、新建檔案或目錄，
+		是個很重要的參數啊！這樣可以理解了嗎？！ ^_^</p>
+	</div>
+
+	<hr /><a name="filepermission_type"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux檔案種類與副檔名</span><br />
+	<div class="block2">
+		<p>我們在基礎篇一直強調一個概念，那就是：任何裝置在Linux底下都是檔案，
+		不僅如此，連資料溝通的介面也有專屬的檔案在負責～所以，你會瞭解到，Linux的檔案種類真的很多～
+		除了前面提到的一般檔案(-)與目錄檔案(d)之外，還有哪些種類的檔案呢？<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">檔案種類：</li></ul>
+		<p>我們在剛剛提到使用『ls -l』觀察到第一欄那十個字元中，第一個字元為檔案的類型。
+		除了常見的一般檔案(-)與目錄檔案(d)之外，還有哪些種類的檔案類型呢？</p>
+		<ul>
+		<li><span class="text_import1">正規檔案(regular file )</span>：<br />
+		就是一般我們在進行存取的類型的檔案，在由 ls -al 所顯示出來的屬性方面，第一個字元為 
+		[ - ]，例如 [-rwxrwxrwx ]。另外，依照檔案的內容，又大略可以分為：<br /><br />
+		<ul><li><span class="text_import2">純文字檔(ASCII)</span>：這是Linux系統中最多的一種檔案類型囉，
+		稱為純文字檔是因為內容為我們人類可以直接讀到的資料，例如數字、字母等等。
+		幾乎只要我們可以用來做為設定的檔案都屬於這一種檔案類型。
+		舉例來說，你可以下達『 cat ~/.bashrc 』就可以看到該檔案的內容。
+		(cat 是將一個檔案內容讀出來的指令)<br /><br /></li>
+
+		<li><span class="text_import2">二進位檔(binary)</span>：還記得我們在『
+		<a href="0105computers.php">第零章、計算機概論</a> 』裡面的<a 
+		href="0105computers.php#program">軟體程式的運作</a>中提過，
+		我們的系統其實僅認識且可以執行二進位檔案(binary file)吧？沒錯～
+		你的Linux當中的可執行檔(scripts, 文字型批次檔不算)就是這種格式的啦～
+		舉例來說，剛剛下達的指令cat就是一個binary file。<br /><br /></li>
+		<li><span class="text_import2">資料格式檔(data)</span>：
+		有些程式在運作的過程當中會讀取某些特定格式的檔案，那些特定格式的檔案可以被稱為資料檔 
+		(data file)。舉例來說，我們的Linux在使用者登入時，都會將登錄的資料記錄在
+		/var/log/wtmp那個檔案內，該檔案是一個data file，他能夠透過last這個指令讀出來！
+		但是使用cat時，會讀出亂碼～因為他是屬於一種特殊格式的檔案。瞭乎？<br /><br /></li>
+		</ul></li>
+		<li><span class="text_import1">目錄(directory)</span>：<br />就是目錄囉～第一個屬性為 
+		[ d ]，例如 [drwxrwxrwx]。<br /><br /></li>
+
+		<li><span class="text_import1">連結檔(link)</span>：<br />就是類似Windows系統底下的捷徑啦！
+		第一個屬性為 [ l ](英文L的小寫)，例如 [lrwxrwxrwx] ；<br /><br /></li>
+
+		<li><span class="text_import1">設備與裝置檔(device)</span>：<br />與系統周邊及儲存等相關的一些檔案，
+		通常都集中在/dev這個目錄之下！通常又分為兩種：<br /><br />
+		<ul><li><span class="text_import2">區塊(block)設備檔</span> ：就是一些儲存資料，
+		以提供系統隨機存取的周邊設備，舉例來說，硬碟與軟碟等就是啦！
+		你可以隨機的在硬碟的不同區塊讀寫，這種裝置就是區塊裝置囉！你可以自行查一下/dev/sda看看，
+		會發現第一個屬性為[ b ]喔！<br /><br /></li>
+
+		<li><span class="text_import2">字元(character)設備檔</span>：亦即是一些序列埠的周邊設備，
+		例如鍵盤、滑鼠等等！這些設備的特色就是『一次性讀取』的，不能夠截斷輸出。
+		舉例來說，你不可能讓滑鼠『跳到』另一個畫面，而是『滑動』到另一個地方啊！第一個屬性為 [ c ]。</li></ul><br /></li>
+
+		<li><span class="text_import1">資料接口檔(sockets)</span>：<br />既然被稱為資料接口檔，
+		想當然爾，這種類型的檔案通常被用在網路上的資料承接了。我們可以啟動一個程式來監聽用戶端的要求，
+		而用戶端就可以透過這個socket來進行資料的溝通了。第一個屬性為 [ s ]，
+		最常在/var/run這個目錄中看到這種檔案類型了。<br /><br /></li>
+
+		<li><span class="text_import1">資料輸送檔(FIFO, pipe)</span>：<br />
+		FIFO也是一種特殊的檔案類型，他主要的目的在解決多個程序同時存取一個檔案所造成的錯誤問題。
+		FIFO是first-in-first-out的縮寫。第一個屬性為[p] 。
+		</li></ul>
+
+		<p>除了設備檔是我們系統中很重要的檔案，最好不要隨意修改之外(通常他也不會讓你修改的啦！)，
+		另一個比較有趣的檔案就是連結檔。如果你常常將應用程式捉到桌面來的話，你就應該知道在
+		Windows底下有所謂的『<span class="text_import2">捷徑</span>』。同樣的，你可以將
+		linux下的連結檔簡單的視為一個檔案或目錄的捷徑。
+		至於socket與FIFO檔案比較難理解，因為這兩個咚咚與程序(process)比較有關係，
+		這個等到未來你瞭解process之後，再回來查閱吧！此外，
+		你也可以透過man fifo及man socket來查閱系統上的說明！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Linux檔案副檔名：</li></ul>
+		<p>基本上，Linux的檔案是沒有所謂的『副檔名』的，我們剛剛就談過，<span 
+		class="text_import2">一個Linux檔案能不能被執行，與他的第一欄的十個屬性有關，
+		與檔名根本一點關係也沒有</span>。這個觀念跟Windows的情況不相同喔！在Windows底下，
+		能被執行的檔案副檔名通常是 .com .exe .bat等等，而在Linux底下，<span 
+		class="text_import2">只要你的權限當中具有x的話，例如[ -rwx-r-xr-x ]
+		即代表這個檔案可以被執行喔</span>！</p>
+
+		<p>不過，可以被執行跟可以執行成功是不一樣的～舉例來說，在root家目錄下的install.log 
+		是一個純文字檔，如果經由修改權限成為 -rwxrwxrwx 後，這個檔案能夠真的執行成功嗎？
+		當然不行～因為他的內容根本就沒有可以執行的資料。所以說，這個x代表這個檔案具有可執行的能力，
+		但是能不能執行成功，當然就得要看該檔案的內容囉～</p>
+
+		<p>雖然如此，不過我們仍然希望可以藉由副檔名來瞭解該檔案是什麼東西，所以，
+		通常我們還是會以適當的副檔名來表示該檔案是什麼種類的。底下有數種常用的副檔名：</p>
+
+		<ul>
+		<li>*.sh ： 腳本或批次檔 (scripts)，因為批次檔為使用shell寫成的，所以副檔名就編成 .sh 囉；<br /><br /></li>
+		<li>*Z, *.tar, *.tar.gz, *.zip, *.tgz： 經過打包的壓縮檔。這是因為壓縮軟體分別為 gunzip, 
+			tar 等等的，由於不同的壓縮軟體，而取其相關的副檔名囉！<br /><br /></li>
+
+		<li>*.html, *.php：網頁相關檔案，分別代表 HTML 語法與 PHP 語法的網頁檔案囉！
+			.html 的檔案可使用網頁瀏覽器來直接開啟，至於 .php 的檔案，
+			則可以透過 client 端的瀏覽器來 server 端瀏覽，以得到運算後的網頁結果呢！</li></ul>
+
+		<p>基本上，Linux系統上的檔名真的只是讓你瞭解該檔案可能的用途而已，
+		真正的執行與否仍然需要權限的規範才行！例如雖然有一個檔案為可執行檔，
+		如常見的/bin/ls這個顯示檔案屬性的指令，不過，如果這個檔案的權限被修改成無法執行時，
+		那麼ls就變成不能執行囉！</p>
+		<p>上述的這種問題最常發生在檔案傳送的過程中。例如你在網路上下載一個可執行檔，但是偏偏在你的
+		Linux系統中就是無法執行！呵呵！那麼就是可能檔案的屬性被改變了！不要懷疑，從網路上傳送到你的
+		Linux系統中，檔案的屬性與權限確實是會被改變的喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Linux檔案長度限制：</li></ul>
+
+		<p>在Linux底下，使用預設的Ext2/Ext3檔案系統時，針對檔案的檔名長度限制為：</p>
+
+		<ul class="text_import2">
+		<li>單一檔案或目錄的最大容許檔名為 255 個字元；</li>
+		<li>包含完整路徑名稱及目錄 (/) 之完整檔名為 4096 個字元。</li></ul>
+		<p>是相當長的檔名喔！我們希望Linux的檔案名稱可以一看就知道該檔案在幹嘛的，
+		所以檔名通常是很長很長！而用慣了Windows的人可能會受不了，因為檔案名稱通常真的都很長，
+		對於用慣Windows而導致打字速度不快的朋友來說，嗯！真的是很困擾.....不過，只得勸你好好的加強打字的訓練囉！</p>
+
+		<p>而由<a href="/linux_basic/0160startlinux.php#cmd_hkey">第五章談到的熱鍵</a>你也會知道，
+		其實可以透過[tab]按鍵來確認檔案的檔名的！這很好用啊！
+		當然啦，如果你已經讀完了本書第三篇關於<a href="/linux_basic/0320bash.php">BASH</a>的用法，那麼你將會發現
+		『<a href="/linux_basic/0320bash.php#variable">哇！變數真是一個相當好用的東西吶！</a>』 
+		嗯！看不懂，沒關係，到第三篇談到bash再說！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Linux檔案名稱的限制：</li></ul>
+		<p>由於Linux在文字介面下的一些指令操作關係，一般來說，你在設定Linux底下的檔案名稱時，
+		最好可以避免一些特殊字元比較好！例如底下這些：</p><blockquote style="font-family:'細明體'; color: #000088">
+			* ? &gt; &lt; ; &amp; ! [ ] | \ ' " ` ( ) { }</blockquote>
+		<p>因為這些符號在文字介面下，是有特殊意義的！另外，檔案名稱的開頭為小數點『.』時，
+		代表這個檔案為『隱藏檔』喔！同時，由於指令下達當中，常常會使用到 -option 之類的選項，
+		所以你最好也避免將檔案檔名的開頭以 - 或 + 來命名啊！</p>
+
+	</div>
+</div>
+
+
+<hr /><a name="dir"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux目錄配置</span><br />
+<div class="block1">
+	<p>在瞭解了每個檔案的相關種類與屬性，以及瞭解了如何更改檔案屬性/權限的相關資訊後，再來要瞭解的就是，
+	為什麼每套Linux distributions他們的設定檔啊、執行檔啊、每個目錄內放置的咚咚啊，其實都差不多？
+	原來是有一套標準依據的哩！我們底下就來瞧一瞧。<br /><br /></p>
+
+	<hr /><a name="dir_fhs"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux目錄配置的依據--FHS</span><br />
+	<div class="block2">
+
+		<p>因為利用Linux來開發產品或distributions的社群/公司與個人實在太多了，
+		如果每個人都用自己的想法來配置檔案放置的目錄，那麼將可能造成很多管理上的困擾。
+		你能想像，你進入一個企業之後，所接觸到的Linux目錄配置方法竟然跟你以前學的完全不同嗎？
+		很難想像吧～所以，後來就有所謂的<span 
+		class="text_import2">Filesystem Hierarchy Standard (FHS)</span>標準的出爐了！</p>
+
+		<p>根據FHS(<a href="http://www.pathname.com/fhs" target="_blank">http://www.pathname.com/fhs/</a>)的官方文件指出，
+		他們的主要目的是希望<span class="text_import2">讓使用者可以瞭解到已安裝軟體通常放置於那個目錄下</span>，
+		所以他們希望獨立的軟體開發商、作業系統製作者、以及想要維護系統的使用者，都能夠遵循FHS的標準。
+		也就是說，FHS的重點在於規範每個特定的目錄下應該要放置什麼樣子的資料而已。
+		這樣做好處非常多，因為Linux作業系統就能夠在既有的面貌下(目錄架構不變)發展出開發者想要的獨特風格。</p>
+
+		<p>事實上，FHS是根據過去的經驗一直再持續的改版的，FHS依據檔案系統使用的頻繁與否與是否允許使用者隨意更動，
+		而將目錄定義成為四種交互作用的形態，用表格來說有點像底下這樣：</p>
+
+<table width="85%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>　</td><td>可分享的(shareable)</td><td>不可分享的(unshareable)</td></tr>
+<tr><td bgcolor="lightblue">不變的(static)</td><td>/usr (軟體放置處)</td><td>/etc (設定檔)</td></tr>
+<tr><td bgcolor="lightblue">　</td><td>/opt (第三方協力軟體)</td><td>/boot (開機與核心檔)</td></tr>
+<tr><td bgcolor="lightblue">可變動的(variable)</td><td>/var/mail (使用者郵件信箱)</td><td>/var/run (程序相關)</td></tr>
+
+<tr><td bgcolor="lightblue">　</td><td>/var/spool/news (新聞群組)</td><td>/var/lock (程序相關)</td></tr>
+</table>
+
+		<p>上表中的目錄就是一些代表性的目錄，該目錄底下所放置的資料在底下會談到，這裡先略過不談。
+		我們要瞭解的是，什麼是那四個類型？</p>
+		<ul>
+		<li><span class="text_import2">可分享的</span>：可以分享給其他系統掛載使用的目錄，所以包括執行檔與使用者的郵件等資料，
+		是能夠分享給網路上其他主機掛載用的目錄；<br /><br /></li>
+		<li><span class="text_import2">不可分享的</span>：自己機器上面運作的裝置檔案或者是與程序有關的socket檔案等，
+		由於僅與自身機器有關，所以當然就不適合分享給其他主機了。<br /><br /></li>
+
+		<li><span class="text_import2">不變的</span>：有些資料是不會經常變動的，跟隨著distribution而不變動。
+		例如函式庫、文件說明檔、系統管理員所管理的主機服務設定檔等等；<br /><br /></li>
+		<li><span class="text_import2">可變動的</span>：經常改變的資料，例如登錄檔、一般用戶可自行收受的新聞群組等。</li>
+		</ul>
+
+		<p>事實上，FHS針對目錄樹架構僅定義出三層目錄底下應該放置什麼資料而已，分別是底下這三個目錄的定義：</p>
+		<ul class="text_import2">
+		<li>/ (root, 根目錄)：與開機系統有關；</li>
+
+		<li>/usr (unix software resource)：與軟體安裝/執行有關；</li>
+		<li>/var (variable)：與系統運作過程有關。</li>
+		</ul>
+
+		<p>為什麼要定義出這三層目錄呢？其實是有意義的喔！每層目錄底下所應該要放置的目錄也都又特定的規定喔！
+		由於我們尚未介紹完整的Linux系統，所以底下的介紹你可能會看不懂！沒關係，先有個概念即可，
+		等到妳將基礎篇全部看完後，就重頭將基礎篇再看一遍！到時候你就會豁然開朗啦！^_^</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		這個 root 在 Linux 裡面的意義真的很多很多～多到讓人搞不懂那是啥玩意兒。
+		如果以『帳號』的角度來看，所謂的 root 指的是『系統管理員！』的身份，
+		如果以『目錄』的角度來看，所謂的 root 意即指的是根目錄，就是 / 啦～
+		要特別留意喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+		<a name="dir_fhs_root"></a>
+		<hr /><ul class="list1"><li class="text_import1">根目錄 (/) 的意義與內容：</li></ul>
+
+		<p>根目錄是整個系統最重要的一個目錄，因為不但所有的目錄都是由根目錄衍生出來的，
+		同時<span class="text_import2">根目錄也與開機/還原/系統修復等動作有關</span>。
+		由於系統開機時需要特定的開機軟體、核心檔案、開機所需程式、
+		函式庫等等檔案資料，若系統出現錯誤時，根目錄也必須要包含有能夠修復檔案系統的程式才行。
+		因為根目錄是這麼的重要，所以在FHS的要求方面，他希望根目錄不要放在非常大的分割槽內，
+		因為越大的分割槽妳會放入越多的資料，如此一來根目錄所在分割槽就可能會有較多發生錯誤的機會。</p>
+
+		<p>因此FHS標準建議：<span class="text_import2">根目錄(/)所在分割槽應該越小越好，
+		且應用程式所安裝的軟體最好不要與根目錄放在同一個分割槽內，保持根目錄越小越好。
+		如此不但效能較佳，根目錄所在的檔案系統也較不容易發生問題。</span></p>
+
+		<p>有鑑於上述的說明，因此FHS定義出根目錄(/)底下應該要有底下這些次目錄的存在才好：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="80">目錄</td><td>應放置檔案內容</td></tr>
+<tr><td>/bin</td><td>
+	系統有很多放置執行檔的目錄，但/bin比較特殊。因為<span 
+	class="text_import2">/bin放置的是在單人維護模式下還能夠被操作的指令。</span>
+	在/bin底下的指令可以被root與一般帳號所使用，主要有：cat, chmod, chown, date, mv, mkdir, cp, bash等等常用的指令。</td></tr>
+
+<tr><td>/boot</td><td>
+	這個目錄主要在放置開機會使用到的檔案，包括Linux核心檔案以及開機選單與開機所需設定檔等等。
+	<span class="text_import2">Linux kernel常用的檔名為：vmlinuz</span>，如果使用的是grub這個開機管理程式，
+	則還會存在/boot/grub/這個目錄喔！</td></tr>
+<tr><td>/dev</td><td>
+	在Linux系統上，任何裝置與周邊設備都是以檔案的型態存在於這個目錄當中的。
+	你只要透過存取這個目錄底下的某個檔案，就等於存取某個裝置囉～
+	比要重要的檔案有<span class="text_import2">/dev/null, /dev/zero, /dev/tty</span>, /dev/lp*, /dev/hd*, /dev/sd*等等</td></tr>
+<tr><td>/etc</td><td>
+	系統主要的設定檔幾乎都放置在這個目錄內，例如人員的帳號密碼檔、
+	各種服務的啟始檔等等。一般來說，這個目錄下的各檔案屬性是可以讓一般使用者查閱的，
+	但是只有root有權力修改。<span class="text_import2">FHS建議不要放置可執行檔(binary)在這個目錄中</span>喔。比較重要的檔案有：
+	<span class="text_import2">/etc/inittab, /etc/init.d/, /etc/modprobe.conf, 
+	/etc/X11/, /etc/fstab, /etc/sysconfig/</span> 等等。另外，其下重要的目錄有：
+	<ul><li><span class="text_import2">/etc/init.d/</span>：所有服務的預設啟動 script
+		都是放在這裡的，例如要啟動或者關閉 iptables 的話：『 /etc/init.d/iptables start』、『/etc/init.d/iptables 
+		stop』</li>
+
+	<li><span class="text_import2">/etc/xinetd.d/</span>：這就是所謂的super daemon管理的各項服務的設定檔目錄。</li>
+	<li><span class="text_import2">/etc/X11/</span>：與 X Window 有關的各種設定檔都在這裡，尤其是
+		xorg.conf 這個 X Server 的設定檔。</li></ul></td></tr>
+<tr><td>/home</td><td>
+	這是系統預設的使用者家目錄(home directory)。在你新增一個一般使用者帳號時，
+	預設的使用者家目錄都會規範到這裡來。比較重要的是，家目錄有兩種代號喔：<br />
+	<span class="text_import2">~</span>：代表目前這個使用者的家目錄，而 <br />
+
+	<span class="text_import2">~dmtsai</span> ：則代表 dmtsai 的家目錄！</td></tr>
+<tr><td>/lib</td><td>
+	系統的函式庫非常的多，而<span class="text_import2">/lib放置的則是在開機時會用到的函式庫，
+	以及在/bin或/sbin底下的指令會呼叫的函式庫而已</span>。
+	什麼是函式庫呢？妳可以將他想成是『外掛』，某些指令必須要有這些『外掛』才能夠順利完成程式的執行之意。
+	尤其重要的是<span class="text_import2">/lib/modules/</span>這個目錄，
+	因為該目錄會放置核心相關的模組(驅動程式)喔！</td></tr>
+<tr><td>/media</td><td>
+	media是『媒體』的英文，顧名思義，這個<span class="text_import2">/media底下放置的就是可移除的裝置啦！</span>
+
+	包括軟碟、光碟、DVD等等裝置都暫時掛載於此。常見的檔名有：/media/floppy, /media/cdrom等等。</td></tr>
+<tr><td>/mnt</td><td>
+	如果妳想要暫時掛載某些額外的裝置，一般建議妳可以放置到這個目錄中。
+	在古早時候，這個目錄的用途與/media相同啦！只是有了/media之後，這個目錄就用來暫時掛載用了。</td></tr>
+<tr><td>/opt</td><td>
+	這個是<span class="text_import2">給第三方協力軟體放置的目錄</span>。什麼是第三方協力軟體啊？
+	舉例來說，KDE這個桌面管理系統是一個獨立的計畫，不過他可以安裝到Linux系統中，因此KDE的軟體就建議放置到此目錄下了。
+	另外，如果妳想要自行安裝額外的軟體(非原本的distribution提供的)，那麼也能夠將你的軟體安裝到這裡來。
+	不過，以前的Linux系統中，我們還是習慣放置在/usr/local目錄下呢！</td></tr>
+<tr><td>/root</td><td>
+
+	系統管理員(root)的家目錄。之所以放在這裡，是因為如果進入單人維護模式而僅掛載根目錄時，
+	該目錄就能夠擁有root的家目錄，所以我們會希望root的家目錄與根目錄放置在同一個分割槽中。</td></tr>
+<tr><td>/sbin</td><td>
+	Linux有非常多指令是用來設定系統環境的，這些指令只有root才能夠利用來『設定』系統，其他使用者最多只能用來『查詢』而已。
+	<span class="text_import2">放在/sbin底下的為開機過程中所需要的，裡面包括了開機、修復、還原系統所需要的指令。</span>
+	至於某些伺服器軟體程式，一般則放置到/usr/sbin/當中。至於本機自行安裝的軟體所產生的系統執行檔(system binary)，
+	則放置到/usr/local/sbin/當中了。常見的指令包括：fdisk, fsck, ifconfig, init, mkfs等等。</td></tr>
+<tr><td>/srv</td><td>
+	srv可以視為『service』的縮寫，是一些網路服務啟動之後，這些服務所需要取用的資料目錄。
+	常見的服務例如WWW, FTP等等。舉例來說，WWW伺服器需要的網頁資料就可以放置在/srv/www/裡面。</td></tr>
+
+<tr><td>/tmp</td><td>
+	這是讓一般使用者或者是正在執行的程序暫時放置檔案的地方。
+	這個目錄是任何人都能夠存取的，所以你需要定期的清理一下。當然，重要資料不可放置在此目錄啊！
+	因為FHS甚至建議在開機時，應該要將/tmp下的資料都刪除唷！</td></tr>
+</table>
+
+		<p>事實上FHS針對根目錄所定義的標準就僅有上面的咚咚，不過我們的Linux底下還有許多目錄你也需要瞭解一下的。
+		底下是幾個在Linux當中也是非常重要的目錄喔：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="80">目錄</td><td>應放置檔案內容</td></tr>
+<tr><td>/lost+found</td><td>
+
+	這個目錄是使用標準的ext2/ext3檔案系統格式才會產生的一個目錄，目的在於當檔案系統發生錯誤時，
+	將一些遺失的片段放置到這個目錄下。這個目錄通常會在分割槽的最頂層存在，
+	例如你加裝一顆硬碟於/disk中，那在這個系統下就會自動產生一個這樣的目錄『/disk/lost+found』</td></tr>
+<tr><td>/proc</td><td>
+	這個目錄本身是一個『虛擬檔案系統(virtual filesystem)』喔！他放置的資料都是在記憶體當中，
+	例如系統核心、行程資訊(process)、周邊裝置的狀態及網路狀態等等。因為這個目錄下的資料都是在記憶體當中，
+	所以本身不佔任何硬碟空間啊！比較重要的檔案例如：<span class="text_import2">/proc/cpuinfo,
+	/proc/dma, /proc/interrupts, /proc/ioports, /proc/net/*</span> 等等。</td></tr>
+<tr><td>/sys</td><td>
+	這個目錄其實跟/proc非常類似，也是一個虛擬的檔案系統，主要也是記錄與核心相關的資訊。
+	包括目前已載入的核心模組與核心偵測到的硬體裝置資訊等等。這個目錄同樣不佔硬碟容量喔！</td></tr>
+</table>
+
+		<p>除了這些目錄的內容之外，另外要注意的是，因為根目錄與開機有關，開機過程中僅有根目錄會被掛載，
+		其他分割槽則是在開機完成之後才會持續的進行掛載的行為。就是因為如此，因此根目錄下與開機過程有關的目錄，
+		就不能夠與根目錄放到不同的分割槽去！那哪些目錄不可與根目錄分開呢？有底下這些：</p>
+		<ul class="text_import2">
+		<li>/etc：設定檔</li>
+		<li>/bin：重要執行檔</li>
+		<li>/dev：所需要的裝置檔案</li>
+		<li>/lib：執行檔所需的函式庫與核心所需的模組</li>
+
+		<li>/sbin：重要的系統執行檔</li>
+		</ul>
+		<p>這五個目錄千萬不可與根目錄分開在不同的分割槽！請背下來啊！
+		好了，談完了根目錄，接下來我們就來談談/usr以及/var囉！先看/usr裡面有些什麼東西：<br /><br /></p>
+
+		<a name="dir_fhs_usr"></a>
+		<hr /><ul class="list1"><li class="text_import1">/usr 的意義與內容：</li></ul>
+
+		<p>依據FHS的基本定義，/usr裡面放置的資料屬於可分享的與不可變動的(shareable, static)，
+		如果你知道如何透過網路進行分割槽的掛載(例如在伺服器篇會談到的<a href="/linux_server/0330nfs.php"
+		target="_blank">NFS伺服器</a>)，那麼/usr確實可以分享給區域網路內的其他主機來使用喔！</p>
+
+		<p>很多讀者都會誤會/usr為user的縮寫，其實<span class="text_import2">usr是Unix Software Resource的縮寫</span>，
+		也就是『Unix作業系統軟體資源』所放置的目錄，而不是使用者的資料啦！這點要注意。
+		FHS建議所有軟體開發者，應該將他們的資料合理的分別放置到這個目錄下的次目錄，而不要自行建立該軟體自己獨立的目錄。</p>
+
+		<p>因為是所有系統預設的軟體(distribution發佈者提供的軟體)都會放置到/usr底下，因此這個目錄有點類似Windows
+		系統的『C:\Windows\ + C:\Program files\』這兩個目錄的綜合體，系統剛安裝完畢時，這個目錄會佔用最多的硬碟容量。
+		一般來說，/usr的次目錄建議有底下這些：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="80">目錄</td><td>應放置檔案內容</td></tr>
+<tr><td>/usr/X11R6/</td><td>
+
+	為X Window System重要資料所放置的目錄，之所以取名為X11R6是因為最後的X版本為第11版，且該版的第6次釋出之意。</td></tr>
+<tr><td>/usr/bin/</td><td>
+	絕大部分的使用者可使用指令都放在這裡！請注意到他與/bin的不同之處。(是否與開機過程有關)</td></tr>
+<tr><td>/usr/include/</td><td>
+	c/c++等程式語言的檔頭(header)與包含檔(include)放置處，當我們以tarball方式 
+	(*.tar.gz 的方式安裝軟體)安裝某些資料時，會使用到裡頭的許多包含檔喔！</td></tr>
+<tr><td>/usr/lib/</td><td>
+	包含各應用軟體的函式庫、目標檔案(object file)，以及<span 
+	class="text_import2">不被一般使用者慣用的執行檔或腳本(script)</span>。
+	某些軟體會提供一些特殊的指令來進行伺服器的設定，這些指令也不會經常被系統管理員操作，
+	那就會被擺放到這個目錄下啦。要注意的是，如果你使用的是X86_64的Linux系統，
+	那可能會有/usr/lib64/目錄產生喔！</td></tr>
+
+<tr><td>/usr/local/</td><td>
+	系統管理員在本機自行安裝自己下載的軟體(非distribution預設提供者)，建議安裝到此目錄，
+	這樣會比較便於管理。舉例來說，你的distribution提供的軟體較舊，你想安裝較新的軟體但又不想移除舊版，
+	此時你可以將新版軟體安裝於/usr/local/目錄下，可與原先的舊版軟體有分別啦！
+	你可以自行到/usr/local去看看，該目錄下也是具有bin, etc, include, lib...的次目錄喔！</td></tr>
+<tr><td>/usr/sbin/</td><td>
+	非系統正常運作所需要的系統指令。最常見的就是某些網路伺服器軟體的服務指令(daemon)囉！</td></tr>
+<tr><td>/usr/share/</td><td>
+	放置共享文件的地方，在這個目錄下放置的資料幾乎是不分硬體架構均可讀取的資料，
+	因為幾乎都是文字檔案嘛！在此目錄下常見的還有這些次目錄：
+	<ul>
+	<li>/usr/share/man：線上說明文件</li>
+
+	<li>/usr/share/doc：軟體雜項的文件說明</li>
+	<li>/usr/share/zoneinfo：與時區有關的時區檔案</li></ul></td></tr>
+<tr><td>/usr/src/</td><td>
+	一般原始碼建議放置到這裡，src有source的意思。至於核心原始碼則建議放置到/usr/src/linux/目錄下。</td></tr>
+</table><br />
+
+		<a name="dir_fhs_var"></a>
+		<hr /><ul class="list1"><li class="text_import1">/var 的意義與內容：</li></ul>
+
+		<p>如果/usr是安裝時會佔用較大硬碟容量的目錄，那麼/var就是在系統運作後才會漸漸佔用硬碟容量的目錄。
+		因為/var目錄主要針對常態性變動的檔案，包括快取(cache)、登錄檔(log file)以及某些軟體運作所產生的檔案，
+		包括程序檔案(lock file, run file)，或者例如MySQL資料庫的檔案等等。常見的次目錄有：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="80">目錄</td><td>應放置檔案內容</td></tr>
+<tr><td>/var/cache/</td><td>
+	應用程式本身運作過程中會產生的一些暫存檔；</td></tr>
+<tr><td>/var/lib/</td><td>
+	程式本身執行的過程中，需要使用到的資料檔案放置的目錄。在此目錄下各自的軟體應該要有各自的目錄。
+	舉例來說，MySQL的資料庫放置到/var/lib/mysql/而rpm的資料庫則放到/var/lib/rpm去！</td></tr>
+
+<tr><td>/var/lock/</td><td>
+	某些裝置或者是檔案資源一次只能被一個應用程式所使用，如果同時有兩個程式使用該裝置時，
+	就可能產生一些錯誤的狀況，因此就得要將該裝置上鎖(lock)，以確保該裝置只會給單一軟體所使用。
+	舉例來說，燒錄機正在燒錄一塊光碟，你想一下，會不會有兩個人同時在使用一個燒錄機燒片？
+	如果兩個人同時燒錄，那片子寫入的是誰的資料？所以當第一個人在燒錄時該燒錄機就會被上鎖，
+	第二個人就得要該裝置被解除鎖定(就是前一個人用完了)才能夠繼續使用囉。</td></tr>
+<tr><td>/var/log/</td><td>
+	重要到不行！這是登錄檔放置的目錄！裡面比較重要的檔案如/var/log/messages, /var/log/wtmp(記錄登入者的資訊)等。</td></tr>
+<tr><td>/var/mail/</td><td>
+	放置個人電子郵件信箱的目錄，不過這個目錄也被放置到/var/spool/mail/目錄中！
+	通常這兩個目錄是互為連結檔啦！</td></tr>
+<tr><td>/var/run/</td><td>
+
+	某些程式或者是服務啟動後，會將他們的PID放置在這個目錄下喔！
+	至於PID的意義我們會在後續章節提到的。</td></tr>
+<tr><td>/var/spool/</td><td>
+	這個目錄通常放置一些佇列資料，<span class="text_import2">所謂的『佇列』就是排隊等待其他程式使用的資料啦！</span>
+	這些資料被使用後通常都會被刪除。舉例來說，系統收到新信會放置到/var/spool/mail/中，
+	但使用者收下該信件後該封信原則上就會被刪除。信件如果暫時寄不出去會被放到/var/spool/mqueue/中，
+	等到被送出後就被刪除。如果是工作排程資料(crontab)，就會被放置到/var/spool/cron/目錄中！</td></tr>
+</table>
+
+		<p>建議在你讀完整個基礎篇之後，可以挑戰FHS官方英文文件(參考本章<a 
+		href="#reference">參考資料</a>)，相信會讓你對於Linux作業系統的目錄有更深入的瞭解喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">針對FHS，各家distributions的異同</li></ul>
+
+		<p>由於FHS僅是定義出最上層(/)及次層(/usr, /var)的目錄內容應該要放置的檔案或目錄資料，
+		因此，在其他次目錄層級內，就可以隨開發者自行來配置了。舉例來說，CentOS的網路設定資料放在 
+		/etc/sysconfig/network-scripts/ 目錄下，但是SuSE則是將網路放置在
+		/etc/sysconfig/network/ 目錄下，目錄名稱可是不同的呢！不過只要記住大致的FHS標準，差異性其實有限啦！</p>
+	</div>
+
+	<hr /><a name="dir_tree"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">目錄樹(directory tree)</span><br />
+	<div class="block2">
+		<p>另外，在Linux底下，所有的檔案與目錄都是由根目錄開始的！那是所有目錄與檔案的源頭～
+		然後再一個一個的分支下來，有點像是樹枝狀啊～因此，我們也稱這種目錄配置方式為：『目錄樹(directory tree)』
+		這個目錄樹有什麼特性呢？他主要的特性有：</p>
+
+		<ul class="text_import2">
+		<li>目錄樹的啟始點為根目錄 (/, root)；</li>
+		<li>每一個目錄不止能使用本地端的 partition 的檔案系統，也可以使用網路上的 filesystem 。舉例來說，
+			可以利用 Network File System (NFS) 伺服器掛載某特定目錄等。</li>
+		<li>每一個檔案在此目錄樹中的檔名(包含完整路徑)都是獨一無二的。</li></ul>
+
+		<p>好，談完了FHS的標準之後，實際來看看CentOS在根目錄底下會有什麼樣子的資料吧！我們可以下達以下的指令來查詢：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -l /</span>
+drwxr-xr-x   2 root root  4096 Sep  5 12:34 bin
+drwxr-xr-x   4 root root  1024 Sep  4 18:06 boot
+drwxr-xr-x  12 root root  4320 Sep 22 12:10 dev
+drwxr-xr-x 105 root root 12288 Sep 22 12:10 etc
+drwxr-xr-x   4 root root  4096 Sep  5 14:08 home
+drwxr-xr-x  14 root root  4096 Sep  5 12:12 lib
+drwx------   2 root root 16384 Sep  5 01:49 lost+found
+drwxr-xr-x   2 root root  4096 Mar 30  2007 media
+drwxr-xr-x   2 root root     0 Sep 22 12:09 misc
+drwxr-xr-x   2 root root  4096 Mar 30  2007 mnt
+drwxr-xr-x   2 root root     0 Sep 22 12:09 net
+drwxr-xr-x   2 root root  4096 Mar 30  2007 opt
+dr-xr-xr-x  95 root root     0 Sep 22  2008 proc
+drwxr-x---   4 root root  4096 Sep  8 14:06 root
+drwxr-xr-x   2 root root 12288 Sep  5 12:33 sbin
+drwxr-xr-x   4 root root     0 Sep 22  2008 selinux
+drwxr-xr-x   2 root root  4096 Mar 30  2007 srv
+drwxr-xr-x  11 root root     0 Sep 22  2008 sys
+drwxrwxrwt   6 root root  4096 Sep 22 12:10 tmp
+drwxr-xr-x  14 root root  4096 Sep  4 18:00 usr
+drwxr-xr-x  26 root root  4096 Sep  4 18:19 var
+</pre></td></tr></table>
+
+		<p>上面表格中比較特殊的應該是/selinux這個目錄了，這個目錄的內容資料也是在記憶體中的資訊，
+		同樣的不會佔用任何的硬碟容量。這個/selinux是Secure Enhance Linux(SELinux)的執行目錄，
+		而SELinux是Linux核心的重要外掛功能之一，他可以用來作為細部權限的控管，主要針對程序(尤其是網路程序)的存取權限來限制。
+		關於SELinux我們會在後續的章節繼續做介紹的喔！</p>
+
+		<p>如果我們將整個目錄樹以圖示的方法來顯示，並且將較為重要的檔案資料列出來的話，那麼目錄樹架構有點像這樣：</p>
+
+		<center><img src="0210filepermission/directory_tree.gif" alt="目錄樹架構示意圖" 
+		title="目錄樹架構示意圖" border="1" /><br />
+
+		圖3.2.1、目錄樹架構示意圖<br /></center>
+
+		<p>鳥哥只有就各目錄進行簡單的解釋，看看就好，詳細的解釋請回到剛剛說明的表格中去查閱喔！
+		看完了FHS標準之後，現在回到<a 
+		href="/linux_basic/0130designlinux.php#beforeinstall_partition">第三章裡面去看看安裝前Linux規劃的分割情況</a>，
+		對於當初為何需要分割為這樣的情況，有點想法了嗎？^_^。根據FHS的定義，妳最好能夠將/var獨立出來，
+		這樣對於系統的資料還有一些安全性的保護呢！因為至少/var死掉時，你的根目錄還會活著嘛！
+		還能夠進入救援模式啊！</p>
+	</div>
+
+	<hr /><a name="dir_path"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">絕對路徑與相對路徑</span><br />
+	<div class="block2">
+
+		<p>除了需要特別注意的FHS目錄配置外，在檔名部分我們也要特別注意喔！因為<span 
+		class="text_import2">根據檔名寫法的不同，也可將所謂的路徑(path)定義為絕對路徑(absolute)與相對路徑(relative)</span>。
+		這兩種檔名/路徑的寫法依據是這樣的：</p>
+		<ul>
+		<li><span class="text_import2">絕對路徑</span>：由根目錄(/)開始寫起的檔名或目錄名稱，
+		例如 /home/dmtsai/.bashrc；</li>
+		<li><span class="text_import2">相對路徑</span>：相對於目前路徑的檔名寫法。
+		例如 ./home/dmtsai 或 ../../home/dmtsai/ 等等。反正開頭不是 / 就屬於相對路徑的寫法</li>
+		</ul>
+
+		<p>而你必須要瞭解，相對路徑是以『你當前所在路徑的相對位置』來表示的。舉例來說，你目前在 /home 這個目錄下，
+		如果想要進入 /var/log 這個目錄時，可以怎麼寫呢？</p>
+
+		<ol style="font-family: '細明體'">
+		<li>cd /var/log &nbsp; (absolute)</li>
+		<li>cd ../var/log (relative)</li></ol>
+
+		<p>因為你在 /home 底下，所以要回到上一層 (../) 之後，才能繼續往 /var 來移動的！
+		特別注意這兩個特殊的目錄：</p>
+
+		<ul style="font-family:'細明體'; color: #000088">
+		<li> . &nbsp;：代表當前的目錄，也可以使用 ./ 來表示；</li>
+		<li>.. ：代表上一層目錄，也可以 ../ 來代表。</li></ul>
+
+		<p>這個 . 與 .. 目錄概念是很重要的，你常常會看到 cd .. 或 ./command 之類的指令下達方式，
+		就是代表上一層與目前所在目錄的工作狀態喔！很重要的吶！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+
+例題：<div class="block2">
+如何先進入/var/spool/mail/目錄，再進入到/var/spool/cron/目錄內？
+</div>
+答：<div class="block2">
+由於/var/spool/mail與/var/spool/cron是同樣在/var/spool/目錄中，因此最簡單的指令下達方法為：
+<ol style="font-family:'細明體'">
+	<li>cd /var/spool/mail</li>
+	<li>cd ../cron</li>
+</ol>
+如此就不需要在由根目錄開始寫起了。這個相對路徑是非常有幫助的！尤其對於某些軟體開發商來說。
+一般來說，軟體開發商會將資料放置到/usr/local/裡面的各相對目錄，妳可以參考圖3.2.1的相對位置。
+但如果使用者想要安裝到不同目錄呢？就得要使用相對路徑囉！^_^
+</div>
+
+</td></tr></table><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+網路文件常常提到類似『./run.sh』之類的資料，這個指令的意義為何？
+</div>
+答：<div class="block2">
+由於指令的執行需要變數(bash章節才會提到)的支援，若你的執行檔放置在本目錄，並且本目錄並非正規的執行檔目錄(/bin, 
+/usr/bin等為正規)，此時要執行指令就得要嚴格指定該執行檔。『./』代表『本目錄』的意思，所以『./run.sh』代表『執行本目錄下，
+名為run.sh的檔案』囉！
+</div>
+</td></tr></table>
+	</div>
+
+	<hr /><a name="dir_lsb"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">CentOS 的觀察</span><br />
+
+	<div class="block2">
+		<p>某些時刻你可能想要知道你的 distribution 使用的是那個 Linux 標準 (Linux Standard Base)，
+		而且我們也知道 distribution 使用的都是 Linux 的核心！那你如何觀察這些基本的資訊呢？
+		可以使用如下的指令來觀察看看啦：</p>
+
+<a name="lsb_release"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">uname -r</span>
+2.6.18-128.el5 <span class="term_note">&lt;==可以察看實際的核心版本</span>
+[root@www ~]# <span class="term_command">lsb_release -a</span>
+
+LSB Version:    :core-3.1-amd64:core-3.1-ia32:core-3.1-noarch:graphics-3.1-amd64:
+graphics-3.1-ia32:graphics-3.1-noarch      <span class="term_note">&lt;==LSB 的版本</span>
+Distributor ID: CentOS
+Description:    CentOS release 5.3 (Final) <span class="term_note">&lt;==distribution 的版本</span>
+Release:        5.3
+Codename:       Final
+</pre></td></tr></table>
+
+
+
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+
+<div class="block1">
+<ul class="text_import2">
+	<li>Linux的每個檔案中，依據權限分為使用者、群組與其他人三種身份；</li>
+	<li>群組最有用的功能之一，就是當你在團隊開發資源的時候，且每個帳號都可以有多個群組的支援；</li>
+	<li>利用ls -l顯示的檔案屬性中，第一個欄位是檔案的權限，共有十個位元，第一個位元是檔案類型，
+		接下來三個為一組共三組，為使用者、群組、其他人的權限，權限有r,w,x三種；</li>
+	<li>如果檔名之前多一個『 . 』，則代表這個檔案為『隱藏檔』；</li>
+	<li>更改檔案的群組支援可用chgrp，修改檔案的擁有者可用chown，修改檔案的權限可用chmod</li>
+
+	<li>chmod修改權限的方法有兩種，分別是符號法與數字法，數字法中r,w,x分數為4,2,1；</li>
+	<li>對檔案來講，權限的效能為：
+		<ul>
+		<li>r：可讀取此一檔案的實際內容，如讀取文字檔的文字內容等；</li>
+		<li>w：可以編輯、新增或者是修改該檔案的內容(但不含刪除該檔案)；</li>
+		<li>x：該檔案具有可以被系統執行的權限。</li></ul></li>
+	<li>對目錄來說，權限的效能為：
+		<ul>
+
+		<li>r (read contents in directory)</li>
+		<li>w (modify contents of directory)</li>
+		<li>x (access directory)</li></ul></li>
+	<li>要開放目錄給任何人瀏覽時，應該至少也要給予r及x的權限，但w權限不可隨便給；</li>
+	<li>Linux檔名的限制為：單一檔案或目錄的最大容許檔名為 255 個字元；包含完整路徑名稱及目錄 (/) 之完整檔名為 4096 個字元</li>
+	<li>根據FHS的官方文件指出， 他們的主要目的是希望讓使用者可以瞭解到已安裝軟體通常放置於那個目錄下</li>
+
+	<li>FHS訂定出來的四種目錄特色為：shareable, unshareable, static, variable等四類；</li>
+	<li>FHS所定義的三層主目錄為：/, /var, /usr三層而已；</li>
+	<li>有五個目錄不可與根目錄放在不同的partition，分別為/etc, /bin, /lib, /dev, /sbin五個。</li>
+</ul>
+</div>
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章練習</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+
+	<li>請說明/bin與/usr/bin目錄所放置的執行檔有何不同之處？
+	<div class="blockex">
+		/bin主要放置在開機時，以及進入單人維護模式後還能夠被使用的指令，至於/usr/bin則是大部分軟體提供的指令放置處。
+	</div></li>
+
+	<li>請說明/bin與/sbin目錄所放置的執行檔有何不同之處？
+	<div class="blockex">
+		/bin放置的是一般使用者慣用的指令，至於/sbin則是系統管理員才會使用到的指令。不過/bin與/sbin都與開機、單人維護模式有關。
+		更多的執行檔會被放置到/usr/bin及/usr/sbin底下。
+	</div></li>
+
+	<li>哪幾個目錄不能夠與根目錄(/)放置到不同的partition中？並請說明該目錄所放置的資料為何？
+	<div class="blockex">
+
+		/etc(設定檔), /bin(一般身份可用執行檔), /dev(裝置檔案), /lib(執行檔的函式庫或核心模組等), 
+		/sbin(系統管理員可用指令)
+	</div></li>
+
+	<li>試說明為何根目錄要小一點比較好？另外在分割時，為什麼/home, /usr, /var, /tmp最好與根目錄放到不同的分割槽？
+		試說明可能的原因為何(由目錄放置資料的內容談起)？
+	<div class="blockex">
+		根據FHS的說明，越小的/可以放置的較為集中且讀取頻率較不頻繁，可避免較多的錯誤。
+		至於/home(使用者家目錄), /usr(軟體資源), /var(變動幅度較大的資料), /tmp(系統暫存，資料莫名)中，
+		因為資料量較大或者是讀取頻率較高，或者是不明的使用情況較多，因此建議不要與根目錄放在一起，
+		也會有助於系統安全。
+	</div></li>
+
+	<li>早期的 Unix 系統檔名最多允許 14 個字元，而新的 Unix 與 Linux 系統中，檔名最多可以容許幾個字元？
+	<div class="blockex">
+		由於使用Ext2/Ext3檔案系統，單一檔名可達 255 字元，完整檔名 (包含路徑) 可達 4096 個字元
+	</div></li>
+
+	<li>當一個一般檔案權限為 -rwxrwxrwx 則表示這個檔案的意義為？
+	<div class="blockex">
+		任何人皆可讀取、修改或編輯、可以執行，但不一定能刪除。
+	</div></li>
+
+	<li>我需要將一個檔案的權限改為 -rwxr-xr-- 請問該如何下達指令？
+	<div class="blockex">
+		chmod 754 filename 或 chmod u=rwx,g=rx,o=r filename
+	</div></li>
+
+	<li>若我需要更改一個檔案的擁有者與群組，該用什麼指令？
+	<div class="blockex">
+
+		chown, chgrp
+	</div></li>
+
+	<li>Linux 傳統的檔案系統為何？此外，常用的 Journaling 檔案格式有哪些？
+	<div class="blockex">
+		傳統檔案格式為：ext2,<br />Journaling 有 ext3 及 Reiserfs 等
+	</div></li>
+
+	<li>請問底下的目錄與主要放置什麼資料：<br />
+		/etc/, /etc/init.d, /boot, /usr/bin, /bin, /usr/sbin, /sbin, /dev, /var/log
+	<div class="blockex"><ul>
+
+		<li>/etc/：幾乎系統的所有設定檔案均在此，尤其 passwd,shadow</li>
+		<li>/etc/init.d：系統開機的時候載入服務的 scripts 的擺放地點</li>
+		<li>/boot：開機設定檔，也是預設擺放核心 vmlinuz 的地方</li>
+		<li>/usr/bin, /bin：一般執行檔擺放的地方</li>
+		<li>/usr/sbin, /sbin：系統管理員常用指令集</li>
+		<li>/dev：擺放所有系統裝置檔案的目錄</li>
+
+		<li>/var/log：擺放系統登錄檔案的地方</li></ul>
+	</div></li>
+
+	<li>若一個檔案的檔名開頭為『 . 』，例如 .bashrc 這個檔案，代表什麼？另外，如何顯示出這個檔名與他的相關屬性？
+	<div class="blockex">
+		有『 . 』為開頭的為隱藏檔，需要使用 ls -a 這個
+		-a 的選項才能顯示出隱藏檔案的內容，而使用 ls -al 才能顯示出屬性。
+	</div></li>
+</ul>
+</div>
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+
+<div class="block1">
+<ul>
+	<li>FHS的標準官方文件：<a href="http://proton.pathname.com/fhs/" 
+		target="_blank">http://proton.pathname.com/fhs/</a>，非常值得參考的文獻！</li>
+	<li>關於 Journaling 日誌式文章的相關說明 <a href="http://www.linuxplanet.com/linuxplanet/reports/3726/1/"
+		target="_blank">http://www.linuxplanet.com/linuxplanet/reports/3726/1/</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/07/18：第一次完成<br />
+
+2003/02/06：重新編排與加入FAQ<br />
+2005/06/28：將舊的資料移動到 <a href="0210filepermission/0210filepermission.php">這裡</a> <br />
+2005/07/15：呼呼～終於改完成了～這次的修訂當中，加入了 FHS 的說明，希望大家能夠比較清楚 Linux 的目錄配置！<br />
+2005/08/05：修訂了最大檔名字元，應該是 255 才對！另外，加入了『檔名限制』的部分！<br />
+2005/09/03：修訂了目錄權限相關的說明，將原本僅具有 r 卻寫成無法使用 ls 瀏覽的說明資料移除！<br />
+2008/09/08：舊的針對FC4所寫的文章移動到<a href="0210filepermission/0210filepermission-fc4.php">此處</a><br />
+2008/09/20：針對FHS加強說明了一下，分為/, /usr, /var三層來個別說明！並非抄襲官網的資料而已喔！<br />
+
+2008/09/23：經過一場大感冒，停工了四、五天，終於還是給他完工了！^_^<br />
+2008/10/21：原本的第四小節 Linux 的檔案系統，因為與第八章重複性太高，將他移除了！<br />
+2009/08/01：加入了 lsb_release 的相關說明！<br />
+2009/08/18：調整一下顯示的情況，使得更易讀～<br />
+</span>
+
+
+<hr />
+<br /><br />
+    </td>
+  <!-- InstanceEndEditable -->
+  
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+<!-- InstanceEnd --></html>

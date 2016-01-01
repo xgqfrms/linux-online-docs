@@ -1,0 +1,1537 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 連上 Internet 的方法與步驟</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0130internet_connect.htm">
+    <span class="text_head0">連上 <span class="text_head_en"> Internet </span></span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0130internet_connect.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/07/24</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	呼呼！終於要來到修改 Linux 網路參數的章節了！在前面的 <a href="0110network_basic.htm">網路基礎</a>
+	章節內我們知道了主機要連上 Internet 需要一些正確的網路參數設定，這些設定在
+	Windows 系統上面的修改則在 <a href="0120intranet.htm">區域網路的架構</a>
+	裡面進行了說明。在這一章當中，我們則主要以固定 IP 的設定方式來修改 Linux
+	的網路參數，同時，也會介紹如何使用 ADSL 的撥接方式來上網，此外，因為 Cable
+	modem 使用者也不在少數，所以我們也說明一下 Cable modem 在 Linux 下的設定方式喔！
+	最後，由於筆記型電腦使用者大增，由於筆記型電腦常使用無線網路，因此本文也加入了無線網路的連線介紹啊！
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#note">Linux 連上 Internet 前的注意事項</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#note_nic">Linux 的網路卡</a><br />
+	　　1.2 <a href="#note_compile">編譯網路卡驅動程式</a><br />
+	　　1.3 <a href="#note_files">Linux 網路相關設定檔案</a><br />
+	</span>
+2. <a href="#connect">連上 Internet 的方法</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#connect_fix_IP">固定 IP 的上網方式 (適用學術網路、ADSL 固定制)</a><br />
+	　　2.2 <a href="#connect_auto">可自動取得 IP 的環境 (適用 Cable modem、IP 分享器的環境)</a><br />
+	　　2.3 <a href="#connect_adsl">ADSL 撥接上網 (適用 ADSL 撥接)</a><br />
+	</span>
+3. <a href="#wireless">無線網路--以筆記型電腦為例</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#wireless_hw">無線網路所需要的硬體</a><br />
+	　　3.2 <a href="#wireless_security">網路安全方面</a><br />
+	　　3.3 <a href="#wireless_connect">開始連線</a><br />
+	</span>
+4. <a href="#problem">常見問題說明</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#problem_hosts">內部網域使用某些連線服務(如 FTP, POP3)所遇到的連線延遲問題</a><br />
+	　　4.2 <a href="#problem_dns">網址列無法解析問題</a><br />
+	　　4.3 <a href="#problem_route">預設路由的問題</a><br />
+	</span>
+5. <a href="#review">重點回顧</a><br />
+6. <a href="#ex">課後練習</a><br />
+7. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+8. <a href="http://phorum.vbird.org/viewtopic.htm?p=112420"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=112420</a><br />
+</span>
+
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="note"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux 連上 Internet 前的注意事項：</span><br />
+<div class=block1>
+	要連上 Internet 時，由前幾章的資料來說，我們知道需要設定一組網路參數，
+	包括 IP, netmask, network, broadcast, gateway 以及 DNS 主機的 IP 等等，
+	那我們也知道，其實整個主機最重要的設定，就是『先要驅動網路卡』，否則主機連網路卡都捉不到時，
+	怎麼設定 IP 參數都是沒有用的，您說是吧！所以底下我們就來談一談，
+	您要如何確定網路卡已經被捉到，而 Linux 主機的網路參數又該如何設定？<br /><br />
+
+	<hr /><a NAME="note_nic"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 的網路卡</span><br />
+	<div class=block2>
+		在 Linux 裡面的各項裝置幾乎都是以檔案名稱來取代的，例如 /dev/hda 代表 IDE1 介面的第一個 master 硬碟等等。
+		不過，<span class=text_import2>網路卡的代號 (Network Interface Card, NIC) 卻是以模組對應裝置名稱來代替的，
+		而預設的網路卡代號為 eth0</span> ，第二張網路卡則為 eth1 ，以此類推。<br /><br />
+
+		我們知道網路卡其實是硬體，所以當然需要核心支援才能驅動他。
+		一般來說，目前新版的 Linux distributions 預設可以支援的網路卡晶片組數量已經很完備了，
+		包括大廠的 3COM, Intel 以及初階的 RealTek, D-Link 等網路卡晶片都已經被支援，
+		所以使用者可以很輕易的設定好他們的網路卡。不過，萬一您的網路卡晶片組開發商不願意釋出開放源 
+		(Open Source) 的硬體驅動程式，或者是該網路卡太新了，使得 Linux 核心來不及支援時，
+		那麼您就得要透過：<br />
+		<ul><span class=text_import2>
+		<li><a href="http://linux.vbird.org/linux_basic/0540kernel.htm">重新編譯核心</a>
+		<li><a href="http://linux.vbird.org/linux_basic/0540kernel.htm#module">編譯網路卡的核心模組</a>
+		</span></ul>
+		好讓核心可以支援網路卡這塊硬體啦！但是，重編核心或編譯網路卡核心模組都不是簡單的工作，
+		而且有時原始碼又可能無法在每部主機上面編譯成功，所以萬一您的網路卡真的不被預設的 Linux 
+		網路晶片所支援，那麼鳥哥真的建議直接換一塊被 Linux 支援的網路卡吧，例如很便宜的螃蟹卡！
+		免得花了太多時間在硬體確認上面，划不來的！ ^_^<br /><br />
+
+		 如果您是照鳥哥推薦的，使用 RLT 8139 晶片 ( RealTek 8139 ) 的網路卡 ( 就是螃蟹卡 ) 
+		，那您應該在安裝 Linux 的時候就已經捉到網路卡了，那真是恭喜您啦！
+		因為您的網路卡應該已經可以正常的工作囉！那如果在安裝的時候並沒有捉到網路卡呢？
+		該如何是好？那也不用擔心，因為您也可以事後才安裝網路卡的驅動程式呀！不過，因為 
+		Linux 並不像 Windows 是那樣的隨插即用，所以需要動一些手術的！ <br /><br />
+
+		另外，其實有的時候 Linux 的預設網路卡模組可能無法完全 100%  的發揮網路卡的功能的，
+		所以，有的時候您還是得必須要自行編譯網路卡的模組才行喔！當然，
+		那個網路卡的模組就得要自行由網路卡開發商的官方網站下載了！不過，如果您的網路卡是自行編譯安裝的，
+		<span class=text_import2>那麼每次重新安裝其他版本的核心時，您都必須要自行重新手動編譯過該模組</span>。
+		因為模組與核心是有相關性的啊！<br /><br />
+
+		好了，假設您的網路卡已經在主機上面，不論是內建的還是自行安插到 PCI 或 PCI-x 或 PCI-E 的介面上，
+		那麼如何確認該網路卡有被核心捉到呢？很簡單啊！就利用 dmesg 來查閱即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>dmesg | grep -in eth</span>
+117:divert: not allocating divert_blk for non-ethernet device lo
+<span class=term_write>171:divert: allocating divert_blk for eth0</span>
+227:divert: not allocating divert_blk for non-ethernet device sit0
+228:eth0: no IPv6 routers present
+
+[root@linux ~]# <span class=term_command>dmesg | cat -n | less</span>
+<span class=term_say>#...前面省略...</span>
+   169  3c59x: Donald Becker and others. www.scyld.com/network/vortex.html
+   170  0000:00:08.0: 3Com PCI 3c905C Tornado at 0xe800. Vers LK1.1.19
+   171  divert: allocating divert_blk for eth0
+<span class=term_say>#...後面省略...</span>
+</pre></td></tr></table>
+
+		透過這個 dmesg 可以發現系統在開機時確實有捉到網路卡，然後透過搜尋行號，就能夠找到該網路卡的驅動模組；
+		當然，您也可以透過 lspci 來查閱網路卡的相關模組吶！
+		另外，您也可以透過這個 dmesg 瞭解到該張網路卡的代號喔！舉例來說，鳥哥上面這個訊息就顯示：
+		<span class=text_import2>我的這張網路卡代號是 eth0 </span><br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>lspci</span>
+00:08.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 74)
+</pre></td></tr></table>
+
+		看到了吧？鳥哥的某一部主機就是使用 3Com 的網路卡啊！Linux 系統本身就內建了 3c905C 這個驅動程式，
+		所以鳥哥根本不需要自行安裝驅動程式吶！真是高興！ ^_^
+		那麼這個 3c905 的驅動程式放在哪裡啊？就是核心模組啊！在這個地方：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /lib/modules/`uname -r`/kernel/drivers/net</span>
+[root@linux net]# <span class=term_command>modinfo 3c59x.ko</span>
+filename:       3c59x.ko
+author:         Donald Becker &lt;becker@scyld.com&gt;
+description:    3Com 3c59x/3c9xx ethernet driver LK1.1.19 10 Nov 2002
+license:        GPL
+version:        LK1.1.19 DBFD1C112761D573276AC45
+parm:           debug:3c59x debug level (0-6)
+<span class=term_say>.....以下省略.....</span>
+</pre></td></tr></table>
+
+		你可以先以 lsmod 查詢各個相關的模組後，再到這個地方來檢查，或者是直接以上面這個目錄下的檔案，
+		配合 lsmod 所顯示出來的各個模組名稱相對應，以取得各個網路卡的模組名稱說！這樣瞭解嗎？
+		OK 那你如何知道你的網路卡卡號呢？很簡單啊！不管有沒有啟動你的網路卡，都可以使用：
+		『<span class=text_import2> ifconfig eth0 </span>』來查詢你的網卡卡號。
+		如果網路卡已經安裝好了，那麼請前往<a href="#connect_fix_IP">固定 IP 上網方式</a>去設定
+		ifcfg-eth0 這個檔案 (如果是新增的網卡，這個檔案可能不會存在喔！，需要自己建立)。
+		好了，萬一你的網路卡無法被驅動，不過好在官方有提供相關的原始碼時，
+		您就可以自行編譯啦！<br /><br />
+	</div>
+
+
+	<hr /><a NAME="note_compile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">編譯網路卡驅動程式</span><br />
+	<div class=block2>
+		如果你買到的網路卡實在太新，導致 Linux 預設核心不支援，
+		或者您實在是很想要一些官方網站提供的驅動程式的新功能，
+		那實在就得要自行編譯核心啦！
+		事實上，如果您要新添購硬體時，請先查閱一下硬體包裝上面是否提及支援 Linux 的字樣，
+		因為有些硬體廠商在推出新硬體時，常常會漏掉 Linux 驅動程式的撰寫，
+		如果包裝上面有提到支援的話，那麼至少您會獲得官方網站所提供的驅動程式原始碼啊！ ^_^<br /><br />
+
+		鳥哥以我們實驗室內一部 P-4 內建 Gigabit 乙太網路卡的 CentOS Linux 系統來作介紹，
+		這部主機的內建乙太網路使用的是 <a href="http://www.marvell.com" 
+		target="_blank">Marvell</a> 的 88E8001 晶片，鳥哥到他們網站上面找到了一個 2006/04 
+		釋出的最新驅動程式來安裝，該原始的檔案名稱為 install-8_40.tar.bz2 ，看到 .tar.bz2 
+		就應該知道他是屬於原始碼，雖然鳥哥這部主機已經正確的捉到網路卡了，
+		不過，我們還是來更新一下讓這個模組成為最新的驅動程式吧！ ^_^<br /><br />
+
+		另外，記得啊，要編譯就得要有 gcc, make, kernel-devel 等套件才行喔！不要說你忘了！
+		趕緊回到<a href="../linux_basic/0520source_code_and_tarball.htm">基礎篇</a>裡面看看先！
+		假設您已經：
+		<ul><span class=text_import2><li>前往官方網站取得驅動程式的原始碼了；</li>
+		<li>已經在您的系統上面安裝了 gcc, make, kernel-devel 等套件；</li></span></ul>
+		那接下來的編譯步驟是這樣的：<br />
+
+		<ol>
+		<li><span class=text_import1>解壓縮與編譯：</span><br /><br />
+		假設您下載下來的檔案放置在 /root 內的話，那麼使用 root 的身份進行如下工作吧：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /usr/src</span>
+[root@linux src]# <span class=term_command>ln -s kernels/2.6.9-34.0.1.EL-smp-i686/ linux</span>
+[root@linux src]# <span class=term_command>cd ~</span>
+</pre></td></tr></table>
+
+		上面這個步驟很重要！因為驅動程式的模組都會需要找到核心的包含檔案與相關函式庫，
+		而一般來說， Linux kernel 2.6 以後的版本，則都會預設將核心原始碼放在
+		<span class=text_import2>/usr/src/kernels/(version)</span> 這個目錄內，但一般程式卻是假設核心原始碼在 
+		<span class=text_import2>/usr/src/linux</span>，因此我們必須要先作個手術，將原始碼與 
+		/usr/src/linux 作個連結啊！請注意，那個原始碼請依照您的核心版本與 Linux distribution 之公布為準。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>tar -jxvf install-8_40.tar.bz2</span>
+[root@linux ~]# <span class=term_command>cd DriverInstall</span>
+<span class=term_say># 此時在該目錄下有個 README 的檔案，記得看一看，這個檔案內會說明很多資訊，
+# 包括如何編譯，以及這個模組所支援的晶片組哩！</span>
+[root@linux DriverInstall]# <span class=term_command>./install.sh</span>
+</pre></td></tr></table>
+
+		這個模組寫的比較人性化，因為他有給予一個可直接安裝測試的 script，
+		所以我們可以直接執行這個指令即可，很單純吧！ ^_^ 。不過記得，
+		這些動作請在主機前進行。因為這個 script 會主動的重新啟動網路卡喔！
+		所以如果你是在網路上連線到此主機上面動作的話，嘿嘿！那可是會失敗的！
+		這個指令會有很多的選項在裡面，請依序選擇：
+		<ul><li>1) installation<li>y(install)</ul>
+		然後這個 script 便會主動的進行編譯、模組卸除以及模組安裝到
+		<span class=text_import2>/lib/modules/`uname -r`/kernel/drivers/net</span> 這個目錄中，
+		並且嘗試載入這個模組，以及啟動網路卡喔！如果一切無誤，您就會看到如下畫面：<br />
+
+<table class="term"><tr><td class="term"><pre>
+ eth0: network connection up using port A
+     speed:           1000
+     autonegotiation: yes
+     duplex mode:     full
+     flowctrl:        symmetric
+     role:            slave
+     irq moderation:  disabled
+     scatter-gather:  enabled
+     tx-checksum:     enabled
+     rx-checksum:     enabled
+     rx-polling:      enabled
+</pre></td></tr></table>
+
+		這樣就算安裝妥當囉！很簡單吧！ ^_^<br /><br /></li>
+
+		<li><span class=text_import1>模組之測試與處理</span><br /><br />
+		事實上，剛剛我們那個模組其實已經主動的載入到我們的系統當中了，
+		不過，如果您所取得的原始碼並沒有附上這麼一支人性化的 script 的話，那麼您就得要自行進行底下的動作了。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ls -l</span>
+drwxr-xr-x  2 root root   4096 Jul 20 11:57 sk98lin
+[root@linux ~]# <span class=term_command>ls -l sk98lin</span>
+-rw-r--r--  1 root root 2666344 Jul 20 11:57 sk98lin.ko
+<span class=term_say># 上面那個目錄假設是我編譯出來的模組，裡面還會有一個檔案喔！那個檔案就是
+# sk98lin.ko ，要注意，新的 2.6 版的核心模組副檔名都變成 .ko 的格式了！</span>
+
+[root@linux ~]# <span class=term_command>cp -a sk98lin /lib/modules/`uname -r`/kernel/drivers/net</span>
+<span class=term_say># 注意啊！整個網路卡驅動模組就是放在上面的目錄中，不要寫錯了。</span>
+
+[root@linux ~]# <span class=term_command>depmod -a</span>
+<span class=term_say># 將所有的模組進行重新分析的工作！建立關連檔案</span>
+
+[root@linux ~]# <span class=term_command>lsmod | grep 'sk98lin'</span>
+<span class=term_say># 先確認『sk98lin』這個模組不存在，然後就可以開始測試：</span>
+
+[root@linux ~]# <span class=term_command>modprobe sk98lin</span>
+[root@linux ~]# <span class=term_command>lsmod | grep 'sk98lin'</span>
+<span class=term_say># 如果有相關的字樣跑出來時，就表示這個模組可以順利的被載入啦！</span>
+</pre></td></tr></table>
+
+		如果可以順利載入的話，恭喜您，您所自行編譯的驅動程式已經搞定啦！
+		不過，當有新版本的核心釋出時，您也安裝了新版的核心，那麼上面的動作您就得要再進行一次，
+		為什麼呢？想一想，剛剛您將編譯出來的驅動程式模組放在哪裡？
+		然後編譯的時候參考的核心原始碼又是在哪裡？那您就會曉得『為什麼』了！ ^_^<br /><br /></li>
+
+		<li><span class=text_import1>設定開機自動啟動網路卡模組</span><br /><br />
+		我們前面提到，Linux 的網路卡其實僅是一個代號，並不是類似硬碟的裝置檔案，所以，
+		我們必須要指定這個代號與模組的對應才行，在 CentOS (Red Hat 系統) 的對應是使用 /etc/modprobe.conf 
+		，至於舊版的 2.4 核心中，則使用的是 /etc/modules.conf ，注意一下您的核心版本。
+		鳥哥的 CentOS 4.3 使用的是 /etc/modprobe.conf ，所以我就得這麼做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/modprobe.conf</span>
+<span class=term_say># 修改或增加底下這一行吧！</span>
+<span class=term_write>alias eth0 sk98lin</span>
+
+[root@linux ~]# <span class=term_command>sync; reboot</span>
+</pre></td></tr></table>
+
+		為了測試一下剛剛的設定是否會生效，通常鳥哥都會嘗試一次重新開機，
+		然後開機完成之後觀察一下是否有正確的啟動網路卡，並觀察一下模組載入的情況，
+		如果一切都順利，那就太完美了！<br /><br />
+
+		<li><span class=text_import1>嘗試設定 IP </span><br /><br />
+		等到一切就緒之後，總得試看看這樣的網路卡模組是否可以順利的設定好 IP 吧？
+		所以我們先手動給他一個私有 IP 看看先：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig eth0 192.168.1.100</span>
+[root@linux ~]# <span class=term_command>ifconfig</span>
+eth0      Link encap:Ethernet  HWaddr 00:01:BA:77:16:52
+          inet addr:192.168.1.100  Bcast:192.168.1.255  Mask:255.255.255.0
+<span class=term_say>.....以下省略.....</span>
+</pre></td></tr></table>
+
+		嘿嘿！真的設定妥當哩！然後利用 ping 這個指令去 ping 一下網域內的其他電腦，
+		看看能不能有回應，就知道您的網路卡是否 OK 的啦！通常是沒有問題的啦！<br />
+		</ol>
+	</div>
+
+
+	<hr /><a NAME="note_files"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 網路相關設定檔案</span><br />
+	<div class=block2>
+		要開始玩 Linux 網路之前，<span class=text_import2>請您務必瞭解 Linux 
+		網路相關設定檔案放置的目錄與檔名</span>！這真的很重要！因為在 Linux 底下修改 IP 
+		只要動到一個檔案即可，修改主機名稱也只要一個檔案，所以只要將這些檔案名稱記起來，呵呵！
+		未來在進行網路的測試與修訂時，真的會事半功倍～完全不需要什麼 linuxconf, webmin 等額外工具的幫助，
+		真的很簡單啦！底下趕緊來說一說與 Linux 網路最相關的幾個檔案檔名與他的用途！<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/sysconfig/network</span><br />
+		這個檔案主要的功能在於設定『<span class=text_import2>主機名稱( HOSTNAME )與啟動 Network 
+		與否</span>』！一般來說，如果您變動過這個檔案內的主機名稱時，請務必重新開機  (reboot)，
+		因為這樣才會讓系統上面所有的程式都使用最新設定的主機名稱喔！(<span class=text_vbird>
+		在 SuSEL 上面，主機名稱是記錄在 /etc/HOSTNAME 裡面的！</span>)<br /><br /></li>
+
+		<li><span class=text_import1>/etc/sysconfig/network-scrips/ifcfg-eth0</span><br />
+		這個檔案的內容即是設定網路卡參數的檔案啦！裡面可以設定『<span class=text_import2>network, 
+		IP, netmask, broadcast, gateway, 開機時的 IP 取得方式( DHCP, static ), 
+		是否在開機的時候啟動</span>』等等。至於 ifcfg-eth0 指的是第一塊網路卡，而第二塊網路卡為 ifcfg-eth1 
+		以此類推。(<span class=text_vbird>在 SuSE 上面則是使用 /etc/sysconfig/network/ifcfg-eth0 </span>)。
+		<br /><br /></li>
+
+		<li><span class=text_import1>/etc/modprobe.conf</span><br />
+		如果硬體要能動作，當然要核心有支援才行！同時，我們也可以利用外掛的核心模組
+		(可以將他想成是驅動程式) 來驅動硬體，而開機時用來設定載入核心模組的檔案就是 modprobe.conf 
+		啦。一般來說，目前的 distributions 通常使用模組的方式來編譯網路卡驅動程式，所以，
+		當您安裝完畢後，您的網路卡與模組對應通常已經寫到這個檔案當中囉！<br /><br /></li>
+
+		<li><span class=text_import1>/etc/resolv.conf</span><br />
+		我們在<a href="0110network_basic">網路基礎</a>裡面稍微提到的 DNS 功能是什麼？對啦，
+		就是進行主機名稱與 IP 的對應！而 resolv.conf 就是設定 DNS IP (名稱解析伺服器) 的檔案，
+		常常有人提到『咦！我已經可以 ping 到外部電腦的公共 IP 了，為何輸入網址卻無法連線？』
+		通常發生的錯誤就是這個檔案裡面的設定不正確啦！請注意！
+		通常這個檔案可以輸入中華電信的 DNS ( 168.95.1.1 )！<br /><br /></li>
+
+		<li><span class=text_import1>/etc/hosts</span><br />
+		這個檔案可以記錄電腦的 IP 對應主機的名稱或者主機的別名！特別留意的是，
+		在區域網路內有些服務需要反查 Client 的身份，此時就會動用到主機名稱對應 IP 的資料。
+		但是因為區域網路內使用私有保留 IP ，當然無法進行 Hostname 對應 IP 的行為，
+		這個時候該服務就會呆呆的等待 30~60 秒～如果可以避過這個反查，或者是直接告訴主機 Hostname 與 
+		IP 的對應，那麼就可以節省這個反查的時間了！所以，如此一來省去反查的時間，就可以改善 LAN 
+		內的連線速度了！這個 hosts 就是用來設定 Hostname 對應 IP 的啦！
+		更多的資訊請查閱後續伺服器章節 <a href="0350dns.htm">DNS 伺服器</a>的介紹。<br /><br /></li>
+
+		<li><span class=text_import1>/etc/services</span><br />
+		這個檔案則是記錄架構在 TCP/IP 上面的總總協定，包括 http, ftp, ssh, telnet 等等服務所定義的 port 
+		number ，都是這個檔案所規劃出來的。如果您想要自訂一個新的協定與 port 
+		的對應，就得要改這個檔案了；<br /><br /></li>
+
+		<li><span class=text_import1>/etc/protocols</span><br />
+		這個檔案則是在定義出 IP 封包協定的相關資料，包括 ICMP/TCP/UDP 這方面的封包協定的定義等。<br /></li>
+		</ul>
+
+		大概知道上面這幾個檔案後，未來要修改網路參數時，那就太簡單了！
+		至於網路方面的啟動指令的話，可以記得幾個簡單的指令即可喔！<br />
+
+		<ul>
+		<li><span class=text_import1>/etc/init.d/network restart</span><br />
+			這個 script 最重要！因為可以一口氣重新啟動整個網路的參數！
+			他會主動的去讀取所有的網路設定檔，所以可以很快的恢復系統預設的參數值。<br /><br /></li>
+		<li><span class=text_import1>ifup eth0 (ifdown eth0)</span><br />
+			啟動或者是關閉某張網路介面。可以透過這個簡單的 script 來處理喔！
+			這兩個 script 會主動到 /etc/sysconfig/network-scripts/ 目錄下，
+			讀取適當的設定檔來處理啊！ (例如 ifcfg-eth0)。<br /></li>
+		</ul>
+
+		大概您只要只到這些基本的指令與檔案，哈哈！網路參數的設定就太簡單啦！
+		不過，最好您還是要瞭解 <a href="../linux_basic/0340bashshell-scripts.htm">shell script</a>
+		，比較好！因為可以追蹤整個網路的設定條件。 why ？這是因為每個 distributions 
+		的設定資料可能都不太相同，不過卻都以 /etc/init.d/network 作為啟動的 script ，
+		因此，您只要瞭解到該檔案的內容，很容易就追蹤得出來您的設定檔所需要的內容呢！對吧！<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="connect"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">連上 Internet 的方法：</span><br />
+<div class=block1>
+	在前一章<a href="0120intranet.htm">區域網路的簡易設定</a>裡面，我們知道了連上 Internet 
+	的方法有好多種，不過在現今的台灣，主要的連線方法其實是以
+	<span class=text_import2>(1)學術網路、(2)ADSL 固接與撥接、(3)Cable modem</span> 等方式為主，
+	此外，由於目前使用 Linux notebook 的使用者大增，而 Notebook 通常是以無線網路來連線的，
+	所以鳥哥在這裡也嘗試使用一款無線網路來進行連線設定。
+	至於傳統的 56 Kbps 撥接則因為速度較慢且使用度越來越低，所以在這裡就不多做介紹了。<br /><br />
+
+	另外請特別留意，底下的說明全部都是假設您的網路卡已經正常驅動的情況下，所以，
+	萬一您的網路卡還是無法啟動時，看是要(1)參考前面的說明重新編譯一個模組，還是(2)早點放棄，
+	趕緊買張便宜的網路卡來安裝與設定，那就完全依照您的需求啦！<br /><br />
+
+	<hr /><a NAME="connect_fix_IP"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">固定 IP 上網方式</span><br />
+	<div class=block2>
+		所謂的固定 IP 就是指在您的網路參數當中，你只要輸入既定的 IP 參數即可。那麼這個既定的 IP 來自哪裡呢？
+		一般來說，他可能來自於：
+		<ul>
+		<li><span class=text_import2>學術網路</span>：由學校單位直接給予的一組 IP 網路參數；</li>
+		<li><span class=text_import2>固定制 ADSL</span>：向 ISP 申請的一組固定 IP 的網路參數；</li>
+		<li><span class=text_import2>企業內部或 IP 分享器內部的區域網路</span>：例如企業內使用私有 
+			IP 作為區域網路的連線之用時，
+			那麼我們的 Linux 當然也就需要向企業的網管人員申請一組固定的 IP 網路參數囉！
+		</span></ul>
+		這樣清楚嗎？也就是說，我們取得的固定 IP 參數並非一定是 public IP 喔！反正就是一組可接受的固定 IP 就是了！
+		所以在架設您的環境之前，請先注意所有網路參數的來源正確性啊！
+		好了，那麼現在假設我的 Linux 主機需要的參數如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+Hostname  centos.dm.tsai
+
+IP:       192.168.1.13
+Netmask   255.255.255.0
+Network   192.168.1.0
+Broadcast 192.168.1.255
+Gateway   192.168.1.2
+
+DNS IP    168.95.1.1
+</pre></td></tr></table>
+
+		底下我們就分別針對上面的各項設定來進行檔案的重新修改囉！<br />
+
+		<ol>
+		<li><span class=text_import1>修改主機名稱： /etc/sysconfig/network</span><br />
+		修改主機名稱真的是很簡單！直接在檔案內修訂即可！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network</span>
+<span class=term_write>NETWORKING=yes
+HOSTNAME=centos.dm.tsai</span>
+</pre></td></tr></table>
+		夠簡單吧！這樣就將主機名稱改好了！記得：<span class=text_import2>如果您曾經更動過這個檔案，
+		最好重新開機，以使所有的服務都可以使用到新主機名稱。</span><br /><br />
+
+		<li><span class=text_import1>設定網路參數： /etc/sysconfig/network-scripts/ifcfg-eth0</span><br />
+		請記得，這個 ifcfg-eth0 與檔案內的 DEVICE 名稱設定需相同，並且，在這個檔案內的所有設定，
+		基本上就是 bash 的變數設定規則啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0</span>                <span class=term_say>&lt;== 網路卡代號，必須要 ifcfg-<b>eth0</b> 相對應</span>
+<span class=term_write>BOOTPROTO=static</span>           <span class=term_say>&lt;== 開機協定，有 dhcp 及 static 這裡是 static</span>
+<span class=term_write>BROADCAST=192.168.1.255</span>    <span class=term_say>&lt;== 就是廣播位址囉</span>
+<span class=term_write>HWADDR=00:40:D0:13:C3:46</span>   <span class=term_say>&lt;== 就是網路卡位址</span>
+<span class=term_write>IPADDR=192.168.1.13</span>        <span class=term_say>&lt;== 就是 IP 啊</span>
+<span class=term_write>NETMASK=255.255.255.0</span>      <span class=term_say>&lt;== 就是子遮罩網路</span>
+<span class=term_write>NETWORK=192.168.1.0</span>        <span class=term_say>&lt;== 就是網域啊！該網段的第一個 IP</span>
+<span class=term_write>GATEWAY=192.168.1.2</span>        <span class=term_say>&lt;== 就是預設路由！</span>
+<span class=term_write>ONBOOT=yes</span>                 <span class=term_say>&lt;== 是否開機啟動的意思</span>
+<span class=term_write>MTU=1500</span>                   <span class=term_say>&lt;== 就是最大傳輸單元的設定值。</span>
+<span class=term_write>#GATEWAYDEV=eth0</span>           <span class=term_say>&lt;== 主要路由的裝置為那個，通常不用設定</span>
+</pre></td></tr></table>
+		上面的資料很好理解吧！<span class=text_import2>請注意每個變數(左邊的英文)都應該要大寫</span>！
+		否則我們的 script 會誤判！關於 IP 的四個參數 (IPADDR, NETMASK, NETWORK, BROADCAST) 鳥哥在這裡就不再多說，
+		要談的是幾個重要的設定值：<br /><br />
+		<ul><li><span class=text_import2>DEVICE</span>：這個設定值後面接的裝置代號需要與檔名 (ifcfg-eth0)
+			那個裝置代號相同才行！否則會顯示找不到裝置名稱！<br /><br /></li>
+		<li><span class=text_import2>BOOTPROTO</span>：啟動該網路介面時，使用何種協定？
+			如果是手動給予 IP 的環境，請輸入 static 或 none ，如果是自動取得 IP 的時候，
+			請輸入 dhcp (不要寫錯字！)<br /><br /></li>
+		<li><span class=text_import2>GATEWAY</span>：代表的是『整個主機系統的 default gateway』，
+			所以，設定這個項目時，請特別留意！不要有重複設定的情況發生喔！也就是當您有 
+			ifcfg-eth0, ifcfg-eth1.... 等多個檔案，<span class=text_import2>只要在其中一個檔案設定 
+			GATEWAY 即可</span><br /><br /></li>
+		<li><span class=text_import2>GATEWAYDEV</span>：如果您不是使用固定的 IP 作為 Gateway ，
+			而是使用網路裝置作為 Gateway (通常 Router 最常有這樣的設定)，那也可以使用 
+			GATEWAYDEV 來設定通訊閘裝置呢！不過這個設定項目很少使用就是了！<br /><br /></li>
+		<li><span class=text_import2>HWADDR</span>：這個東西就是網路卡的卡號了！有啥用途呢？
+			記得以前我們常常在講，如果有兩塊一模一樣的網路卡存在時，例如在一部主機上面安裝兩張螃蟹卡，
+			由於是相同的晶片，所以在 /etc/modprobe.conf 內無法指定出明確的 eth0 與 eth1
+			的對應 (因為模組使用相同嘛！)，那麼哪一張才是 eth0 ？呵呵！大家有福了！
+			利用 HWADDR 指定網路卡的卡號，就能夠明白的定義出不同網卡的代號啦！很方便吧！<br /><br /></li>
+		</ul>
+		事實上，如果您想要瞭解每個變數的項目代表的意義時，建議可以參考 /sbin/ifup 這個 script 的內容，
+		這個 script 對於每個項目的應用都記錄的挺清楚的！ ^_^<br /><br />
+
+		<li><span class=text_import1>啟動與關閉網卡：</span><br />
+		啟動與關閉的方式有兩種，底下分別介紹：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifup eth0</span>
+[root@linux ~]# <span class=term_command>ifdown eth0</span>
+<span class=term_say># 上面的作法是針對 eth0 來進行啟動 (ifup) 與關閉 (ifdown) ；</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/network restart</span>
+<span class=term_say># 針對這部主機的所有網路介面 (包含 lo) 與通訊閘進行重新啟動，
+# 所以網路會停頓再開喔！</span>
+</pre></td></tr></table>
+		就樣就能夠啟動網路卡了！再來趕緊測試觀察看看，我們可以直接下達 ifconfig 以及使用 
+		ping 來檢查看看喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig eth0</span>
+eth0      Link encap:Ethernet  HWaddr 00:40:D0:13:C3:46
+          <span class=term_write>inet addr:192.168.1.13  Bcast:192.168.1.255  Mask:255.255.255.0</span>
+          inet6 addr: fe80::240:d0ff:fe13:c346/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  <span class=term_write>MTU:1500</span>  Metric:1
+          RX packets:229458 errors:16 dropped:0 overruns:0 frame:0
+          TX packets:117415 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:345006035 (329.0 MiB)  TX bytes:7177543 (6.8 MiB)
+          Interrupt:5 Base address:0x3e00
+<span class=term_say># 記得啊！有出現上頭那個 IP 的資料才是正確的啟動；
+# 另外，也注意一下那個 MTU 的數值吶！ ^_^</span>
+
+[root@linux ~]# <span class=term_command>ping -c 3 192.168.1.2</span>
+PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
+64 bytes from 192.168.1.2: icmp_seq=0 <span class=term_write>ttl=64 time=0.216 ms</span>
+64 bytes from 192.168.1.2: icmp_seq=1 <span class=term_write>ttl=64 time=0.227 ms</span>
+64 bytes from 192.168.1.2: icmp_seq=2 <span class=term_write>ttl=64 time=0.222 ms</span>
+
+--- 192.168.1.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2000ms
+rtt min/avg/max/mdev = 0.216/0.221/0.227/0.017 ms, pipe 2
+<span class=term_say># 注意啊！有出現 ttl 才是正確的回應！如果出現『 Destination Host Unreachable 』
+# 表示沒有成功的連線到您的 GATEWAY 那表示出問題啦！趕緊檢查有無設定錯誤。</span>
+</pre></td></tr></table>
+		一般來說，到此為止您的 IP 設定已經成功啦！不過，偶而您會發現無法找到 yahoo.com.tw 的 IP 那！
+		那表示您必須要進行底下的工作！<br /><br />
+
+		<a name=resolv></a><li><span class=text_import1>設定 DNS 的 IP： /etc/resolv.conf</span><br />
+		這個檔案重要啦！他會影響到您是否可以查詢到主機名稱與 IP 的對應喔！
+		通常如下的設定就 OK 了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/resolv.conf</span>
+<span class=term_write>nameserver 168.95.1.1
+nameserver 139.175.10.20</span>
+</pre></td></tr></table>
+		我們以中華電信與 SeedNet 在南部的 DNS 主機之 IP 作為設定的方式！
+		請注意一下，如果您不知道您的最接近的 DNS 主機的 IP ，那麼直接輸入 nameserver 168.95.1.1 
+		這個中華電信的 DNS 主機即可！不過如果您公司內部有設定防止 DNS 的要求封包的防火牆規則時，
+		那麼您就得要請教貴公司的網管單位告知您的 DNS IP 設定啦！然後趕緊測試看看：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>nslookup tw.yahoo.com</span>
+Server:         168.95.1.1
+Address:        168.95.1.1#53
+
+Non-authoritative answer:
+tw.yahoo.com    canonical name = tw.yahoo-ap1.akadns.net.
+Name:   tw.yahoo-ap1.akadns.net
+Address: <span class=term_write>202.43.195.52</span>
+</pre></td></tr></table>
+		仔細觀察，得要出現有 IP 的字樣，才算是設定成功喔！<br /><br />
+		</ol>
+
+		上面這幾個步驟需要一步一步來，如果前面失敗，後面就不可能成功的！
+		所以請不要尚未啟動網路前，就使用 nslookup 去追查 IP ，那是『查不到的』啦！
+		注意流程啊！得要網路好了，才能夠處理其他在網路上面的 DNS 資料，您說是吧！ ^_^<br /><br />
+	</div>
+
+
+	<hr /><a NAME="connect_auto"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">可自動取得 IP 的環境</span><br />
+	<div class=block2>
+		可自動取得 IP 的環境是怎麼回事啊？不是很簡單嗎？當您在 IP 分享器後頭的主機在設定時，
+		不是都會選擇『自動取得 IP 』嗎？那就是可自動取得 IP 的環境啦！那麼這個自動取得是怎麼回事啊？
+		也不難瞭解啦，其實就是『有一部主機提供 DHCP 服務給整個網域內的電腦』就是了！
+		例如 IP 分享器就可能是一部 DHCP 主機。那麼 DHCP 是啥？
+		他是：Dynamic Host Configuration Protocol 的簡寫，顧名思義，
+		他可以『動態的調整主機的網路參數』的意思。詳細的 
+		<a href="0340dhcp.htm">DHCP</a> 功能我們會在後面的章節說明的。<br /><br />
+
+		好了，那麼這個方法適合哪些連線的方式呢？大致有這些：<br />
+		<ul>
+		<li><span class=text_import2>Cable Modem</span>：就是使用電視纜線進行網路迴路連線的方式啊！
+			這個方式屬於媒體共享式，在社區內比較常見；</li>
+		<li><span class=text_import2>ADSL 多 IP 的 DHCP 制</span>：就鳥哥所知， SeedNet 有推出一種專案，
+			可以讓 ADSL 用戶以 DHCP 的方式來自動取得 IP ，不需要撥接。那使用的也是這種方法！
+		<li><span class=text_import2>IP 分享器或 NAT 有架設 DHCP 服務時</span>：當您的主機位於 IP
+			分享器的後端，或者是您的 LAN 當中有 NAT 主機且 NAT 主機有架設 DHCP 服務時，
+			那取得 IP 的方法也是這樣喔！</li>
+		</ul>
+		反正可以自動取得 IP 的條件下，大多數都是使用底下的方法啦！
+		請先參考前一小節<a href="#connect_fix_IP">固定 IP 的連線方法</a>設定好步驟 1~4 的所有項目，
+		其中第2個步驟需要改成底下的樣子：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0
+ONBOOT=yes
+BOOTPROTO=dhcp</span>
+</pre></td></tr></table>
+
+		沒蓋你喔！只要這三個項目即可，其他的都給他註解 (#) 掉！避免互相干擾！然後給他重新啟動網路：
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>/etc/init.d/network restart</span>
+</pre></td></tr></table>
+
+		我們區域網路內的 IP 分享器或 DHCP 主機，就會立刻幫您的 Linux 主機做好網路參數的規劃，
+		包括 IP 參數與 GATEWAY 等，就通通設定妥當啦！很方便也很簡單吧！<br />
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		有些版本會主動的修改 /etc/resolv.conf 這個檔案，所以您必須要隨時注意一下這個檔案的內容，
+		另外， CentOS 會主動的建立一個說明文件資料在 /etc/dhclient-eth0.conf ，您也可以自行瞧一瞧去！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+
+	<hr /><a NAME="connect_adsl"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ADSL 撥接上網</span><br />
+	<div class=block2>
+		終於來到台灣最熱門的 ADSL 撥接上網的介紹啦！來談一談如何在 Linux 上撥接上網吧！
+		要撥接上網時，可以使用 rp-pppoe 這套軟體來幫忙，所以，您必須要確認你的 Linux distributions 
+		上面已經存在這個玩意兒了！(註： SuSE 使用的是其他的軟體，您應該要自行使用 yast 來設定即可。)
+		CentOS 本身就含有 rp-pppoe ，請使用原版光碟，或者是使用 yum 來進行安裝吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>rpm -q rp-pppoe</span>
+rp-pppoe-3.5-22    <span class=term_say>&lt;==您瞧瞧！確實有安裝喔！</span>
+</pre></td></tr></table>
+
+		當然，很多 distributions 都已經將撥接這個動作歸類到圖形介面裡面去了，
+		所以可能沒有提供 rp-pppoe 這個咚咚，沒關係，您可以到底下的網站去取得的：<br />
+
+		<ul><li><a href="http://www.roaringpenguin.com/pppoe/"
+			target="_blank">http://www.roaringpenguin.com/pppoe/</a></li>
+		<li><a href="http://freshmeat.net/projects/rp-pppoe/"
+			target="_blank">http://freshmeat.net/projects/rp-pppoe/</a></ul>
+
+		然後再自行手動安裝即可。如何安裝的過程鳥哥在這裡就不談了，請自行前往基礎篇的<a 
+		href="../linux_basic/0520source_code_and_tarball.htm">原始碼與 Tarball</a>查閱相關資料吧。
+		另外請注意，雖然整個連線是由主機的乙太網路卡連接到 ADSL 數據機上，然後再透過電話線路連線到 
+		ISP 的機房去，最後在主機上以 rp-pppoe 撥接達成連線。但是 <span class=text_import2>rp-pppoe 
+		使用的是 Point to Point (ppp) 的點對點協定所產生的網路介面，因此當您順利的撥接成功之後，
+		會多產生一個實體網路介面『 ppp0 』</span>喔！
+		而由於 ppp0 是架構在乙太網路上的，所以 eth0 也不能關掉啊！注意注意！因此，撥接成功後就會有：<br />
+		<ul><span class=text_import2>
+		<li>內部迴圈測試用的lo介面；
+		<li>網路卡 eth0 這個介面；
+		<li>撥接之後產生的經由 ISP 對外連接的 ppp0 介面。</span></ul>
+		<span class=text_import2>上頭這三個介面是完全獨立的，互不相干</span>，所以關於 eth0 您可以這樣思考：<br />
+		<ul>
+		<li><span class=text_import1>這張網路卡 (假設是 eth0) 有接內部網路(LAN)</span>：<br />
+		如果是這樣的話，那麼您的 IP 設定參數： /etc/sysconfig/network-scripts/ifcfg-eth0 應該要給予一個私有
+		IP 以使內部的 LAN 也可以透過 eth0 來進行連線啊！所以我會這樣設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0
+BOOTPROTO=static
+BROADCAST=192.168.1.255
+IPADDR=192.168.1.13
+NETMASK=255.255.255.0
+NETWORK=192.168.1.0
+ONBOOT=yes</span>
+</pre></td></tr></table>
+
+		並請記得一件事情，那就是：『<span class=text_import2>千萬不要有 GATEWAY 的設定！</span>』，
+		否則 ppp0 撥接成功後又會產生另一個 default gateway ，就會造成問題了！<br /><br /></li>
+
+		<li><span class=text_import1>沒有內部網域</span>：<br />
+		如果這部 Linux 主機是直接連接到 ADSL 上頭，並沒有任何內部主機與其連線，
+		也就是說，您的 eth0 有沒有 IP 都沒有關係時，那麼上面的設定當中的那個『 ONBOOT=yes 』
+		直接改成『 ONBOOT=no 』就好了！</li></ul>
+
+		至於其他的檔案請參考前兩小節<a href="#connect_fix_IP">固定 IP 的連線方法</a>上面的步驟1, 3, 4
+		設定好！步驟 2 則依照剛剛提到的是否有接 LAN 的情況來設定，然後就可以開始準備撥接了！
+		當然啦，撥接之前，請確認您的 ADSL 數據機 (小烏龜) 已經與主機連線妥當，
+		也取得帳號與密碼，也安裝好了 rp-pppoe ，然後就來處理吧！<br />
+
+		<ol>
+		<li><span class=text_import1>關閉接在 ADSL 數據機上面的那張網卡</span><br />
+		說實在的，鳥哥比較建議將內外網域分的清清楚楚比較好，所以，通常我都是主機上面接兩塊網路卡，
+		一張對內一張對外，對外的那張網卡在撥接前先關閉，雖然沒有關閉也不打緊，
+		不過曾有網友回報，如果不關閉時，有時候(機率很低)會無法撥接成功！假設連接到 ADSL 
+		的網卡是 eth0 ，那麼關閉很簡單吧？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifdown eth0</span>
+[root@linux ~]# <span class=term_command>ifconfig eth0 down</span>
+</pre></td></tr></table>
+
+		這樣就可以啦！<br /><br />
+
+		<li><span class=text_import1>設定帳號與密碼之連線設定</span><br />
+		假設 rp-pppoe 設定好了，如果您的版本沒有 rp-pppoe 的話，請自行安裝。
+		關於安裝的方法可以參考本章最後的參考資料。然後就開始如下的設定：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>adsl-setup</span>
+Welcome to the ADSL client setup.  First, I will run some checks on
+your system to make sure the PPPoE client is installed properly...
+
+LOGIN NAME
+Enter your Login Name (default root): <span class=term_command>T1234567</span>
+<span class=term_say># 注意啊！這個帳號名稱是 ISP 給的，其中如果是 SeedNet ，輸入如上，
+# 如果是 Hinet 的話，就得要輸入 username@hinet.com.tw ，後面的主機名也要寫。</span>
+
+INTERFACE
+Enter the Ethernet interface connected to the ADSL modem
+For Solaris, this is likely to be something like /dev/hme0.
+For Linux, it will be ethX, where 'X' is a number.
+(default eth0): <span class=term_command>eth0</span>
+<span class=term_say># 就是連接到 ADSL 數據機的那張網卡代號</span>
+
+Do you want the link to come up on demand, or stay up continuously?
+If you want it to come up on demand, enter the idle time in seconds
+after which the link should be dropped.  If you want the link to
+stay up permanently, enter 'no' (two letters, lower-case.)
+NOTE: Demand-activated links do not interact well with dynamic IP
+addresses.  You may have some problems with demand-activated links.
+Enter the demand value (default no): <span class=term_write>&lt;==這裡按 Enter 確定不要即可</span>
+
+DNS
+Enter the DNS information here: <span class=term_command>168.95.1.1</span>
+Enter the secondary DNS server address here: <span class=term_command>139.175.10.20</span>
+<span class=term_say># 這兩個設定會影響 /etc/resolv.conf 的內容喔！</span>
+
+PASSWORD
+Please enter your Password: <span class=term_write>&lt;==這裡則是輸入您 ISP 給的密碼</span>
+Please re-enter your Password: <span class=term_write>&lt;==再一次密碼</span>
+
+USERCTRL
+Please enter 'yes' (two letters, lower-case.) if you want to allow
+normal user to start or stop DSL connection (default yes): <span class=term_command>no</span>
+<span class=term_say># 不讓使用者可以啟動或關閉 ADSL 的設定比較好吧！</span>
+
+The firewall choices are:
+0 - NONE: This script will not set any firewall rules.  You are responsible
+          for ensuring the security of your machine.  You are STRONGLY
+          recommended to use some kind of firewall rules.
+1 - STANDALONE: Appropriate for a basic stand-alone web-surfing workstation
+2 - MASQUERADE: Appropriate for a machine acting as an Internet gateway
+                for a LAN
+Choose a type of firewall (0-2): <span class=term_command>0</span>
+<span class=term_say># 先不要密碼！後面我們會使用 Linux 本機的防火牆！</span>
+
+Start this connection at boot time
+Do you want to start this connection at boot time?
+Please enter no or yes (default no):<span class=term_command>yes</span>
+<span class=term_say># 是否要開機的時候就撥接？</span>
+
+Ethernet Interface: eth0
+User name:          T1234567
+Activate-on-demand: No
+Primary DNS:        168.95.1.1
+Secondary DNS:      139.175.10.20
+Firewalling:        NONE
+User Control:       no
+Accept these settings and adjust configuration files (y/n)? <span class=term_command>y</span>
+<span class=term_say># 如果沒有問題就按下 y 開始寫入設定檔吧！</span>
+Adjusting /etc/sysconfig/network-scripts/ifcfg-ppp0
+Adjusting /etc/resolv.conf
+  (But first backing it up to /etc/resolv.conf.bak)
+Adjusting /etc/ppp/chap-secrets and /etc/ppp/pap-secrets
+  (But first backing it up to /etc/ppp/chap-secrets.bak)
+  (But first backing it up to /etc/ppp/pap-secrets.bak)
+<span class=term_say># 上面的檔案很簡單吧！
+# ifcfg-ppp0  ：亦即是 ppp0 這個網路介面的設定檔案；
+# resolv.conf ：這個檔案會被備份後，然後以剛剛我們上面輸入的資料取代；
+# pap-secrets, chap-secrets：我們輸入的密碼就放在這裡！</span>
+</pre></td></tr></table>
+
+		哈哈！這樣設定就成功啦！很簡單吧！唯一需要注意的是在上面的 username 那個地方，千萬注意，
+		因為 hinet 與 seednet 的設定是不一樣的！千萬小心呢！否則會無法連上線呦！此外，
+		由於我們在未來還會有 firewall 的建置，所以這裡不太需要使用到防火牆啦！否則也可能無法連上 
+		Internet 呦！另外，注意一下，我們上面使用 adsl-setup 的設定，其實最主要是修改兩個檔案，
+		分別是 <span class=text_import2>/etc/ppp/pppoe.conf</span> 這個主要設定檔，以及 
+		<span class=text_import2>/etc/ppp/chap-secrets</span> 這個密碼儲存檔！
+		仔細去察看一下 chap-secrets 這個檔案的內容，您就可以知道您的密碼是否輸入錯誤了！ ^_^ <br /><br /></li>
+
+		<li><span class=text_import1>開始撥接上網</span><br />
+		撥接很簡單啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>adsl-start</span>
+....Connect!
+</pre></td></tr></table>
+
+		這樣就是顯示連上 Internet 啦！通常比較容易出問題的地方在於硬體的連線情況，
+		請先確認所有的硬體連線沒有問題喔！通常，如果您使用小烏龜 (ATU-R) 時，
+		請使用跳線連接網路卡與 ATU-R。另外一個容易出錯的地方在於輸入的帳號與密碼，
+		帳號與密碼都是您的 ISP 給您的，並且注意大小寫(可以到 /etc/ppp/chap-secrets 察看一下是否設定錯誤？)<br /><br />
+
+		<li><span class=text_import1>察看 IP 啦！</span><br />
+		直接使用 ifconfig ppp0 看看能否得到您的 IP 呢？沒錯！那就是啦！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig ppp0</span>
+ppp0      Link encap:Point-to-Point Protocol 
+          inet addr:211.74.249.38  P-t-P:172.16.11.8  Mask:255.255.255.255 
+          UP POINTOPOINT RUNNING NOARP MULTICAST  MTU:1492  Metric:1 
+          RX packets:8356088 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:8532063 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:10
+</pre></td></tr></table>
+
+		<li><span class=text_import1>特殊狀況：</span><br />
+		或許您會發現使用 rp-pppoe 撥接之後，您的 /var/log/messages 老是出現這樣的訊息：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>more /var/log/messages</span>
+May 10 18:02:22 testing pppoe[8527]: Bogus PPPoE length field (50)
+</pre></td></tr></table>
+
+		這是什麼問題啊？在 RP-PPPOE 的官方討論區上面提過，這個問題是由於 ISP 提供的訊息長度超過 
+		rp-pppoe 預設的檢查長度才會發生的一個警告訊息，事實上這個訊息並不重要，不用理會他也沒有關係，
+		不會影響到 Internet 的運作。但是，這樣的訊息在 /var/log/messages 裡面每一分鐘就出現一次，
+		實在很討厭！怎麼辦，可以將他拿掉嗎？！當然可以！您可以下載新的 Tarball 來重新編譯過！
+		詳細的步驟是這樣的：<br /><br />
+
+		<span class=text_import2>步驟一：下載新的 tarball (鳥哥這裡以 3.5 版為例)：</span><br />
+			到底下的網站下載新的版本：<br />
+			<a href="http://www.roaringpenguin.com/pppoe/#download"
+			target="_blank">http://www.roaringpenguin.com/pppoe/#download</a><br /><br />
+		<span class=text_import2>步驟二：在 /usr/local/src 底下解開檔案，則造成 
+		/usr/local/src/rp-pppoe-3.5/ 目錄</span><br /><br />
+		<span class=text_import2>步驟三：到 /usr/local/src/rp-pppoe-3.5/src 底下去，修改這四個檔案：</span><br>
+		* discovery.c<br />
+		* pppoe.c<br />
+		* pppoe-server.c<br />
+		* relay.c<br />
+		找到這四個檔案內容如下代碼：<br />
+
+<table class="term"><tr><td class="term"><pre>
+  /* Check length */
+    if (ntohs(packet.length) + HDR_SIZE > len) {
+        syslog(LOG_ERR, "Bogus PPPoE length field (%u)",
+               (unsigned int) ntohs(packet.length));
+        return;
+    }
+</pre></td></tr></table>
+
+		將他修改成為如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+    /* Check length */
+    if (ntohs(packet.length) + HDR_SIZE > len) {
+        /* syslog(LOG_ERR, "Bogus PPPoE length field (%u)",
+               (unsigned int) ntohs(packet.length)); */
+        return;
+    }
+</pre></td></tr></table>
+
+		請注意，上面每個檔案都有多個同樣的字串，請依序一個一個都修改掉才行！還沒完喔！再到 pppoe.c 找到底下的字眼：<br />
+
+<table class="term"><tr><td class="term"><pre>
+    if (plen + HDR_SIZE > len) {
+        syslog(LOG_ERR, "Bogus length field in session packet %d (%d)",
+               (int) plen, (int) len);
+        return;
+    }
+</pre></td></tr></table>
+
+		請將他改成：<br />
+
+<table class="term"><tr><td class="term"><pre>
+    if (plen + HDR_SIZE > len) {
+        /* syslog(LOG_ERR, "Bogus length field in session packet %d (%d)",
+               (int) plen, (int) len); */
+        return;
+    }
+</pre></td></tr></table>
+
+		<span class=text_import2>步驟四：然後開始編譯與安裝吧！</span><br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /usr/local/src/rp-pppoe-3.5/src</span>
+[root@linux src]# <span class=term_command>./configure</span>
+[root@linux src]# <span class=term_command>make</span>
+[root@linux src]# <span class=term_command>make install</span>
+</pre></td></tr></table>
+
+		當然，您得先移除 rp-pppoe 才行喔！ ^_^<br /><br />
+
+		<span class=text_import2>步驟五：利用 adsl-setup ,adsl-start 再重新設定與啟動看看吧！</span><br />
+		</ol>
+		很快的，這樣您就已經做好 ADSL 撥接上網的動作了！很快樂吧！
+		但是不要忘記了，現在您的主機可是沒有任何防備的喔！所以，趕緊往下兩節讀一讀去啊！ ^_^<br /><br />
+	</div>
+</div>
+
+
+<hr /><a NAME="wireless"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">無線網路--以筆記型電腦為例</span><br />
+<div class=block1>
+	除了使用實體 RJ-45 線路來連接主機之外，由於現在筆記型電腦漸漸廣為使用，
+	因此在筆記型電腦上面的無線網路 (Wireless) 也越來越重要囉～針對無線網路所提出的標準中，
+	以 IEEE 802.11b 及 802.11g 較為重要，其中 802.11g 這個標準的傳輸速度已經可以達到 54Mbps 的水準，
+	等於是快速乙太網路 (fast ethernet, 10/100 Mbps) 的一半了，比起以前的 11Mbps (802.11b) 
+	要快的多！所以也漸漸的成為移動式裝置之一的筆記型電腦常用的網路連線方式之一。<br /><br />
+
+	<hr /><a NAME="wireless_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">無線網路所需要的硬體</span><br />
+	<div class=block2>
+		我們知道在 RJ-45 的乙太網路環境中，以 switch/hub 以及網路卡與網路線最重要，
+		該架構中主要以 switch/hub 串接所有的網路設備。那麼在無線網路中，當然也需要一個接收訊號的裝置，
+		那就是<span class=text_import2>無線基地台 (Wireless Access Point, 簡稱 AP)</span> 了！
+		另一個裝置當然就是安裝在電腦主機上面的無線網卡囉！<br /><br />
+
+		其實無線基地台本身就是個 IP 分享器了，他本身會有兩個介面，一個可以與外部的 IP 做溝通，
+		另外一個則是作為 LAN 內部其他主機的 GATEWAY 囉！那其他主機上面只要安裝了無線網卡，
+		並且順利的連上 AP 後，自然就可以透過 AP (以 AP 為路由器) 來連上 Internet 啦！
+		整個傳輸的情況可以用下圖來示意：<br />
+
+		<center>
+		<img src="0130internet_connect/ap.png"
+		title="無線網路的連線圖示" alt="無線網路的連線圖示"><br />
+		圖一、無線網路的連線圖示</center><br />
+
+		在上圖中，我們假設 PC A 與 PC B 這兩部主機都有安裝無線網卡，因此他們可以掃瞄到區域網路內的 AP
+		存在，所以可以透過這個 AP 來連上 Internet 啊。在不考慮內部 LAN 連線的情況下，
+		AP 如何連上 Internet 呢？雖然每部 AP 的控制介面都不相同，不過絕大部分的 AP
+		都是提供 Web 介面來設定的，因此您可以參考每部 AP 的說明書來進行設定，
+		在這裡鳥哥就不多說了。<br /><br />
+
+		鳥哥底下將會以一般家庭常用的小型 AP 與無線網卡來說明一個案例，
+		鳥哥手邊有的筆記型電腦是舊式的 MiTac 內有賽揚 366 CPU 及 192 MB 的記憶體，
+		USB 版本為 1.1 ，夠舊了吧！所以鳥哥額外加了擴充卡 (PCMCIA) 讓 USB 提升到 2.0 版，
+		選擇的 AP 為 PCi 這家公司製造的 BLW-54PM 無線基地台，
+		而無線網卡則是使用 USB 2.0 介面的 PCi 公司製造的 GW-US54Mini ，
+		會選擇這個裝置主要是因為 PCi 這一款無線網卡裝置有支援 Linux 系統，
+		所以很容易被 Linux 捉到，較容易安裝使用啦！ ^_^<br /><br />
+	</div>
+
+	<hr /><a NAME="wireless_security"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">網路安全方面</span><br />
+	<div class=block2>
+		如果您留心一下上面的圖一，那麼就可以發現一件事情，那就是：『<span class=text_import2>如果 
+		AP 不設定任何連線限制，那任何擁有無線網卡的主機都可以透過這個 AP 連接上您的 LAN</span> 』，
+		要知道，通常我們都會認為 LAN 是信任網域，所以內部是沒有防火牆的，
+		亦即是不設防的狀態，呵呵！如果剛好有人拿著筆記型電腦經過您的 AP 可
+		以接收訊號的範圍，那麼他就可以輕易的透過您的 AP
+		連接上你的 LAN ，並且可以透過你的 AP 連上 Internet ，如果他剛好是個喜歡搞破壞的 cracker ，
+		哈哈！那麼當他使用您的 AP 去攻擊別人時，最後被發現的跳板是誰？？當然是您的 AP！
+		那是誰會吃上官司？夠清楚了吧？而且您內部主機的資料也很有可能被竊取啊！<br /><br />
+
+		所以啦，『<span class=text_import2>無線網路的安全性一定是具有很大的漏洞的</span>』，
+		沒辦法，因為無線網路的傳輸並不是透過實體的網路線，而是透過無線訊號，實體網路線很好控制，
+		無線訊號您如何偵測啊？對吧！因此，請您務必在您的 AP 上面進行好連線的限制設定，
+		一般可以這樣做限制的：<br />
+		<ul>
+		<li><span class=text_import1>在 AP 上面使用網卡卡號 (MAC) 來作為是否可以存取 AP 的限制</span>：<br />
+			如此一來，就只有你允許的網路卡才能夠存取你的 AP ，當然會安全不少。不過這個方法有個問題，
+			那就是當有其他主機想要透過這個 AP 連線時，你就得要手動的登入 AP 去進行 MAC 的設定，
+			在經常有變動性裝置的環境中 (例如公司行號)，這個方法比較麻煩～</li><br />
+		<li><span class=text_import1>設定你的 AP 連線加密機制與金鑰</span>：<br />
+			另一個比較可行的辦法就是設定連線時所需要的驗證金鑰！
+			這個金鑰不但可以在網路連線的資料當中加密，使得即使您的資料被竊聽，
+			對方也是僅能得到一堆亂碼，同時由於 client 端也需要知道金鑰並且在連線階段輸入金鑰，
+			因此也可以被用來限制可連線的用戶啊！</li>
+		</ul>
+
+		當然，上面兩種方法您可以同時設定，亦即不但需要連線的金鑰，而且在 AP 處也設定能夠存取的 MAC 網卡，
+		嘿嘿！這樣一來，就更安全的多了！更多的 AP 安全方面的概念，可以參考底下這一篇文章的介紹：<br />
+
+		<ul><li><a href="http://www.cert.org.tw/document/column/show.htm?key=61" 
+		target="_blank">無線網路安全白皮書(三)：<br />
+		http://www.cert.org.tw/document/column/show.htm?key=61</a></li></ul>
+
+		<span class=text_import1>關於 ESSID/SSID ：</span><br />
+		<div class=block2>
+		想一想，如果您有兩部 AP 在同一個區域網路內，那麼請問一下，
+		當你的無線網卡在上網時，他會透過哪一個 AP 連線出去呢？很困擾，對吧！
+		其實每部 AP 都會有一個連線的名字，那就是 ESSID ，這個 ESSID 可以提供給 client 端，
+		當 client 端需要進行無線連線時，他必須要說明他要利用哪一部 AP ，那個 
+		ESSID 就是那時需要輸入的資料了！在鳥哥的案例當中，我將我的 AP 設定為 BLW-VBIRD 這個名字，
+		並且給予一個金鑰密碼，設定的方法如同下圖所示：<br /><br />
+
+		<center>
+		<img src="0130internet_connect/essid_1.jpg"
+		title="無線網路 AP 的金鑰設定項目" alt="無線網路 AP 的金鑰設定項目"><br />
+		圖二、無線網路 AP 的金鑰設定項目</center><br />
+
+		如上圖，在登入了 AP 的設定項目後，依序 (1)先選擇無線網路，然後在右邊的視窗當中 
+		(2)取消 AutoLink 的設定，然後 (3)輸入您的 SSID 識別碼 (就是 ESSID)，最後再進入
+		(4)密碼設定的項目囉！在按下『設定加密』之後，他就會出現如下的畫面： <br /><br />
+
+		<center>
+		<img src="0130internet_connect/essid_2.png"
+		title="無線網路 AP 的金鑰設定項目" alt="無線網路 AP 的金鑰設定項目"><br />
+		圖三、無線網路 AP 的金鑰設定項目</center><br />
+
+		我們先選擇 (1)加密的方式，在這裡可以選擇簡單的 WEP 加密方式即可，然後 
+		(2)輸入加密的金鑰長度，選擇最長的吧！這個長度需要輸入 26 個字元吶！之後當然就得
+		(3)輸入 26 個密碼 (金鑰) 囉～在這裡鳥哥隨便先填一個，您可別真的跟鳥哥填一樣的密碼啊！
+		填完之後就 (4)按下套用設定，最後才 (5)關閉，關閉回到前一個畫面後，
+		給他按下『儲存設定』，如下圖所示：<br /><br />
+
+		<center>
+		<img src="0130internet_connect/essid_3.jpg"
+		title="無線網路 AP 的金鑰設定項目" alt="無線網路 AP 的金鑰設定項目"><br />
+		圖四、無線網路 AP 的金鑰設定項目</center><br />
+
+		這個時候在畫面當中的『加密機制』才會正式的啟動啊！這個時候我們就會有底下兩個資料：
+		<ul><span class=text_import2>
+		<li>ESSID 為 BLW-VBIRD</li>
+		<li>KEY 為 12345678901234567890123456</li></span></ul>
+		這兩個資料很重要喔！我們底下會仔細的來說明啊！<br />
+		</div>
+	</div>
+
+	<hr /><a NAME="wireless_connect"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開始連線</span><br />
+	<div class=block2>
+		OK！底下我們就來談一談，那麼您的筆記型電腦如何透過無線網路實際的上線呢？
+		首先當然就是需要安裝驅動程式啦！再來則是需要讓網卡代號與模組對上關係，
+		然後設定了網路卡設定檔後，才能夠連上 Internet 啦！底下我們就一個一個步驟來說明吧！<br />
+		<ol>
+
+		<hr><li><span class=text_import1>取得驅動程式並實際安裝：</span><br /><br />
+		鳥哥在這個案例當中使用的 USB 無線網卡的驅動程式，並沒有在 CentOS 的預設核心內支援，
+		所以我必須要自行安裝他的驅動程式才行！先來察看一下我們的主機是否有捉到這個 USB 的硬體裝置呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>dmesg | grep usb</span>
+usb 4-1: new high speed USB device using <span class=term_write>address 2</span>
+<span class=term_say># 這裡是說，有個高速 USB 裝置使用第二個 USB 位址的意思。
+# 既然知道這個位址，我們來查一查這個裝置的內容吧！</span>
+
+[root@linux ~]# <span class=term_command>cat /proc/bus/usb/devices</span>
+T:  Bus=04 Lev=01 Prnt=01 Port=00 Cnt=01 <span class=term_write>Dev#=  2</span> Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=ff(vend.) Sub=ff Prot=ff MxPS=64 #Cfgs=  1
+P:  <span class=term_write>Vendor=14ea ProdID=ab13</span> Rev=43.30
+S:  Manufacturer=PCI
+S:  Product=USB2.0 WLAN
+<span class=term_say>.....後面省略.....</span>
+<span class=term_say># 比較重要的就是上面的那個裝置碼以及廠商與產品代碼了！
+# 先給他抄寫下來，因為等一下我們進行模組編譯時會用到！</span>
+</pre></td></tr></table>
+
+		呵呵！真的有捉到！那麼就得要實際的來進行驅動程式的安裝囉！
+		這個驅動程式的下載可以前往他的官方網站：
+		<a href="http://www.planex.com.tw/download/wireless/gw-us54mini.htm"
+		target="_blank">http://www.planex.com.tw/download/wireless/gw-us54mini.htm</a> 來下載，
+		鳥哥下載的是 zd1211 的驅動程式，版本是 V1.2.0.0 ，這個版本在編譯時，
+		似乎還是沒有做得很好，所以我們依舊得要進行一些小手術來修訂才行喔！
+		假設您將下載的 tarball 解壓縮到 /root/zd1211 檔案當中了，那麼如何編譯呢？<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd zd1211</span>
+<span class=term_say># 這個目錄下有個 README 的檔案，請記得好好查閱一下喔！</span>
+
+[root@linux zd1211]# <span class=term_command>cd zdsta</span>
+[root@linux zdsta]# <span class=term_command>vi Makefile</span>
+<span class=term_say># 先修改底下這一行，應該是在第 15 行的地方，這裡需要與你的核心對應喔！
+# 我這裡是使用 CentOS 4.3 並且升級過核心作為範例的！</span>
+<span class=term_write>KERNEL_SOURCE=/lib/modules/2.6.9-34.0.2.EL/build</span>
+
+[root@linux zdsta]# <span class=term_command>vi src/zdusb.h</span>
+<span class=term_say># 很奇怪，我的 CentOS 4.3 不支援太長的型號名稱，所以需要做個修改，
+# 大約在第 16 行的地方，找到下列的字：</span>
+#define PRODUCT_GW-US54MINI    0xAB13
+<span class=term_say># 將他改成下列的模樣：</span>
+<span class=term_write>#define PRODUCT_US54MINI    0xAB13</span>
+<span class=term_say># 順便仔細看一下第 15, 16 行，有沒有發現版本與型號最右側，
+# 與我們剛剛使用 cat /proc/bus/usb/devices 的內容相同啊！ ^_^</span>
+
+[root@linux zdsta]# <span class=term_command>vi src/zdusb.c</span>
+<span class=term_say># 找到 63 行左右的地方，如下所示：</span>
+    { USB_DEVICE(VENDOR_PLANEX, PRODUCT_GW-US54MINI )  },
+<span class=term_say># 將他改成與上述檔案相同的型號資料啊！</span>
+<span class=term_write>    { USB_DEVICE(VENDOR_PLANEX, PRODUCT_US54MINI )  },</span>
+</pre></td></tr></table>
+
+		這樣就做好了編譯前準備，先注意一下，在編譯的過程當中會出現很多的 warning ，
+		不過並不會影響最終的結果，所以就不要理他沒關係啊！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux zdsta]# <span class=term_command>make</span>
+<span class=term_say># 編譯完成後會產生 zd1211.ko 的模組檔案喔！</span>
+[root@linux zdsta]# <span class=term_command>make install</span>
+<span class=term_say># 可以將模組安裝到核心模組放置的地方去了！</span>
+</pre></td></tr></table><br />
+
+		<hr><li><span class=text_import1>測試模組，並且對應網路卡與模組：(modprobe 與 iwconfig)</span><br /><br />
+		編譯好模組後當然就是要測試看看的啦！這個時候請這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>modprobe zd1211</span>
+[root@linux ~]# <span class=term_command>lsmod | grep zd1211</span>
+zd1211                226768  0
+<span class=term_say># 是的！有啊！確實有載入啊！</span>
+
+[root@linux ~]# <span class=term_command>iwconfig</span>
+eth1      802.11b/g NIC  ESSID:""
+          Mode:Managed  Frequency=2.462GHz  Access Point: 00:00:00:00:00:00
+          Bit Rate:1Mb/s
+          Retry:off   RTS thr=2432 B   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+</pre></td></tr></table>
+
+		這個 iwconfig 是用在作為無線網路設定之用的一個指令，與 ifconfig 類似！
+		不過，當我們使用 iwconfig 時，如果有發現上述的字樣，那就代表該網路介面使用的是無線網卡的意思啊！
+		所以，俺的無線網卡代號是 eth1 喔！之後，我將這個模組與網卡的代號寫入 /etc/modprobe.conf 當中吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/modprobe.conf</span>
+<span class=term_write>alias eth1 zd1211</span>
+<span class=term_say>將上面這一行新增到您的 Linux 當中啊！</span>
+</pre></td></tr></table><br />
+
+		<hr><li><span class=text_import1>利用 iwlist 偵測 AP ：</span><br /><br />
+		好了，接下來要幹嘛？當然是看看我們的無線網卡是否能夠找到 AP 啊！
+		所以，首先我們要啟動無線網卡，就利用 ifconfig 即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifconfig eth1 up</span>
+</pre></td></tr></table>
+
+		啟動網卡後才能以這個網卡來搜尋整個區域內的無線基地台啊！接下來，
+		直接使用 iwlist 來使用這個無線網卡搜尋看看吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iwlist eth1 scanning</span>
+eth1      Scan completed :
+          Cell 01 - Address: 00:90:CC:D6:A4:1C
+                    <span class=term_write>ESSID:"BLW-VBIRD"</span>
+                    Mode:Master
+                    Frequency:2.437GHz (Channel 6)
+                    Quality:8/92  Signal level=54/154  Noise level=0/154
+                    Encryption key:on
+                    Bit Rate:1Mb/s
+                    Bit Rate:2Mb/s
+                    Bit Rate:5.5Mb/s
+                    Bit Rate:11Mb/s
+                    Bit Rate:6Mb/s
+                    Bit Rate:9Mb/s
+                    Bit Rate:12Mb/s
+                    Bit Rate:18Mb/s
+                    Bit Rate:24Mb/s
+                    Bit Rate:36Mb/s
+                    Bit Rate:48Mb/s
+                    Bit Rate:54Mb/s
+</pre></td></tr></table>
+
+		注意到上頭的顯示喔！有顯示 ESSID 沒錯吧！這個東西等一下可是需要設定的喔！
+		其實接下來我們可以直接使用手動的方式來啟動我們的無線網卡的連線喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>iwconfig eth1 essid "BLW-VBIRD"  \</span>
+&gt; <span class=term_command>key "12345678901234567890123456"</span>
+
+[root@linux ~]# <span class=term_command>iwconfig eth1</span>
+eth1      802.11b/g NIC  ESSID:"BLW-VBIRD"
+          Mode:Managed  Frequency=2.437GHz  Access Point: 00:90:CC:D6:A4:1C
+          <span class=term_write>Bit Rate:11Mb/s</span>
+          Retry:off   RTS thr=2432 B   Fragment thr:off
+          Encryption key:****-****-****-****-****-****-**   Security mode:open
+          Power Management:off
+</pre></td></tr></table>
+
+		如果順利出現上面的資料，那就表示您的無線網卡已經與 AP 接上線了～
+		不過有個地方比較奇怪，怎麼最高傳輸速率僅有 11Mb/s 啊？太低了～
+		沒關係，我們可以在底下進行處理的。
+		再來則是設定網路卡的設定檔囉！^_^ <br /><br />
+
+		<hr><li><span class=text_import1>設定網路卡設定檔 (ifcfg-ethn)</span><br /><br />
+		因為我們的網路卡使用的代號是 eth1 ，所以也是需要在 /etc/sysconfig/network-scripts
+		設定好相對應的檔案才行啊！而由於我們的這塊卡其實是無線網卡，
+		所以很多設定值都與原本的乙太網路卡不同，詳細的各項變數設定您可以自行參考一下底下的檔案：<br />
+		<span class=text_import2>/etc/sysconfig/network-scripts/ifup-wireless</span><br />
+		至於我的網路卡設定是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/sysconfig/network-scripts</span>
+[root@linux network-scripts]# <span class=term_command>vi ifcfg-eth1</span>
+<span class=term_write>DEVICE=eth1
+BOOTPROTO=dhcp
+ONBOOT=no
+TYPE=wireless
+ESSID=BLW-VBIRD
+MODE=Managed
+RATE=54M</span>      <span class=term_say>&lt;== 可以嚴格指定傳輸的速率，要與上面 iwconfig 相同，單位 b/s</span>
+<span class=term_write>KEY=12345678901234567890123456</span>
+</pre></td></tr></table>
+
+		要注意的是那個 ONBOOT=no 的設定，如果您想要每次開機時無線，網卡都會自動啟動，
+		那就將他設定為 yes 吧！否則就設定為 no 囉！要啟動再以 ifup eth1 來啟動即可！
+		呼呼！到此為止，您的無線網卡已經可以順利的給他啟動了喔！很快樂吧！ ^_^<br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		其實上面那個設定檔的內容都是在規劃出 iwconfig 的參數而已，
+		所以您除了可以查閱 ifup-wireless 的內容外，可以 man iwconfig ，
+		會知道的更詳細喔！而最重要的參數當然就是 ESSID 及 KEY 囉！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr><li><span class=text_import1>啟動與觀察無線網卡</span><br /><br />
+		要啟動就用 ifup eth1 來啟動，很簡單啦！要觀察就用 iwconfig 及 ifconfig 分別觀察，
+		底下您自己瞧瞧就好啊！ ^_^<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ifup eth1</span>
+<span class=term_say># 如果上面的測試都沒有問題的話，那麼建議您繼續底下的動作</span>
+
+[root@linux ~]# <span class=term_command>iwconfig eth1</span>
+eth1      802.11b/g NIC  ESSID:"BLW-VBIRD"
+          Mode:Managed  Frequency=2.437GHz  Access Point: 00:90:CC:D6:A4:1C
+          <span class=term_write>Bit Rate:54Mb/s</span>
+          Retry:off   RTS thr=2432 B   Fragment thr:off
+          Encryption key:****-****-****-****-****-****-**   Security mode:open
+          Power Management:off
+
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say># 加入底下這段：</span>
+<span class=term_write>/sbin/ifconfig eth1 up</span>
+</pre></td></tr></table>
+		</ol>
+
+		整個流程就是這麼簡單喔！不過，如果您的筆記型電腦已經有支援 802.11g/b 的無線網卡時，
+		比如說使用 Intel 規格的迅馳 (Centrino) 筆記型電腦，那除了上面在載入模組的地方不一樣，
+		因為 CentOS 4.3 本身就有支援 Centrino 的模組，那就是 ipw2200/ipw2100 ，
+		所以您可以直接跳到第二步，甚至可能在安裝的時候系統就主動的幫您安裝好這個無線網卡了呢！
+		那您就可以直接前往第三步驟開始設計您的 AP 與無線網卡的連線囉！ ^_^。在本章結尾的參考資料處，
+		鳥哥還是列出許多與無線網卡有關的連結，您可以自行前往查閱與您的無線網卡有關的資訊喔！ ^_^<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="problem"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">常見問題說明</span><br />
+<div class=block1>
+	其實這個小節也很重要的！因為可以讓您在唸完理論後，瞭解一下如何利用那些概念來查詢您的網路設定問題喔！
+	底下我們就針對幾個常見的問題來說說看吧！<br /><br />
+
+	<hr /><a NAME="problem_hosts"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">內部網域使用某些連線服務(如 FTP, 
+	POP3)所遇到的連線延遲問題</span><br />
+	<div class=block2>
+		您或許曾經聽過這樣的問題：『<span class=text_import2>我在我的虛擬網域內有幾部電腦，
+		這幾部電腦明明都是在同一個網域之內，而且系統通通沒有問題，為什麼我使用 pop3 或者是
+		ftp 連上我的 Linux 主機會停頓好久才連上？</span>』<br /><br />
+
+		由於網路在連線時，兩部主機之間會互相詢問對方的主機名稱，以確認對方的身份。
+		在目前的網際網路上面，我們大多使用 Domain Name System (DNS) 系統做為主機名稱與 IP 
+		對應的查詢，那就是我們在上面提到的 /etc/resolv.conf 檔案內設定的 IP 由來，
+		如果沒有指定正確的 DNS IP 的話，那麼我們就無法查詢到主機名稱與 IP 的對應了。<br /><br />
+
+		公開的網際網路可以這樣設定，但是如果是我們內部網域的私有 IP 主機呢？
+		因為是私有 IP 的主機，所以當然無法使用 /etc/resolv.conf 的設定來查詢到這部主機的名稱啊！
+		那怎麼辦？要知道，<span class=text_import2>如果兩部主機之間無法查詢到正確的主機名稱與 IP 的對應，
+		那麼將『可能』發生持續查詢主機名稱對應的動作，這個動作一般需要持續 30-60 
+		秒，因此，您的該次連線將會持續檢查主機名 30 秒鐘，也就會造成奇怪的 delay 的情況</span>。<br /><br />
+
+		這個問題最常發生在內部的 LAN ，例如使用 192.168.10.1 的主機連線到 192.168.10.2 的主機。
+		這個問題雖然可以透過修改軟體的設定來略過主機名稱的檢查，但是絕大多數的軟體都是預設啟用這個機制的，
+		因此，內部主機『<span class=text_import2>老是連線時期很慢，連線成功後速度就會恢復正常</span>』
+		時，通常就是這個問題啦！尤其是在 FTP 及 POP3 等網路連線軟體上最常見。<br /><br />
+
+		那麼如何避過這個情況？最簡單的方法就是『<span class=text_import2>給予內部的主機每部主機一個名稱與 
+		IP 的對應</span>』即可。舉例來說，我們知道每部主機都有一個主機名稱為 localhost ，對應到 
+		127.0.0.1 ，為什麼呢？因為這個 127.0.0.1 與 localhost 的對應就被寫到 /etc/hosts 內嘛！
+		當我們需要主機名稱與 IP 的對應時，系統就會先到 /etc/hosts 找尋對應的設定值，
+		如果找不到，才會使用 /etc/resolv.conf 的設定去網際網路找。這樣說，您明白了吧？
+		也就是說，只要修改了 <span class=text_import1>/etc/hosts</span>，加入每部主機與 IP 的對應，
+		就能夠避過主機名稱的檢查囉！<br /><br />
+
+		瞭解了嗎？所以說，您就要將您的 私有 IP 的電腦與電腦名稱寫入您的 
+		<span class=text_import1>/etc/hosts</span> 當中了！好了！那麼這個咚咚的內容如何呢？
+		我們來看一看原本的設定內容吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/hosts</span>
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1               localhost.localdomain   localhost
+<span class=term_say># 主機的 IP             主機的名稱              主機的別名</span>
+</pre></td></tr></table>
+
+		在上面的情況中很容易就發現了設定的方法了吧！很簡單吧！沒錯！那就是 IP 對應主機名稱啦！
+		那麼現在知道為什麼我們給他 ping localhost 的時候，位址會寫出 127.0.0.1 了吧！
+		那就是寫在這個檔案中的啦！<span class=text_import2>而且 localhost 那一行不能拿掉呦！
+		否則系統的某些服務可能就會無法被啟動</span>！好了！那麼將我區域網路內的所有的電腦 IP 
+		都給他寫進去！並且，每一部給他取一個您喜歡的名字，
+		<span class=text_import2>即使與 client 的電腦名稱設定不同也沒關係啦</span>！
+		以鳥哥為例，如果我還額外加設了 DHCP 的時候，那麼我就乾脆將所有的 C Class 
+		的所有網段全部給他寫入 /etc/hosts 當中，有點像底下這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/hosts</span>
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1               localhost.localdomain   localhost
+<span class=term_write>192.168.1.1　　linux001
+192.168.1.2　　linux002
+192.168.1.3　　linux003
+.........
+.........
+192.168.1.255　linux255</span>
+</pre></td></tr></table>
+
+		如此一來，不論我哪一部電腦連上來，不論是在同一個網段的哪一個 IP ，
+		我都可以很快速的追查到！嘿嘿！那麼區內網路互連的時候，就不會多等個好幾時秒鐘囉！<br /><br />
+	</div>
+
+	<hr /><a NAME="problem_dns"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">網址列無法解析問題</span><br />
+	<div class=block2>
+		很多朋友常問的一個問題『<span class=text_import2>咦！我可以撥接上網了，也可以 ping 
+		到奇摩雅虎的 IP ，但為何就是無法直接以網址連上 Internet 呢！</span>』嘿！被氣死！
+		前面不是一直強調那個 DNS 解析的問題嗎？對啦！就是名稱解析不對啦！趕快改一下 
+		/etc/resolv.conf 這個檔案吧！改成上層 ISP 給您的 DNS 主機的 IP 就可以啦！例如 Hinet 的 
+		168.95.1.1 及 Seednet 的 139.175.10.20 囉！例如底下的範例(這個範例就可以照抄了！ ^_^)：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/resolv.conf</span>
+<span class=term_write>nameserver 168.95.1.1
+nameserver 139.175.10.20</span>
+</pre></td></tr></table>
+
+		朋友們常常會在這個地方寫錯，因為很多書上都說這裡要設定成為 NAT 主機的 IP ，
+		那根本就是不對的！您應該要將所有管理的電腦內，關於 DNS 的設定都直接使用上面的設定值即可！
+		除非您的上層環境有使用防火牆，那才另外考量！<br /><br />
+	</div>
+
+	<hr /><a NAME="problem_route"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">預設路由的問題</span><br />
+	<div class=block2>
+		記得我們在前兩章提到的網路基礎當中，不是講了很多預設路由 (default gateway) 相關的說明嗎？
+		預設路由通常僅有一個，用來做為同一網域的其他主機傳遞非本網域的封包閘道。
+		但我們也知道在每個網路設定檔案 (/etc/sysconfig/network-scripts/ifcfg-ethx)
+		內部都可以指定『 GATEWAY 』這個參數，若這個參數重複設定的話，那可就麻煩啦！<br /><br />
+
+		舉例來說，您的 ifcfg-eth0 用來做為內部網域的溝通，所以您在該檔案內設定 GATEWAY 為您自己的 IP ，
+		但是該主機為使用 ADSL 撥接，所以當撥接成功後會產生一個 ppp0 的介面，這個 ppp0 介面也有自己的 
+		default gateway ，好了，那麼當你要將封包傳送到 Yahoo 這個非為本網域的主機時，
+		這個封包是要傳到 eth0 還是 ppp0 呢？因為兩個都有 default gateway 啊！<br /><br />
+
+		沒錯！很多朋友就是這裡搞不懂啦！常常會錯亂～所以，請注意，
+		<span class=text_import2>您的 default gateway 應該只能有一個，
+		如果是撥接，請不要在 ifcfg-eth0 當中指定 GATEWAY或 GATEWAYDEV 等變數</span>，重要重要！
+		<br /><br />
+	</div>
+
+	更多的網路除錯請參考後續章節<a href="0150detect_network.htm">Linux 網路偵錯</a> 的說明。<br /><br />
+</div>
+
+
+<hr /><a NAME="review"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class=block1>
+<ul><span class=text_import2>
+	<li>Linux 網路卡的預設代號為 eth0, eth1 等等；</li>
+	<li>Linux 內的網路卡代號為一個代號，並非為裝置檔案。欲對應裝置代號時，
+		可在 /etc/modprobe.conf 內製作好網卡代號與驅動模組的對應。</li>
+	<li>若要取得網路卡的完整功能，有時需要自行由網卡開發商的官方網站下載適合的原始碼來安裝。
+		編譯與安裝模組前必須先確定 gcc, make, kernel-devel (核心原始碼) 已經安裝完畢。</li>
+	<li>內部網域的私有 IP 之主機的『 IP 與主機名稱的對應』，最好還是寫入 /etc/hosts ，
+		可以克服很多軟體的 IP 反查所花費的等待時間。</li>
+	<li>在 Red Hat base 的 Linux distributions 當中，網路設定檔案大多放置於 /etc/sysconfig/network-scripts/
+		目錄下，尤其是該目錄下的 ifcfg-eth0 可設定網路參數；</li>
+	<li>在 ifcfg-eth0 當中，可以指定 MTU 以設定網路卡的最大傳輸單元，也可以利用 HWADDR 
+		指定出所需要設定的網卡；</li>
+	<li>在 GATEWAY 這個參數的設定上面，務必檢查妥當，僅設定一個 GATEWAY 即可。</li>
+	<li>可以使用 /etc/init.d/network restart 來重新啟動整個系統的網路介面。</li>
+	<li>若使用 DHCP 協定時，則請將 GATEWAY 取消設定，避免重複出現多個 default 
+		gateway ，反而造成無法連線的狀況。</li>
+	<li>撥接後可以產生一個新的實體介面，名稱為 ppp0 </li>
+	<li>主機名稱與 IP 的對應，通常使用 DNS 系統，該系統以 /etc/resolv.conf 做為伺服器 IP 設定的檔案。</li>
+	<li>無線網卡與無線基地台之間的連線由於是透過無線介面，所以需要特別注意網路安全；</li>
+	<li>常見的無線基地台(AP)的連線防護，主要利用控制登入者的 MAC 或者是加上連線加密機制的金鑰等方法；</li>
+	<li>設定網路卡可以使用 ifconfig 這個指令，而設定無線網卡則需要 iwconfig ，至於掃瞄基地台，
+		可以使用 iwlist 這個指令。</li>
+</span></ul>
+</div>
+
+
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>我要如何確定我在 Linux 系統上面的網路卡已經被 Linux 捉到並且驅動了？</li>
+	<div class=block2><font color=white size=-1>
+	網路卡能不能被捉到可以使用『 dmesg|grep eth 』來判斷，有沒有驅動則可以使用 lsmod 
+	看看模組有沒有載入核心！最後，以 ifconfig eth0 192.168.0.10 測試看看！
+	</font></div>
+
+	<li>假設我的網路參數為：IP 192.168.100.100, Netmask 255.255.255.0, 請問我要如何在 Linux 
+	上面設定好這些網路參數 (未提及的網路參數請自行定義！)？請使用手動與檔案設定方法分別說明。</li>
+	<div class=block2><font color=white size=-1>
+	手動設定為：『 ifconfig eth0 192.168.100.100 netmask 255.255.255.0 up 』<br />
+	檔案設定為：vi /etc/sysconfig/network-scripts/ifcfg-eth0 ，內容為：<br />
+	<div class=block2>DEVICE=eth0<br />
+	ONBOOT=yes<br />
+	BOOTPROTO=static<br />
+	IPADDR=192.168.100.100<br />
+	NETMASK=255.255.255.0<br />
+	NETWORK=192.168.100.0<br />
+	BROADCAST=192.168.100.255 要啟動則使用 ifup eth0 即可！
+	</div></font></div>
+
+	<li>我要將我的 Linux 主機名稱改名字，步驟應該如何(更改那個檔案？如何啟用？)？</li>
+	<div class=block2><font color=white size=-1>
+	Linux 主機名稱在 /etc/sysconfig/network 這個檔案裡面的『HOSTNAME=主機名稱』來設定，先以 
+	vi 來修改，改完後可以使用 /etc/init.d/network restart 不過建議直接 reboot 啟動主機名稱！
+	</font></div>
+
+	<li>/etc/resolv.conf 與 /etc/hosts 的功能為何？</li>
+	<div class=block2><font color=white size=-1>
+	以主機名稱尋找 IP 的方法， /etc/resolv.conf 內填寫 DNS 主機名稱，至於 /etc/hosts 則直接填寫主機名稱對應的 IP 即可！
+	其中 /etc/hosts 對於內部私有 IP 的主機名稱查詢非常有幫助！
+	</font></div>
+
+	<li>我使用 ADSL 撥接連上 Internet ，請問撥接成功之後，我的 Linux 上面會有幾個網路介面 
+	(假設我只有一個網路卡)？</li>
+	<div class=block2><font color=white size=-1>
+	因為撥接是使用 PPP (點對點)協定，所以撥接成功後會多出一個 ppp0 的介面，此外，系統原本即有 
+	eth0 及 lo 這兩個介面，所以共有三個介面。
+	</font></div>
+
+	<li>在 Linux 上面進行 ADSL 撥接應該使用什麼軟體？</li>
+	<div class=block2><font color=white size=-1>
+	其實軟體非常多，尤其是圖形介面的撥接軟體，多的很！
+	不過，依舊請愛用 rp-pppoe ，官方網站： http://www.roaringpenguin.com/pppoe/ 
+	</font></div>
+
+	<li>一般來說，如果我撥接成功，也取得了 ppp0 這個介面，但是卻無法對外連線成功，
+	您認為應該是哪裡出了問題？該如何解決？</li>
+	<div class=block2><font color=white size=-1>
+	因為撥接成功了，表示物理對外連線沒有問題，那麼可能的問題應該是發生在 Gateway 
+	上面了！確認的方法請使用 route -n 查閱路由資訊，然後修訂 /etc/sysconfig/network-scripts/ifcfg-eth0 吧！
+	</font></div>
+
+	<li>如果您的區域網路環境內有可以控管的無線 AP 時，請自行查出如何以 MAC 的方式管理可登入的用戶，
+		並將您的無線 AP 做好連線加密的金鑰設定。</li>
+	<div class=block2><font color=white size=-1>
+	請自行測試！謝謝！
+	</font></div>
+
+	<li>如果一部主機上面插了兩張相同晶片的網路卡，代表兩者使用的模組為同一個，此時可能會造成網卡代號的誤判；
+		請問您如何克服這個問題？讓網卡代號不會變動？</li>
+	<div class=block2><font color=white size=-1>
+	以現在的方法來講，其實我們可以透過指定 Hardware Address(硬體位址，通稱為 MAC) 來指定網卡代號與 MAC 的對應。
+	這個設定值可以在 ifcfg-ethx 裡面以 HWADDR 這個設定項目來指定的。
+	</font></div>
+
+	<li>如何在 Linux 上面的文字介面搜尋您所在區域的無線 AP ？</li>
+	<div class=block2><font color=white size=-1>
+	透過直接使用『 iwlist ethx scanning 』這個指令來指定某個無線網卡的搜尋！
+	然後再以 iwconfig 來進行網卡的設定即可！
+	</font></div>
+
+	<li>請依序說明：如果您想要新增一塊新的網路卡在您的主機上，並給予一個固定的私有 IP ，應如何進行？</li>
+	<div class=block2><font color=white size=-1>
+	<ul><li>先關掉主機的 power ，然後拆掉機殼，裝上網路卡；
+	<li>開機完成後，以 dmesg | grep eth 查詢是否可捉到該網路卡，若無法捉到，請編譯模組，若可捉到，找出網卡代號，
+		並且將該模組與網卡代號寫入 /etc/modprobe.conf 當中，以利未來開機時可自動達成對應；
+	<li>利用『 ifconfig "網卡代號" 』來查詢 MAC 為何？
+	<li>開始在 /etc/sysconfig/network-scripts 內建立 ifcfg-"網卡代號" 檔案，同時給予 HWADDR 的對應；
+	<li>啟動 /etc/init.d/network restart 測試是否能成功！</ul>
+	</font></div>
+
+	<li>如果您想要登入某個區域的無線 AP ，您應該向該處所至少申請哪些資料？</li>
+	<div class=block2><font color=white size=-1>
+	無線網路的技術相當多且複雜，所以需要取得的參數都不盡相同。不過，至少您還是得要取得 ESSID 以及 KEY
+	密碼，這樣才能夠連線登入該 AP 當中。
+	</font></div>
+
+</div>
+
+
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料：</span><br />
+<ul>
+	<li>rp-pppoe 官方網站：<a href="http://www.roaringpenguin.com/pppoe/" 
+		target="_blank">http://www.roaringpenguin.com/pppoe/</a></li>
+	<li>rp-pppoe 的安裝方法：<a href="http://linux.vbird.org0130internet_connect/0130internet_connect.htm#connect_adsl">http://linux.vbird.org0130internet_connect/0130internet_connect.htm#connect_adsl</a></li>
+	<li>無線網路安全白皮書(三)：<a href="http://www.cert.org.tw/document/column/show.htm?key=61"
+		target="_blank">http://www.cert.org.tw/document/column/show.htm?key=61</a></li>
+	<li>GW-US54Mini 驅動程式下載：<a href="http://www.planex.com.tw/download/wireless/gw-us54mini.htm"
+		target="_blank">http://www.planex.com.tw/download/wireless/gw-us54mini.htm</a></li>
+	<li>Intel Centrino 的無線網卡相關模組資訊：<br />
+		<a href="http://ipw2100.sourceforge.net/"
+		target="_blank">http://ipw2100.sourceforge.net/</a><br />
+		<a href="http://ipw2200.sourceforge.net/"
+		target="_blank">http://ipw2200.sourceforge.net/</a></li>
+	<li>HP 的許多無線網路的計畫連結：<a href="http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/"
+		target="_blank">http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/07/24：首次釋出日期<br />
+2003/08/18：重新校正，並且修正部分書寫方式<br />
+2003/08/20：新增課後練習部分<br />
+2003/09/19：加入 <a href="1000results.htm#0130internet_connect">前往參考用解答</a><br />
+2006/07/17：將原本舊文章移動到 <a href="0130internet_connect/0130internet_connect.htm">此處</a><br />
+</span>
+<hr><span class="text_date">2002/07/24以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0130internet_connect.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

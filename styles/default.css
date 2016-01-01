@@ -1,0 +1,57 @@
+@charset "utf-8";
+/* CSS Document */
+
+	 	body {
+			background-color: #D3D3D3;
+			color: #000000;
+			background-attachment:fixed ;
+		}
+				body,th,td,input,select,textarea,select,checkbox {
+			font-family: '新細明體', 'Times New Roman', serif;
+			font-size: 11pt ;
+		}
+		a:link		{text-decoration: none; color: blue}
+		a:visited	{text-decoration: none; color: red}
+		a:active	{text-decoration: none; color: blue}
+		a:hover		{text-decoration: underline; color: #ff0000}
+				table.head1	{width:100%; background-color: #FFCCCC; 
+				 border-style:groove;border-width:5px;border-color: #FFCCCC; margin:0;
+				 padding: 5px 5px}
+		   		   td.head1	{font: 10pt "新細明體", serif; color: #000099; }
+		   		   td.info1	{font: 11pt "新細明體", serif; color: #000066; text-align:center; width:14%}
+		   td.info2	{font: 11pt "新細明體", serif; color: #000066; text-align:center; width:12%}
+		    *.info21	{font: 11pt "新細明體", serif; color: #000066; }
+		    *.info22	{font: 11pt "新細明體", serif; color: blue  ; }
+		    *.info23	{font: 11pt "新細明體", serif; color: green ; }
+		   td.info3	{font: 11pt "新細明體", serif; color: #000066; text-align:justify}
+				*.text_head0	{font-size:18pt; font-family:'標楷體','Times New Roman','Times', serif; }
+		*.text_head_en	{font-size:18pt; font-family:'Times New Roman','Times', serif; }
+				*.text_h1	{font: 15pt "新細明體", serif; color: #0000BB; font-weight: bold }
+				*.text_h2	{font: 13pt "新細明體", serif; color: #0000BB; font-weight: bold }
+				*.text_import1	{font:  11pt "新細明體", serif; color: #000088; font-weight: bold  }
+		*.text_import2	{font:  11pt "新細明體", serif; color: #000088; font-weight: normal}
+		*.text_vbird	{font:  11pt "新細明體", serif; color: #000088; font-weight: normal; 
+				 font-style: italic;}
+		*.text_history	{font:  10pt "新細明體", serif; color: #000066; }
+		*.text_date	{font:  10pt "新細明體", serif; color: #3333FF; }
+				*.block1	{padding: 10px 20px 10px 25px; text-align:left }
+				*.block2	{padding: 10px 0px  10px 25px; text-align:left }
+	    table.term2		{width: 350px; background-color: #000000;
+				 border-style:groove;border-width:3px;border-color: #FFCCCC; margin:10px 0px;}
+	    	    table.term		{width: 580px; background-color: #000000;
+				 border-style:groove;border-width:3px;border-color: #FFCCCC; margin:10px 0px;}
+	       	       td.term		{font:  10pt "細明體", Fixedsys, serif; color: #FFFFFF; }
+		*.term_hd	{font:  10pt "細明體", Fixedsys, serif; color: #BBBBBB; }
+		*.term_note	{font:  10pt "細明體", Fixedsys, serif; color: #777777; font-weight: normal }
+		*.term_note_b	{font:  10pt "細明體", Fixedsys, serif; color: #FF77FF; font-weight: bolder }
+		*.term_command	{font:  10pt "細明體", Fixedsys, serif; color: yellow ; font-weight: bolder }
+		*.term_write	{font:  10pt "細明體", Fixedsys, serif; color: yellow ; font-weight: normal }
+		*.term_say	{font:  10pt "細明體", Fixedsys, serif; color: #FF6666; font-weight: normal }
+		*.term_white	{font:  10pt "細明體", Fixedsys, serif; color: #000000; background-color: #FFFFFF }
+		*.list1		{list-style-type: square ; padding-left:0; margin-bottom:0 }
+		*.listol	{                          padding-left:0; margin-bottom:0 }
+		*.blockex	{padding: 10px 0px  10px 25px ; font: 9pt "新細明體", serif; color: #FFFFFF ; text-align: left }
+		*.fontwidth	{font-family: 細明體 }
+		*.fontwidth td 	{font-family: 細明體 ; text-align: justify; }
+		
+table.wrap {border: 1px solid #960;}

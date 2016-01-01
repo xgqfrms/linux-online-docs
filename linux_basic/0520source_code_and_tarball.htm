@@ -1,0 +1,1716 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="談一下，在 Linux 裡面的軟體管理，用最原始的原始碼與 tarball 來管理的。" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 原始碼與 Tarball 軟體管理員</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第二十二章、軟體安裝：原始碼與<span class="text_head_en"> Tarball </span></span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/15</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們在<a href="/linux_basic/0110whatislinux.php">第一章、Linux是什麼</a>當中提到了 GNU 計畫與 
+	GPL 授權所產生的自由軟體與開放源碼等咚咚。不過，前面的章節都還沒有提到真正的開放源碼是什麼的訊息！在這一章當中，我們將藉由
+	Linux 作業系統裡面的執行檔，來理解什麼是可執行的程式，以及瞭解什麼是編譯器。另外，與程式息息相關的函式庫 
+	(library) 的資訊也需要瞭解一番！不過，在這個章節當中，鳥哥並不是要你成為一個開放源碼的程式設計師，
+	而是希望你可以瞭解如何將開放源碼的程式設計、加入函式庫的原理、透過編譯而成為可以執行
+	的 binary program，最後該執行檔可被我們所使用的一連串過程！<br /><br />
+
+	瞭解上面的咚咚有什麼好處呢？因為在 Linux 的世界裡面，由於客製化的關係，有時候我們需要自行安裝軟體在自己的 
+	Linux 系統上面，所以如果你有簡單的程式編譯概念，那麼將很容易進行軟體的安裝。
+	甚至在發生軟體編譯過程中的錯誤時，你也可以自行作一些簡易的修訂呢！而最傳統的軟體安裝過程，
+	自然就是由原始碼編譯而來的囉！所以，在這裡我們將介紹最原始的軟體管理方式：使用
+	Tarball 來安裝與升級管理我們的軟體喔！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#intro">開放源碼的軟體安裝與升級簡介</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#intro_whatisopensource">什麼是開放源碼、編譯器與可執行檔</a><br />
+	　　1.2 <a href="#intro_library">什麼是函式庫</a><br />
+	　　1.3 <a href="#intro_make">什麼是 make 與 configure</a><br />
+	　　1.4 <a href="#intro_tarball">什麼是 Tarball 的軟體</a><br />
+	　　1.5 <a href="#intro_howto">如何安裝與升級軟體</a><br />
+	</span>
+2. <a href="#simple_ex">使用傳統程式語言進行編譯的簡單範例</a><br/>
+	<span class="text_h2">
+	　　2.1 <a href="#simple_ex_hello">單一程式：印出 Hello World</a><br />
+	　　2.2 <a href="#simple_ex_function">主、副程式連結：副程式的編譯</a><br />
+	　　2.3 <a href="#simple_ex_lib">呼叫外部函式庫：加入連結的函式庫</a><br />
+	　　2.4 <a href="#simple_ex_gcc">gcc 的簡易用法 (編譯、參數與鏈結)</a><br />
+	</span>
+3. <a href="#make">用 make 進行巨集編譯</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#make_why">為什麼要用 make</a><br />
+	　　3.2 <a href="#make_makefile">makefile 的基本語法與變數</a><br />
+	</span>
+4. <a href="#tarball">Tarball 的管理與建議</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#tarball_pack">使用原始碼管理軟體所需要的基礎軟體</a><br />
+	　　4.2 <a href="#tarball_step">Tarball 安裝的基本步驟</a><br />
+	　　4.3 <a href="#tarball_common">一般 Tarball 軟體安裝的建議事項 (如何移除？升級？)</a><br />
+	　　4.4 <a href="#tarball_exntp">一個簡單的範例、利用 ntp 來示範</a><br />
+	　　4.5 <a href="#tarball_patch">利用 patch 更新原始碼</a><br />
+	</span>
+5. <a href="#library">函式庫管理</a><br />
+	<span class="text_h2">
+	　　5.1 <a href="#library_dyna_sta">動態與靜態函式庫</a><br />
+	　　5.2 <a href="#library_ldconfig">ldconfig 與 /etc/ld.so.conf</a><br />
+	　　5.3 <a href="#ldd">程式的動態函式庫解析： ldd</a><br />
+	</span>
+6. <a href="#check">檢驗軟體的正確性</a><br />
+	<span class="text_h2">
+	　　6.1 <a href="#check_md5sum">md5sum / sha1sum</a><br />
+	</span>
+7. <a href="#hint">重點回顧</a><br />
+8. <a href="#ex">課後練習</a><br />
+9. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+10. <a href="http://phorum.vbird.org/viewtopic.php?t=23892"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23892</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="intro"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">開放源碼的軟體安裝與升級簡介</span><br />
+<div class="block1">
+	<p>如果鳥哥想要在我的 Linux 伺服器上面跑網頁伺服器 (WWW server) 這項服務，那麼我應該要做些什麼事呢？當然就一定需要『<span 
+	class="text_import2">安裝網頁伺服器的軟體</span>』囉！如果鳥哥的伺服器上面沒有這個軟體的話，那當然也就無法啟用 
+	WWW 的服務啦！所以啦，想要在你的 Linux 上面進行一些有的沒的功能，學會『<span 
+	class="text_import2">如何安裝軟體</span>』是很重要的一個課題！</p>
+
+	<p>咦！安裝軟體有什麼難的？在 W 牌的作業系統上面安裝軟體時，不是只要一直給他按
+	『下一步』就可以安裝妥當了嗎？話是這樣說沒錯啦，不過，也由於如此，所以在 Windows 
+	系統上面的軟體都是一模一樣的，也就是說，你『<span class="text_import2">無法修改該軟體的原始程式碼</span>』，因此，
+	萬一你想要增加或者減少該軟體的某些功能時，大概只能求助於當初發行該軟體的廠商了！(這就是所謂的商機嗎？)</p>
+
+	<p>或許你會說：『唉呦！我不過是一般人，不會用到多餘的功能，所以不太可能會更動到程式碼的部分吧？』
+	如果你這麼想的話，很抱歉～是有問題的！怎麼說呢？像目前網路上面的病毒、黑客軟體、臭蟲程式等等，
+	都可能對你的主機上面的某些軟體造成影響，導致主機的當機或者是其他資料損毀等等的傷害。
+	如果你可以藉由安全資訊單位所提供的修訂方式進行修改，
+	那麼你將可以很快速的自行修補好該軟體的漏洞，而不必一定要等到軟體開發商提供修補的程式包哩！要知道，<span 
+	class="text_import2">提早補洞</span>是很重要的一件事。</p>
+
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">	並不是軟體開發商故意要搞出一個有問題的軟體，而是某些程式碼當初設計時可能沒有考量周全，
+	或者是程式碼與作業系統的權限設定並不相同，所導致的一些漏洞。當然，也有可能是 cracker 透過某些攻擊程式測試到程式的不周全所致。
+	無論如何，只要有網路存在的一天，可以想像的到，程式的漏洞永遠補不完！但能補多少就補多少吧！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<p>這樣說可以瞭解 Linux 的優點了嗎？沒錯！因為 <span class="text_import2">Linux
+	上面的軟體幾乎都是經過 GPL 的授權</span>，所以每個軟體幾乎均提供原始程式碼，
+	並且你可以自行修改該程式碼，以符合你個人的需求呢！很棒吧！這就是開放源碼的優點囉！不過，到底什麼是開放源碼？
+	這些程式碼是什麼咚咚？又 Linux 上面可以執行的相關軟體檔案與開放源碼之間是如何轉換的？不同版本的
+	Linux 之間能不能使用同一個執行檔？或者是該執行檔需要由原始程式碼的部分重新進行轉換？
+	這些都是需要釐清觀念的。底下我們先就原始程式碼與可執行檔來進行說明。<br /><br /></p>
+
+	<hr /><a name="intro_whatisopensource"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是開放源碼、編譯器與可執行檔</span>
+	<div class="block2">
+		<p>在討論程式碼是什麼之前，我們先來談論一下什麼是可執行檔？我們說過，在
+		Linux 系統上面，一個檔案能不能被執行看的是有沒有可執行的那個權限 (具有
+		x permission)，不過，<span class="text_import2">Linux 系統上真正認識的可執行檔其實是二進位檔案 (
+		binary program)</span>，例如 /usr/bin/passwd, /bin/touch 這些個檔案即為二進位程式碼。</p>
+
+		<p>或許你會說 shell scripts 不是也可以執行嗎？其實 shell scripts 只是利用 shell (例如 bash) 
+		這支程式的功能進行一些判斷式，而最終執行的除了 bash 提供的功能外，仍是呼叫一些已經編譯好的二進位程式來執行的呢！
+		當然啦， bash 本身也是一支二進位程式啊！那麼我怎麼知道一個檔案是否為 binary 呢？還記得我們在<a 
+		href="/linux_basic/0220filemanager.php#file">第七章裡面提到的 file</a> 
+		這個指令的功能嗎？對啦！用他就是了！我們現在來測試一下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 先以系統的檔案測試看看：</span>
+[root@www ~]# <span class="term_command">file /bin/bash</span>
+/bin/bash: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), for GNU/
+Linux 2.6.9, dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+
+<span class="term_hd"># 如果是系統提供的 /etc/init.d/syslog 呢？</span>
+[root@www ~]# <span class="term_command">file /etc/init.d/syslog</span>
+/etc/init.d/syslog: Bourne-Again shell script text executable
+</pre></td></tr></table>
+
+		<p>看到了吧！如果是 binary 而且是可以執行的時候，他就會顯示執行檔類別 (ELF 32-bit LSB executable)，
+		同時會說明是否使用<span class="text_import2">動態函式庫 (shared libs)</span>，而如果是一般的 
+		script ，那他就會顯示出 text executables 之類的字樣！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		事實上，syslog 的資料顯示出 Bourne-Again ... 那一行，是因為你的 scripts 上面第一行有宣告 #!/bin/bash
+		的緣故，如果你將 script 的第一行拿掉，那麼不管 /etc/init.d/syslog 
+		的權限為何，他其實顯示的是 ASCII 文字檔的資訊喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>既然 Linux 作業系統真正認識的其實是 binary program，那麼我們是如何做出這樣的一支
+		binary 的程式呢？首先，我們必須要寫程式，用什麼東西寫程式？就是一般的文書處理器啊！鳥哥都喜歡使用
+		<a href="/linux_basic/0310vi.php">vim</a> 來進行程式的撰寫，寫完的程式就是所謂的原始程式碼囉！
+		<span class="text_import2">這個程式碼檔案其實就是一般的純文字檔</span>。
+		在完成這個原始碼檔案的編寫之後，再來就是要將這個檔案『<span class="text_import2">編譯</span>』成為作業系統看的懂得
+		binary program 囉！而要編譯自然就需要『<span class="text_import2">編譯器</span>』來動作，
+		經過編譯器的編譯與連結之後，就會產生一支可以執行的 binary program 囉。</p>
+
+		<p>舉個例子來說，在 Linux 上面最標準的程式語言為 C ，所以我使用 C 的語法進行原始程式碼的書寫，寫完之後，以
+		Linux 上標準的 C 語言編譯器 <span class="text_import2">gcc</span> 這支程式來編譯，就可以製作一支可以執行的
+		binary program 囉。整個的流程有點像這樣：</p>
+
+		<a name="fig1.1.1"></a>
+		<center><img src="0520source/source_to_binary.gif" alt="利用 gcc 編譯器進行程式的編譯流程示意圖" 
+		title="利用 gcc 編譯器進行程式的編譯流程示意圖" border="1" /><br />
+		圖 1.1.1、利用 gcc 編譯器進行程式的編譯流程示意圖"<br /></center>
+
+		<p>事實上，在編譯的過程當中還會產生所謂的<span class="text_import2">目標檔 (Object file)</span>，這些檔案是以 
+		*.o 的副檔名樣式存在的！至於 C 語言的原始碼檔案通常以 *.c 作為副檔名。此外，有的時候，我們會在程式當中『引用、呼叫』
+		其他的外部副程式，或者是利用其他軟體提供的『函數功能』，這個時候，我們就必須要在編譯的過程當中，
+		將該函式庫給他加進去，如此一來，編譯器就可以將所有的程式碼與函式庫作一個連結 (Link) 以產生正確的執行檔囉。</p>
+
+		<p>總之，我們可以這麼說：</p>
+		<ul>
+		<li>開放源碼：就是程式碼，寫給人類看的程式語言，但機器並不認識，所以無法執行；</li>
+		<li>編譯器：將程式碼轉譯成為機器看的懂得語言，就類似翻譯者的角色；</li>
+		<li>可執行檔：經過編譯器變成二進位程式後，機器看的懂所以可以執行的檔案。</li>
+		</ul>
+	</div>
+
+	<hr /><a name="intro_library"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是函式庫</span>
+	<div class="block2">
+		<p>在前一小節的<a href="#fig1.1.1">圖1.1.1</a>示意圖中，在編譯的過程裡面有提到函式庫這東西。
+		什麼是函式庫呢？先舉個例子來說：我們的 Linux 系統上通常已經提供一個可以進行身份驗證的模組，
+		就是在<a href="/linux_basic/0410accountmanager.php#usershell">第十四章提到的 PAM 模組</a>。這個
+		PAM 提供的功能可以讓很多的程式在被執行的時候，除了可以驗證使用者登入的資訊外，
+		還可以將身份確認的資料記錄在<a href="/linux_basic/0570syslog.php">登錄檔</a>裡面，以方便系統管理員的追蹤！</p>
+
+		<p>既然有這麼好用的功能，那如果我要編寫具有身份認證功能的程式時，直接引用該 PAM 
+		的功能就好啦，如此一來，我就不需要重新設計認證機制囉！也就是說，只要在我寫的程式碼裡面，設定去呼叫 PAM 
+		的函式功能，我的程式就可以利用 Linux 原本就有的身份認證的程序咯！除此之外，其實我們的 Linux 
+		核心也提供了相當多的函式庫來給硬體開發者利用喔。</p>
+
+		<p>函式庫又分為動態與靜態函式庫，這兩個咚咚的分別我們在後面的小節再加以說明。
+		這裡我們以一個簡單的流程圖，來示意一支有呼叫外部函式庫的程式的執行情況。</p>
+
+		<a name="fig1.2.1"></a>
+		<center><img src="0520source/library.gif" alt="程式執行時引用外部動態函式庫的示意圖" 
+		title="程式執行時引用外部動態函式庫的示意圖" border="0" /><br />
+		圖 1.2.1、程式執行時引用外部動態函式庫的示意圖<br /></center>
+
+		<p>很簡單的示意圖啊！^_^！而如果要在程式裡面加入引用的函式庫，就需要如<a href="#fig1.1.1">圖 1.1.1</a> 所示，
+		亦即在編譯的過程當中，就需要加入函式庫的相關設定囉。
+		事實上， Linux 的核心提供很多的核心相關函式庫與外部參數，
+		這些核心功能在設計硬體的驅動程式的時候是相當有用的資訊，這些核心相關資訊大多放置在
+		<span class="text_import2">/usr/include, /lib, /usr/lib</span>
+		裡面哩！我們在本章的後續小節再來探討。反正我們可以簡單的這麼想：</p>
+		<ul>
+		<li>函式庫：就類似副程式的角色，可以被呼叫來執行的一段功能函數。</li>
+		</ul>
+	</div>
+
+	<hr /><a name="intro_make"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 make 與 configure</span>
+	<div class="block2">
+		<p>事實上，使用類似 gcc 的編譯器來進行編譯的過程並不簡單，因為一套軟體並不會僅有一支程式，
+		而是有一堆程式碼檔案。所以除了每個主程式與副程式均需要寫上一筆編譯過程的指令外，還需要寫上最終的連結程序。
+		程式碼小的時候還好，如果是類似 WWW 伺服器軟體 (例如 <a href="/linux_server/0360apache.php">Apache</a>)
+		，或者是類似核心的原始碼，動則數百 MBytes 的資料量，編譯指令會寫到瘋掉～這個時候，我們就可以使用
+		make 這個指令的相關功能來進行編譯過程的指令簡化了！</p>
+
+		<p>當執行 make 時，make 會在當時的目錄下搜尋 <span class="text_import2">Makefile (or makefile)</span> 
+		這個文字檔，而 Makefile 裡面則記錄了原始碼如何編譯的詳細資訊！
+		make 會自動的判別原始碼是否經過變動了，而自動更新執行檔，是軟體工程師相當好用的一個輔助工具呢！</p>
+
+		<p>咦！make 是一支程式，會去找 Makefile ，那 Makefile 怎麼寫？
+		通常軟體開發商都會寫一支偵測程式來偵測使用者的作業環境，
+		以及該作業環境是否有軟體開發商所需要的其他功能，該偵測程式偵測完畢後，就會主動的建立這個
+		Makefile 的規則檔案啦！通常這支偵測程式的檔名為 configure 或者是 config 。</p>
+
+		<p>咦！那為什麼要偵測作業環境呢？在<a href="/linux_basic/0110whatislinux.php">第一章</a>當中，
+		不是曾經提過其實每個 Linux distribution 都使用同樣的核心嗎？但妳得要注意，
+		不同版本的核心所使用的系統呼叫可能不相同，而且每個軟體所需要的相依的函式庫也不相同，
+		同時，軟體開發商不會僅針對 Linux 開發，而是會針對整個 Unix-Like 做開發啊！
+		所以他也必須要偵測該作業系統平台有沒有提供合適的編譯器才行！所以當然要偵測環境啊！
+		一般來說，偵測程式會偵測的資料大約有底下這些：</p>
+
+		<ul class="text_import2">
+		<li>是否有適合的編譯器可以編譯本軟體的程式碼；</li>
+		<li>是否已經存在本軟體所需要的函式庫，或其他需要的相依軟體；</li>
+		<li>作業系統平台是否適合本軟體，包括 Linux 的核心版本；</li>
+		<li>核心的表頭定義檔 (header include) 是否存在 (驅動程式必須要的偵測)。</li>
+		</ul>
+
+		<p>至於 make 與 configure 運作流程的相關性，我們可以使用底下的圖示來示意一下啊！
+		下圖中，妳要進行的任務其實只有兩個，一個是執行 configure 來建立 Makefile ，
+		這個步驟一定要成功！成功之後再以 make 來呼叫所需要的資料來編譯即可！非常簡單！</p>
+
+		<center><img src="0520source/make_configure.gif" alt="透過 configure 與 make 進行編譯示意圖" 
+		title="透過 configure 與 make 進行編譯示意圖" border="0" /><br />
+		圖 1.3.1、透過 configure 與 make 進行編譯示意圖<br /></center>
+
+		<p>由於不同的 Linux distribution 的函式庫檔案所放置的路徑，或者是函式庫的檔名訂定，
+		或者是預設安裝的編譯器，以及核心的版本都不相同，因此理論上，妳無法在 CentOS 5.x 
+		上面編譯出 binary program 後，還將他拿到 SuSE 上面執行，這個動作通常是不可能成功的！
+		因為呼叫的目標函式庫位置可能不同 (參考<a href="#fig1.2.1">圖1.2.1</a>) ，
+		核心版本更不可能相同！所以能夠執行的情況是微乎其微！所以同一套軟體要在不同的平台上面執行時，
+		必須要重複編譯！所以才需要原始碼嘛！瞭解乎！</p>
+
+		<p>詳細的 make 用法與 Makefile 規則，在後續的小節裡面再探討囉！</p>
+	</div>
+
+	<hr /><a name="intro_tarball"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 Tarball 的軟體</span>
+	<div class="block2">
+		<p>從前面幾個小節的說明來看，我們知道所謂的原始程式碼，其實就是一些寫滿了程式碼的純文字檔案。
+		那我們在<a href="/linux_basic/0240tarcompress.php">第九章壓縮指令的介紹</a>當中，
+		也瞭解了純文字檔在網路上其實是很浪費頻寬的一種檔案格式！
+		所以啦，如果能夠將這些原始碼透過檔案的打包與壓縮技術來將檔案的數量與容量減小，
+		不但讓使用者容易下載，軟體開發商的網站頻寬也能夠節省很多很多啊！這就是
+		Tarball 檔案的由來囉！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		想一想，一個核心的原始碼檔案大約要 300~500 MB 以上，如果每個人都去下載這樣的一個核心檔案，
+		呵呵！那麼網路頻寬不被吃的死翹翹才怪呢！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>所謂的 Tarball 檔案，其實就是將軟體的所有原始碼檔案先以 <a href="/linux_basic/0240tarcompress.php#tar">tar</a>
+		打包，然後再以壓縮技術來壓縮，通常最常見的就是以 <a href="/linux_basic/0240tarcompress.php#gzip">gzip</a>
+		來壓縮了。因為利用了 tar 與 gzip 的功能，所以 <span class="text_import2">tarball
+		檔案一般的副檔名就會寫成 *.tar.gz 或者是簡寫為 *.tgz 囉</span>！不過，近來由於 <a 
+		href="/linux_basic/0240tarcompress.php#bzip2">bzip2</a> 的壓縮率較佳，所以 Tarball 漸漸的以 bzip2
+		的壓縮技術來取代 gzip 囉！因此檔名也會變成 *.tar.bz2 之類的哩。所以說， Tarball 是一個軟體包，
+		妳將他解壓縮之後，裡面的檔案通常就會有：</p>
+
+		<ul class="text_import2">
+		<li>原始程式碼檔案；</li>
+		<li>偵測程式檔案 (可能是 configure 或 config 等檔名)；</li>
+		<li>本軟體的簡易說明與安裝說明 (INSTALL 或 README)。</li></ul>
+
+		<p>其中最重要的是那個 INSTALL 或者是 README 這兩個檔案，通常你只要能夠參考這兩個檔案，
+		Tarball 軟體的安裝是很簡單的啦！我們在後面的章節會再繼續介紹 Tarball 這個玩意兒。</p>
+	</div>
+
+	<hr /><a name="intro_howto"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">如何安裝與升級軟體</span>
+	<div class="block2">
+		<p>將原始碼作了一個簡單的介紹，也知道了系統其實認識的可執行檔是
+		binary program 之後，好了，得要聊一聊，那麼怎麼安裝與升級一個 Tarball 
+		的軟體？為什麼要安裝一個新的軟體呢？當然是因為我們的主機上面沒有該軟體囉！那麼，
+		為何要升級呢？原因可能有底下這些：</p>
+
+		<ul class="text_import2">
+		<li>需要新的功能，但舊有主機的舊版軟體並沒有，所以需要升級到新版的軟體；</li>
+		<li>舊版本的軟體上面可能有資安上的顧慮，所以需要更新到新版的軟體；</li>
+		<li>舊版的軟體執行效能不彰，或者執行的能力不能讓管理者滿足。</li></ul>
+
+		<p>在上面的需求當中，尤其需要注意的是第二點，當一個軟體有安全上的顧慮時，千萬不要懷疑，
+		趕緊更新軟體吧！否則造成網路危機，那可不是鬧著玩的！那麼更新的方法有哪些呢？
+		基本上更新的方法可以分為兩大類，分別是：</p>
+
+		<ul class="text_import2">
+		<li>直接以原始碼透過編譯來安裝與升級；</li>
+		<li>直接以編譯好的 binary program 來安裝與升級。</li></ul>
+
+		<p>上面第一點很簡單，就是直接以 Tarball 在自己的機器上面進行偵測、編譯、
+		安裝與設定等等動作來升級就是了。不過，這樣的動作雖然讓使用者在安裝過程當中具有很高的彈性，
+		但畢竟是比較麻煩一點，如果
+		Linux distribution 廠商能夠針對自己的作業平台先進行編譯等過程，再將編譯好的
+		binary program 釋出的話，那由於我的系統與該 Linux distribution 的環境是相同的，所以他所釋出的
+		binary program 就可以在我的機器上面直接安裝啦！省略了偵測與編譯等等繁雜的過程呢！</p>
+
+		<p>這個預先編譯好程式的機制存在於很多 distribution 喔，包括有 <span class="text_import2">Red Hat 系統
+		(含 Fedora/CentOS 系列) 發展的 RPM 軟體管理機制與 yum 線上更新模式； Debian
+		使用的 dpkg 軟體管理機制與 APT 線上更新模式等等</span>。</p>
+
+		<p>由於 CentOS 系統是依循標準的 Linux distribution，所以可以使用 Tarball 直接進行編譯的安裝與升級，
+		當然也可以使用 RPM 相關的機制來進行安裝與升級囉！本章節主要針對 Tarball ，至於 RPM 則留待下個章節再來介紹呢！</p>
+
+		<p>好了，那麼一個軟體的 Tarball 是如何安裝的呢？基本流程是這樣的啦：</p>
+
+		<ol class="text_import2">
+		<li>將 Tarball 由廠商的網頁下載下來；</li>
+		<li>將 Tarball 解開，產生很多的原始碼檔案；</li>
+		<li>開始以 gcc 進行原始碼的編譯 (會產生目標檔 object files)；</li>
+		<li>然後以 gcc 進行函式庫、主、副程式的連結，以形成主要的 binary file；</li>
+		<li>將上述的 binary file 以及相關的設定檔安裝至自己的主機上面。</li></ol>
+
+		<p>上面第 3, 4 步驟當中，我們可以透過 make 這個指令的功能來簡化他，
+		所以整個步驟其實是很簡單的啦！只不過你就得需要至少有
+		gcc 以及 make 這兩個軟體在你的 Linux 系統裡面才行喔！
+		詳細的過程以及需要的軟體我們在後面的章節繼續來介紹的啦！</p>
+	</div>
+</div>
+
+
+<hr /><a name="simple_ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">使用傳統程式語言進行編譯的簡單範例</span>
+<div class="block1">
+	<p>經過上面的介紹之後，你應該比較清楚的知道原始碼、編譯器、函式庫與執行檔之間的相關性了。
+	不過，詳細的流程可能還是不很清楚，所以，在這裡我們以一個簡單的程式範例來說明整個編譯的過程喔！趕緊進入
+	Linux 系統，實地的操作一下底下的範例呢！<br /><br /></p>
+
+	<hr /><a name="simple_ex_hello"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">單一程式：印出 Hello World</span>
+	<div class="block2">
+		<p>我們以 Linux 上面最常見的 C 語言來撰寫第一支程式！第一支程式最常作的就是.....
+		在螢幕上面印出『<span class="text_import2">Hello World！</span>』的字樣～當然，
+		這裡我們是以簡單的 C 語言來撰寫，如果你對於 C 有興趣的話，那麼請自行購買相關的書籍喔！
+		^_^ 好了，不囉唆，立刻編輯第一支程式吧！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		請先確認你的 Linux 系統裡面已經安裝了 gcc 了喔！如果尚未安裝 
+		gcc 的話，請先參考下一節的 RPM 安裝法，先安裝好 gcc 之後，再回來閱讀本章。
+		如果你已經有網路了，那麼直接使用『 yum groupinstall "Development Tools" 』
+		預先安裝好所需的所有軟體即可。 rpm 與 yum 均會在下一章介紹。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr /><ul class="list1"><li class="text_import1">編輯程式碼，亦即原始碼</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim hello.c</span>   <span class="term_note">&lt;==用 C 語言寫的程式副檔名建議用 .c</span>
+<span class="term_write">#include &lt;stdio.h&gt;
+int main(void)
+{
+        printf("Hello World\n");
+}</span>
+</pre></td></tr></table>
+
+		<p>上面是用 C 語言的語法寫成的一個程式檔案。第一行的那個『 # 』並不是註解喔！如果你擔心輸入錯誤，
+		請到底下的連結下載這個檔案：</p>
+		<ul><li><a 
+		href="/linux_basic/0520source/hello.c">http://linux.vbird.org/linux_basic/0520source/hello.c</a>
+		</li></ul>
+
+		<hr /><ul class="list1"><li class="text_import1">開始編譯與測試執行</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc hello.c</span>
+[root@www ~]# <span class="term_command">ll hello.c a.out</span>
+<span class="term_write">-rwxr-xr-x</span> 1 root root 4725 Jun  5 02:41 <span class="term_write">a.out</span>   <span class="term_note">&lt;==此時會產生這個檔名</span>
+-rw-r--r-- 1 root root   72 Jun  5 02:40 hello.c
+
+[root@www ~]# <span class="term_command">./a.out</span>
+Hello World  <span class="term_note">&lt;==呵呵！成果出現了！</span>
+</pre></td></tr></table>
+
+		<p>在預設的狀態下，如果我們直接以 gcc 編譯原始碼，並且沒有加上任何參數，則<span 
+		class="text_import2">執行檔的檔名會被自動設定為 a.out 這個檔案名稱</span>！
+		所以妳就能夠直接執行 ./a.out 這個執行檔啦！上面的例子很簡單吧！那個 hello.c 就是原始碼，而
+		gcc 就是編譯器，至於 a.out 就是編譯成功的可執行 binary program 囉！
+		咦！那如果我想要產生目標檔 (object file) 來進行其他的動作，而且執行檔的檔名也不要用預設的
+		a.out ，那該如何是好？其實妳可以將上面的第 2 個步驟改成這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc -c hello.c</span>
+[root@www ~]# <span class="term_command">ll hello*</span>
+-rw-r--r-- 1 root root  72 Jun  5 02:40 hello.c
+-rw-r--r-- 1 root root 868 Jun  5 02:44 <span class="term_write">hello.o</span>  <span class="term_note">&lt;==就是被產生的目標檔</span>
+
+[root@www ~]# <span class="term_command">gcc -o hello hello.o</span>
+[root@www ~]# <span class="term_command">ll hello*</span>
+<span class="term_write">-rwxr-xr-x</span> 1 root root 4725 Jun  5 02:47 <span class="term_write">hello</span>  <span class="term_note">&lt;==這就是可執行檔！ -o 的結果</span>
+-rw-r--r-- 1 root root   72 Jun  5 02:40 hello.c
+-rw-r--r-- 1 root root  868 Jun  5 02:44 hello.o
+
+[root@www ~]# <span class="term_command">./hello</span>
+Hello World
+</pre></td></tr></table>
+
+		<p>這個步驟主要是利用 hello.o 這個目標檔製作出一個名為 hello 的執行檔，詳細的 gcc 
+		語法我們會在後續章節中繼續介紹！透過這個動作後，我們可以得到 hello 及 hello.o 兩個檔案，
+		真正可以執行的是 hello 這個 binary program 喔！
+		或許你會覺得，咦！只要一個動作作出 a.out 就好了，幹嘛還要先製作目標檔再做成執行檔呢？
+		呵呵！透過下個範例，你就可以知道為什麼啦！</p>
+	</div>
+
+	<hr /><a name="simple_ex_function"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主、副程式連結：副程式的編譯</span>
+	<div class="block2">
+		<p>如果我們在一個主程式裡面又呼叫了另一個副程式呢？這是很常見的一個程式寫法，
+		因為可以簡化整個程式的易讀性！在底下的例子當中，我們以
+		thanks.c 這個主程式去呼叫 thanks_2.c 這個副程式，寫法很簡單：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">撰寫所需要的主、副程式</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 編輯主程式：</span>
+[root@www ~]# <span class="term_command">vim thanks.c</span>
+<span class="term_write">#include &lt;stdio.h&gt;
+int main(void)
+{
+        printf("Hello World\n");
+        thanks_2();
+}</span>
+<span class="term_say"># 上面的 thanks_2(); 那一行就是呼叫副程式啦！</span>
+
+[root@www ~]# <span class="term_command">vim thanks_2.c</span>
+<span class="term_write">#include &lt;stdio.h&gt;
+void thanks_2(void)
+{
+        printf("Thank you!\n");
+}</span>
+</pre></td></tr></table>
+
+		<p>上面這兩個檔案你可以到底下下載：</p>
+		<ul>
+		<li><a href="/linux_basic/0520source/thanks.c">http://linux.vbird.org/linux_basic/0520source/thanks.c</a></li>
+		<li><a href="/linux_basic/0520source/thanks_2.c">http://linux.vbird.org/linux_basic/0520source/thanks_2.c</a></li>
+		</ul>
+
+		<hr /><ul class="list1"><li class="text_import1">進行程式的編譯與連結 (Link)</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 2. 開始將原始碼編譯成為可執行的 binary file ：</span>
+[root@www ~]# <span class="term_command">gcc -c thanks.c thanks_2.c</span>
+[root@www ~]# <span class="term_command">ll thanks*</span>
+-rw-r--r-- 1 root root  76 Jun  5 16:13 thanks_2.c
+<span class="term_write">-rw-r--r-- 1 root root 856 Jun  5 16:13 thanks_2.o</span>  <span class="term_note">&lt;==編譯產生的！</span>
+-rw-r--r-- 1 root root  92 Jun  5 16:11 thanks.c
+<span class="term_write">-rw-r--r-- 1 root root 908 Jun  5 16:13 thanks.o</span>    <span class="term_note">&lt;==編譯產生的！</span>
+[root@www ~]# <span class="term_command">gcc -o thanks thanks.o thanks_2.o</span>
+[root@www ~]# <span class="term_command">ll thanks*</span>
+-rwxr-xr-x 1 root root 4870 Jun  5 16:17 thanks     <span class="term_note">&lt;==最終結果會產生這玩意兒</span>
+
+<span class="term_hd"># 3. 執行一下這個檔案：</span>
+[root@www ~]# <span class="term_command">./thanks</span>
+Hello World
+Thank you!
+</pre></td></tr></table>
+
+		<p>知道為什麼要製作出目標檔了嗎？由於我們的原始碼檔案有時並非僅只有一個檔案，所以我們無法直接進行編譯。
+		這個時候就需要先產生目標檔，然後再以連結製作成為 binary 可執行檔。另外，<span 
+		class="text_import2">如果有一天，你更新了 thanks_2.c 這個檔案的內容，則你只要重新編譯 thanks_2.c 來產生新的 thanks_2.o
+		，然後再以連結製作出新的 binary 可執行檔即可！而不必重新編譯其他沒有更動過的原始碼檔案</span>。
+		這對於軟體開發者來說，是一個很重要的功能，因為有時候要將偌大的原始碼全部編譯完成，會花很長的一段時間呢！</p>
+
+		<p>此外，如果你想要讓程式在執行的時候具有比較好的效能，或者是其他的除錯功能時，
+		可以在編譯的過程裡面加入適當的參數，例如底下的例子：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc -O -c thanks.c thanks_2.c</span>  <span class="term_note">&lt;== -O 為產生最佳化的參數</span>
+
+[root@www ~]# <span class="term_command">gcc -Wall -c thanks.c thanks_2.c</span>
+thanks.c: In function 'main':
+thanks.c:5: warning: implicit declaration of function 'thanks_2'
+thanks.c:6: warning: control reaches end of non-void function
+<span class="term_say"># -Wall 為產生更詳細的編譯過程資訊。上面的訊息為警告訊息 (warning)
+# 所以不用理會也沒有關係！</span>
+</pre></td></tr></table>
+
+		<p>至於更多的 gcc 額外參數功能，就得要 man gcc 囉～呵呵！可多的跟天書一樣～</p>
+	</div>
+
+	<hr /><a name="simple_ex_lib"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">呼叫外部函式庫：加入連結的函式庫</span>
+	<div class="block2">
+		<p>剛剛我們都僅只是在螢幕上面印出一些字眼而已，如果說要計算數學公式呢？例如我們想要計算出三角函數裡面的
+		sin (90度角)。要注意的是，大多數的程式語言都是使用徑度而不是一般我們在計算的『角度』，
+		180 度角約等於 3.14 徑度！嗯！那我們就來寫一下這個程式吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim sin.c</span>
+<span class="term_write">#include &lt;stdio.h&gt;
+int main(void)
+{
+        float value;
+        value = sin ( 3.14 / 2 );
+        printf("%f\n",value);
+}</span>
+</pre></td></tr></table>
+
+		<p>上面這個檔案的內容可以在底下取得！</p>
+		<ul><li><a href="/linux_basic/0520source/sin.c">http://linux.vbird.org/linux_basic/0520source/sin.c</a></li></ul>
+
+		<p>那要如何編譯這支程式呢？我們先直接編譯看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc sin.c</span>
+sin.c: In function 'main':
+sin.c:5: warning: incompatible implicit declaration of built-in function 'sin'
+/tmp/ccsfvijY.o: In function `main':
+sin.c:(.text+0x1b): <u>undefined reference to `sin'</u>
+collect2: ld returned 1 exit status
+<span class="term_say"># 注意看到上面最後一行，會有個錯誤訊息，代表沒有成功！</span>
+</pre></td></tr></table>
+
+		<p>特別注意上面的錯誤訊息，唉啊！怎麼沒有編譯成功？它說的是『<span class="text_import2">undefined
+		reference to sin</span>』，說的是『<span class="text_import2">沒有 sin 
+		的相關定義參考值！</span>』，為什麼會這樣呢？這是因為 C 語言裡面的 sin 函示是寫在 libm.so 
+		這個函式庫中，而我們並沒有在原始碼裡面將這個函式庫功能加進去，
+		所以當然就需要在編譯與連結的時候將這個函式庫給他連結進執行檔裡面啊！我們可以這樣做：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">編譯時加入額外函式庫連結的方式：</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc sin.c -lm -L/lib -L/usr/lib</span>  <span class="term_note">&lt;==重點在 -lm </span>
+[root@www ~]# <span class="term_command">./a.out                        </span>  <span class="term_note">&lt;==嘗試執行新檔案！</span>
+1.000000
+</pre></td></tr></table>
+
+		<p>特別注意，使用 gcc 編譯時所加入的那個 -lm 是有意義的，他可以拆開成兩部份來看：</p>
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>-l ：是『加入某個函式庫(library)』的意思，</li>
+		<li>&nbsp;m ：則是 libm.so 這個函式庫，其中， lib 與副檔名(.a 或 .so)不需要寫</li></ul>
+
+		<p>所以 -lm 表示使用 libm.so (或 libm.a) 這個函式庫的意思～至於那個 -L 後面接的路徑呢？這表示：
+		『<span class="text_import2">我要的函式庫 libm.so 請到 /lib 或 /usr/lib 裡面搜尋</span>！』</p>
+
+		<p>上面的說明很清楚了吧！不過，要注意的是，由於 Linux 預設是將函式庫放置在 /lib 與 /usr/lib 
+		當中，所以你沒有寫 -L/lib 與 -L/usr/lib 也沒有關係的！不過，萬一哪天你使用的函式庫並非放置在這兩個目錄下，那麼
+		-L/path 就很重要了！否則會找不到函式庫喔！</p>
+
+		<p>除了連結的函式庫之外，你或許已經發現一個奇怪的地方，那就是在我們的
+		sin.c 當中第一行『<span class="text_import2" style="font-family:'細明體'"> #include
+		&lt;stdio.h&gt;</span>』，這行說的是要將一些定義資料由 stdio.h 這個檔案讀入，這包括 printf 
+		的相關設定。這個檔案其實是放置在 /usr/include/stdio.h
+		的！那麼萬一這個檔案並非放置在這裡呢？那麼我們就可以使用底下的方式來定義出要讀取的
+		include 檔案放置的目錄：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gcc sin.c -lm -I/usr/include</span>
+</pre></td></tr></table>
+
+		<p>-I/path 後面接的路徑( Path )就是設定要去搜尋相關的
+		include 檔案的目錄啦！不過，同樣的，預設值是放置在 /usr/include 底下，除非你的
+		include 檔案放置在其他路徑，否則也可以略過這個項目！</p>
+
+		<p>透過上面的幾個小範例，你應該對於 gcc 以及原始碼有一定程度的認識了，再接下來，我們來稍微整理一下
+		gcc 的簡易使用方法吧！</p>
+	</div>
+
+	<hr /><a name="simple_ex_gcc"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">gcc 的簡易用法 (編譯、參數與鏈結)</span>
+	<div class="block2">
+		<p>前面說過， gcc 為 Linux 上面最標準的編譯器，這個 gcc 是由 <a href="http://www.gnu.org/" 
+		target="_blank">GNU 計畫</a>所維護的，有興趣的朋友請自行前往參考。既然 gcc 對於 Linux 上的 Open source
+		是這麼樣的重要，所以底下我們就列舉幾個 gcc 常見的參數，如此一來大家應該更容易瞭解原始碼的各項功能吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 僅將原始碼編譯成為目標檔，並不製作連結等功能：</span>
+[root@www ~]# <span class="term_command">gcc -c hello.c</span>
+<span class="term_say"># 會自動的產生 hello.o 這個檔案，但是並不會產生 binary 執行檔。</span>
+
+<span class="term_hd"># 在編譯的時候，依據作業環境給予最佳化執行速度</span>
+[root@www ~]# <span class="term_command">gcc -O hello.c -c</span>
+<span class="term_say"># 會自動的產生 hello.o 這個檔案，並且進行最佳化喔！</span>
+
+<span class="term_hd"># 在進行 binary file 製作時，將連結的函式庫與相關的路徑填入</span>
+[root@www ~]# <span class="term_command">gcc sin.c -lm -L/usr/lib -I/usr/include</span>
+<span class="term_say"># 這個指令較常下達在最終連結成 binary file 的時候，
+# -lm 指的是 libm.so 或 libm.a 這個函式庫檔案；
+# -L 後面接的路徑是剛剛上面那個函式庫的搜尋目錄；
+# -I 後面接的是原始碼內的 include 檔案之所在目錄。</span>
+
+<span class="term_hd"># 將編譯的結果輸出成某個特定檔名</span>
+[root@www ~]# <span class="term_command">gcc -o hello hello.c</span>
+<span class="term_say"># -o 後面接的是要輸出的 binary file 檔名</span>
+
+<span class="term_hd"># 在編譯的時候，輸出較多的訊息說明</span>
+[root@www ~]# <span class="term_command">gcc -o hello hello.c -Wall</span>
+<span class="term_say"># 加入 -Wall 之後，程式的編譯會變的較為嚴謹一點，
+# 所以警告訊息也會顯示出來！</span>
+</pre></td></tr></table>
+
+		<p>比較重要的大概就是這一些。<span class="text_import2">另外，我們通常稱
+		-Wall 或者 -O 這些非必要的參數為旗標 (FLAGS)，因為我們使用的是 C 程式語言，所以有時候也會簡稱這些旗標為
+		CFLAGS ，</span>這些變數偶爾會被使用的喔！尤其是在後頭會介紹的 make 相關的用法時，更是重要的很吶！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="make"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">用 make 進行巨集編譯</span>
+<div class="block1">
+	<p>在本章一開始我們提到過 make 的功能是可以簡化編譯過程裡面所下達的指令，同時還具有很多很方便的功能！那麼底下咱們就來試看看使用
+	make 簡化下達編譯指令的流程吧！<br /><br /></p>
+
+	<hr /><a name="make_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">為什麼要用 make</span>
+	<div class="block2">
+		<p>先來想像一個案例，假設我的執行檔裡面包含了四個原始碼檔案，分別是 main.c haha.c sin_value.c cos_value.c 
+		這四個檔案，這四個檔案的目的是：</p>
+
+		<ul style="font-family:'細明體'">
+		<li>main.c ：主要的目的是讓使用者輸入角度資料與呼叫其他三支副程式；</li>
+		<li>haha.c ：輸出一堆有的沒有的訊息而已；</li>
+		<li>sin_value.c ：計算使用者輸入的角度(360) sin 數值；</li>
+		<li>cos_value.c ：計算使用者輸入的角度(360) cos 數值。</li>
+		</ul>
+
+		<p>這四個檔案你可以到 <a href="/linux_basic/0520source/main.tgz"
+		>http://linux.vbird.org/linux_basic/0520source/main.tgz</a>
+		來下載。由於這四個檔案裡面包含了相關性，並且還用到數學函式在裡面，所以如果你想要讓這個程式可以跑，
+		那麼就需要這樣編譯：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先進行目標檔的編譯，最終會有四個 *.o 的檔名出現：</span>
+[root@www ~]# <span class="term_command">gcc -c main.c</span>
+[root@www ~]# <span class="term_command">gcc -c haha.c</span>
+[root@www ~]# <span class="term_command">gcc -c sin_value.c</span>
+[root@www ~]# <span class="term_command">gcc -c cos_value.c</span>
+
+<span class="term_hd"># 2. 再進行連結成為執行檔，並加入 libm 的數學函式，以產生 main 執行檔：</span>
+[root@www ~]# <span class="term_command">gcc -o main main.o haha.o sin_value.o cos_value.o \</span>
+&gt; <span class="term_command">-lm -L/usr/lib -L/lib</span>
+
+<span class="term_hd"># 3. 本程式的執行結果，必須輸入姓名、360 度角的角度值來計算：</span>
+[root@www ~]# <span class="term_command">./main </span>
+Please input your name: <span class="term_command">VBird</span>  <span class="term_note">&lt;==這裡先輸入名字</span>
+Please enter the degree angle (ex&gt; 90): <span class="term_command">30</span>   <span class="term_note">&lt;==輸入以 360 度角為主的角度</span>
+Hi, Dear VBird, nice to meet you.    <span class="term_note">&lt;==這三行為輸出的結果喔！</span>
+The Sin is:  0.50
+The Cos is:  0.87
+</pre></td></tr></table>
+
+		<p>編譯的過程需要進行好多動作啊！而且如果要重新編譯，則上述的流程得要重新來一遍，光是找出這些指令就夠煩人的了！
+		如果可以的話，能不能一個步驟就給他完成上面所有的動作呢？那就利用 make 這個工具吧！
+		先試看看在這個目錄下建立一個名為 makefile 的檔案，內容如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先編輯 makefile 這個規則檔，內容只要作出 main 這個執行檔</span>
+[root@www ~]# <span class="term_command">vim makefile</span>
+<span class="term_write">main: main.o haha.o sin_value.o cos_value.o
+	gcc -o main main.o haha.o sin_value.o cos_value.o -lm</span>
+<span class="term_say"># 注意：第二行的 gcc 之前是 &lt;tab&gt; 按鍵產生的空格喔！</span>
+
+<span class="term_hd"># 2. 嘗試使用 makefile 制訂的規則進行編譯的行為：</span>
+[root@www ~]# <span class="term_command">rm -f main *.o   <span class="term_note">&lt;==先將之前的目標檔去除</span></span>
+[root@www ~]# <span class="term_command">make</span>
+cc    -c -o main.o main.c
+cc    -c -o haha.o haha.c
+cc    -c -o sin_value.o sin_value.c
+cc    -c -o cos_value.o cos_value.c
+gcc -o main main.o haha.o sin_value.o cos_value.o -lm
+<span class="term_say"># 此時 make 會去讀取 makefile 的內容，並根據內容直接去給他編譯相關的檔案囉！</span>
+
+<span class="term_hd"># 3. 在不刪除任何檔案的情況下，重新執行一次編譯的動作：</span>
+[root@www ~]# <span class="term_command">make</span>
+make: `main' is up to date.
+<span class="term_say"># 看到了吧！是否很方便呢！只會進行更新 (update) 的動作而已。</span>
+</pre></td></tr></table>
+
+		<p>或許你會說：『如果我建立一個 shell script 來將上面的所有動作都集結在一起，不是具有同樣的效果嗎？』呵呵！
+		效果當然不一樣，以上面的測試為例，我們僅寫出 main 需要的目標檔，結果 make 
+		會主動的去判斷每個目標檔相關的原始碼檔案，並直接予以編譯，最後再直接進行連結的動作！
+		真的是很方便啊！此外，如果我們更動過某些原始碼檔案，則 make 也可以主動的判斷哪一個原始碼與相關的目標檔檔案有更新過，
+		並僅更新該檔案，如此一來，將可大大的節省很多編譯的時間呢！要知道，某些程式在進行編譯的行為時，會消耗很多的
+		CPU 資源呢！所以說， make 有這些好處：</p>
+
+		<ul class="text_import2">
+		<li>簡化編譯時所需要下達的指令；</li>
+		<li>若在編譯完成之後，修改了某個原始碼檔案，則 make 僅會針對被修改了的檔案進行編譯，其他的
+			object file 不會被更動；</li>
+		<li>最後可以依照相依性來更新 (update) 執行檔。</li></ul>
+
+		<p>既然 make 有這麼多的優點，那麼我們當然就得好好的瞭解一下 make 這個令人關心的傢伙啦！而 make 
+		裡面最需要注意的大概就是那個規則檔案，也就是 makefile 這個檔案的語法啦！所以底下我們就針對 makefile 
+		的語法來加以介紹囉。</p>
+	</div>
+
+	<hr /><a name="make_makefile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">makefile 的基本語法與變數</span>
+	<div class="block2">
+		<a name="20080110"></a><p>make 的語法可是相當的多而複雜的，有興趣的話可以到 <a
+		href="http://www.gnu.org/software/make/manual/make.html" target="_blank">GNU</a> (<a href="#ps1">註1</a>)
+		去查閱相關的說明，鳥哥這裡僅列出一些基本的規則，重點在於讓讀者們未來在接觸原始碼時，不會太緊張啊！
+		好了，基本的 makefile 規則是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_write">標的(target): 目標檔1 目標檔2
+&lt;tab&gt;   gcc -o 欲建立的執行檔 目標檔1 目標檔2</span>
+</pre></td></tr></table>
+
+		<p>那個標的 (target) 就是我們想要建立的資訊，而目標檔就是具有相關性的 object files ，那建立執行檔的語法就是以 
+		&lt;tab&gt; 按鍵開頭的那一行！特別給他留意喔，『<span class="text_import2">命令列必須要以 tab 
+		按鍵作為開頭</span>』才行！他的規則基本上是這樣的：</p>
+
+		<ul class="text_import2">
+		<li>在 makefile 當中的 # 代表註解；</li>
+		<li>&lt;tab&gt; 需要在命令行 (例如 gcc 這個編譯器指令) 的第一個字元；</li>
+		<li>標的 (target) 與相依檔案(就是目標檔)之間需以『:』隔開。</li>
+		</ul>
+
+		<p>同樣的，我們以剛剛上一個小節的範例進一步說明，如果我想要有兩個以上的執行動作時，
+		例如下達一個指令就直接清除掉所有的目標檔與執行檔，該如何製作呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先編輯 makefile 來建立新的規則，此規則的標的名稱為 clean ：</span>
+[root@www ~]# <span class="term_command">vi makefile</span>
+main: main.o haha.o sin_value.o cos_value.o
+	gcc -o main main.o haha.o sin_value.o cos_value.o -lm
+<span class="term_write">clean:
+	rm -f main main.o haha.o sin_value.o cos_value.o</span>
+
+<span class="term_hd"># 2. 以新的標的 (clean) 測試看看執行 make 的結果：</span>
+[root@www ~]# <span class="term_command">make clean</span>  <span class="term_note">&lt;==就是這裡！透過 make 以 clean 為標的</span>
+rm -rf main main.o haha.o sin_value.o cos_value.o
+</pre></td></tr></table>
+
+		<p>如此一來，我們的 makefile 裡面就具有至少兩個標的，分別是 main 與 clean ，如果我們想要建立 main 
+		的話，輸入『<span class="text_import2">make main</span>』，如果想要清除有的沒的，輸入『<span class="text_import2">make
+		clean</span>』即可啊！而如果想要先清除目標檔再編譯 main 這個程式的話，就可以這樣輸入：『make 
+		clean main』，如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">make clean main</span>
+rm -rf main main.o haha.o sin_value.o cos_value.o
+cc    -c -o main.o main.c
+cc    -c -o haha.o haha.c
+cc    -c -o sin_value.o sin_value.c
+cc    -c -o cos_value.o cos_value.c
+gcc -o main main.o haha.o sin_value.o cos_value.o -lm
+</pre></td></tr></table>
+
+		<p>這樣就很清楚了吧！但是，你是否會覺得，咦！ makefile 裡面怎麼重複的資料這麼多啊！沒錯！所以我們可以再藉由 shell
+		script 那時學到的『變數』來更簡化 makefile 喔：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi makefile</span>
+<span class="term_write">LIBS = -lm
+OBJS = main.o haha.o sin_value.o cos_value.o
+main: ${OBJS}
+        gcc -o main ${OBJS} ${LIBS}
+clean:
+        rm -f main ${OBJS}</span>
+</pre></td></tr></table>
+
+		<p>與 <a href="/linux_basic/0340bashshell-scripts.php">bash shell script</a> 的語法有點不太相同，變數的基本語法為：</p>
+
+		<ol class="text_import2">
+		<li>變數與變數內容以『=』隔開，同時兩邊可以具有空格；</li>
+		<li>變數左邊不可以有 &lt;tab&gt; ，例如上面範例的第一行 LIBS 左邊不可以是 &lt;tab&gt;；</li>
+		<li>變數與變數內容在『=』兩邊不能具有『:』；</li>
+		<li>在習慣上，變數最好是以『大寫字母』為主；</li>
+		<li>運用變數時，以 ${變數} 或 $(變數) 使用；</li>
+		<li>在該 shell 的環境變數是可以被套用的，例如提到的 CFLAGS 這個變數！</li>
+		<li>在指令列模式也可以給予變數。</li></ol>
+
+		<p>由於 <span class="text_import2">gcc 在進行編譯的行為時，會主動的去讀取 CFLAGS
+		這個環境變數</span>，所以，你可以直接在 shell 定義出這個環境變數，也可以在
+		makefile 檔案裡面去定義，更可以在指令列當中給予這個咚咚呢！例如：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">CFLAGS="-Wall" make clean main</span>
+<span class="term_say"># 這個動作在上 make 進行編譯時，會去取用 CFLAGS 的變數內容！</span>
+</pre></td></tr></table>
+
+		<p>也可以這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi makefile</span>
+LIBS = -lm
+OBJS = main.o haha.o sin_value.o cos_value.o
+<span class="term_write">CFLAGS = -Wall</span>
+main: ${OBJS}
+	gcc -o main ${OBJS} ${LIBS}
+clean:
+	rm -f main ${OBJS}
+</pre></td></tr></table>
+
+		<p>咦！我可以利用指令列進行環境變數的輸入，也可以在檔案內直接指定環境變數，那萬一這個
+		CFLAGS 的內容在指令列與 makefile 裡面並不相同時，以那個方式輸入的為主？呵呵！問了個好問題啊！
+		環境變數取用的規則是這樣的：</p>
+
+		<ol class="text_import2">
+		<li>make 指令列後面加上的環境變數為優先；</li>
+		<li>makefile 裡面指定的環境變數第二；</li>
+		<li>shell 原本具有的環境變數第三。</li></ol>
+
+		<p>此外，還有一些特殊的變數需要瞭解的喔：</p>
+
+		<ul class="text_import2">
+		<li>$@：代表目前的標的(target)</li></ul>
+
+		<p>所以我也可以將 makefile 改成：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi makefile</span>
+LIBS = -lm
+OBJS = main.o haha.o sin_value.o cos_value.o
+CFLAGS = -Wall
+main: ${OBJS}
+	<span class="term_write">gcc -o $@ ${OBJS} ${LIBS}</span>   <span class="term_note">&lt;==那個 $@ 就是 main ！</span>
+clean:
+	rm -f main ${OBJS}
+</pre></td></tr></table>
+
+		<p>這樣是否稍微瞭解了 makefile (也可能是 Makefile) 
+		的基本語法？這對於你未來自行修改原始碼的編譯規則時，是很有幫助的喔！^_^！</p>
+	</div>
+</div>
+
+
+<hr /><a name="tarball"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Tarball 的管理與建議</span>
+<div class="block1">
+	<p>在我們知道了原始碼的相關資訊之後，再來要瞭解的自然就是如何使用具有原始碼的
+	Tarball 來建立一個屬於自己的軟體囉！從前面幾個小節的說明當中，我們曉得<span class="text_import2">其實
+	Tarball 的安裝是可以跨平台的，因為 C 語言的程式碼在各個平台上面是可以共通的</span>，
+	只是需要的編譯器可能並不相同而已。例如
+	Linux 上面用 gcc 而 Windows 上面也有相關的 C 編譯器啊～所以呢，同樣的一組原始碼，既可以在
+	CentOS Linux 上面編譯，也可以在 SuSE Linux 上面編譯，當然，也可以在大部分的 Unix 平台上面編譯成功的！</p>
+
+	<p>如果萬一沒有編譯成功怎麼辦？很簡單啊，透過修改小部分的程式碼 (通常是因為很小部分的異動而已) 
+	就可以進行跨平台的移植了！也就是說，剛剛我們在 Linux 底下寫的程式『<span class="text_import2">理論上，是可以在
+	Windows 上面編譯的</span>！』這就是原始碼的好處啦！所以說，如果朋友們想要學習程式語言的話，
+	鳥哥個人是比較建議學習『<span class="text_import2">具有跨平台能力的程式語言</span>』，例如
+	C 就是很不錯的一個！</p>
+
+	<p>唉啊！又扯遠了～趕緊拉回來繼續說明我們的 Tarball 啦！<br /><br /></p>
+
+	<hr /><a name="tarball_pack"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用原始碼管理軟體所需要的基礎軟體</span>
+	<div class="block2">
+		<p>從原始碼的說明我們曉得要製作一個 binary program 需要很多咚咚的呢！這包括底下這些基礎的軟體：</p>
+
+		<ul>
+		<li><span class="text_import1">gcc 或 cc 等 C 語言編譯器 (compiler)：</span><br /><br />
+		沒有編譯器怎麼進行編譯的動作？所以 C compiler 是一定要有的。不過 Linux 上面有眾多的編譯器，其中當然以 GNU
+		的 gcc 是首選的自由軟體編譯器囉！事實上很多在 Linux 平台上面發展的軟體的原始碼，原本就是以
+		gcc 為底來設計的呢。<br /><br /></li>
+
+		<li><span class="text_import1">make 及 autoconfig 等軟體：</span><br /><br />
+		一般來說，以 Tarball 方式釋出的軟體當中，為了簡化編譯的流程，通常都是配合前幾個小節提到的
+		make 這個指令來依據目標檔案的相依性而進行編譯。但是我們也知道說 make 需要
+		makefile 這個檔案的規則，那由於不同的系統裡面可能具有的基礎軟體環境並不相同，
+		所以就需要偵測使用者的作業環境，好自行建立一個 makefile 檔案。這個自行偵測的小程式也必須要藉由 autoconfig 
+		這個相關的軟體來輔助才行。<br /><br /></li>
+
+		<li><span class="text_import1">需要 Kernel 提供的 Library 以及相關的 Include 檔案：</span><br /><br />
+		從前面的原始碼編譯過程，我們曉得函式庫 (library) 的重要性，同時也曉得有 include 
+		檔案的存在。很多的軟體在發展的時候都是直接取用系統核心提供的函式庫與 include 
+		檔案的，這樣才可以與這個作業系統相容啊！尤其是在『<span 
+		class="text_import2">驅動程式方面的模組</span> 』，例如網路卡、音效卡、USB
+		等驅動程式在安裝的時候，常常是需要核心提供的相關資訊的。在 Red Hat  的系統當中 (包含 Fedora/CentOS 等系列)
+		，這個核心相關的功能通常都是被包含在 <span class="text_import2">kernel-source</span>
+		或 <span class="text_import2">kernel-header</span> 這些軟體名稱當中，所以記得要安裝這些軟體喔！
+		</li></ul>
+
+		<p>雖然 Tarball 的安裝上面相當的簡單，如同我們前面幾個小節的例子，只要順著開發商提供的
+		README 與 INSTALL 檔案所載明的步驟來進行，安裝是很容易的。但是我們卻還是常常會在
+		BBS 或者是新聞群組當中發現這些留言：『我在執行某個程式的偵測檔案時，他都會告訴我沒有
+		gcc 這個軟體，這是怎麼回事？』還有：『我沒有辦法使用 make 耶！這是什麼問題？』呵呵！
+		這就是沒有安裝上面提到的那些基礎軟體啦！</p>
+
+		<p>咦！為什麼使用者不安裝這些軟體啊？這是因為目前的 Linux distribution
+		大多已經偏向於桌上型電腦的使用 (非伺服器端)，他們希望使用者能夠按照廠商自己的希望來安裝相關的軟體即可，
+		所以通常『預設』是沒有安裝 gcc 或者是 make 等軟體的。所以啦，<span class="text_import2">如果你希望未來可以自行安裝一些以
+		Tarball 方式釋出的軟體時，記得請自行挑選想要安裝的軟體名稱喔</span>！例如在
+		CentOS 或者是 Red Hat 當中記得選擇 <span class="text_import2">Development Tools</span>
+		以及 <span class="text_import2">Kernel Source Development</span> 等相關字眼的軟體群集呢。</p>
+
+		<p><span class="text_import2">那萬一我已經安裝好一部 Linux 主機，但是使用的是預設值所安裝的軟體，所以沒有
+		make, gcc 等咚咚，該如何是好</span>？呵呵！問題其實不大啦，目前使用最廣泛的 CentOS/Fedora
+		或者是 Red Hat 大多是以 RPM (下一章會介紹) 來安裝軟體的，所以，你只要拿出當初安裝
+		Linux 時的原版光碟，然後以下一章介紹的 RPM 來一個一個的加入到你的 Linux	主機裡面就好啦！很簡單的啦！
+		尤其現在又有 yum 這玩意兒，更方便吶！</p>
+
+		<p>在 CentOS 當中，如果你已經有網路可以連上 Internet 的話，那麼就可以使用下一章會談到的 yum 囉！
+		透過 yum 的軟體群組安裝功能，你可以這樣做：</p>
+
+		<ul>
+		<li>如果是要安裝 gcc 等軟體發展工具，請使用『 yum groupinstall "Development Tools" 』</li>
+		<li>若待安裝的軟體需要圖形介面支援，一般還需要『 yum groupinstall "X Software Development" 』</li>
+		<li>若安裝的軟體較舊，可能需要『 yum groupinstall "Legacy Software Development" 』</li>
+		</ul>
+
+		<p>大概就是這樣，更多的資訊請參考下一章的介紹喔。</p>
+	</div>
+
+	<hr /><a name="tarball_step"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Tarball 安裝的基本步驟</span>
+	<div class="block2">
+		<p>我們提過以 Tarball 方式釋出的軟體是需要重新編譯可執行的
+		binary program 的。而 Tarball 是以 tar 這個指令來打包與壓縮的檔案，所以啦，當然就需要先將
+		Tarball 解壓縮，然後到原始碼所在的目錄下進行 makefile 的建立，再以 make
+		來進行編譯與安裝的動作啊！所以整個安裝的基礎動作大多是這樣的：</p>
+
+		<ol class="text_import2">
+		<li>取得原始檔：將 tarball 檔案在 /usr/local/src 目錄下解壓縮；</li>
+		<li>取得步驟流程：進入新建立的目錄底下，去查閱 INSTALL 與 README 等相關檔案內容 (很重要的步驟！)；</li>
+		<li>相依屬性軟體安裝：根據 INSTALL/README 的內容察看並安裝好一些相依的軟體 (非必要)；</li>
+		<li>建立 makefile：以自動偵測程式 (configure 或 config) 偵測作業環境，並建立 Makefile 這個檔案；</li>
+		<li>編譯：以 make 這個程式並使用該目錄下的 Makefile 做為他的參數設定檔，來進行 make (編譯或其他) 的動作；</li>
+		<li>安裝：以 make 這個程式，並以 Makefile 這個參數設定檔，依據
+			install 這個標的 (target) 的指定來安裝到正確的路徑！</li></ol>
+
+		<p>注意到上面的第二個步驟，通常在每個軟體在釋出的時候，都會附上 INSTALL 或者是 README 
+		這種檔名的說明檔，這些說明檔請『<span class="text_import2">確實詳細的</span>』
+		閱讀過一遍，通常這些檔案會記錄這個軟體的安裝要求、軟體的工作項目、
+		與軟體的安裝參數設定及技巧等，只要仔細的讀完這些檔案，基本上，要安裝好
+		tarball 的檔案，都不會有什麼大問題囉。</p>
+
+		<p>至於 makefile 在製作出來之後，裡頭會有相當多的標的 (target)，最常見的就是 install 與 clean 
+		囉！通常『make clean』代表著將目標檔 (object file) 清除掉，『make』則是將原始碼進行編譯而已。
+		注意喔！編譯完成的可執行檔與相關的設定檔還在原始碼所在的目錄當中喔！因此，最後要進行『make
+		install』來將編譯完成的所有咚咚都給他安裝到正確的路徑去，這樣就可以使用該軟體啦！</p>
+
+		<p>OK！我們底下約略提一下大部分的 tarball 軟體之安裝的指令下達方式：</p>
+
+		<ol>
+		<li><span class="text_import1">./configure</span><br />
+		這個步驟就是在<span class="text_import2">建立 Makefile 這個檔案</span>囉！通常程式開發者會寫一支
+		scripts 來檢查你的 Linux 系統、相關的軟體屬性等等，這個步驟相當的重要，
+		因為未來你的安裝資訊都是這一步驟內完成的！另外，這個步驟的相關資訊應該要參考一下該目錄下的
+		README 或 INSTALL 相關的檔案！<br /><br /></li>
+
+		<li><span class="text_import1">make clean</span><br />
+		make 會讀取 Makefile 中關於 clean 的工作。這個步驟不一定會有，但是希望執行一下，因為他<span 
+		class="text_import2">可以去除目標檔案</span>！因為誰也不確定原始碼裡面到底有沒有包含上次編譯過的目標檔案 
+		(*.o) 存在，所以當然還是清除一下比較妥當的。
+		至少等一下新編譯出來的執行檔我們可以確定是使用自己的機器所編譯完成的嘛！<br /><br /></li>
+
+		<li><span class="text_import1">make</span><br />
+		make 會依據 Makefile 當中的預設工作進行編譯的行為！編譯的工作主要是進行
+		gcc 來將原始碼編譯成為可以被執行的 object files ，但是這些 object files
+		通常還需要一些函式庫之類的 link 後，才能產生一個完整的執行檔！使用 make
+		就是要將原始碼編譯成為可以被執行的可執行檔，而這個可執行檔會放置在目前所在的目錄之下，
+		尚未被安裝到預定安裝的目錄中；<br /><br /></li>
+
+		<li><span class="text_import1">make install</span><br />
+		通常這就是最後的安裝步驟了，make 會依據 Makefile 這個檔案裡面關於 install 
+		的項目，將上一個步驟所編譯完成的資料給他安裝到預定的目錄中，就完成安裝啦！</li>
+		</ol>
+
+		<p>請注意，上面的步驟是一步一步來進行的，而<span 
+		class="text_import2">其中只要一個步驟無法成功，那麼後續的步驟就完全沒有辦法進行的！</span>
+		因此，要確定每一的步驟都是成功的才可以！舉個例子來說，萬一今天你在 ./configure 就不成功了，那麼就表示 Makefile
+		無法被建立起來，要知道，後面的步驟都是根據 Makefile 來進行的，既然無法建立 Makefile，後續的步驟當然無法成功囉！</p>
+
+		<p>另外，如果在 make 無法成功的話，那就表示原始檔案無法被編譯成可執行檔，那麼 make install
+		主要是將編譯完成的檔案給他放置到檔案系統中的，既然都沒有可用的執行檔了，怎麼進行安裝？
+		所以囉，要每一個步驟都正確無誤才能往下繼續做！此外，如果安裝成功，
+		並且是安裝在獨立的一個目錄中，例如 /usr/local/packages 這個目錄中好了，那麼你就必需手動的將這個軟體的
+		man page 給他寫入 /etc/man.config 裡面去。</p>
+	</div>
+
+	<hr /><a name="tarball_common"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一般
+	Tarball 軟體安裝的建議事項 (如何移除？升級？)</span>
+	<div class="block2">
+		<p>或許你已經發現了也說不定，那就是<span class="text_import2">為什麼前一個小節裡面，
+		Tarball 要在 /usr/local/src 裡面解壓縮呢</span>？基本上，在預設的情況下，原本的
+		Linux distribution 釋出安裝的軟體大多是在 /usr 裡面的，而使用者自行安裝的軟體則建議放置在
+		/usr/local 裡面。這是考量到管理使用者所安裝軟體的便利性。</p>
+
+		<p>怎麼說呢？我們曉得幾乎每個軟體都會提供線上說明的服務，那就是
+		info 與 man 的功能。在預設的情況下， man 會去搜尋 /usr/local/man 裡面的說明文件，
+		因此，如果我們將軟體安裝在 /usr/local 底下的話，那麼自然安裝完成之後，
+		該軟體的說明文件就可以被找到了。此外，如果你所管理的主機其實是由多人共同管理的，
+		或者是如同學校裡面，一部主機是由學生管理的，但是學生總會畢業吧？
+		所以需要進行交接，如果大家都將軟體安裝在
+		/usr/local 底下，那麼管理上不就顯的特別的容易嗎！</p>
+
+		<p>所以囉，通常我們會建議大家將自己安裝的軟體放置在 /usr/local 下，至於原始碼
+		(Tarball)則建議放置在 /usr/local/src (src 為 source 的縮寫)底下啊。</p>
+
+		<p>再來，讓我們先來看一看 Linux distribution 預設的安裝軟體的路徑會用到哪些？我們以
+		apache 這個軟體來說明的話 (apache 是 WWW 伺服器軟體，詳細的資料請參考<a 
+		href="/linux_server/0360apache.php">伺服器架設篇</a>。你的系統不見得有裝這個軟體)：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/etc/httpd</li>
+		<li>/usr/lib</li>
+		<li>/usr/bin</li>
+		<li>/usr/share/man</li></ul>
+
+		<p>我們會發現軟體的內容大致上是擺在<span class="text_import2"> etc, lib, bin, man</span>
+		等目錄當中，分別代表『<span class="text_import2">設定檔、函式庫、執行檔、線上說明檔』。</span>
+		好了，那麼你是以 tarball 來安裝時呢？如果是放在預設的 /usr/local 裡面，由於 
+		/usr/local 原本就預設這幾個目錄了，所以你的資料就會被放在：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/usr/local/etc</li>
+		<li>/usr/local/bin</li>
+		<li>/usr/local/lib</li>
+		<li>/usr/local/man</li></ul>
+
+		<p>但是如果你每個軟體都選擇在這個預設的路徑下安裝的話，
+		那麼所有的軟體的檔案都將放置在這四個目錄當中，因此，如果你都安裝在這個目錄下的話，
+		那麼未來再想要升級或移除的時候，就會比較難以追查檔案的來源囉！
+		而如果你在安裝的時候選擇的是單獨的目錄，例如我將
+		apache 安裝在 /usr/local/apache 當中，那麼你的檔案目錄就會變成：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/usr/local/apache/etc</li>
+		<li>/usr/local/apache/bin</li>
+		<li>/usr/local/apache/lib</li>
+		<li>/usr/local/apache/man</li></ul>
+
+		<p>呵呵！單一軟體的檔案都在同一個目錄之下，那麼要移除該軟體就簡單的多了！
+		<span class="text_import2">只要將該目錄移除即可視為該軟體已經被移除囉</span>！以上面為例，我想要移除
+		apache 只要下達『<span class="text_import2">rm -rf /usr/local/apache</span>』
+		就算移除這個軟體啦！當然囉，實際安裝的時候還是得視該軟體的
+		Makefile 裡頭的 install 資訊才能知道到底他的安裝情況為何的。因為例如 sendmail
+		的安裝就很麻煩......</p>
+
+		<p>這個方式雖然有利於軟體的移除，但不曉得你有沒有發現，我們在執行某些指令的時候，與該指令是否在
+		PATH 這個環境變數所記錄的路徑有關，以上面為例，我的 /usr/local/apache/bin
+		肯定是不在 PATH 裡面的，所以執行 apache 的指令就得要利用絕對路徑了，否則就得將這個
+		/usr/local/apache/bin 加入 PATH 裡面。另外，那個 /usr/local/apache/man
+		也需要加入 man page 搜尋的路徑當中啊！</p>
+
+		<p>除此之外， Tarball 在升級的時候也是挺困擾的，怎麼說呢？我們還是以 apache
+		來說明好了。WWW 伺服器為了考慮互動性，所以通常會將 PHP+MySQL+Apache 一起安裝起來 (詳細的資訊請參考伺服器架設篇)
+		，果真如此的話，那麼每個軟體在安裝的時候『<span class="text_import2">都有一定的順序與程序</span>！』
+		因為他們三者之間具有相關性，所以安裝時必需要三者同時考慮到他們的函式庫與相關的編譯參數。</p>
+
+		<p>假設今天我只要升級 PHP 呢？有的時候因為只有涉及動態函式庫的升級，那麼我只要升級 PHP 
+		即可！其他的部分或許影響不大。但是如果今天 PHP 需要重新編譯的模組比較多，那麼可能會連帶的，連 Apache 
+		這個程式也需要重新編譯過才行！真是有點給他頭痛的！沒辦法啦！使用
+		tarball 確實有他的優點啦，但是在這方面，確實也有他一定的傷腦筋程度。</p>
+
+		<p>由於 Tarball 在升級與安裝上面具有這些特色，亦即 Tarball 在反安裝上面具有比較高的難度 
+		(如果你沒有好好規劃的話～)，所以，為了方便 Tarball 的管理，通常鳥哥會這樣建議使用者：</p>
+
+		<ol>
+		<li><span class="text_import2">最好將 tarball 的原始資料解壓縮到 /usr/local/src 當中；</span><br /><br /></li>
+		<li><span class="text_import2">安裝時，最好安裝到 /usr/local 這個預設路徑下；</span><br /><br /></li>
+		<li><span class="text_import2">考慮未來的反安裝步驟，最好可以將每個軟體單獨的安裝在 /usr/local 底下；</span><br /><br /></li>
+		<li><span class="text_import2">為安裝到單獨目錄的軟體之 man page 加入 man path 搜尋：</span><br />
+		如果你安裝的軟體放置到 /usr/local/software/ ，那麼 man page 搜尋的設定中，可能就得要在 /etc/man.config 內的 
+		40~50 行左右處，寫入如下的一行：
+			<blockquote class="text_import2">MANPATH /usr/local/software/man</blockquote>
+		這樣才可以使用 man 來查詢該軟體的線上文件囉！</li></ol>
+	</div>
+
+	<hr /><a name="tarball_exntp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個簡單的範例、利用
+	ntp 來示範</span>
+	<div class="block2">
+		<p>讀萬卷書不如行萬里路啊！所以當然我們就來給他測試看看，看你是否真的瞭解了如何利用
+		Tarball 來安裝軟體呢？我們利用時間伺服器 (network time protocol) ntp 這個軟體來測試安裝看看。先請到
+		<a href="http://www.ntp.org/downloads.html" target="_blank">http://www.ntp.org/downloads.html</a>
+		這個目錄去下載檔案，請下載最新版本的檔案即可。或者直接到鳥哥的網站下載 2009/05 公告釋出的穩定版本：</p>
+
+		<blockquote>
+		<a href="/linux_basic/0520source/ntp-4.2.4p7.tar.gz"
+		>http://linux.vbird.org/linux_basic/0520source/ntp-4.2.4p7.tar.gz</a></blockquote>
+
+		<p>假設我對這個軟體的要求是這樣的：</p>
+		<ul>
+		<li>假設 ntp-4.2.4p7.tar.gz 這個檔案放置在 /root 這個目錄下；</li>
+		<li>原始碼請解開在 /usr/local/src 底下；</li>
+		<li>我要安裝到 /usr/local/ntp 這個目錄中；</li></ul>
+
+		<p>那麼你可以依照底下的步驟來安裝測試看看 (如果可以的話，請你不要參考底下的文件資料，
+		先自行安裝過一遍這個軟體，然後再來對照一下鳥哥的步驟喔！)。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">解壓縮下載的 tarball ，並參閱 README/INSTALL 檔案</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cd /usr/local/src</span>   <span class="term_note">&lt;==切換目錄</span>
+[root@www src]# <span class="term_command">tar -zxvf /root/ntp-4.2.4p7.tar.gz</span>  <span class="term_note">&lt;==解壓縮到此目錄</span>
+ntp-4.2.4p7/         <span class="term_note">&lt;==會建立這個目錄喔！</span>
+ntp-4.2.4p7/libopts/
+<span class="term_say">....(底下省略)....</span>
+[root@www src]# <span class="term_command">cd ntp-4.2.4p7/</span>
+[root@www ntp-4.2.4p7]# <span class="term_command">vi INSTALL</span>  <span class="term_note">&lt;==記得 README 也要看一下！</span>
+<span class="term_say"># 特別看一下 28 行到 54 行之間的安裝簡介！可以瞭解如何安裝的流程喔！</span>
+</pre></td></tr></table>
+
+		<hr /><ul class="list1"><li class="text_import1">檢查 configure 支援參數，並實際建置 makefile 規則檔</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ntp*]# <span class="term_command">./configure --help | more</span>  <span class="term_note">&lt;==查詢可用的參數有哪些</span>
+  --prefix=PREFIX         install architecture-independent files in PREFIX
+  --enable-all-clocks     + include all suitable non-PARSE clocks:
+  --enable-parse-clocks   - include all suitable PARSE clocks:
+<span class="term_say"># 上面列出的是比較重要的，或者是你可能需要的參數功能！</span>
+
+[root@www ntp*]# <span class="term_command">./configure --prefix=/usr/local/ntp \</span>
+&gt; <span class="term_command"> --enable-all-clocks --enable-parse-clocks</span>  <span class="term_note">&lt;==開始建立makefile</span>
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+<span class="term_say">....(中間省略)....</span>
+checking for gcc... gcc           <span class="term_note">&lt;==也有找到 gcc 編譯器了！</span>
+<span class="term_say">....(中間省略)....</span>
+config.status: creating Makefile  <span class="term_note">&lt;==現在知道這個重要性了吧？</span>
+config.status: creating config.h
+config.status: executing depfiles commands
+</pre></td></tr></table>
+
+		<p>一般來說 configure 設定參數較重要的就是那個 --prefix=/path 了，--prefix 
+		後面接的路徑就是『<span class="text_import2">這個軟體未來要安裝到那個目錄去</span>？』如果你沒有指定 
+		--prefix=/path 這個參數，通常預設參數就是 /usr/local 至於其他的參數意義就得要參考 ./configure --help 了！
+		這個動作完成之後會產生 makefile 或 Makefile 這個檔案。當然啦，這個偵測檢查的過程會顯示在螢幕上，
+		<span class="text_import2">特別留意關於 gcc 的檢查</span>，還有最重要的是<span 
+		class="text_import2">最後需要成功的建立起 Makefile 才行</span>！</p>
+
+		<hr /><ul class="list1"><li class="text_import1">最後開始編譯與安裝嚕！</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ntp*]# <span class="term_command">make clean; make</span>
+[root@www ntp*]# <span class="term_command">make check</span>
+[root@www ntp*]# <span class="term_command">make install</span>
+<span class="term_say"># 將資料給他安裝在 /usr/local/ntp 底下</span>
+</pre></td></tr></table>
+
+		<p>整個動作就這麼簡單，你完成了嗎？完成之後到 /usr/local/ntp 你發現了什麼？</p>
+	</div>
+
+	<hr /><a name="tarball_patch"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 patch 更新原始碼</span>
+	<div class="block2">
+		<p>我們在本章一開始介紹了<a href="#intro_howto">為何需要進行軟體的升級</a>，這是很重要的喔！那假如我是以
+		Tarball 來進行某個軟體的安裝，那麼是否當我要升級這個軟體時，就得要下載這個軟體的完整全新的
+		Tarball 呢？舉個例子來說，鳥哥幫崑山資傳系架了個討論區在 <a 
+		href="http://www.dic.ksu.edu.tw/phpbb3" target="_blank">http://www.dic.ksu.edu.tw/phpbb3</a>
+		這個網址，這個討論區是以 <a href="http://www.phpbb.com/" target="_blank">phpBB</a> 
+		這個軟體來架設的，而鳥哥的討論區版本為 phpbb3.0.4.tar.gz
+		，目前 (2009/06) 最新釋出的版本則是 phpbb3.0.5.tar.gz 。那我是否需要下載全新的
+		phpbb3.0.5.tar.gz 這個檔案來更新原本的舊程式呢？</p>
+
+		<p>事實上，當我們發現一些軟體的漏洞，通常是某一段程式碼寫的不好所致。因此，
+		所謂的『更新原始碼』常常是只有更改部分檔案的小部分內容而已。既然如此的話，
+		那麼我們是否可以就那些被更動的檔案來進行修改就可以咯？也就是說，
+		舊版本到新版本間沒有更動過的檔案就不要理他，僅將有修訂過的檔案部分來處理即可。</p>
+
+		<p>這有什麼好處呢？首先，沒有更動過的檔案的目標檔 (object file) 根本就不需要重新編譯，而且有更動過的檔案又可以利用 
+		make 來自動 update (更新)，如此一來，我們原先的設定 (makefile 檔案裡面的規則) 
+		將不需要重新改寫或偵測！可以節省很多寶貴的時間呢 (例如後續章節會提到的核心的編譯！)</p>
+
+		<p>從上面的說明當中，我們可以發現，如果可以將舊版的原始碼資料改寫成新版的版本，	那麼就能直接編譯了，而不需要將全部的新版
+		Tarball 重新下載一次呢！可以節省頻寬與時間說！那麼如何改寫原始碼？
+		難道要我們一個檔案一個檔案去參考然後修訂嗎？當然沒有這麼沒人性！</p>
+
+		<p>我們在<a href="/linux_basic/0330regularex.php">第十二章、正規表示法</a>的時候有提到一個比對檔案的指令，那就是
+		<a href="/linux_basic/0330regularex.php#diff">diff</a>，這個指令可以將『<span 
+		class="text_import2">兩個檔案之間的差異性列出來</span>』呢！那我們也知道新舊版本的檔案之間，
+		其實只有修改一些程式碼而已，那麼我們可以透過 diff 比對出新舊版本之間的文字差異，然後再以相關的指令來將舊版的檔案更新嗎？
+		呵呵！當然可以啦！那就是 <a href="/linux_basic/0330regularex.php#patch">patch</a> 
+		這個指令啦！很多的軟體開發商在更新了原始碼之後，幾乎都會釋出所謂的 patch file，也就是直接將原始碼 update 
+		而已的一個方式喔！我們底下以一個簡單的範例來說明給你瞭解喔！</p>
+
+		<p>關於 diff 與 patch 的基本用法我們在第十二章都談過了，所以這裡不再就這兩個指令的語法進行介紹，
+		請回去參閱第十二章的內容。這裡我們來舉個案例解釋一下好了。假設我們剛剛計算三角函數的程式 (main) 歷經多次改版，
+		0.1 版僅會簡單的輸出， 0.2 版的輸出就會含有角度值，因此這兩個版本的內容不相同。如下所示，兩個檔案的意義為：</p>
+
+		<ul>
+		<li><a href="0520source/main-0.1.tgz">http://linux.vbird.org/linux_basic/0520source/main-0.1.tgz</a>
+		：main 的 0.1 版；</li>
+		<li><a href="0520source/main_0.1_to_0.2.patch">http://linux.vbird.org/linux_basic/0520source/main_0.1_to_0.2.patch</a>
+		：main 由 0.1 升級到 0.2 的 patch file；</li>
+		</ul>
+
+		<p>請您先下載這兩個檔案，並且解壓縮到你的 /root 底下。你會發現系統產生一個名為 main-0.1 的目錄。
+		該目錄內含有五個檔案，就是剛剛的程式加上一個 Makefile 的規則檔案。你可以到該目錄下去看看 Makefile 的內容，
+		在這一版當中含有 main 與 clean 兩個標的功能而已。至於 0.2 版則加入了 install 與 uninstall 的規則設定。
+		接下來，請看一下我們的作法囉：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">測試舊版程式的功能</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tar -zxvf main-0.1.tgz</span>
+[root@www ~]# <span class="term_command">cd main-0.1</span>
+[root@www main-0.1]# <span class="term_command">make clean main</span>
+[root@www main-0.1]# <span class="term_command">./main</span>
+version <u>0.1</u>
+Please input your name: <span class="term_command">VBird</span>
+Please enter the degree angle (ex&gt; 90): <span class="term_command">45</span>
+Hi, Dear VBird, nice to meet you.
+The <u>Sin</u> is:  0.71
+The <u>Cos</u> is:  0.71
+</pre></td></tr></table>
+
+		<p>與之前的結果非常類似，只是鳥哥將 Makefile 直接給您了！但如果你下達 make install 時，系統會告知沒有 install 的 target 
+		啊！而且版本是 0.1 也告知了。那麼如何更新到 0.2 版呢？透過這個 patch 檔案吧！這個檔案的內容有點像這樣：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">查閱 patch file 內容</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www main-0.1]# <span class="term_command">vim ~/main_0.1_to_0.2.patch</span>
+diff -Naur <u>main-0.1/cos_value.c main-0.2/cos_value.c</u>
+--- main-0.1/cos_value.c        2009-06-09 22:52:33.000000000 +0800
++++ main-0.2/cos_value.c        2009-06-12 00:45:10.000000000 +0800
+@@ -6,5 +6,5 @@
+ {
+        float value;
+<span class="term_say">....(底下省略)....</span>
+</pre></td></tr></table>
+
+		<p>上面表格內有個底線的部分，那代表使用 diff 去比較時，被比較的兩個檔案所在路徑，這個路徑非常的重要喔！
+		因為 patch 的基本語法如下：</p>
+
+		<blockquote class="text_import2" style="font-family: '細明體'">patch -p數字 &lt; patch_file</blockquote>
+
+		<p>特別留意那個『 -p數字』，那是與 patch_file 裡面列出的檔名有關的資訊。假如在
+		patch_file 第一行寫的是這樣：</p>
+
+		<blockquote class="text_import2" style="font-family: '細明體'">*** /home/guest/example/expatch.old</blockquote>
+
+		<p>那麼當我下達『 patch -p0 &lt; patch_file 』時，則更新的檔案是『 /home/guest/example/expatch.old
+		』，如果『 patch -p1 &lt; patch_file』，則更新的檔案為『home/guest/example/expatch.old』，如果『patch
+		-p4 &lt; patch_file』則更新『expatch.old』，也就是說， 
+		<span class="text_import2">-pxx 那個 xx 代表『拿掉幾個斜線(/)』的意思！</span>這樣可以理解了嗎？
+		好了，根據剛剛上頭的資料，我們可以發現比較的檔案是在 main-0.1/xxx 與 main-0.2/xxx ，
+		所以說，如果你是在 main-0.1 底下，並且想要處理更新時，就得要拿掉一個目錄 (因為並沒有 main-0.2 的目錄存在，
+		我們是在當前的目錄進行更新的！)，因此使用的是 -p1 才對喔！所以：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">更新原始碼，並且重新編譯程式！</li></ul>
+<table class="term"><tr><td class="term"><pre>
+[root@www main-0.1]# <span class="term_command">patch -p1 &lt; ../main_0.1_to_0.2.patch</span>
+patching file cos_value.c
+patching file main.c
+patching file Makefile
+patching file sin_value.c
+<span class="term_say"># 請注意，鳥哥目前所在目錄是在 main-0.1 底下喔！注意與 patch 檔案的<u>相對路徑</u>！
+# 雖然有五個檔案，但其實只有四個檔案有修改過喔！上面顯示有改過的檔案！</span>
+
+[root@www main-0.1]# <span class="term_command">make clean main</span>
+[root@www main-0.1]# <span class="term_command">./main</span>
+version <u>0.2</u>
+Please input your name: <span class="term_command">VBird</span>
+Please enter the degree angle (ex&gt; 90): <span class="term_command">45</span>
+Hi, Dear VBird, nice to meet you.
+The <u>sin(45.000000)</u> is:  0.71
+The <u>cos(45.000000)</u> is:  0.71
+<span class="term_say"># 你可以發現，輸出的結果中版本變了，輸出資訊多了括號 () 喔！</span>
+
+[root@www main-0.1]# <span class="term_command">make install  </span> <span class="term_note">&lt;==將他安裝到 /usr/local/bin 給大家用</span>
+cp -a main /usr/local/bin
+[root@www main-0.1]# <span class="term_command">main          </span> <span class="term_note">&lt;==直接輸入指令可執行！</span>
+[root@www main-0.1]# <span class="term_command">make uninstall</span> <span class="term_note">&lt;==移除此軟體！</span>
+rm -f /usr/local/bin/main
+</pre></td></tr></table>
+
+		<p>很有趣的練習吧！所以你只要下載 patch file 就能夠對你的軟體原始碼更新了！<span 
+		class="text_import2">只不過更新了原始碼並非軟體就更新！你還是得要將該軟體進行編譯後，才會是最終正確的軟體喔！
+		因為 patch 的功能主要僅只是更新原始碼檔案而已！切記切記</span>！此外，如果你 patch 錯誤呢？沒關係的！我們的 patch 
+		是可以還原的啊！透過『 patch -R  &lt; ../main_0.1_to_0.2.patch 』就可以還原啦！很有趣吧！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+如果我有一個很舊版的軟體，這個軟體已經更新到很新的版本，例如核心，那麼我可以使用 patch file 來更新嗎？
+</div>
+答：<div class="block2">
+這個問題挺有趣的，首先，你必須要確定舊版本與新版本之間『確實有釋出 patch file 』才行，以 kernel 2.2.xx 及 2.4.xx 
+來說，這兩者基本上的架構已經不同了，所以兩者間是無法以 patch file 來更新的。不過， 2.4.xx 與 2.4.yy 就可以更新了。不過，因為 kernel
+每次推出的 patch 檔案都僅針對前一個版本而已，所以假設要由 kernel 2.4.20 升級到 2.4.26 ，就必須要使用 patch 2.4.21, 
+2.4.22, 2.4.23, 2.4.24, 2.4.25, 2.4.26 六個檔案來『<b>依序更新</b>』才行喔！當然，如果有朋友幫你比對過
+2.4.20 與 2.4.26 ，那你自然就可以使用該 patch file 來直接一次更新囉！
+</div>
+</td></tr></table><br />
+	</div>
+</div>
+
+
+<hr /><a name="library"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">函式庫管理</span>
+<div class="block1">
+	<p>在我們的 Linux 作業系統當中，函式庫是很重要的一個項目。
+	因為<span class="text_import2">很多的軟體之間都會互相取用彼此提供的函式庫來進行特殊功能的運作</span>，
+	例如很多需要驗證身份的程式都習慣利用 PAM 這個模組提供的驗證機制來實作，而很多網路連線機制則習慣利用 SSL
+	函式庫來進行連線加密的機制。所以說，函式庫的利用是很重要的。不過，
+	函式庫又依照是否被編譯到程式內部而分為動態與靜態函式庫，這兩者之間有何差異？哪一種函式庫比較好？
+	底下我們就來談一談先！<br /><br /></p>
+
+	<hr /><a name="library_dyna_sta"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">動態與靜態函式庫</span>
+	<div class="block2">
+		<p>首先我們要知道的是，函式庫的類型有哪些？依據函式庫被使用的類型而分為兩大類，分別是靜態 
+		(Static) 與動態 (Dynamic) 函式庫兩類。底下我們來談一談這兩種類行的函式庫吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">靜態函式庫的特色：</li></ul>
+		<ul>
+		<li><b>副檔名</b>：(副檔名為 .a)<br />
+		這類的函式庫通常副檔名為 <span class="text_import2">libxxx.a</span> 的類型；<br /><br /></li>
+		<li><b>編譯行為</b>：<br />
+		這類函式庫在編譯的時候會直接整合到執行程式當中，所以<span 
+		class="text_import2">利用靜態函式庫編譯成的檔案會比較大一些喔</span>；<br /><br /></li>
+
+		<li><b>獨立執行的狀態</b>：<br />這類函式庫最大的優點，就是編譯成功的可執行檔<span 
+		class="text_import2">可以獨立執行</span>，而不需要再向外部要求讀取函式庫的內容 
+		(請參照動態函式庫的說明)。<br /><br /></li>
+
+		<li><b>升級難易度</b>：<br />雖然執行檔可以獨立執行，但因為函式庫是直接整合到執行檔中，
+		因此若函式庫升級時，整個執行檔必須要重新編譯才能將新版的函式庫整合到程式當中。
+		也就是說，在升級方面，只要函式庫升級了，所有將此函式庫納入的程式都需要重新編譯！</li></ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">動態函式庫的特色：</li></ul>
+		<ul>
+		<li><b>副檔名</b>：(副檔名為 .so)<br />這類函式庫通常副檔名為 <span class="text_import2">libxxx.so</span>
+		的類型；<br /><br /></li>
+
+		<li><b>編譯行為</b>：<br />動態函式庫與靜態函式庫的編譯行為差異挺大的。
+		與靜態函式庫被整個捉到程式中不同的，動態函式庫在編譯的時候，在程式裡面只有一個『<span class="text_import2">指向
+		(Pointer)</span>』的位置而已。也就是說，動態函式庫的內容並沒有被整合到執行檔當中，而是當執行檔要使用到函式庫的機制時，
+		程式才會去讀取函式庫來使用。由於執行檔當中僅具有指向動態函式庫所在的指標而已，
+		並不包含函式庫的內容，所以<span class="text_import2">他的檔案會比較小一點</span>。<br /><br /></li>
+
+		<li><b>獨立執行的狀態</b>：<br />這類型的函式庫所編譯出來的程式<span class="text_import2">不能被獨立執行</span>，
+		因為當我們使用到函式庫的機制時，程式才會去讀取函式庫，所以函式庫檔案『<span 
+		class="text_import2">必須要存在</span>』才行，而且，函式庫的『<span 
+		class="text_import2">所在目錄也不能改變</span>』，因為我們的可執行檔裡面僅有『指標』亦即當要取用該動態函式庫時，
+		程式會主動去某個路徑下讀取，呵呵！所以動態函式庫可不能隨意移動或刪除，會影響很多相依的程式軟體喔！<br /><br /></li>
+
+		<li><b>升級難易度</b>：<br />雖然這類型的執行檔無法獨立運作，然而由於是具有指向的功能，
+		所以，當函式庫升級後，執行檔根本不需要進行重新編譯的行為，因為執行檔會直接指向新的函式庫檔案
+		(前提是函式庫新舊版本的檔名相同喔！)。</li></ul>
+
+		<p>目前的 Linux distribution 比較傾向於使用動態函式庫，因為如同上面提到的最重要的一點，
+		就是函式庫的升級方便！由於 Linux 系統裡面的軟體相依性太複雜了，如果使用太多的靜態函式庫，那麼升級某一個函式庫時，
+		都會對整個系統造成很大的衝擊！因為其他相依的執行檔也要同時重新編譯啊！
+		這個時候動態函式庫可就有用多了，因為只要動態函式庫升級就好，其他的軟體根本無須變動。</p>
+
+		<p>那麼這些函式庫放置在哪裡呢？絕大多數的函式庫都放置在：/usr/lib, /lib 目錄下！
+		此外，Linux 系統裡面很多的函式庫其實 kernel 就提供了，那麼 kernel 
+		的函式庫放在哪裡？呵呵！就是在<span class="text_import2">
+		/lib/modules</span> 裡面啦！裡面的資料可多著呢！不過要注意的是，
+		<span class="text_import2">不同版本的核心提供的函式庫差異性是挺大的，所以
+		kernel 2.4.xx 版本的系統不要想將核心換成 2.6.xx 喔！
+		很容易由於函式庫的不同而導致很多原本可以執行的軟體無法順利運作呢</span>！</p>
+	</div>
+　
+	<hr /><a name="library_ldconfig"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ldconfig
+	與 /etc/ld.so.conf</span>
+	<div class="block2">
+		<p>在瞭解了動態與靜態函式庫，也知道我們目前的 Linux 
+		大多是將函式庫做成動態函式庫之後，再來要知道的就是，那有沒有辦法增加函式庫的讀取效能？
+		我們知道記憶體的存取速度是硬碟的好幾倍，所以，<span 
+		class="text_import2">如果我們將常用到的動態函式庫先載入記憶體當中 (快取, 
+		cache)，如此一來，當軟體要取用動態函式庫時，就不需要從頭由硬碟裡面讀出囉！
+		這樣不就可以增進動態函式庫的讀取速度</span>？沒錯，是這樣的！這個時候就需要
+		ldconfig 與 /etc/ld.so.conf 的協助了。</p>
+
+		<p>如何將動態函式庫載入快取記憶體當中呢？</p>
+		<ol>
+		<li>首先，我們必須要在 /etc/ld.so.conf 裡面寫下『
+		<span class="text_import2">想要讀入快取記憶體當中的動態函式庫所在的目錄</span>』，注意喔，
+		<span class="text_import2">是目錄而不是檔案；</span></li>
+		<li>接下來則是利用 ldconfig 這個執行檔將 /etc/ld.so.conf 的資料讀入快取當中；</li>
+		<li>同時也將資料記錄一份在 /etc/ld.so.cache 這個檔案當中吶！</li>
+		</ol>
+
+		<center><img src="0520source/ldconfig.gif" alt="使用 ldconfig 預載入動態函式庫到記憶體中" 
+		title="使用 ldconfig 預載入動態函式庫到記憶體中" border="0" /><br />
+		圖 5.2.1、使用 ldconfig 預載入動態函式庫到記憶體中<br /></center>
+
+		<p>事實上， ldconfig 還可以用來判斷動態函式庫的連結資訊呢！趕緊利用 CentOS
+		來測試看看。假設妳想要將目前你系統下的 MySQL 函式庫加入到快取當中時，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ldconfig [-f conf] [ -C cache]</span>
+[root@www ~]# <span class="term_command">ldconfig [-p]</span>
+<span class="term_say">選項與參數：
+-f conf ：那個 conf 指的是某個檔案名稱，也就是說，使用 conf 作為 libarary 
+	  函式庫的取得路徑，而不以 /etc/ld.so.conf 為預設值
+-C cache：那個 cache 指的是某個檔案名稱，也就是說，使用 cache 作為快取暫存
+	  的函式庫資料，而不以 /etc/ld.so.cache 為預設值
+-p	：列出目前有的所有函式庫資料內容 (在 /etc/ld.so.cache 內的資料！)</span>
+
+<span class="term_hd">範例一：假設我的 MySQL 資料庫函式庫在 /usr/lib/mysql 當中，如何讀進 cache ？</span>
+[root@www ~]# <span class="term_command">vi /etc/ld.so.conf</span>
+include ld.so.conf.d/*.conf
+<span class="term_write">/usr/lib/mysql</span>   <span class="term_note">&lt;==這一行新增的啦！</span>
+
+[root@www ~]# <span class="term_command">ldconfig</span>  <span class="term_note">&lt;==畫面上不會顯示任何的資訊，不要太緊張！正常的！</span>
+
+[root@www ~]# <span class="term_command">ldconfig -p</span>
+530 libs found in cache `/etc/ld.so.cache'
+        libz.so.1 (libc6) =&gt; /usr/lib/libz.so.1
+        libxslt.so.1 (libc6) =&gt; /usr/lib/libxslt.so.1
+<span class="term_say">....(底下省略)....</span>
+<span class="term_say">#       函式庫名稱 =&gt; 該函式庫實際路徑</span>
+</pre></td></tr></table>
+
+		<p>透過上面的動作，我們可以將 MySQL 的相關函式庫給他讀入快取當中，這樣可以加快函式庫讀取的效率呢！
+		在某些時候，你可能會自行加入某些 Tarball 安裝的動態函式庫，而你想要讓這些動態函式庫的相關連結可以被讀入到快取當中，
+		這個時候你可以將動態函式庫所在的目錄名稱寫入 /etc/ld.so.conf 當中，然後執行 ldconfig 就可以啦！</p>
+	</div>
+
+	<hr /><a name="ldd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">程式的動態函式庫解析： ldd</span>
+	<div class="block2">
+		<p>說了這麼多，那麼我如何判斷某個可執行的 binary 檔案含有什麼動態函式庫呢？很簡單，利用
+		ldd 就可以曉得了！例如我想要知道 /usr/bin/passwd 這個程式含有的動態函式庫有哪些，可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ldd [-vdr] [filename]</span>
+<span class="term_say">選項與參數：
+-v ：列出所有內容資訊；
+-d ：重新將資料有遺失的 link 點秀出來！
+-r ：將 ELF 有關的錯誤內容秀出來！</span>
+
+<span class="term_hd">範例一：找出 /usr/bin/passwd 這個檔案的函式庫資料</span>
+[root@www ~]# <span class="term_command">ldd /usr/bin/passwd</span>
+<span class="term_say">....(前面省略)....</span>
+        libaudit.so.0 =&gt; /lib/libaudit.so.0 (0x00494000)     <span class="term_note">&lt;==SELinux</span>
+        libselinux.so.1 =&gt; /lib/libselinux.so.1 (0x00101000) <span class="term_note">&lt;==SELinux</span>
+        libc.so.6 =&gt; /lib/libc.so.6 (0x00b99000)
+        libpam.so.0 =&gt; /lib/libpam.so.0 (0x004ab000)         <span class="term_note">&lt;==PAM 模組</span>
+<span class="term_say">....(底下省略)....</span>
+<span class="term_say"># 我們前言的部分不是一直提到 passwd 有使用到 pam 的模組嗎！怎麼知道？
+# 利用 ldd 察看一下這個檔案，看到 libpam.so 了吧？這就是 pam 提供的函式庫</span>
+
+<span class="term_hd">範例二：找出 /lib/libc.so.6 這個函式的相關其他函式庫！</span>
+[root@www ~]# <span class="term_command">ldd -v /lib/libc.so.6</span>
+        /lib/ld-linux.so.2 (0x00ab3000)
+        linux-gate.so.1 =&gt;  (0x00636000)
+
+        Version information:  <span class="term_note">&lt;==使用 -v 選項，增加顯示其他版本資訊！</span>
+        /lib/libc.so.6:
+                ld-linux.so.2 (GLIBC_PRIVATE) =&gt; /lib/ld-linux.so.2
+                ld-linux.so.2 (GLIBC_2.3) =&gt; /lib/ld-linux.so.2
+                ld-linux.so.2 (GLIBC_2.1) =&gt; /lib/ld-linux.so.2
+</pre></td></tr></table>
+
+		<p>未來如果你常常升級安裝 RPM 的軟體時 (下一章節會介紹)，應該常常會發現那個『
+		<span class="text_import2">相依屬性</span>』的問題吧！沒錯！我們可以先以
+		ldd 來視察『<span class="text_import2">相依函式庫</span>』之間的相關性！以先取得瞭解！
+		例如上面的例子中，我們檢查了 libc.so.6 這個在 /lib 當中的函式庫，結果發現他其實還跟 
+		ld-linux.so.2 有關！所以我們就需要來瞭解一下，那個檔案到底是什麼軟體的函式庫呀？使用
+		-v 這個參數還可以得知該函式庫來自於哪一個軟體！像上面的資料中，就可以得到該
+		libc.so.6 其實可以支援 GLIBC_2.1 等的版本！</p>
+	</div>
+</div>
+
+
+<hr /><a name="check"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">檢驗軟體正確性</span>
+<div class="block1">
+	<p>前面提到很多升級與安裝需要注意的事項，因為我們需要克服很多的程式漏洞，所以需要前往
+	Linux distribution 或者是某些軟體開發商的網站，下載最新並且較安全的軟體檔案來安裝才行。
+	好了，那麼『<span class="text_import2">有沒有可能我們下載的檔案本身就有問題</span>？』
+	是可能的！因為 cracker 無所不在，很多的軟體開發商已經公布過他們的網頁所放置的檔案曾經被竄改過！
+	那怎麼辦？連下載原版的資料都可能有問題了？難道沒有辦法判斷檔案的正確性嗎？</p>
+
+	<p>這個時候我們就要透過<span class="text_import2">每個檔案獨特的指紋驗證資料</span>了！因為每個檔案的內容與檔案大小都不相同，
+	所以如果一個檔案被修改之後，必然會有部分的資訊不一樣！利用這個咚咚，我們可以使用
+	MD5 這個指紋驗證機制來判斷該檔案有沒有被更動過！
+	舉個例子來說，台灣高速網路中心所提供的 CentOS 5.3 原版光碟下載點：</p>
+
+	<blockquote><a href="http://ftp.twaren.net/Linux/CentOS/5.3/isos/i386/"
+		target="_blank">http://ftp.twaren.net/Linux/CentOS/5.3/isos/i386/</a></blockquote>
+
+	<p>同時提供了 CentOS 5.3 所有光碟/DVD 的 ISO 檔案 MD5 編碼，透過這個編碼的比對，
+	我們就可以曉得下載的檔案是否有問題。那麼萬一 CentOS 提供的光碟映象檔被下載之後，讓有心人士偷偷修改過，再轉到
+	Internet 上面流傳，那麼你下載的這個檔案偏偏不是原廠提供的，呵呵！
+	你能保證該檔案的內容完全沒有問題嗎？當然不能對不對！是的，這個時候就有
+	md5sum 與 sha1sum 這個檔案指紋的咚咚出現啦！說說他的用法吧！<br /><br /></p>
+
+	<hr /><a name="check_md5sum"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">md5sum / sha1sum</span>
+	<div class="block2">
+		<p>目前有多種機制可以計算檔案的指紋碼，我們選擇使用較為廣泛的 MD5 與 SHA1 加密機制來處理。
+		同樣的，我們以高速電腦中心談到的 CentOS 5.3 的網路安裝映像檔來處理試看看好了。
+		在上面的連結網址上面，妳會看到幾個檔案：</p>
+		<ul>
+		<li>CentOS-5.3-i386-netinstall.iso：CentOS 5.3 的網路安裝映像檔；</li>
+		<li>md5sum.txt： MD5 指紋編碼</li>
+		<li>sha1sum.txt： SHA1 指紋編碼</li>
+		</ul>
+
+		<p>如果妳下載了 CentOS-5.3-i386-netinstall.iso 後，再以 md5sum 與 sha1sum 去檢驗這個檔案時，
+		檔案所回傳的指紋碼應該要與網站上面提供的檔案指紋碼相同才對！我們由網站上面提供的指紋碼知道這個映像檔的指紋為：</p>
+		<ul style="font-family: '細明體'">
+		<li>MD5&nbsp;: 6ae4077a9fc2dcedca96013701bd2a43</li>
+		<li>SHA1: a0c640ae0c68cc0d9558cf4f8855f24671b3dadb</li>
+		</ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">md5sum/sha1sum [-bct] filename</span>
+[root@www ~]# <span class="term_command">md5sum/sha1sum [--status|--warn] --check filename</span>
+<span class="term_say">選項與參數：
+-b ：使用 binary 的讀檔方式，預設為 Windows/DOS 檔案型態的讀取方式；
+-c ：檢驗檔案指紋；
+-t ：以文字型態來讀取檔案指紋。</span>
+
+<span class="term_hd">範例一：將剛剛的檔案下載後，測試看看指紋碼</span>
+[root@www ~]# <span class="term_command">wget \</span>
+&gt; <span class="term_command" style="font-size:8pt">http://ftp.twaren.net/Linux/CentOS/5.3/isos/i386/CentOS-5.3-i386-netinstall.iso</span>
+[root@www ~]# <span class="term_command">md5sum CentOS-5.3-i386-netinstall.iso</span>
+6ae4077a9fc2dcedca96013701bd2a43  CentOS-5.3-i386-netinstall.iso
+[root@www ~]# <span class="term_command">sha1sum CentOS-5.3-i386-netinstall.iso</span>
+a0c640ae0c68cc0d9558cf4f8855f24671b3dadb  CentOS-5.3-i386-netinstall.iso
+<span class="term_say"># 看！顯示的編碼是否與上面相同呢？趕緊測試看看！</span>
+</pre></td></tr></table>
+
+		<p>一般而言，每個系統裡面的檔案內容大概都不相同，例如你的系統中的 /etc/passwd
+		這個登入資訊檔與我的一定不一樣，因為我們的使用者與密碼、 Shell 及家目錄等大概都不相同，所以由
+		md5sum 這個檔案指紋分析程式所自行計算出來的指紋表當然就不相同囉！</p>
+
+		<p>好了，那麼如何應用這個東西呢？基本上，你必須要在你的 Linux 系統上為你的這些重要的檔案進行指紋資料庫的建立
+		(好像在做戶口調查！)，將底下這些檔案建立資料庫：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/etc/passwd</li>
+		<li>/etc/shadow( 假如你不讓使用者改密碼了 )</li>
+		<li>/etc/group</li>
+		<li>/usr/bin/passwd</li>
+		<li>/sbin/portmap</li>
+		<li>/bin/login ( 這個也很容易被駭！ )</li>
+		<li>/bin/ls</li>
+		<li>/bin/ps</li>
+		<li>/usr/bin/top</li></ul>
+
+		<p>這幾個檔案最容易被修改了！因為很多木馬程式執行的時候，還是會有所謂的『執行序,
+		PID』為了怕被 root 追查出來，所以他們都會修改這些檢查排程的檔案，如果你可以替這些檔案建立指紋資料庫
+		(就是使用 md5sum 檢查一次，將該檔案指紋記錄下來，然後常常以
+		<a href="/linux_basic/0340bashshell-scripts.php">shell script</a> 
+		的方式由程式自行來檢查指紋表是否不同了！)，那麼對於檔案系統會比較安全啦！</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>原始碼其實大多是純文字檔，需要透過編譯器的編譯動作後，才能夠製作出 Linux 系統能夠認識的可執行的 binary file ；</li>
+	<li>開放原始碼可以加速軟體的更新速度，讓軟體效能更快、漏洞修補更即時；</li>
+	<li>在 Linux 系統當中，最標準的 C 語言編譯器為 gcc ；</li>
+	<li>在編譯的過程當中，可以藉由其他軟體提供的函式庫來使用該軟體的相關機制與功能；</li>
+	<li>為了簡化編譯過程當中的複雜的指令輸入，可以藉由 make 與 makefile 規則定義，來簡化程式的更新、編譯與連結等動作；</li>
+	<li>Tarball 為使用 tar 與 gzip/bzip2 壓縮功能所打包與壓縮的，具有原始碼的檔案；</li>
+	<li>一般而言，要使用 Tarball 管理 Linux 系統上的軟體，最好需要 gcc, make, autoconfig, kernel source, 
+		kernel header 等前驅軟體才行，所以在安裝 Linux 之初，最好就能夠選擇 
+		Software development 以及 kernel development 之類的群組；</li>
+	<li>函式庫有動態函式庫與靜態函式庫，動態函式庫在升級上具有較佳的優勢。動態函式庫的副檔名為 *.so 而靜態則是 *.a ；</li>
+	<li>patch 的主要功能在更新原始碼，所以更新原始碼之後，還需要進行重新編譯的動作才行；</li>
+	<li>可以利用 ldconfig 與 /etc/ld.so.conf 來製作動態函式庫的連結與快取！</li>
+	<li>透過 MD5 的編碼可以判斷下載的檔案是否為原本廠商所釋出的檔案。</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+<div class="block1">
+實作題部分：
+<ul>
+	<li>請前往企鵝遊戲網站 <a href="http://xpenguins.seul.org/" target="_blank">http://xpenguins.seul.org/</a>
+	下載 xpenguins-2.2.tar.gz 原始碼檔案，並安裝該軟體。安裝完畢之後，請在 GNOME 圖形介面執行 xpenguins ，
+	看看有沒有出現如同官網上面出現的小企鵝？<br /><br /></li>
+</ul>
+<hr />情境模擬題部分：
+<ul>
+	<li>請依照底下的方式來建置你的系統的重要檔案指紋碼，並每日比對此重要工作。<br /><br />
+	<ol>
+		<li>將 /etc/{passwd,shadow,group} 以及系統上面所有的 SUID/SGID 檔案建立檔案列表，該列表檔名為『 important.file 』；<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls /etc/{passwd,shadow,group} &gt; important.file</span>
+[root@www ~]# <span class="term_command">find /bin /sbin /usr/sbin /usr/bin -perm +6000 \</span>
+&gt; <span class="term_command">&gt;&gt; important.file</span>
+</pre></td></tr></table><br /></li>
+
+		<li>透過這個檔名列表，以名為 md5.checkfile.sh 的檔名去建立指紋碼，並將該指紋碼檔案『 finger1.file 』設定成為不可修改的屬性；<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim md5.checkfile.sh</span>
+#!/bin/bash
+for filename in $(cat important.file)
+do
+        md5sum $filename &gt;&gt; finger1.file
+done
+
+[root@www ~]# <span class="term_command">sh md5.checkfile.sh</span>
+[root@www ~]# <span class="term_command">chattr +i finger1.file</span>
+</pre></td></tr></table><br /></li>
+
+		<li>透過相同的機制去建立後續的分析資料為 finger_new.file ，並將兩者進行比對，若有問題則提供 email 給 root 查閱：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim md5.checkfile.sh</span>
+#!/bin/bash
+if [ "$1" == "new" ]; then
+    for filename in $(cat important.file)
+    do
+        md5sum $filename &gt;&gt; finger1.file
+    done
+    echo "New file finger1.file is created."
+    exit 0
+fi
+if [ ! -f finger1.file ]; then
+    echo "file: finger1.file NOT exist."
+    exit 1
+fi
+
+[ -f finger_new.file ] &amp;&amp; rm finger_new.file
+for filename in $(cat important.file)
+do
+    md5sum $filename &gt;&gt; finger_new.file
+done
+
+testing=$(diff finger1.file finger_new.file)
+if [ "$testing" != "" ]; then
+    diff finger1.file finger_new.file | mail -s 'finger trouble..' root
+fi
+
+[root@www ~]# <span class="term_command">vim /etc/crontab</span>
+30 2 * * * root cd /root; sh md5.checkfile.sh
+</pre></td></tr></table>
+
+		如此一來，每天系統會主動的去分析你認為重要的檔案之指紋資料，然後再加以分析，看看有沒有被更動過。
+		不過，如果該變動是正常的，例如 CentOS 自動的升級時，那麼你就得要刪除 finger1.file ，
+		再重新建置一個新的指紋資料庫才行！否則你會每天收到有問題信件的回報喔！</li>
+	</ol></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：GNU 的 make 網頁：<a href="http://www.gnu.org/software/make/manual/make.html"
+		target="_blank">http://www.gnu.org/software/make/manual/make.html</a></li>
+	<li>幾種常見加密機制的全名：<br />
+md5 (Message-Digest algorithm 5) <a href="http://en.wikipedia.org/wiki/MD5" target="_blank">http://en.wikipedia.org/wiki/MD5</a><br />
+sha (Secure Hash Algorithm) <a href="http://en.wikipedia.org/wiki/SHA_hash_functions" 
+	target="_blank">http://en.wikipedia.org/wiki/SHA_hash_functions</a><br />
+des (Data Encryption Standard) <a href="http://en.wikipedia.org/wiki/Data_Encryption_Standard"
+		target="_blank">http://en.wikipedia.org/wiki/Data_Encryption_Standard</a></li>
+	<li>洪朝貴老師的 C 程式語言：<a href="http://www.cyut.edu.tw/%7Eckhung/b/c/" 
+		target="_blank">http://www.cyut.edu.tw/~ckhung/b/c/</a></li>
+</ul>
+</div>
+
+
+
+<hr /><span class="text_history">
+2002/08/21：第一次完成<br />
+2003/02/11：重新編排與加入 FAQ<br />
+2004/03/25：原本是 Tarball 與 RPM ，本日開始將 Tarball 與 RPM&nbsp; 分開說明與講解(後續會花好幾天喔！)，<br />
+　　　　　 最重要的是 Source code 的說明，並提到相關的 gcc compile 功能等等！<br />
+2004/04/10：經歷了當兵中的無奈生活，終於將這篇給他完工了～(當時的鳥哥在將軍漁港與青山港～)<br />
+2005/09/30：舊版文章 (Tarball 與 RPM 的簡單說明) 移動到 <a href="0520softwaremanager/0520rpmtarball.php">此處</a> 。<br />
+2005/10/01：將風格作個轉變之外，也將一些測試移轉到 FC4 上面進行！<br />
+2008/01/10：感謝網友 ayttk 的說明，原本的 make 語法網頁已經移動到其他地方了，請參考 <a href="#20080110">這裡</a>。<br />
+2009/06/04：將基於 FC4 撰寫的文章移動到 <a href="/linux_basic/0520source/0520source_code_and_tarball-fc4.php">此處</a><br />
+2009/06/20：增加一個小練習，需要使用到 X software development 的軟體群組喔！<br />
+2009/09/15：加入一個情境模擬，其實有點功力練功練功而已的習題囉！<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

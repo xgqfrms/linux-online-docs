@@ -1,0 +1,1315 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- APT/YUM server</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  
+<center>
+<font color="#3333FF"><font size=+2><font face="標楷體">簡易</font><font face="Times New Roman,Times">
+APT/YUM&nbsp; </font><font face="標楷體">伺服器設定</font></font></font></center>
+<div align=right><font face="新細明體"><font color="#3333FF"><font size=-1>最近更新日期：2004/06/23</font></font></font></div>
+<font color="#000099"><font size=-2>　</font></font>
+<table BORDER COLS=1 WIDTH="100%" BGCOLOR="#FFCCCC" >
+<tr>
+
+<td><font color="#000099"><font size=-1>用不慣 Tarball 安裝套件卻又擔心
+RPM 的屬性相依問題嗎？如果有一種套件管理工具可以克服 RPM 屬性相依的方法該有多好！有沒有這種工具？呵呵！有的，那就是
+APT 與 YUM 這兩個伺服器了。APT (Advanced Package Tool) 是由 <a href="http://www.debian.org/intl/zh/" target="_blank">debian</a>
+這個 distribution 所發展的一個套件管理工具，其目的在克服 RPM 套件的屬性相依問題，讓使用者可以透過
+APT 的分析直接安裝/昇級/刪除相關聯的套件喔。另一個很好用的就是 YUM (Yellow
+dog Updater, Modified) 這個咚咚，他是由 Duke University 所發起的計劃，目的則與
+APT 相似，都是在克服 RPM 的屬性相依問題，方便使用者進行套件的安裝、升級等等工作。由於
+APT/YUM 這一類的伺服器在『系統升級/管理』上面的功能發揮的很好，所以目前很多的
+distributions 都把這兩個伺服器作為預設的服務喔。在這個章節當中，我們要介紹如何在您的
+Linux 伺服器上面建置一個 ATP 或 YUM 伺服器，並且提供更新的 RPM 套件給 Client
+端來使用！</font></font></td>
+</tr>
+</table>
+<font color="#000099"><font size=-2>　</font></font>
+<br><font color="#000099"><font size=+1><a href="#theory">前言</a>：</font></font>
+<br><font color="#000099">　　：<a href="#theory_what">甚麼是 APT/YUM 呢？他們如何運作</a></font>
+<br><font color="#000099">　　：<a href="#theory_why_apt">是否需要架設
+APT/YUM 伺服器</a></font>
+
+<br><font color="#000099">　　：<a href="#theory_protocol">架設之前，您所需要啟用的服務</a></font>
+<br><font color="#000099"><font size=+1><a href="#apt">APT 伺服器</a>：</font></font>
+<br><font color="#000099">　　：<a href="#apt_mechanism">APT 伺服器利用的機制</a></font>
+<br><font color="#000099">　　：<a href="#apt_install">安裝 APT 軟體</a></font>
+<br><font color="#000099">　　：<a href="#apt_intru">APT 伺服器的套件結構</a></font>
+<br><font color="#000099">　　：<a href="#apt_httpd_setup">APT 伺服器設定
+( 以 HTTP 提供服務為例 )</a></font>
+
+<br><font color="#000099">　　：<a href="#apt_client">Client 端的設定</a></font>
+<br><font color="#000099"><font size=+1><a href="#yum">YUM 伺服器</a>：</font></font>
+<br><font color="#000099">　　：<a href="#yum_mechanism">YUM 伺服器利用的機制</a></font>
+<br><font color="#000099">　　：<a href="#yum_install">安裝 yum 軟體</a></font>
+<br><font color="#000099">　　：<a href="#yum_packa">yum 伺服器的套件結構</a></font>
+<br><font color="#000099">　　：<a href="#yum_setup">yum 伺服器設定</a></font>
+
+<br><font color="#000099"><font size=+1><a href="#spec">特殊案例</a>：</font></font>
+<br><font color="#000099">　　：<a href="#spec_my">建立自己的更新套件</a></font>
+<br><font color="#000099">　　：<a href="#spec_spec">如何取得網路上的更新元件</a></font>
+<br><font color="#000099"><font size=+1><a href="#server_partition">主機的規劃技巧與建議</a>：</font></font>
+<br><font color="#000099"><font size=+1><a href="#reference">參考資源</a>：</font></font>
+<br>
+<hr WIDTH="100%"><a NAME="theory"></a><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><font color="#000099"><font size=+1>前言：</font></font>
+
+<ul>如果您曾經自行安裝過某些套件的話，那麼您或許會覺得：『<font color="#000066"><a href="http://linux.vbird.org/linux_basic/0520rpm_and_srpm.php">RPM</a>
+是比 <a href="http://linux.vbird.org/linux_basic/0520source_code_and_tarball.php">Tarball</a>
+好安裝沒有錯啦，但是每次為了解決套件之間的屬性相依問題，真的是很煩，尤其是
+RPM 檔案在不同的作業系統版本之間也無法相容！</font>』是的！沒錯！為了要解決這個套件之間的屬性相依問題，又要保留
+RPM 套件的易安裝與查詢的特性，所以就有一些套件管理方法出來啦！比較有名的就是
+APT 與 YUM 這兩個咚咚啦。(註：當然，Mandrake 的 urpmi 也是很棒的工具。)
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="theory_what"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">甚麼是
+APT/YUM 呢？他們如何運作？</font>
+<br>　
+<ul>眾所皆知的， RPM 是目前 Linux 世界裡面用的最多的套件安裝方式。不過，由於
+RPM 所管理的套件在安裝的時候必須要考慮到不同套件之間的相依性，這在系統管理員處理系統的升級/更新上面是很討厭的！為了克服這個問題，所以有
+APT/YUM 之類的計劃出來。APT ( Advanced Package Tool ) 最早是由 <a href="http://www.debian.org/intl/zh/" target="_blank">debian</a>
+這個 distribution 所發展出來的，而
+
+<a href="http://linux.duke.edu/projects/yum/index.ptml" target="_blank">YUM
+( Yellow dog Updater, Modified )</a> 則是由 <a href="http://www.phy.duke.edu/~rgb/General/yum_HOWTO.php" target="_blank">Duke
+University</a> 所發起的計劃之一，這兩者的目的都是『<font color="#000066">為了要解決安裝
+RPM 套件時的屬性相依問題！</font>』，而不是額外再建立一個套件安裝模式喔。首先，我們談一談為甚麼
+RPM 套件會有屬性相依的問題？又，甚麼是屬性相依的問題啊？
+<br>　
+<ul>
+<li>
+屬性相依的問題大多來自於函式庫的引用，舉例來說，我們前面 <a href="http://linux.vbird.org/linux_server/0310telnetssh.php">SSH
+與 Telnet 伺服器</a>章節中提到的 SSH 伺服器需要使用到 SSL 這個套件的加密機制，所以自然就需要
+SSL 的函式庫，這個時候，如果您沒有安裝 SSL 的話，那麼 SSH 就不會讓您安裝了！這就是屬性相依的問題啦。也就是說，當我們要安裝
+A 套件，<font color="#000000">結果 RPM 套件管理員告訴你還需要 B 套件，而安裝
+B 套件時，卻又發現還缺少 C 套件～真是環環相扣啊！討厭死了～</font></li>
+</ul>
+
+</ul>
+<font color="#000000">　</font>
+<ul>
+<ul>
+<li>
+<font color="#000000">要知道某個套件的最低要求是哪些套件時，可以使用 </font><font face="細明體"><font color="#000066">rpm
+-qR packagename</font></font><font color="#000000"> ，至於某個套件提供哪些檔案則可以使用
+</font><font face="細明體"><font color="#000066">rpm
+-q --provides packagename</font></font><font color="#000000"> 。這些資訊都紀錄在
+RPM 套件裡面。</font></li>
+</ul>
+<font color="#000000">　</font>
+
+<br><font color="#000000">如果對於 RPM 還有疑問，請參考<a href="http://linux.vbird.org/linux_basic">基礎學習篇</a>的
+<a href="http://linux.vbird.org/linux_basic/0520rpm_and_srpm.php">RPM
+與 SRPM</a> 那個章節囉。好了，既然每一個 RPM 套件的標頭 (header)裡面都會紀錄該套件的屬性相依關係，那麼如果我們可以將該標頭的內容紀錄下來並且進行分析，不就可以得知每個套件在安裝之前需要額外安裝哪些基礎套件嗎？也就是說，</font><font color="#000066">我們在伺服器上面先以分析工具將所有的
+RPM 檔案進行分析，然後將該分析紀錄下來，只要在進行安裝或升級時先查詢該紀錄的檔案，就可以知道所有相關聯的套件檔案！</font><font color="#000000">沒錯！是這樣。他的整個運作流程有點像這樣：</font>
+<br><font color="#000000">　</font>
+<br><font color="#000099">伺服器端：</font>
+<ol>
+<li>
+<font color="#000066">首先，在 APT/YUM 伺服器上面放置了所有的 RPM 套件(這包括來自原版光碟與供應商發行的昇級套件)；</font></li>
+
+<li>
+<font color="#000066">然後以相關的功能去分析各個 RPM 檔案的相依性，這些紀錄可以解決所謂的屬性相依問題，然後將這些資料記錄成檔案存放在伺服器的某特定目錄內；</font></li>
+</ol>
+<font color="#000066">　</font>
+<br><font color="#000099">客戶端：</font>
+<ol>
+<li>
+<font color="#000066">Client 端如果需要安裝/升級/刪除某個程式時，會先下載伺服器上面記載的屬性相依檔案(利用的協定則是
+WWW 或者是 FTP)；</font></li>
+
+<li>
+<font color="#000066">經由比對伺服器端傳來的紀錄資料進行分析，然後取得所有相關的套件，一次全部下載下來進行升級安裝。</font></li>
+
+</ol>
+<font color="#000066">　</font>
+<br><font color="#000000">如此一來則克服了屬性相依的問題囉！是的！就這麼簡單啊！整個圖示如下：</font></ul>
+</ul>
+
+<center><img SRC="0450apt/apt-1.jpg" NOSAVE BORDER=2 height=269 width=384>
+<br><a NAME="fig_1"></a>圖一、APT/YUM 伺服器的架構。</center>
+
+<ul>
+<ul>您的 APT/YUM 伺服器上面可以擁有多個版本的 Linux distributions 的 RPM
+套件，並且需要提供 WWW/FTP 等服務，而 Client 端則是藉由主機的 WWW/FTP 等協定來進行
+RPM 檔案的取得喔。</ul>
+　
+<br>
+<hr WIDTH="100%"><a NAME="theory_why_apt"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">是否需要架設
+APT/YUM 伺服器</font>
+
+<br>　
+<ul>APT/YUM 的功能也只是在管理 RPM 套件而已，只是他比單純的 RPM 指令要好的地方在於他克服了屬性相依的問題，所以用戶端可以很方便的進行安裝/升級與移除的動作。那麼是否意味著我就得要架設
+APT 或 YUM 伺服器呢？
+<br>　
+<br>這可不一定吶。如果您只有一部主機，而且上面的網路服務很少，並且也沒有提供甚麼重要的服務，那麼架設
+APT/YUM 伺服器就沒有這麼需要了。為甚麼呢？因為很少用到 APT 的機制啊，而且直接找網路上面有的
+APT/YUM 伺服器即可，無須架設啦！要注意的是，架設 APT/YUM 伺服器時，您必須要有夠用的硬碟空間、夠用的頻寬以及提供至少
+WWW 或者是 FTP 的網路服務呢！這對只有一部主機的您來說，真的不必要費心思去管理的啦！但如果您的網路環境是如下的模樣，可能就得要架設一部
+APT/YUM 伺服器比較好囉！
+<br>　
+<ul>
+<li>
+<font color="#000066">您的網路裡面有相當多的同樣版本的 Linux distribution
+系統；</font></li>
+
+<li>
+<font color="#000066">您的區域網路對外頻寬不高，且內部有多部 Linux 主機系統；</font></li>
+
+<li>
+<font color="#000066">您的 Linux distributions 在國內並沒有相對應的 APT/YUM
+伺服器提供服務，而對國外連線的頻寬又很低時；</font></li>
+
+</ul>
+　
+<br>也就是說，如果您擁有多部 Linux 主機，或者是您連接到 APT/YUM 伺服器的頻寬太低時，就可以考慮架設
+APT/YUM 伺服器了。以上面<a href="#fig_1">圖一</a>來說，如果您的連外網路頻寬太低，那麼架設一部
+APT/YUM 伺服器後，所有的 Linux 是連接到該部 APT/YUM 伺服器進行升級/安裝，速度當然比連外要快很多啦！
+<br>　　
+<br>所以說，如果您是上層的系統管理員(例如學校的網管老師或者縣網、區網的網管人員)，為了您的整個網域的
+Linux 主機來打算，那麼架設 APT/YUM 是蠻需要的，因為真的可以節省很多連外的頻寬；相反的，如果您是一般用戶，擁有的了不起就是兩三部
+Linux 主機而已，那麼似乎沒有架設 APT 主機的必要性呢！因為由上面的說明來看，架設
+APT 主機所需要的『硬碟空間』可是不能省的，<font color="#000066">對於一般的用戶來說，架設
+APT 主機實在是沒有什麼必要性說</font>～</ul>
+　
+<br>
+<hr WIDTH="100%"><a NAME="theory_protocol"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">架設之前，您所需要啟用的服務</font>
+<br>　
+<ul>就如同前面的說明，您要架設 APT/YUM 時，請先記得<font color="#000066">在您的
+APT/YUM 主機上面啟用 WWW 或者是 FTP 服務了才行！</font>因為 APT/YUM 是利用
+WWW/FTP 來進行 RPM 檔案在 Server 與 Client 之間的傳送的！此外，您的 APT/YUM
+主機上面最好將最靠近您主機的 Linux 版本更新套件的網站設定為映射站台 ( mirror
+)，如此一來，您就可以讓系統自動的更新您的 Linux distributions 所需要的更新檔案，而不必手動來更新呢！
+
+<br>　
+<br>此外，由於完整的 APT/YUM 伺服器包含了原本的 Linux distributions 的原版光碟內容，所以需要的硬碟空間是很高的！至少需要
+3~5 GB 以上，<font color="#000066">最好能夠有 10GB 以上的硬碟空間</font>。
+<br>　
+<br>好了，底下我們就來開始安裝與設定 APT/YUM 伺服器吧！</ul>
+</ul>
+
+<hr WIDTH="100%"><a NAME="apt"></a><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><font color="#000099"><font size=+1>APT
+伺服器：</font></font>
+<ul>底下開始來談一談 APT 伺服器吧！
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="apt_mechanism"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">APT
+伺服器利用的機制</font>
+<br>　
+
+<ul>就如同前言說明的， APT 主機可以將已經存在的 RPM 檔案進行分析，並且將各個套件的相關係記錄下來，以便讓使用者依據這個套件的相關性紀錄檔案來更新與安裝他們的
+Linux 系統。那麼這些檔案放在哪裡呢？其實因為這些檔案被需要讓 Client 端可以下載，而且
+APT 並不是額外再啟用其他的 port ，而是透過 WWW 或者是 FTP 的方式來讓 Client
+端下載的，所以<b> <font color="#000066">APT 的 RPM 檔案當然就需要放在可以讓
+WWW 或者讓 FTP 來存取的目錄囉</font></b>！
+<br>　
+<br>在很多 Linux distributions 的 WWW 預設主頁是放在 /var/www/html 這個目錄下的(
+例如 Red Hat 9, Fedora Core I/II, Mandrake 等等 )，所以，除非您想要自行架設虛擬主機，或者是利用連結檔的方式來讓
+RPM 檔案放置的目錄可以讓 WWW 讀取，否則您都應該要將 APT 管理的 RPM 檔案放置在
+/var/www/html 底下。假設我有兩個 Linux 的版本要這部 APT 主機管理時，一版是
+Mandrake 9.1 一版是 Red Hat 9 ，那麼我可以這樣編排我的 RPM 檔案放置的目錄：
+<br><font face="細明體"><font color="#000066"><font size=-1>　</font></font></font>
+<br><a NAME="table_01"></a><font face="細明體"><font color="#000066">表一、APT
+主機相關 RPM 檔案放置的目錄示意表</font></font>
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#FFCCCC" >
+<tr>
+<td><font face="細明體"><font color="#000066"><font size=-1>/var/www/html/apt/redhat9</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　 　　　　　　　　　
+|--RPMS.os</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　 　　　　　　　　
+|--RPMS.updates</font></font></font>
+
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　 　　　　　　　
+|--SRPMS.os (非必備目錄)</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　
+　　　　　　 |--SRPMS.updates (非必備目錄)</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　&nbsp;
+`--base</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　|--pkglist.os.bz2</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　|--pkglist.updates.bz2</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　|--release</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　|--release.os</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　`--release.updates</font></font></font>
+
+<br><font face="細明體"><font color="#000066"><font size=-1>/var/www/html/apt/mdk9.1</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　 　　　　　　　　
+|--RPMS.os</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　 　　　　　　　
+|--RPMS.updates</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　 　　　　　　
+|--SRPMS.os (非必備目錄)</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　
+　　　　　 |--SRPMS.updates (非必備目錄)</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　&nbsp;
+`--base</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--pkglist.os.bz2</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--pkglist.updates.bz2</font></font></font>
+
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--release</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--release.os</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　`--release.updates</font></font></font></td>
+</tr>
+</table>
+<font face="細明體"><font color="#000066"><font size=-1>　</font></font></font>
+<br>如上所示，我獨立出一個名為 apt 的目錄來管理我的 APT 檔案，另外，因為有兩個版本，所以我將
+apt 又分為兩個目錄，因為兩個目錄的格式一樣，所以我以 Red Hat 9 那個 /var/www/html/apt/redhat9
+目錄來介紹。裡面至少會有三個目錄才對，分別是 RPMS.os, RPMS.updates, base
+這三個目錄，其中：
+<br>　
+<ul>
+<li>
+<font color="#000066">RPMS.os 的內容為 Red Hat 9 的原本光碟中的 RPM 檔案(i386)；</font></li>
+
+<li>
+<font color="#000066">RPMS.updates 的內容為 Red Hat 公司針對 Red Hat 9
+這一版所釋出的修補套件；</font></li>
+
+<li>
+<font color="#000066">base 這個目錄裡面的資料則是由 APT 伺服器所自動產生的，前面我們提到的
+APT 會去分析 RPM 檔案而將檔案資訊記錄下來，記錄下來的咚咚就是放置在這個目錄下的啦！</font></li>
+</ul>
+　
+<br>您還會看到其實還有 SRPMS.os 以及 SRPMS.updates 等目錄，呵呵！那個就是
+Source RPM (SRPM) 檔案放置的目錄了。因為我們直接可以透過 Binary 來升級，所以我預設不放
+SRPM 在我的 APT 伺服器裡面囉！
+<br>　
+<br>OK！所以我們需要怎麼來架設我們的 APT 以及利用 APT 來升級呢？
+<br>　
+<ol>
+<li>
+<font color="#000066">先將所有來自 Linux 原版光碟的 RPM 檔案複製到 /full/path/RPMS.os
+檔案中；</font></li>
+
+<li>
+<font color="#000066">再將來自原 Linux 版本公司釋出的 RPM 修補套件由 Internet
+下載到 /full/path/RPMS.updates 當中；</font></li>
+
+<li>
+<font color="#000066">利用 APT 的功能進行 /full/path/base 這個目錄裡面資訊的更新；</font></li>
+
+<li>
+<font color="#000066">到 Client 端上面，以 APT 的功能更新 Client 自己的套件資訊，使與
+APT 主機的 /full/path/base 這個目錄裡面的套件記錄資訊同步化；</font></li>
+
+<li>
+<font color="#000066">到 Client 端上面，可以利用 APT 的功能來更新或者是安裝套件了！當然，所使用來下載
+RPM 檔案的協定當然是 WWW 或是 FTP 囉！而且， Client 端分析的是自己的 RPM
+資訊喔，所以每次進行更新之前，應該將 Client 端的 RPM 資訊與 APT Server
+端來同步化才行！否則 Server 新增的檔案在 Client 端是無法取得資訊的喔！</font></li>
+</ol>
+
+　
+<br>所以囉，其實在 APT 主機設定上面最重要的步驟應該是在於主機硬碟的規劃、檔案的複製與
+updates 檔案的隨時自動更新(可以利用映射站台的功能)，以及 /full/path/base
+目錄下的資訊更新等等步驟！只要這邊沒有問題，其他的流程就簡單咯！</ul>
+　
+<br>
+<hr WIDTH="100%"><a NAME="apt_install"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">安裝
+APT 軟體</font>
+<br>　
+<ul>因為 APT 這套件是挺大的，而且也不容易使用 Tarball 來安裝，所以比較建議使用
+RPM 的方式直接安裝，您可以到底下的網站搜尋一下屬於您自己的 Linux distributions
+的 APT 版本喔：
+<br>　
+<ul>
+<li>
+<a href="http://rpmfind.net/linux/rpm2html/search.php?query=apt" target="_blank">http://rpmfind.net/linux/rpm2html/search.php?query=apt</a></li>
+
+<li>
+<a href="http://apt.freshrpms.net/" target="_blank">http://apt.freshrpms.net/</a></li>
+
+</ul>
+　
+<br>同時我也將一些常見的版本捉下來了，您也可以在這裡下載：
+<br>　
+<br><font color="#000066">RPM 的部分：</font>
+<ul>
+<li>
+Red Hat 9：<a href="http://linux.vbird.org/download/linux_server/apt/rh9/apt-0.5.5cnc6-fr1.i386.rpm">http://linux.vbird.org/download/linux_server/apt/rh9/apt-0.5.5cnc6-fr1.i386.rpm</a></li>
+
+<li>
+Red Hat 8：<a href="http://linux.vbird.org/download/linux_server/apt/rh8/apt-0.5.5cnc6-fr0.rh80.1.i386.rpm">http://linux.vbird.org/download/linux_server/apt/rh8/apt-0.5.5cnc6-fr0.rh80.1.i386.rpm</a></li>
+
+<li>
+Red Hat 7.3：<a href="http://linux.vbird.org/download/linux_server/apt/rh7.3/apt-0.5.5cnc5-fr0.rh73.2.i386.rpm">http://linux.vbird.org/download/linux_server/apt/rh7.3/apt-0.5.5cnc5-fr0.rh73.2.i386.rpm</a></li>
+
+<li>
+Red Hat 7.1：<a href="http://linux.vbird.org/download/linux_server/apt/rh7.1/apt-0.5.4cnc9-fr0.1.rh71.i386.rpm">http://linux.vbird.org/download/linux_server/apt/rh7.1/apt-0.5.4cnc9-fr0.1.rh71.i386.rpm</a></li>
+
+<li>
+Mandrake 9.1：<a href="http://linux.vbird.org/download/linux_server/apt/mdk9.1/apt-0.5.5cnc3-1mdk.i586.rpm">http://linux.vbird.org/download/linux_server/apt/mdk9.1/apt-0.5.5cnc3-1mdk.i586.rpm</a></li>
+
+<li>
+Mandrake 9.0：<a href="http://linux.vbird.org/download/linux_server/apt/mdk9.0/apt-0.3.19cnc55-2mdk.i586.rpm">http://linux.vbird.org/download/linux_server/apt/mdk9.0/apt-0.3.19cnc55-2mdk.i586.rpm</a></li>
+
+<li>
+Mandrake 9.0：<a href="http://linux.vbird.org/download/linux_server/apt/mdk9.0/apt-devel-0.3.19cnc55-2mdk.i586.rpm">http://linux.vbird.org/download/linux_server/apt/mdk9.0/apt-devel-0.3.19cnc55-2mdk.i586.rpm</a></li>
+</ul>
+　
+<br><font color="#000066">SRPM 的部分(可以使用 Red Hat 9 提供的 SRPM 來進行重新編譯)：</font>
+<ul>
+<li>
+Red Hat 9：<a href="http://linux.vbird.org/download/linux_server/apt/rh9/apt-0.5.5cnc6-fr1.src.rpm">http://linux.vbird.org/download/linux_server/apt/rh9/apt-0.5.5cnc6-fr1.src.rpm</a></li>
+</ul>
+　
+<br>直接以『<font face="細明體"><font color="#000066"> rpm -ivh package.name
+
+</font></font>』就能安裝了！當然，需要選擇適合您的版本吶！如果找不到適合您的版本，那麼嘗試以上面提供的
+SRPM 來重新編譯試看看能不能成功吧！『<font face="細明體"><font color="#000066">rpm
+--rebuild SRPM</font></font> 』或新版的『<font face="細明體"><font color="#000066">rpmbuild
+--rebuild SRPM</font></font>』(註：SRPM 表示您由上面下載的 apt-0.5.5cnc6-fr1.src.rpm
+這個檔案的檔名)。</ul>
+　
+<br>
+<hr WIDTH="100%"><a NAME="apt_intru"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">APT
+伺服器的套件結構</font>
+<br>　
+<ul>APT 伺服器裡面有很多的檔案，說明如下：</ul>
+　
+<ul>
+<li>
+
+<font color="#000099">設定檔案：</font></li>
+
+<br>　
+<ul>
+<li>
+<b><font face="細明體"><font color="#000066">/etc/apt/apt.conf</font></font></b>：這個並不是
+APT Server 的記錄檔，而是當我們在指令列模式下達 APT 的指令時 (如底下執行檔部分會介紹的
+apt-get )，該指令的環境參數。一般來說，使用預設值就可以了！不需要更動他。這個檔案的內容當中：</li>
+
+<br><font face="細明體"><font color="#000066">　</font></font>
+<br><font face="細明體"><font color="#000066">註解符號為兩個斜線( slash
+)：『//』</font></font>
+<br><font face="細明體"><font color="#000066">主要至少分為三大群組，分別為
+APT(環境參數), Acquire(下載相關參數) 與 RPM(RPM相關參數)，而每個群組之內又分別具有多個參數，每個參數的設定值最後以分號『;』隔開，例如下面的範例：</font></font>
+<table BORDER COLS=1 WIDTH="500" BGCOLOR="#000000" >
+
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/apt/apt.conf</b></font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">APT　　　　</font><font color="#FF6666">//第一個大群組</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>{</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; // Options
+for apt-get</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">&nbsp; Get　　　</font><font color="#FF6666">//第一個大群組裡面的第一個參數</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; {</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">&nbsp;&nbsp;&nbsp;
+Download-Only "false";&nbsp; </font><font color="#FF6666">//第一個參數的項目與該項目之設定值</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">&nbsp;&nbsp;&nbsp;
+Show-Upgraded "true";&nbsp;&nbsp; </font><font color="#FF6666">//第二個參數的項目與該項目之設定值</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; };</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>};</font></font></font></td>
+
+</tr>
+</table>
+<font face="細明體"><font color="#000066">除了上面的格式外，也可以利用底下的格式來進行設定：</font></font>
+<br><b><font face="細明體"><font color="#000066">主群組::參數::項目 "設定值";</font></font></b>
+<br><font face="細明體"><font color="#000066">例如上面的範例中，可以將第一個設定值寫成：</font></font>
+<br><b><font face="細明體"><font color="#000066">APT::Get::Download-Only
+"false";</font></font></b>
+<br>　
+<br>另外，如果您想要使用 Proxy 來加快您的網路傳輸時，可以修改裡面的內容，因為
+Proxy 是在 Acquire 裡面的 Http 參數，所以您可以使用如下的設定值(<i><font color="#000000">註：我以成大的
+proxy.ncku.edu.tw:3128 為例</font></i>)：
+<br>　
+<table BORDER COLS=1 WIDTH="500" BGCOLOR="#000000" >
+<tr>
+
+<td><font face="細明體"><font color="#CCCCCC"><font size=-1>1. 利用原本的設定技巧：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/apt/apt.conf</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>// 找到底下的參數</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Acquire</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>{</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">&nbsp; </font><font color="#FF6666">//
+底下加入這些資料：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp; Http</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp; {</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp;&nbsp;&nbsp;
+Proxy "http://proxy.ncku.edu.tw:3128";</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>&nbsp; };</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; Retries
+"0";</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>};</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>2. 或者您也可以改用底下的參數設定：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/apt/apt.conf</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>//在最後一行加入，注意，不要被括號
+{} 括住了！</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>Acquire::Http::Proxy
+"http://proxy.ncku.edu.tw:3128";</font></font></font></td>
+</tr>
+</table>
+　
+<br>上面兩種方法都是行的通的啦！
+<br>　
+<li>
+<a NAME="sources.list"></a><b><font face="細明體"><font color="#000066">/etc/apt/sources.list</font></font></b>：這個檔案就真的重要了！此檔案的作用在於『<font color="#000066">選擇適合您的
+APT 主機</font>』囉！所以這個檔案與 Client 的關係比較大。內容有點像這樣：</li>
+
+<br>　
+<table BORDER COLS=1 WIDTH="600" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">vi /etc/apt/sources.list</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># Red Hat Linux
+9</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>rpm http://ayo.freshrpms.net
+redhat/9/i386 os updates freshrpms</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#rpm-src http://ayo.freshrpms.net
+redhat/9/i386 os updates freshrpms</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 裡面料的格式為：</font></font></font>
+
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1># rpm &lt;APT伺服器位址>
+&lt;相對於伺服器的路徑> &lt;目錄一> &lt;目錄二> &lt;目錄三> ...</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 以上面的例子來說，事實上
+RPM 放置的目錄在：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># http://ayo.freshrpms.net/redhat/9/i386/RPMS.os</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># http://ayo.freshrpms.net/redhat/9/i386/RPMS.updates</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># http://ayo.freshrpms.net/redhat/9/i386/RPMS.freshrpms</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 而至於 rpm-src
+則是放置 SRPM 檔案的伺服器與目錄喔！</font></font></font></td>
+
+</tr>
+</table>
+　
+<br>如果您是由鳥哥面推薦的 RPM 安裝您的 APT 時，這裡可以保持預設的路徑，不過，如果您知道台灣地區有更快速的映射站台，這裡就可以修改成您所找到的
+APT 伺服器囉。
+<br>　</ul>
+
+<li>
+<font color="#000099">執行檔案：</font></li>
+
+<br>　
+<ul>
+<li>
+<b><font face="細明體"><font color="#000066">apt-get</font></font></b>：這個是最主要的執行檔了！大部分的時候都是給
+Client 端用的，語法如下：</li>
+
+<br>　
+<table BORDER COLS=1 WIDTH="600" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00">apt-get &lt;options> &lt;更新項目>
+&lt;套件名稱></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>參數說明：</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>options：關於參數有底下幾個較常見的：</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　-q 不要顯示
+apt-get 運作時的輸出訊息，安靜一點比較好嗎？！ ^_^</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　-y 如果
+apt-get 在工作過程中需要使用者回應，這個參數可以直接回答 yes&nbsp;</font></font></font>
+
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>更新項目：更新的動作有底下幾個：</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　update：這個動作很重要，就是我們上面有提到的，Client
+端要更新與 APT Server</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　套件相關性檔案的清單對應表，就得要使用這個項目了！基本上，</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　每次進行
+apt-get 來下載 APT Server 的檔案前，最好都先 apt-get update&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　install：安裝某個套件，後面接套件名稱</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　dist-upgrade：自動升級我們系統上面已經安裝的所有
+RPM 套件喔</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　clean：將下載自
+APT 主機的的 RPM 檔案刪除哩！</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　remove：移除已經安裝在我們系統的某個套件！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>範例：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">apt-get update　</font><font color="#FFFFFF">　　　
+　
+</font></b><font color="#FF6666"># 將 RPM 檔案相關性清單更新！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>apt-get install tcpdump </b></font><font color="#FF6666">#
+安裝 tcpdump 這個套件</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">apt-get -y dist-upgrade&nbsp; </font></b><font color="#FF6666">#
+升級我們系統上面的所有 RPM 套件</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>apt-get clean&nbsp;</b></font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># 至於每日更新的話，可以寫入
+/etc/crontab 喔</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/crontab</b></font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>40 5 * * *
+root apt-get update; apt-get -y dist-upgrade ; apt-get clean</font></font></font></td>
+</tr>
+</table>
+　
+<li>
+<b><font face="細明體"><font color="#000066">genbasedir</font></font></b>：我們在前言的部分一再地提到
+APT Server 會分析已經存在的 RPM 檔案的屬性相關性，並且會將屬性的結果放置在
+/full/path/base 那個目錄內～呵呵！其實該動作很簡單的，就是使用這個 genbasedir
+即可！</li>
+
+</ul>
+　
+<li>
+<font color="#000099">相關目錄：</font></li>
+
+<br>　
+<ul>
+<li>
+<b><font face="細明體"><font color="#000066">/var/cache/apt</font></font></b>：一些記錄檔案的地方，例如當使用
+apt-get update 之後，這個目錄下的 RPM 檔案相關係記錄檔就會更新了！</li>
+
+<br><b><font face="細明體"><font color="#000066">/var/state/apt</font></font></b>：這個則是
+apt 在工作的時候，一些狀態的紀錄檔案放置的地方！</ul>
+</ul>
+
+　
+<br>
+<hr WIDTH="100%"><a NAME="apt_httpd_setup"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">APT
+伺服器設定 ( 以 HTTP 提供服務為例 )</font>
+<br>　
+<ul>在底下的例子當中，我們主要是設定以 HTTP 為 APT Server 的服務提供者，因為是利用預設的
+WWW 系統版本，所以首頁在 /var/www/html。鳥哥在 /var/www/html 底下建立一個名為
+apt 的目錄，並在底下提供 Red Hat 9 與 Mandrake 9.1 的 APT 套件服務功能，注意，我預設僅提供
+RPM 檔案，並不提供 SRPM 的檔案喔！相關的目錄如前面提到的<a href="#table_01">表一</a>所示(註：當然
+SRPM.os... 等檔案就不必建立了！)。好了，那麼就來給他安裝 APT Server 相關的流程吧！</ul>
+　
+<ol>
+<li>
+<font color="#000099">建置所需的目錄與複製所需的檔案：</font></li>
+
+<br>如上面提到的 <a href="#table_01">表一</a> 所示為我們所需要的目錄，而在每個
+RPMS.os 為系統原本的光碟裡面的檔案，而 RPMS.updates 則為套件升級版本。我這裡主要以中山大學的
+FTP 網站作為主要的 update 資料來源，使用的是 ncftp 的下載方法：
+
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#CCCCCC"><font size=-1>1. 建置所需目錄：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>mkdir -p /var/www/html/apt/redhat9/RPMS.os</b></font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>mkdir -p /var/www/html/apt/redhat9/RPMS.updates</b></font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>mkdir -p /var/www/html/apt/mdk9.1/RPMS.os</b></font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>mkdir -p /var/www/html/apt/mdk9.1/RPMS.updates</b></font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>2. 利用原版
+CD 來複製所需的 .os 的 RPM 檔案</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">cd /var/www/html/apt/redhat9/RPMS.os</font></b></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 先放入 Red
+Hat 9 的原版光碟片</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+RPMS.os]#</font><font color="#FFFF00"> <b>mount /dev/cdrom&nbsp;</b></font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+RPMS.os]# </font><b><font color="#FFFF00">cp /mnt/cdrom/RedHat/RPMS/* .</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+RPMS.os]#</font><font color="#FFFF00"> <b>umount /dev/cdrom</b></font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 重複上面的步驟，將三片
+i386 的 RPM 檔案都複製進去！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 至於 Mandrake
+的原版光碟複製方法也是相同的步驟！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>3. 利用 ftp.nsysu.edu.tw
+來下載所需要的 RPM 檔案</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+RPMS.os]# </font><b><font color="#FFFF00">cd /var/www/html/apt/redhat9/RPMS.updates</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+RPMS.updates]# </font><b><font color="#FFFF00">ncftp&nbsp; \</font></b></font></font>
+<br><b><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><font color="#FFFF00">ftp://ftp.nsysu.edu.tw/Linux/RedHat/linux/updates/9/en/os/i386/</font></font></font></b>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>NcFTP 3.0.2
+(October 19, 2000) by Mike Gleason (ncftp@ncftp.com).</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Connecting
+to 140.117.11.7...</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>====================================================================</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;歡迎光臨【國立中山大學】檔案伺服器
+: FTP.NSYSU.edu.tw</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+Welcome to National Sun Yat-Sen University FTP Server.</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;右列網址提供本站檔案搜尋引擎
+http://ftp.nsysu.edu.tw/</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+File Search Engine on the URL http://ftp.nsysu.edu.tw/</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;目前
+FTP 部份有 313 人正在線上，最高限制 5000 人.</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+There are currently 313 users out of 5000 possible.</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>====================================================================</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Only anonymous
+FTP !!!! Please press [ENTER] key.</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Logging in...</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;========================================================================</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;!!!!
+Important Function !!!! (重要功能介紹)</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;o 'cd
+key*word' or 'cd prefix*' or 'cd *suffix' provided (case-insentive).</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;&nbsp;
+(例：cd freebsd 可以打成 cd fr 或 cd *sd 或 cd f*e*d 都通用，大小寫都行)</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;========================================================================</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;請多多利用
+&lt;A HREF="http://ftp.nsysu.edu.tw">http://ftp.nsysu.edu.tw&lt;/A></font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;可以使用方便的檔案搜尋引擎喔!!!!!!!!!!!!!!!!!</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;========================================================================</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp;ADM.Email:
+ftpadm@cc.nsysu.edu.tw</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Anonymous user
+(163.28.112.1) logged in</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Logged in to
+ftp.nsysu.edu.tw.</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Current remote
+directory is /pub/Linux/RedHat/linux/updates/9/en/os/i386.</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">ncftp ...x/updates/9/en/os/i386
+></font><b><font color="#FFFF00"> mget *</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>.....</font></font></font></td>
+</tr>
+</table>
+利用上面的步驟就可以將 Red Hat 9 的兩個目錄下的 RPM 檔案放置完畢！至於
+Mandrake 9.1 的方法與 Red Hat 9 是完全相同的！請您依照上面的方法來自行安裝
+Mandrake 到您的系統當中喔！另外，除了中山大學提供的 FTP 網站之外， 您也可以使用淡江大學或者是其他的大專院校提供的
+FTP 服務喔！
+<br>淡江大學的 FTP 網站： <a href="ftp://ftp.tku.edu.tw/OS/Linux/" target="_blank">ftp://ftp.tku.edu.tw/OS/Linux</a>
+<br>中山大學的 FTP 網站： <a href="ftp://linux.cdpa.nsysu.edu.tw" target="_blank">ftp://linux.cdpa.nsysu.edu.tw</a>
+<br>　
+<li>
+
+<font color="#000099">建立 RPM 所在檔案的相關資料：</font></li>
+
+<br>建立好了檔案之後，再來則是需要進行這些 RPM 檔案的相關係分析了，分析方法很簡單，只要一個動作即可：
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>genbasedir &lt;最上層目錄> &lt;相對目錄一>
+&lt;相對目錄二> ...</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>參數說明：</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>最上層目錄：以我們的
+APT 主機為例，最上層目錄有兩個，分別就是：</font></font></font>
+
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　/var/www/html/apt/redhat9</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　/var/www/html/apt/mdk9.1</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>相對目錄一：那就是
+RPMS.os 與 RPMS.updates ，但是記得 RPMS 不要寫，</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　只要
+os 以及 updates 即可！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>範例：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">genbasedir /var/www/html/apt/redhat9
+os updates</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Creating base
+directory... done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Components:
+os updates</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Processing
+pkglists... os updates done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Processing
+srclists... done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Creating component
+releases... os updates done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Creating global
+release file... done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Appending MD5Sum...
+os updates done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>All your base
+are belong to us!!!</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>genbasedir /var/www/html/apt/mdk9.1
+os updates</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 動作真是給他有點久～耐心等候吧！
+^_^</font></font></font></td>
+
+</tr>
+</table>
+進行完上面兩個動作後，APT 就會在您的系統上面主動的建立起 /var/www/html/apt/redhat9/base
+以及 /var/www/html/apt/mkd9.1/base 這兩個目錄囉！這也是最重要的目錄咯！基本上，
+<font color="#000066">APT
+Server 到這一步驟就已經完全 OK 了</font>！其他的就是 WWW 伺服器的設定囉，因為前面我們已經介紹過
+<a href="0360apache.php">WWW</a>
+了，這裡不再重複說明說！
+
+<br>　
+<li>
+<font color="#000099">建立 Client 所需要的 sources.list</font></li>
+
+<br>我們的 Red Hat 9 所架設的 APT Server 當然也可以讓我們自己來升級了！這個時候請您修改
+<a href="#sources.list">/etc/apt/sources.list</a>
+呢！請注意喔！您所選擇的 APT Server 需要設定正確才行喔！
+
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/apt/sources.list</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這是我們主機的
+Red Hat 9 範例：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>rpm http://192.168.1.2
+apt/redhat9 os updates</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這是 Mandrake
+的範例</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1># rpm http://192.168.1.2
+apt/mdk9.1 os updates</font></font></font>
+<br><font face="細明體"><font color="#FFFFCC"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>apt-get update</b></font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Get:1 http://192.168.1.2
+apt/redhat9 release [543B]</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Fetched 543B
+in 0s (1359B/s)</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Get:1 http://192.168.1.2
+apt/redhat9/os pkglist [420kB]</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Get:2 http://192.168.1.2
+apt/redhat9/os release [121B]</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Get:3 http://192.168.1.2
+apt/redhat9/updates pkglist [55.1kB]</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Get:4 http://192.168.1.2
+apt/redhat9/updates release [126B]</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Fetched 475kB
+in 8s (57.0kB/s)</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Reading Package
+Lists... Done</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>Building Dependency
+Tree... Done</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這個步驟在測試我們上面的
+sources.list 是否正確！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 並且可以同時更新我們
+Client 端的 RPM 屬性檔案記錄！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 要出現上面的訊息才對，如果出現錯誤訊息，很有可能是
+WWW 設定錯誤！</font></font></font></td>
+</tr>
+</table>
+這裡特別說明的是， apt-get update 的作用在『<font color="#000066">取得
+APT Server 的各個 RPM 檔案的相關性，亦即是 base 目錄裡面的檔案</font>』，取得這些資料後，未來您的
+Linux 主機要進行各項安裝/升級動作時，就可以直接取用自己的紀錄檔了。所以，如果主機上面更新了
+base 裡面的資訊，則您必須要再次的執行 apt-get update 才行，否則主機上面更新的資料您將無法取得。
+<br>　
+<li>
+<font color="#000099">定期建立 update RPM 檔案的映射資料，並更新 RPM 相關資料</font></li>
+
+<br>其實到上一步驟所有 APT 相關的作業應該就已經完成了，不過，要曉得的是，
+Internet 上面的 update 套件是隨時在更新的，所以我們的 APT server 上面的
+RPMS.updates 目錄也應該要隨時更新才對啊！要更新，您可以使用手動的方式來下載，用
+ncftp 似乎不錯！不過，畢竟不太適合即時更新，這個時候，我們可以利用映射
+(mirror) 的方式來進行更新喔！我們以 Red Hat 9 的 update 來進行說明！關於映射的說明請您自行參考
+
+<a href="http://mirrordir.sourceforge.net/" target="_blank">http://mirrordir.sourceforge.net/</a>
+，我們這裡僅需要應用而已喔！
+<table BORDER COLS=1 WIDTH="570" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#CCCCCC"><font size=-1>1. 先線上安裝
+mirror 吧！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>rpm -ivh \</b></font></font></font>
+<br><b><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+http://mirrordir.sourceforge.net/mirrordir-0.10.49-1.i386.rpm</font></font></font></b>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>2. mirrordir
+的語法</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">mirrordir &lt;來源網址> &lt;目標目錄></font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">mirrordir -v \</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><b><font color="#FFFF00">ftp://ftp.nsysu.edu.tw/Linux/RedHat/linux/updates/9/en/os/i386/&nbsp;
+\</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><b><font color="#FFFF00">/var/www/html/apt/redhat9/RPMS.updates</font></b></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 用 -v 來察看一下
+mirrordir 的檢查狀態，如果以 cron 來進行時，就不需要了！</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>3. 定期進行映射並且同時更新
+RPM 檔案相關性：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/crontab</b></font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>30 5 * * *
+root mirrordir ftp://ftp.nsysu.edu.tw/Linux/RedHat/linux/updates/9/en/os/i386/&nbsp;
+/var/www/html/apt/redhat9/RPMS.updates &amp;&amp; genbasedir /var/www/html/apt/redhat9&nbsp;
+
+os updates</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 注意喔！上面為連續的一行啊！
+^_^</font></font></font></td>
+</tr>
+</table>
+　
+<br><font color="#000000">如此一來，我們的 APT 主機不但能夠自己更新自己與
+FTP 映射站的 update 資料，並且同時更新 APT 的 base 目錄下的相關性檔案喔！而您的
+APT Client 就可以隨時來更新他的 RPM 套件囉！ ^_^</font></ol>
+<font color="#000000">　</font>
+<br>
+<hr WIDTH="100%"><a NAME="apt_client"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">Client
+端的設定</font>
+<br>　
+<ul>無論是 APT Server 或者是 APT Client ，要使用 APT 伺服器的功能，您都必須要安裝
+APT 軟體才行。所以，首先請將您的 Client 依據前面『<a href="#apt_install">安裝
+APT 伺服器軟體</a>』章節進行 apt 的安裝；安裝完畢之後，最重要的就是修訂
+
+<a href="#sources.list">/etc/apt/sources.list</a>
+這個檔案囉！您必須要設定正確的 APT 伺服器才行，如此一來，您就可以運用 APT
+的強大功能啦！更多的使用技巧請參考
+<a href="http://linux.vbird.org/linux_server/0220upgrade.php#apt_client">Linux
+網路套件升級</a> 章節。</ul>
+</ul>
+
+<hr WIDTH="100%"><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><a NAME="yum"></a><font color="#000099"><font size=+1>YUM
+伺服器</font></font>
+<blockquote>談完了 APT 伺服器之後，接下來我們就來談一談目前被 Red Hat 及
+Fedora 列為預設的 RPM 套件安裝/升級機制的 yum 這個伺服器啦。
+<br>　
+<br>
+<hr WIDTH="100%"><a NAME="yum_mechanism"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">YUM
+伺服器利用的機制</font>
+<ol>與 APT 類似的， yum 並沒有開發新的網路傳輸機制，同樣僅是利用原本主機就提供的
+WWW 或者是 FTP 服務，來讓 server/client 進行檔案的傳輸。所以在您 yum 伺服器上的
+RPM 檔案同樣的需要放置在 WWW 或 FTP 服務可以存取的所在目錄才行。這裡鳥哥同樣以
+/var/www/html 這個 WWW 的目錄作為說明。
+
+<br>　
+<br>一般來說，我們需要的 RPM 檔案就是原本光碟所提供的套件，以及後來廠商提供的升級套件，這兩種
+RPM 檔案我分別將他放置在底下所示的目錄內：
+<br>　
+<br><a NAME="table_02"></a><font face="細明體"><font color="#000066">表二、APT
+主機相關 RPM 檔案放置的目錄示意表</font></font>
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#FFCCCC" >
+<tr>
+<td><font face="細明體"><font color="#000066"><font size=-1>/var/www/html/yum/fedora/core1</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--base</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|
+　`--headers</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　`--update</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　　`--headers</font></font></font>
+
+<p><font face="細明體"><font color="#000066"><font size=-1>/var/www/html/yum/mandarke/10.0</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|--base</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　|
+　`--headers</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　`--update</font></font></font>
+<br><font face="細明體"><font color="#000066"><font size=-1>　　　　　　　　　　　　　　　　`--headers</font></font></font></td>
+</tr>
+</table>
+<font face="細明體"><font color="#000066"><font size=-1>　</font></font></font>
+<br><font color="#000000">如同上表二所示，每一個版本的 Linux 內僅有兩個目錄，其中
+base 是原版光碟的 RPM 檔案，至於 update 則是升級的 RPM 檔案。比較有趣的地方在於『</font><font color="#000066">經過
+yum 分析 RPM 檔案後的紀錄資料是放置在該目錄下的 headers 目錄內</font><font color="#000000">。』舉例來說，我們的
+mandrake 10.0 升級用的 RPM 檔案是放置在 /var/www/html/yum/mandrake/10.0/update
+下，則在該目錄下的 RPM 被分析後，每一個 RPM 檔案的紀錄檔則放置在 /var/www/html/yum/mandrake/10.0/update/headers
+目錄下喔。至於整個 yum 的機制為：</font>
+
+<br><font color="#000000">　</font>
+<ol>
+<li>
+<font color="#000066">先將所有來自 Linux 原版光碟的 RPM 檔案複製到 /full/path/base
+檔案中；</font></li>
+
+<li>
+<font color="#000066">再將來自原 Linux 版本公司釋出的 RPM 修補套件由 Internet
+下載到 /full/path/update 當中；</font></li>
+
+<li>
+<font color="#000066">利用 yum 的功能去分析每個目錄下的 RPM 檔案；</font></li>
+
+<li>
+<font color="#000066">在 Client 端上面，每次進行 RPM 套件的升級/安裝功能時，
+yum 會自動的讀取 headers 內的紀錄檔，並自動分析 RPM 套件的屬性相依問題。</font></li>
+
+</ol>
+　
+<br>與 APT 相比， yum 少了一個 Client 端同步化的步驟了，所以，可以避免使用者不小心遺忘了資料同步化而導致無法取得最新
+RPM 紀錄的問題喔。</ol>
+
+<hr WIDTH="100%"><a NAME="yum_install"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">安裝
+yum 軟體</font>
+<blockquote>yum 在 Red Hat 及 Fedora 是標準配備，所以您無須傷腦筋。但如果您是其他的
+distributions 而想要利用這個好用的 yum 功能，那麼可以到底下的網站搜尋適合您的
+yum 版本：
+<ul>
+<li>
+<a href="http://rpmfind.net/linux/rpm2html/search.php?query=yum" target="_blank">http://rpmfind.net/linux/rpm2html/search.php?query=yum</a></li>
+
+<li>
+<a href="http://free.tnc.edu.tw/modules/news/article.php?storyid=854" target="_blank">http://free.tnc.edu.tw/modules/news/article.php?storyid=854</a></li>
+</ul>
+
+找到後，直接安裝即可。</blockquote>
+
+<hr WIDTH="100%"><a NAME="yum_packa"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">yum
+伺服器的套件結構</font>
+<blockquote>鳥哥覺得， yum 伺服器的套件結構要比 apt 簡單一些些，基本上只有底下幾個咚咚：
+<ul>
+<li>
+<font color="#000099">設定檔：</font><font color="#000000">不要懷疑，只有一個設定檔。</font></li>
+
+<br>　
+<ul>
+<li>
+<b><font face="細明體"><font color="#000066">/etc/yum.conf</font></font></b>：<font color="#000066">這個檔案是給
+yum client 用的設定檔</font>，裡面主要規定了要取用 RPM 檔案的 yum server
+的資訊，內容有點像這樣：</li>
+
+<br>　
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">vi /etc/yum.conf</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># 在這個檔案當中，</font><font color="#FFCCFF">註解符號是
+#</font><font color="#FF6666"> ，而每一個大項目則以 [] 作為開始</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># 除了 </font><font color="#FFCCFF">[main]</font><font color="#FF6666">
+是用在針對本機相關參數的說明之外，要取用伺服器的目錄時，</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 則需要額外的規定。我們以上述的
+base/update 兩個目錄作為說明：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>[main]</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cachedir=/var/cache/yum</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>debuglevel=2</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>logfile=/var/log/yum.log</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>pkgpolicy=newest</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>distroverpkg=fedora-release</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>tolerant=1</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>exactarch=1</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 上面主要規定了執行
+yum 時所會使用到的目錄。例如 /var/cache/yum。</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>[base]</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>name=Fedora
+Core $releasever - $basearch - Base</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>baseurl=http://127.0.0.1/yum/fedora/core1/base</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># 這裡就重要了，那</font><font color="#FFCCFF">個中括號[]裡面就是『目錄名稱』</font><font color="#FF6666">需要對應正確喔</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># name 僅只是說明該目錄下的咚咚而已，並不重要；</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666"># </font><font color="#FFCCFF">baseurl
+則是完整的 URL </font><font color="#FF6666">了！這裡請千萬填寫正確！</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>[update]</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>name=Fedora
+Core $releasever - $basearch - Released Updates</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>baseurl=http://127.0.0.1/yum/fedora/core1/update</font></font></font></td>
+</tr>
+</table>
+　
+<br>看到了嗎？事實上，我們只要設定好 [base] 與 [update] 裡面的網址，呵呵！就可以使用
+yum server所提供的更新功能啦。</ul>
+　
+<li>
+<font color="#000099">執行檔：</font></li>
+
+<br>　
+<ul>
+<li>
+<b><font color="#000066">yum</font></b>：這個指令是給 yum client 用來作為更新之用的，簡單的操作如下：</li>
+
+<br>　
+<table BORDER COLS=1 WIDTH="600" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum &lt;options> &lt;更新項目> &lt;套件名稱></font></b></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>參數說明：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>options：這裡僅列出常見的參數而已。</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　-y 如果
+yum 在工作過程中需要使用者回應，這個參數可以直接回答 yes&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>更新項目：更新的動作有底下幾個：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFCCFF">install</font><font color="#FF6666">
+：安裝某個套件，後面</font><font color="#FFCCFF">需要接套件名稱</font><font color="#FF6666">；</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFCCFF">update</font><font color="#FF6666">&nbsp;
+
+：這就是升級啦！</font><font color="#FFCCFF">如果 update 後面接套件名稱，表示只要
+yum 升級該套件</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　　　　　　而已，如果
+update 後面不接套件名稱，表示 yum 針對目前該主機所有已</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFCCFF">　　　　　　　經安裝的套件進行升級的動作！</font><font color="#FF6666">這是最常使用的項目了。</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#CCFFFF">list</font><font color="#FF6666">&nbsp;&nbsp;&nbsp;
+：列出目前在 yum server 上面有的 RPM 套件；</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　info&nbsp;&nbsp;&nbsp;
+：某個套件的內容，類似 rpm -qi packages 的內容。</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFCCFF">clean</font><font color="#FF6666">&nbsp;&nbsp;
+：將已將下載到本機的 packages 或 headers 移除。</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FF6666">　　</font><font color="#FFCCFF">remove</font><font color="#FF6666">&nbsp;
+：移除已經安裝在我們系統的某個套件！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>範例：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00"><b>yum install hdparm</b>&nbsp; </font><font color="#FF6666">#
+安裝 hdparm 這個套件</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00"><b>yum update hdparm</b>&nbsp;&nbsp;&nbsp;</font><font color="#FF6666">
+# 更新 hdparm 這個套件</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00"><b>yum -y update</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#FF6666">
+# 更新目前本機上面的所有套件，並自動回覆 yes</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><font color="#FFFF00"><b>yum clean packages</b> </font><font color="#FF6666">#
+將下載至本機的 RPM 檔案刪除(放在&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>　　　　　　　　　　　　　　　　　　　　　/var/cache/yum
+裡面。</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1># 至於每日更新的話，可以寫入
+/etc/crontab 喔</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]#</font><font color="#FFFF00"> <b>vi /etc/crontab</b></font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>40 5 * * *
+root yum -y update; yum clean packages</font></font></font></td>
+</tr>
+</table>
+　
+<li>
+<b><font color="#000066">yum-arch</font></b>：這個指令則是給 yum server
+使用的！重點在分析 RPM 套件的 header 喔！用法真是很簡單，同樣已 /var/www/html/yum/fedora/core1/base
+為例：</li>
+
+<br>　
+<table BORDER COLS=1 WIDTH="600" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum-arch &lt;options> &lt;目錄></font></b></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>參數說明：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>options：這裡僅列出常見的參數而已。</font></font></font>
+<br><font face="細明體"><font color="#FFCCFF"><font size=-1>　　-q : yum
+分析 RPM 過程中不顯示訊息。</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>範例：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum-arch /var/www/html/yum/fedora/core1/base</font></b></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 只要經過這個步驟，
+yum 就會自動在 /var/www/html/yum/fedora/core1/base 底下新增</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 一個名為
+headers 的目錄，並將分析的 RPM 紀錄資料都放置在裡面喔！</font></font></font></td>
+</tr>
+</table>
+　</ul>
+
+<li>
+<font color="#000099">相關目錄</font>：</li>
+
+<br>　
+<ul>
+<li>
+<b><font color="#000066">/var/cache/yum</font></b>：我們在 yum 這個指令裡面談到當使用
+yum 進行升級時，下載下來的 rpm 檔案並不會自動被刪除的，那麼這些 rpm 檔案放在哪裡呢？就是放在
+/var/cache/yum 這個目錄內。這些檔案在升級完成後就可以移除了，所以我們可以使用『<font face="細明體"><font color="#000066">yum
+clean packages</font></font>』來移除這些 rpm 檔案喔。</li>
+</ul>
+</ul>
+yum 相關的咚咚就只有這樣，是否真的很簡單啊？&nbsp; ^_^</blockquote>
+
+<hr WIDTH="100%"><a NAME="yum_setup"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">yum
+伺服器設定</font>
+
+<blockquote>yum 伺服器的設定真是簡單！最重要的是 WWW/FTP 的設定必須要正確才行。整個步驟是這樣的：
+<br>　
+<table BORDER COLS=1 WIDTH="620" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#CCCCCC"><font size=-1>1. 先建立所需要的目錄：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">mkdir /var/www/html/yum/fedora/core1/base</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">mkdir /var/www/html/yum/fedora/core1/update</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>2. 複製原版光碟的內容：</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 利用 mount
+與 cp umount 等功能，將原本光碟的內容整個複製到</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1># /var/www/html/yum/fedora/core1/base
+當中。</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>3. 利用 mirrordir
+下載昇級套件。鳥哥這裡建議使用中山大學的 FTP 網站：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">mirrordir -v \</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><b><font color="#FFFF00">http://linux.cdpa.nsysu.edu.tw/Linux/Fedora/linux/core/updates/1/i386/
+\</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">> </font><b><font color="#FFFF00">/var/www/html/yum/fedora/core1/update</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>4. 進行 RPM
+套件分析：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum-arch /var/www/html/yum/fedora/core1/base</font></b></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum-arch /var/www/html/yum/fedora/core1/update</font></b></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>5. 為 client
+建立 yum.conf 內容：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">vi /etc/yum.conf</font></b></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>[main]</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>cachedir=/var/cache/yum</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>debuglevel=2</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>logfile=/var/log/yum.log</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>pkgpolicy=newest</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>distroverpkg=fedora-release</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>tolerant=1</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>exactarch=1</font></font></font>
+<p><font face="細明體"><font color="#FFFF00"><font size=-1>[base]</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>name=Fedora
+Core $releasever - $basearch - Base</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>baseurl=http://127.0.0.1/yum/fedora/core1/base</font></font></font>
+<p><font face="細明體"><font color="#FFFF00"><font size=-1>[update]</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>name=Fedora
+Core $releasever - $basearch - Released Updates</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>baseurl=http://127.0.0.1/yum/fedora/core1/update</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#CCCCCC"><font size=-1>6. 開始自我升級：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root@test
+root]# </font><b><font color="#FFFF00">yum -y update</font></b></font></font></td>
+</tr>
+</table>
+
+　
+<br>沒錯！別懷疑！整個 yum 伺服器的架設就是這麼簡單啊！</blockquote>
+</blockquote>
+
+<hr WIDTH="100%"><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><a NAME="spec"></a><font color="#000099"><font size=+1>特殊案例</font></font>
+<blockquote>
+<hr WIDTH="100%"><a NAME="spec_my"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">建立自己的更新套件</font>
+<blockquote>如果您曾經自己修改一些 SRPM 的檔案，並且重新打包成為 RPM 套件，然後發行給自己的
+Linux 機器來安裝，此外，您也可能取得一些計劃所釋出的 RPM 檔案，例如 opnewebmail
+所釋出的 RPM 套件，這些 RPM 檔案您又想放置在自己的伺服器上面，以方便自己未來升級與查詢之用，那麼應該怎麼放置呢？最簡單的方法就是將這些檔案放置在
+/var/www/html/yum/fedora/core1/update 裡面，不過可能會有問題，例如如果您使用
+mirrordir 進行資料的映射時，那麼您放置的 RPM 檔案將會被刪除喔！
+<br>　
+<br>事實上，我們可以自己設定好額外的升級目錄啊！舉例來說，鳥哥自己所製作出來的
+RPM 檔案都是放置在：
+<blockquote><font face="細明體"><font color="#000066">/var/www/html/yum/fedora/core1/myself</font></font></blockquote>
+當然，該目錄是自己建立的，然後將自己新增的 RPM 檔案通通給他複製進去該目錄下，之後，就是製作
+header 檔案啦：
+<blockquote><font face="細明體"><font color="#000066">yum-arch /var/www/html/yum/fedora/core1/myself</font></font></blockquote>
+
+最後只要在 /etc/yum.conf 裡面新增一個目錄：
+<blockquote><font face="細明體"><font color="#000066">[myself]</font></font>
+<br><font face="細明體"><font color="#000066">name=My personal RPM files</font></font>
+<br><font face="細明體"><font color="#000066">baseurl=http://127.0.0.1/yum/fedora/core1/myself</font></font></blockquote>
+當然啦，要利用您的 RPM 檔案的 client ，他的 /etc/yum.conf 就需要加入上面的設定，(<i><font color="#000066">注意：127.0.0.1
+是在自己的機器上面跑的緣故，您必須要填寫正確的 yum server 的主機名稱或
+IP 才行。</font></i>)如此一來，您的 RPM 檔案就可以被利用啦！</blockquote>
+
+<hr WIDTH="100%"><a NAME="spec_spec"></a><img SRC="/images/penguin-s.gif" NOSAVE height=23 width=17 align=CENTER><font color="#000099">如何取得網路上的更新元件</font>
+<blockquote>上面提到的伺服器幾乎都是以 FTP 的方式在 internet 上面取得最新的
+RPM 套件檔案。那如果您的內部網域本身並不提供 FTP 對外連線時，該如何是好？鳥哥曾經遇過一個特別的狀況，在該網域內僅提供
+port 80 的對外連線，除此之外，一切都是關閉的！而我們使用的 mirrordir 及
+ncftp 都是以 ftp 來對外連線，這該如何是好？
+<br>　
+<br>好在天無絕人之路啊！記得鳥哥在前面 <a href="http://linux.vbird.org/linux_server/0220upgrade.php">網路升級套件</a>
+
+那個章節裡面提到的 zzgetrpm.sh 檔案嗎？您只要下載該檔案，然後填寫正確的
+URL ，就可以透過 port 80 下載網路上最新的更新套件了！而後在內部網域當中，您當然就可以透過各方式來進行
+yum/apt 的升級嚕！^_^</blockquote>
+</blockquote>
+
+<hr WIDTH="100%"><a NAME="server_partition"></a><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><font color="#000099">主機的規劃技巧與建議</font>
+<blockquote>那麼架設一部 APT/YUM 主機需要注意哪些事項呢？因為您的 APT 主機還需要運行
+WWW ，所以您可能需要獨立出一個 partition 以進行虛擬主機的設定，或者是在
+/var/www/html 這個預設的 WWW 主頁的硬碟空間要足夠！反正 APT 主機需要注意的地方最主要還是在於硬碟的空間了！此外，
+APT 主機最好可以放置在對外頻寬較高的網段內，因為還需要對 Internet 取得
+update 的 RPM 檔案嘛！
+<br>　
+<br>而如果您的 APT 主機僅作為 APT 的 update 之用時，而 WWW 僅是附屬的功能，那麼您在安置
+RPM 的所在目錄最好額外的限制使用者的瀏覽網段，避免被外部的人(來自 Internet)作為連線升級的主要主機，那可能會佔據掉您的連外頻寬吶！所以，可能的話，使用虛擬主機，並且加以設定瀏覽的屬性，例如使用
+iptables 設定防火牆，或以 httpd.conf 裡面的 ACCEPT/DENY 功能來抵擋，也是一個不錯的想法喔！至於
+<a href="0360apache.php">WWW
+主機的相關設定</a>請參考前面的章節。</blockquote>
+
+<hr WIDTH="100%"><a NAME="reference"></a><img SRC="/images/penguin-m.gif" ALT="" NOSAVE height=34 width=25 align=CENTER><font color="#000099"><font size=+1>參考資源：</font></font>
+<ul>
+<li>
+
+<a href="http://bazar.conectiva.com.br/~godoy/apt-howto/" target="_blank">http://bazar.conectiva.com.br/~godoy/apt-howto/</a></li>
+
+<li>
+<a href="http://freshrpms.net/apt/server/" target="_blank">http://freshrpms.net/apt/server/</a></li>
+
+<li>
+<a href="http://rpmfind.net/linux/rpm2html/search.php?query=apt" target="_blank">http://rpmfind.net/linux/rpm2html/search.php?query=apt</a></li>
+
+<li>
+<a href="http://163.19.59.1/~linux/student_samba/apt/apt_server.html" target="_blank">http://163.19.59.1/~linux/student_samba/apt/apt_server.html</a></li>
+
+<li>
+<a href="http://cle.linux.org.tw/~candyz/" target="_blank">http://cle.linux.org.tw/~candyz/</a></li>
+
+<li>
+<a href="http://linux.duke.edu/projects/yum/" target="_blank">http://linux.duke.edu/projects/yum/</a></li>
+</ul>
+
+<center><font color="#3333FF"><font size=+1><a href="0450apt.php" target="_self"><font face="標楷體">簡易</font><font face="Times New Roman,Times">
+APT/YUM </font><font face="標楷體">伺服器設定</font></a></font></font></center>
+
+<hr WIDTH="100%"><font face="新細明體"><font color="#000066"><font size=-1>2003/08/27：首次完成</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2004/06/23：首次加入
+yum 伺服器的說明！並有實做的例子喔！</font></font></font>
+<br>
+
+
+
+  
+  </td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

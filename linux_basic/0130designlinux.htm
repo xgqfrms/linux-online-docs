@@ -1,0 +1,1337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718"><!-- 本文的檔頭部分 -->
+    <div style="text-align:center">  <span class="text_head0">第三章、主機規劃與磁碟分割</span><br />
+    </div>
+    <div style="text-align:right"> <span class="text_history">最近更新日期：2009/08/06</span> </div>
+    <!-- 本文的檔頭部分 -->
+    <table class="head1" summary="排版：文章檔頭的說明">
+      <tr>
+        <td class="head1"> 事實上，要安裝好一部Linux主機並不是那麼簡單的事情，你必須要針對distributions的特性、伺服器軟體的能力、
+          未來的升級需求、硬體擴充性需求等等來考量，還得要知道磁碟分割、檔案系統、Linux操作較頻繁的目錄等等，
+          都得要有一定程度的瞭解才行，所以，安裝Linux並不是那麼簡單的工作喔！
+          不過，要學習Linux總得要有Linux系統存在吧？所以鳥哥在這裡還是得要提前說明如何安裝一部Linux練習機。
+          在這一章裡面，鳥哥會介紹一下，在開始安裝Linux之前，您應該要先思考哪些工作？
+          好讓您後續的主機維護輕鬆愉快啊！此外，要瞭解這個章節的重要性，您至少需要瞭解到Linux檔案系統的基本概念，
+          所以，在您完成了後面的相關章節之後，<b>記得要再回來這裡看看如何規劃主機喔</b>！ ^_^ </td>
+      </tr>
+    </table>
+    <br />
+    <!-- 本文的連結區部分 -->
+    <div class="block1"> <span class="text_h1"> 1. <a href="#hardware">Linux與硬體的搭配</a><br />
+      <span class="text_h2"> 　　1.1 <a href="#hardware_know">認識電腦的硬體配備</a><br />
+        1.2 <a href="#hardware_select">選擇與Linux搭配的主機配備</a>： <a href="#hardware_site">硬體支援相關網站</a><br />
+        1.3 <a href="#hardware_no">各硬體裝置在Linux中的檔名</a><br />
+        </span> 2. <a href="#partition">磁碟分割</a><br />
+      <span class="text_h2"> 　　2.1 <a href="#partition_name">磁碟連接的方式與裝置檔名的關係</a><br />
+        2.2 <a href="#partition_comp">磁碟的組成複習</a><br />
+        2.3 <a href="#partition_table">磁碟分割表(partition table)</a><br />
+        2.4 <a href="#partition_mbr">開機流程與主要開機記錄區(MBR)</a><br />
+        2.5 <a href="#partition_install">Linux安裝模式下，磁碟分割的選擇(極重要)</a><br />
+        </span> 3. <a href="#beforeinstall">安裝Linux前的規劃</a><br />
+      <span class="text_h2"> 　　3.1 <a href="#beforeinstall_distro">選擇適當的distribution</a><br />
+        3.2 <a href="#beforeinstall_service">主機的服務規劃與硬體的關係</a><br />
+        3.3 <a href="#beforeinstall_partition">主機硬碟的主要規劃(partition)</a><br />
+        3.4 <a href="#beforeinstall_vbird">鳥哥說：關於練習機的安裝建議</a><br />
+        3.5 <a href="#vbirdcase">鳥哥的兩個實際案例</a><br />
+        3.6 <a href="#largehd">大硬碟配合舊主機造成的無法開機問題</a><br />
+        </span> 4. <a href="#hint">重點回顧</a><br />
+      5. <a href="#ex">本章習題</a><br />
+      6. <a href="#reference">參考資料與延伸閱讀</a><br />
+      <span class="text_h2"> 7. <a href="http://phorum.vbird.org/viewtopic.php?t=23874"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23874</a> </span> </span> </div>
+    <!-- 本文的正式部分 -->
+    <hr />
+    <a name="hardware" id="hardware"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">Linux與硬體的搭配</span><br />
+    <div class="block1">
+      <p>雖然個人電腦各元件的主要介面是大同小異的，包括前面<a 
+	href="/linux_basic/0105computers.php">第零章計算機概論</a>講到的種種介面等，
+        但是由於新的技術來得太快，Linux核心針對新硬體所納入的驅動程式模組比不上硬體更新的速度，
+        加上硬體廠商針對Linux所推出的驅動程式較慢，因此你在選購新的個人電腦(或伺服器)時，
+        應該要選擇已經過安裝Linux測試的硬體比較好。</p>
+      <p>此外，在安裝Linux之前，你最好瞭解一下你的Linux預計是想達成什麼任務，這樣在選購硬體時才會知道那個元件是最重要的。
+        舉例來說，桌面電腦(Desktop)的使用者，應該會用到X Window系統，
+        此時，顯示卡的優劣與記憶體的大小可就佔有很重大的影響。如果是想要做成檔案伺服器，
+        那麼硬碟或者是其他的儲存設備，應該就是您最想要增購的元件囉！所以說，功課還是需要作的啊！</p>
+      <p>鳥哥在這裡要不厭其煩的再次的強調，Linux對於電腦各元件/裝置的分辨，
+        與大家慣用的Windows系統完全不一樣！因為，<span class="text_import2">各個元件或裝置在Linux底下都是『一個檔案！』</span> 這個觀念我們在<a href="/linux_basic/0110whatislinux.php">第一章Linux是什麼</a>裡面已經提過，
+        這裡我們再次的強調。因此，你在認識各項裝置之後，學習Linux的裝置檔名之前，
+        務必要先將Windows對於裝置名稱的概念先拿掉～否則會很難理解喔！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="hardware_know" id="hardware_know"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">認識電腦的硬體配備</span><br />
+      <div class="block2">
+        <p>『<span class="text_import2">什麼？學Linux還得要玩硬體？</span>』呵呵！沒錯！
+          這也是為什麼鳥哥要將<a href="/linux_basic/0105computers.php">計算機概論</a>搬上檯面之故！
+          我們這裡主要是介紹較為普遍的個人電腦架構來設定Linux伺服器，因為比較便宜啦！
+          至於各相關的硬體元件說明已經在<a href="/linux_basic/0105computers.php">第零章計概</a>內講過了，這裡不再重複說明。
+          僅將重要的主機板與元件的相關性圖示如下：</p>
+        <center>
+          <img src="0130designlinux/computer_coms.png" 
+		alt="個人電腦各元件的相關性" title="個人電腦各元件的相關性" border="1" /><br />
+          圖1.1.1、個人電腦各元件的相關性<br />
+          (上述圖示主要取自tom's硬體指南，各元件圖片分屬個別公司所有)<br />
+        </center>
+        <p>那麼我們應該如何挑選電腦硬體呢？隨便買買就好，還是有特殊的考量？底下有些思考角度可以提供給大家參考看看： <br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">遊戲機/工作機的考量</span></li>
+        </ul>
+        <p>事實上，電腦主機的硬體配備與這部主機未來的功能是很有相關性的！舉例來說，家裡有小孩，
+          或者自己仍然算是小孩的朋友大概都知道：『<span class="text_import2">要用來打Game的『遊戲機電腦』
+            所需要的配備一定比辦公室用的『工作機電腦』配備更高檔</span>』，為什麼呢？
+          因為現在一般的三維(3D)電腦遊戲所需要的3D光影運算太多了，所以顯示卡與CPU資源都會被耗用的非常多！
+          當然就需要比較高級的配備囉，尤其是在顯示卡、CPU(例如Intel的Core 2 Duo及AMD的Athlon64 
+          X2等)及主機板晶片組方面的功能。</p>
+        <p>至於辦公室的工作環境中，最常使用到的軟體大多是辦公軟體(Office)，最常使用的網路功能是瀏覽器，
+          這些軟體所需要的運算並不高，理論上目前的入門級電腦都能夠跑得非常順暢了！(例如Intel Celeron及AMD的Sempron)。
+          甚至很多企業都喜歡購買將顯示卡、主機板晶片組整合在一起的整合型晶片的電腦，因為便宜又好用！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">效能/價格比的考量</span></li>
+        </ul>
+        <p>並不是『貴就比較好』喔！在目前(2009)全球經濟蕭條的情況下，如何兼顧省錢與電腦硬體的效能問題，很重要！
+          如果你喜歡購買最新最快的電腦零件，這些剛出爐的元件都非常的貴，而且作業系統還不見得能夠完整的支援。
+          所以，鳥哥都比較喜歡購買主流級的產品而非最高檔的。因為我們最好能夠考慮到效能/價格比。
+          如果高一級的產品讓你的花費多一倍，但是新增加的效能卻只有10%而已，那這個效能/價格的比值太低，不建議啦！</p>
+        <p>此外，由於電價越來越高，如何『省電』就很重要啦！因此目前硬體評論界有所謂的『每瓦效能』的單位，
+          每瓦電力所發揮的效能越高，當然代表越省電啊！這也是購買硬體時的考量之一啦！要知道，如果是做為伺服器用，
+          一年365天中時時刻刻都開機，則你的電腦多花費50瓦的電力時，每年就得要多花450度電左右，如果以企業來講，
+          每百部電腦每年多花450度電的話，每年得多花十萬塊以上的電費呢！所以這也需要考量啊！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">支援度的考量</span></li>
+        </ul>
+        <p>並非所有的產品都會支援特定的作業系統，這牽涉到硬體開發商是否有意願提供適當的驅動程式之故。
+          因此，當我們想要購買或者是升級某些電腦元件時，應該要特別注意該硬體是否有針對您的作業系統提供適當的驅動程式，
+          否則，買了無法使用，那才是叫人嘔死啊！因此，針對Linux來說，底下的硬體分析就重要啦！</p>
+      </div>
+      <hr />
+      <a name="hardware_select" id="hardware_select"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">選擇與Linux搭配的主機配備</span><br />
+      <div class="block2">
+        <p>由於硬體的加速發展與作業系統核心功能的增強，導致較早期的電腦已經沒有能力再負荷新的作業系統了。
+          舉例來說，Pentun-II以前的硬體配備可能已經不再適合現在的新的Linux distribution。 <span class="text_import2">而且較早期的硬體配備也可能由於保存的問題或者是電子零件老化的問題，
+            導致這樣的電腦系統反而非常容易在運作過程中出現不明的當機情況</span>，因此在利用舊零件拼湊Linux使用的電腦系統時，
+          真的得要特別留意呢！</p>
+        <p>不過由於Linux運作所需要的硬體配備實在不需要太高檔，因此，如果有近期汰換下來的， <span class="text_import2">比Pentun-III 500還要新的硬體配備</span>，
+          不必急著丟棄。由於P-III的硬體不算太老舊，在效能方面其實也算的上非常OK了～所以，
+          鳥哥建議您如果有P-III以後等級的電腦被淘汰，可以拿下來測試一下，說不定能夠作為你日常生活的Linux伺服器，
+          或者是備用伺服器，都是非常好用的功能哩！</p>
+        <p>但是由於不同的任務的主機所需要的硬體配備並不相同，舉例來說，如果你的Linux主機是要作為企業內部的Mail
+          server或者是Proxy server時，或者是需要使用到圖形介面的運算(X Window內的Open GL等等功能)，
+          那麼你就必須要選擇高檔一點的電腦配備了，使用過去的電腦零件可能並不適合呢。</p>
+        <p>底下我們稍微談一下，如果你的Linux主要是作為小型伺服器使用，並不負責學術方面的大量運算，
+          而且也沒有使用X Window的圖形介面，那你的硬體需求只要像底下這樣就差不多了：</p>
+        <ul>
+          <li><span class="text_import2">CPU</span><br />
+            CPU只要不是老舊到會讓你的硬體系統當機的都能夠支援！如同前面談到的，目前(2009)的環境中，
+            Pentun-III的CPU不算太舊而且效能也不錯，也就是說P-III就非常好用了。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">RAM</span><br />
+            主記憶體是越大越好！事實上在Linux伺服器中，主記憶體的重要性比CPU還要高的多！因為如果主記憶體不夠大，
+            就會使用到硬碟的記憶體置換空間(swap)。
+            而由<a href="/linux_basic/0105computers.php">計算機概論</a>的內容我們知道硬碟比記憶體的速度要慢的多，
+            所以主記憶體太小可能會影響到整體系統的效能的！尤其如果你還想要玩X window的話，那主記憶體的容量就不能少。
+            對於一般的小型伺服器來說，建議至少也要512MB以上的主記憶體容量較佳。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Hard Disk</span><br />
+            由於資料量與資料存取頻率的不同，對於硬碟的要求也不相同。
+            舉例來說，如果是一般小型伺服器，通常重點在於容量，硬碟容量大於20GB就夠用到不行了！
+            但如果你的伺服器是作為備份或者是小企業的檔案伺服器，那麼你可能就得要考量較高階的磁碟陣列(RAID)模式了。<br />
+            <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+              <table width="90%">
+                <tr>
+                  <td><b>Tips:</b><br />
+                    <span style="color : #009000"><font size="-1"> 磁碟陣列(RAID)是利用硬體技術將數個硬碟整合成為一個大硬碟的方法，作業系統只會看到最後被整合起來的大硬碟。
+                      由於磁碟陣列是由多個硬碟組成，所以可以達成速度效能、備份等任務。更多相關的磁碟陣列我們會在<a
+		href="/linux_basic/0420quota.php">第十五章</a>中介紹的。 </font></span></td>
+                  <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+                </tr>
+              </table>
+            </div>
+          </li>
+          <li><span class="text_import2">VGA</span><br />
+            對於不需要X Window的伺服器來說，顯示卡算是最不重要的一個元件了！你只要有顯示卡能夠讓電腦啟動，那就夠了。
+            但如果需要X window系統時，你的顯示卡最好能夠擁有32MB以上的記憶體容量，否則跑X系統會很累喔！
+            鳥哥曾使用一塊只有2MB記憶體的顯示卡跑X，光是按一個按鈕就花費數分鐘時間，真是折磨人家的耐心啊！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">Network Interface Card</span><br />
+            網路卡是伺服器上面最重要的元件了！目前新式的主機板大多擁有10/100/1000Mbps的高速網路，不過，老實說，
+            只要好一點的10/100網路卡就非常夠用了！畢竟我們的頻寬並沒有大到Gigabit的速度！如果是小型伺服器，
+            一塊Realtek RTL8139晶片的網卡就非常好用了，不過，如果是讀取非常頻繁的網站，
+            好一點的Intel/3Com網卡應該是比較適合的喔。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">光碟、軟碟、鍵盤與滑鼠</span><br />
+            不要舊到你的電腦不支援就好了，因為這些配備都是非必備的喔！舉例來說，鳥哥安裝好Linux系統後，
+            可能就將該系統的光碟機、滑鼠、軟碟機等通通拔除，只有網路線連接在電腦後面而已，其他的都是透過網路連線來管控的哩！
+            因為通常伺服器這東西最需要的就是穩定，而穩定的最理想狀態就是平時沒事不要去動他是最好的。</li>
+        </ul>
+        <p>底下鳥哥針對一般你可能會接觸到的電腦主機的用途與相關硬體配備的基本要求來說明一下好了：</p>
+        <ul>
+          <li>一般小型主機且不含X Window系統：<br />
+            <ul>
+              <li>用途：家庭用NAT主機(IP分享器功能)或小型企業之非圖形介面小型主機。</li>
+              <li>CPU：大於P-III 500以上等級即可。</li>
+              <li>RAM：至少128MB，不過還是大於256MB以上比較妥當！</li>
+              <li>網路卡：一般的10/100 Mbps即可應付。</li>
+              <li>顯示卡：只要能夠被Linux捉到的顯示卡即可，例如NVidia或ATI的主流顯示卡均可。</li>
+              <li>硬碟：20GB以上即可！</li>
+            </ul>
+            <br />
+          </li>
+          <li><span class="text_import2">桌上型(Desktop)Linux系統/含X Window：</span><br />
+            <ul class="text_import2">
+              <li>用途：Linux的練習機或辦公室(Office)工作機。(一般我們會用到的環境)</li>
+              <li>CPU：最好等級高一點，例如P-4以上等級。</li>
+              <li>RAM：一定要大於512MB比較好！否則容易有圖形介面停頓的現象。</li>
+              <li>網路卡：普通的10/100 Mbps就好了！</li>
+              <li>顯示卡：使用32MB以上記憶體的顯示卡！</li>
+              <li>硬碟：越大越好，最好有60GB。</li>
+            </ul>
+            <br />
+          </li>
+          <li>中型以上Linux伺服器：<br />
+            <ul>
+              <li>用途：中小型企業/學校單位的FTP/mail/WWW等網路服務主機。</li>
+              <li>CPU：最好等級高一點，可以考慮使用雙核心系統。</li>
+              <li>RAM：最好能夠大於1GB以上，大於4GB更好！</li>
+              <li>網路卡：知名的3Com或Intel等廠牌，比較穩定效能較佳！也可選購10/100/1000 Mbps的速度。</li>
+              <li>顯示卡：如果有使用到圖形功能，則一張64MB記憶體的顯示卡是需要的！</li>
+              <li>硬碟：越大越好，如果可能的話，使用磁碟陣列，或者網路硬碟等等的系統架構，
+                能夠具有更穩定安全的傳輸環境，更佳！</li>
+              <li><span class="text_import2">建議企業用電腦不要自行組裝，可購買商用伺服器較佳，</span> 因為商用伺服器已經通過製造商的散熱、穩定度等測試，對於企業來說，會是一個比較好的選擇。</li>
+            </ul>
+          </li>
+        </ul>
+        <p class="text_import2"> 總之，鳥哥在這裡僅是提出一個方向：如果你的Linux主機是小型環境使用的，即時當機也不太會影響到企業環境的運作時，
+          那麼使用升級後被淘汰下來的零件以組成電腦系統來運作，那是非常好的回收再利用的案例。
+          但如果你的主機系統是非常重要的，你想要更一部更穩定的Linux伺服器，那考慮系統的整體搭配與運作效能的考量，
+          購買已組裝測試過的商用伺服器會是一個比較好的選擇喔！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 一般來說，目前(2009)的入門電腦機種，CPU至少都是Intel Core的2GHz系列的等級以上，
+                  主記憶體至少有1GB，顯示卡記憶體也有128MB以上，所以如果您是新購置的電腦，
+                  那麼該電腦用來作為Linux的練習機，而且加裝X Window系統，肯定是可以跑的嚇嚇叫的啦！^_^ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>此外，Linux開發商在釋出Linux distribution之前，都會針對該版所預設可以支援的硬體做說明，
+          因此，你除了可以在Linux的Howto文件去查詢硬體的支援度之外，也可以到各個相關的Linux distributions網站去查詢呢！
+          底下鳥哥列出幾個常用的硬體與Linux distributions搭配的網站，建議大家想要瞭解你的主機支不支援該版Linux時，
+          務必到相關的網站去搜尋一下喔！</p>
+        <a name="hardware_site" id="hardware_site"></a>
+        <ul>
+          <li>Red Hat的硬體支援：<a href="https://hardware.redhat.com/?pagename=hcl"
+			target="_blank">https://hardware.redhat.com/?pagename=hcl</a></li>
+          <li>Open SuSE的硬體支援：<a href="http://en.opensuse.org/Hardware?LANG=en_UK"
+			target="_blank">http://en.opensuse.org/Hardware?LANG=en_UK</a></li>
+          <li>Mandriva的硬體支援：<a href="http://hcl.mandriva.com/"
+			target="_blank">http://hcl.mandriva.com/</a></li>
+          <li>Linux對筆記型電腦的支援：<a href="http://www.linux-laptop.net/"
+			target="_blank">http://www.linux-laptop.net/</a></li>
+          <li>Linux對印表機的支援：<a href="http://www.openprinting.org/"
+			target="_blank">http://www.openprinting.org/</a></li>
+          <li>顯示卡對XFree86/Xorg的支援：<a href="http://www.linuxhardware.org/"
+			target="_blank">http://www.linuxhardware.org/</a></li>
+          <li>Linux硬體支援的中文HowTo：<a href="http://www.linux.org.tw/CLDP/HOWTO/hardware.html#hardware" 
+			target="_blank">http://www.linux.org.tw/CLDP/HOWTO/hardware.html#hardware</a></li>
+        </ul>
+        <p>總之，如果是自己維護的一個小網站，考慮到經濟因素，你可以自行組裝一部主機來架設。
+          而如果是中、大型企業，那麼主機的錢不要省～因為，省了這些錢，未來主機掛點時，
+          光是要找出哪個元件出問題，或者是系統過熱的問題，會氣死人ㄟ！
+          而且，要注意的就是未來你的Linux主機規劃的『用途』來決定你的Linux主機硬體配備喔！相當的重要呢！</p>
+      </div>
+      <hr />
+      <a name="hardware_no" id="hardware_no"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">各硬體裝置在Linux中的檔名</span><br />
+      <div class="block2">
+        <p>選擇好你所需要的硬體配備後，接下來得要瞭解一下各硬體在Linux當中所扮演的角色囉。
+          這裡鳥哥再次的強調一下：『<span class="text_import2">在Linux系統中，每個裝置都被當成一個檔案來對待</span>』
+          舉例來說，IDE介面的硬碟的檔案名稱即為<span class="text_import2">/dev/hd[a-d]</span>，其中，
+          括號內的字母為a-d當中的任意一個，亦即有<span class="text_import2">/dev/hda,
+            /dev/hdb, /dev/hdc, 及 /dev/hdd</span>這四個檔案的意思。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 這種中括號[]型式的表示法在後面的章節當中會使用得很頻繁，請特別留意<br />
+                  <br />
+                  另外先提出來強調一下，在Linux這個系統當中，幾乎所有的硬體裝置檔案都在/dev這個目錄內，
+                  所以你會看到/dev/hda, /dev/fd0等等的檔名喔。 </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>那麼印表機與軟碟呢？分別是/dev/lp0, /dev/fd0囉！好了，其他的周邊設備呢？
+          底下列出幾個常見的裝置與其在Linux當中的檔名囉：</p>
+        <table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+          <tr bgcolor="lightblue" align="center">
+            <td>裝置</td>
+            <td>裝置在Linux內的檔名</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>IDE硬碟機</td>
+            <td>/dev/hd[a-d]</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>SCSI/SATA/USB硬碟機</td>
+            <td>/dev/sd[a-p]</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>USB快閃碟</td>
+            <td>/dev/sd[a-p](與SATA相同)</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>軟碟機</td>
+            <td>/dev/fd[0-1]</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>印表機</td>
+            <td>25針: /dev/lp[0-2]<br />
+              USB: /dev/usb/lp[0-15]</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>滑鼠</td>
+            <td>USB: /dev/usb/mouse[0-15]<br />
+              PS2: /dev/psaux</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>當前CDROM/DVDROM</td>
+            <td>/dev/cdrom</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>當前的滑鼠</td>
+            <td>/dev/mouse</td>
+          </tr>
+          <tr align="center" class="text_import2">
+            <td>磁帶機</td>
+            <td>IDE: /dev/ht0<br />
+              SCSI: /dev/st0</td>
+          </tr>
+        </table>
+        <p>需要特別留意的是硬碟機(不論是IDE/SCSI/USB都一樣)，每個磁碟機的磁碟分割(partition)不同時，
+          其磁碟檔名還會改變呢！下一小節我們會介紹磁碟分割的相關概念啦！需要特別注意的是磁帶機的檔名，
+          在某些不同的distribution當中可能會發現不一樣的檔名，需要稍微留意。
+          總之，你得先背一下IDE與SATA硬碟的檔名就是了！其他的，用的到再來背吧！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 更多Linux核心支援的硬體裝置與檔名，可以參考如下網頁：<br />
+                  <a href="http://www.kernel.org/pub/linux/docs/device-list/devices.txt"
+		target="_blank">http://www.kernel.org/pub/linux/docs/device-list/devices.txt</a> </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <a name="partition" id="partition"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">磁碟分割</span><br />
+    <div class="block1">
+      <p>這一章在規劃的重點是為了要安裝Linux，那Linux系統是安裝在電腦元件的那個部分呢？就是磁碟啦！所以我們當然要來認識一下磁碟先。
+        我們知道一塊磁碟是可以被分割成多個分割槽的(partition)，以舊有的Windows觀點來看，你可能會有一顆磁碟並且將他分割成為C:, 
+        D:, E:槽對吧！那個C, D, E就是分割槽(partition)囉。但是Linux的裝置都是以檔案的型態存在，那分割槽的檔名又是什麼？
+        如何進行磁碟分割，磁碟分割有哪些限制？是我們這個小節所要探討的內容囉。<br />
+        <br />
+      </p>
+      <hr />
+      <a name="partition_name" id="partition_name"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟連接的方式與裝置檔名的關係</span><br />
+      <div class="block2">
+        <p>由<a href="/linux_basic/0105computers.php#pc_hd">第零章</a>提到的磁碟說明，我們知道個人電腦常見的磁碟介面有兩種，
+          分別是IDE與SATA介面，目前(2009)的主流已經是SATA介面了，但是老一點的主機其實大部分還是使用IDE介面。
+          我們稱呼可連接到IDE介面的裝置為IDE裝置，不管是磁碟還是光碟設備。</p>
+        <p>以IDE介面來說，由於一個IDE排線可以連接兩個IDE裝置，又通常主機都會提供兩個IDE介面，因此最多可以接到四個IDE裝置。
+          也就是說，如果你已經有一個光碟設備了，那麼最多就只能再接三顆IDE介面的磁碟囉。
+          這兩個IDE介面通常被稱為<span class="text_import2">IDE1(primary)及IDE2(secondary)</span>，
+          而每條排線上面的IDE裝置可以被區分為<span class="text_import2">Master與Slave</span>。這四個IDE裝置的檔名為：</p>
+        <table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+          <tr bgcolor="lightblue" align="center">
+            <td>IDE\Jumper</td>
+            <td>Master</td>
+            <td>Slave</td>
+          </tr>
+          <tr align="center">
+            <td bgcolor="lightblue">IDE1(Primary)</td>
+            <td class="text_import1">/dev/hda</td>
+            <td 
+	class="text_import1">/dev/hdb</td>
+          </tr>
+          <tr align="center">
+            <td bgcolor="lightblue">IDE2(Secondary)</td>
+            <td class="text_import1">/dev/hdc</td>
+            <td 
+	class="text_import1">/dev/hdd</td>
+          </tr>
+        </table>
+        <br />
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 假設你的主機僅有一顆IDE介面的磁碟，而這一顆磁碟接在IDE2的Master上面，請問他在Linux作業系統裡面的裝置檔名為何？ </div>
+              答：
+              <div class="block2"> 比較上表的裝置檔名對照，IDE2的Master之裝置檔名為<span class="text_import2">/dev/hdc</span> </div></td>
+          </tr>
+        </table>
+        <br />
+        <p>再以SATA介面來說，由於SATA/USB/SCSI等磁碟介面都是使用SCSI模組來驅動的，
+          因此這些介面的磁碟裝置檔名都是/dev/sd[a-p]的格式。
+          但是與IDE介面不同的是，SATA/USB介面的磁碟根本就沒有一定的順序，那如何決定他的裝置檔名呢？
+          這個時候就得要<span class="text_import2">根據Linux核心偵測到磁碟的順序</span>了！這裡以底下的例子來讓你瞭解囉。</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 如果你的PC上面有兩個SATA磁碟以及一個USB磁碟，而主機板上面有六個SATA的插槽。這兩個SATA磁碟分別安插在主機板上的SATA1, SATA5插槽上，
+                請問這三個磁碟在Linux中的裝置檔名為何？ </div>
+              答：
+              <div class="block2"> 由於是使用偵測到的順序來決定裝置檔名，並非與實際插槽代號有關，因此裝置的檔名如下：
+                <ol>
+                  <li>SATA1插槽上的檔名：<span class="text_import2">/dev/sda</span></li>
+                  <li>SATA5插槽上的檔名：<span class="text_import2">/dev/sdb</span></li>
+                  <li>USB磁碟(開機完成後才被系統捉到)：<span class="text_import2">/dev/sdc</span></li>
+                </ol>
+              </div></td>
+          </tr>
+        </table>
+        <br />
+        <p>通過上面的介紹後，你應該知道了在Linux系統下的各種不同介面的磁碟的裝置檔名了。
+          OK！好像沒問題了呦！才不是呢～問題很大呦！
+          因為如果你的磁碟被分割成兩個分割槽，那麼每個分割槽的裝置檔名又是什麼？在瞭解這個問題之前，我們先來複習一下磁碟的組成，
+          因為現今磁碟的分割與他物理的組成很有關係！</p>
+      </div>
+      <hr />
+      <a name="partition_comp" id="partition_comp"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟的組成複習</span><br />
+      <div class="block2">
+        <p>我們在<a href="/linux_basic/0105computers.php">計算機概論</a>談過磁碟的組成主要有磁碟盤、機械手臂、磁碟讀取頭與主軸馬達所組成，
+          而資料的寫入其實是在磁碟盤上面。<span class="text_import2">磁碟盤上面又可細分出磁區(Sector)與磁柱(Cylinder)兩種單位，
+            其中磁區每個為512bytes那麼大。</span>假設磁碟只有一個磁碟盤，那麼磁碟盤有點像底下這樣：</p>
+        <a name="fig2.2.1" id="fig2.2.1"></a>
+        <center>
+          <img src="0130designlinux/harddisk.jpg" alt="磁碟盤組成示意圖" 
+		title="磁碟盤組成示意圖" border="1" /><br />
+          圖2.2.1、磁碟盤組成示意圖<br />
+        </center>
+        <p>那麼是否每個磁區都一樣重要呢？其實整顆磁碟的第一個磁區特別的重要，因為他記錄了整顆磁碟的重要資訊！
+          磁碟的第一個磁區主要記錄了兩個重要的資訊，分別是：</p>
+        <ul class="text_import2">
+          <li>主要開機記錄區(Master Boot Record, MBR)：可以安裝開機管理程式的地方，有446 bytes</li>
+          <li>分割表(partition table)：記錄整顆硬碟分割的狀態，有64 bytes</li>
+        </ul>
+        <p>MBR是很重要的，因為當系統在開機的時候會主動去讀取這個區塊的內容，這樣系統才會知道你的程式放在哪裡且該如何進行開機。
+          如果你要安裝多重開機的系統，MBR這個區塊的管理就非常非常的重要了！ ^_^</p>
+        <p>那麼分割表又是啥？其實妳剛剛拿到的整顆硬碟就像一根原木，你必須要在這根原木上面切割出你想要的區段，
+          這個區段才能夠再製作成為你想要的家具！如果沒有進行切割，那麼原木就不能被有效的使用。
+          同樣的道理，你必須要針對你的硬碟進行分割，這樣硬碟才可以被你使用的！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 更多的磁碟分割與檔案系統管理，我們將在第二篇的時候深入介紹喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="partition_table" id="partition_table"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟分割表(partition table)</span><br />
+      <div class="block2">
+        <p>但是硬碟總不能真的拿鋸子來切切割割吧？那硬碟還真的是會壞掉去！那怎辦？在前一小節的圖示中，
+          我們有看到『開始與結束磁柱』吧？那是檔案系統的最小單位，也就是分割槽的最小單位啦！沒有錯，
+          我們就是<span class="text_import2">利用參考對照磁柱號碼的方式來處理啦！
+            在分割表所在的64 bytes容量中，總共分為四組記錄區，每組記錄區記錄了該區段的啟始與結束的磁柱號碼</span>。
+          若將硬碟以長條形來看，然後將磁柱以直條圖來看，那麼那64 bytes的記錄區段有點像底下的圖示：</p>
+        <center>
+          <img src="0130designlinux/partition-1.png" alt="磁碟分割表的作用示意圖" 
+		title="磁碟分割表的作用示意圖" border="0" /><br />
+          圖2.3.1、磁碟分割表的作用示意圖<br />
+        </center>
+        <p>假設上面的硬碟裝置檔名為/dev/hda時，那麼這四個分割槽在Linux系統中的裝置檔名如下所示，
+          重點在於檔名後面會再接一個數字，這個數字與該分割槽所在的位置有關喔！</p>
+        <ul>
+          <li>P1:/dev/hda1</li>
+          <li>P2:/dev/hda2</li>
+          <li>P3:/dev/hda3</li>
+          <li>P4:/dev/hda4</li>
+        </ul>
+        <p>上圖中我們假設硬碟只有400個磁柱，共分割成為四個分割槽，第四個分割槽所在為第301到400號磁柱的範圍。
+          當你的作業系統為Windows時，那麼第一到第四個分割槽的代號應該就是C, D, E, F。當你有資料要寫入F槽時，
+          你的資料會被寫入這顆磁碟的301~400號磁柱之間的意思。</p>
+        <p>由於分割表就只有64 bytes而已，最多只能容納四筆分割的記錄，
+          這四個分割的記錄被稱為主要(Primary)或延伸(Extended)分割槽。
+          根據上面的圖示與說明，我們可以得到幾個重點資訊：</p>
+        <ul class="text_import2">
+          <li>其實所謂的『分割』只是針對那個64 bytes的分割表進行設定而已！</li>
+          <li>硬碟預設的分割表僅能寫入四組分割資訊</li>
+          <li>這四組分割資訊我們稱為主要(Primary)或延伸(Extended)分割槽</li>
+          <li>分割槽的最小單位為磁柱(cylinder)</li>
+          <li>當系統要寫入磁碟時，一定會參考磁碟分割表，才能針對某個分割槽進行資料的處理</li>
+        </ul>
+        <p>咦！你會不會突然想到，為啥要分割啊？基本上你可以這樣思考分割的角度：</p>
+        <ol>
+          <li><span class="text_import2">資料的安全性：</span><br />
+            因為每個分割槽的資料是分開的！所以，當你需要將某個分割槽的資料重整時，例如你要將電腦中Windows的C槽重新安裝一次系統時，
+            可以將其他重要資料移動到其他分割槽，例如將郵件、桌面資料移動到D槽去，那麼C槽重灌系統並不會影響到D槽！
+            所以善用分割槽，可以讓妳的資料更安全。 <br />
+            <br />
+          </li>
+          <li><span class="text_import2">系統的效能考量：</span><br />
+            由於分割槽將資料集中在某個磁柱的區段，例如上圖當中第一個分割槽位於磁柱號碼1~100號，如此一來當有資料要讀取自該分割槽時，
+            磁碟只會搜尋前面1~100的磁柱範圍，由於資料集中了，將有助於資料讀取的速度與效能！所以說，分割是很重要的！</li>
+        </ol>
+        <p>既然分割表只有記錄四組資料的空間，那麼是否代表我一顆硬碟最多只能分割出四個分割槽？當然不是啦！有經驗的朋友都知道，
+          你可以將一顆硬碟分割成十個以上的分割槽的！那又是如何達到的呢？在Windows/Linux系統中，
+          我們是透過剛剛談到的延伸分割(Extended)的方式來處理的啦！延伸分割的想法是： <span class="text_import2">既然第一個磁區所在的分割表只能記錄四筆資料，
+            那我可否利用額外的磁區來記錄更多的分割資訊？</span>實際上圖示有點像底下這樣：</p>
+        <center>
+          <img src="0130designlinux/partition-2.png" 
+		alt="磁碟分割表的作用示意圖" title="磁碟分割表的作用示意圖" border="0" /><br />
+          圖2.3.2、磁碟分割表的作用示意圖<br />
+        </center>
+        <p>在上圖當中，我們知道硬碟的四個分割記錄區僅使用到兩個，P1為主要分割，而P2則為延伸分割。請注意， <span class="text_import2">延伸分割的目的是使用額外的磁區來記錄分割資訊，延伸分割本身並不能被拿來格式化</span>。
+          然後我們可以透過延伸分割所指向的那個區塊繼續作分割的記錄。</p>
+        <p>如上圖右下方那個區塊有繼續分割出五個分割槽，
+          這五個由延伸分割繼續切出來的分割槽，就被稱為<span class="text_import2">邏輯分割槽(logical partition)</span>。
+          同時注意一下，由於邏輯分割槽是由延伸分割繼續分割出來的，所以他可以使用的磁柱範圍就是延伸分割所設定的範圍喔！
+          也就是圖中的101~400啦！</p>
+        <p>同樣的，上述的分割槽在Linux系統中的裝置檔名分別如下：</p>
+        <ul>
+          <li>P1:/dev/hda1</li>
+          <li>P2:/dev/hda2</li>
+          <li class="text_import1">L1:/dev/hda5</li>
+          <li>L2:/dev/hda6</li>
+          <li>L3:/dev/hda7</li>
+          <li>L4:/dev/hda8</li>
+          <li>L5:/dev/hda9</li>
+        </ul>
+        <p>仔細看看，怎麼裝置檔名沒有/dev/hda3與/dev/hda4呢？因為前面四個號碼都是保留給Primary或Extended用的嘛！
+          所以<span class="text_import2">邏輯分割槽的裝置名稱號碼就由5號開始了</span>！這是個很重要的特性，不能忘記喔！</p>
+        <p>主要分割、延伸分割與邏輯分割的特性我們作個簡單的定義囉：</p>
+        <ul class="text_import2">
+          <li>主要分割與延伸分割最多可以有四筆(硬碟的限制)</li>
+          <li>延伸分割最多只能有一個(作業系統的限制)</li>
+          <li>邏輯分割是由延伸分割持續切割出來的分割槽；</li>
+          <li>能夠被格式化後，作為資料存取的分割槽為主要分割與邏輯分割。延伸分割無法格式化；</li>
+          <li>邏輯分割的數量依作業系統而不同，在Linux系統中，IDE硬碟最多有59個邏輯分割(5號到63號)，
+            SATA硬碟則有11個邏輯分割(5號到15號)。</li>
+        </ul>
+        <p>事實上，分割是個很麻煩的東西，因為他是<span class="text_import2">以磁柱為單位的『連續』磁碟空間</span>，
+          且延伸分割又是個類似獨立的磁碟空間，所以在分割的時候得要特別注意。我們舉底下的例子來解釋一下好了：</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 在Windows作業系統當中，如果你想要將D與E槽整合成為一個新的分割槽，而如果有兩種分割的情況如下圖所示，
+                圖中的特殊顏色區塊為D與E槽的示意，請問這兩種方式是否均可將D與E整合成為一個新的分割槽？<br />
+                <center>
+                  <img src="0130designlinux/partition-3.png" alt="磁碟空間整合示意圖" title="磁碟空間整合示意圖" border="0" /><br />
+                  圖2.3.3、磁碟空間整合示意圖<br />
+                </center>
+              </div>
+              答：
+              <ul>
+                <li>上圖可以整合：因為上圖的D與E同屬於延伸分割內的邏輯分割，因此只要將兩個分割槽刪除，然後再重新建立一個新的分割槽，
+                  就能夠在不影響其他分割槽的情況下，將兩個分割槽的容量整合成為一個。<br />
+                  <br />
+                </li>
+                <li>下圖不可整合：因為D與E分屬主分割與邏輯分割，兩者不能夠整合在一起。除非將延伸分割破壞掉後再重新分割。
+                  但如此一來會影響到所有的邏輯分割槽，要注意的是：<span class="text_import2">如果延伸分割被破壞，所有邏輯分割將會被刪除。 </span>因為邏輯分割的資訊都記錄在延伸分割裡面嘛！</li>
+              </ul></td>
+          </tr>
+        </table>
+        <br />
+        <p>由於第一個磁區所記錄的分割表與MBR是這麼的重要，幾乎只要讀取硬碟都會先由這個磁區先讀起。
+          因此，如果整顆硬碟的第一個磁區(就是MBR與partition table所在的磁區)物理實體壞掉了，那這個硬碟大概就沒有用了！
+          因為系統如果找不到分割表，怎麼知道如何讀取磁柱區間呢？您說是吧！底下還有一些例題您可以思考看看：</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 如果我想將一顆大硬碟『暫時』分割成為四個partitions，同時還有其他的剩餘容量可以讓我在未來的時候進行規劃，
+                我能不能分割出四個Primary？若不行，那麼你建議該如何分割？ </div>
+              答：
+              <ul>
+                <li>由於Primary+Extended最多只能有四個，其中Extended最多只能有一個，這個例題想要分割出四個分割槽且還要預留剩餘容量，
+                  因此P+P+P+P的分割方式是不適合的。<span class="text_import2">因為如果使用到四個P，則即使硬碟還有剩餘容量，
+                    因為無法再繼續分割，所以剩餘容量就被浪費掉了</span>。<br />
+                  <br />
+                </li>
+                <li>假設你想要將所有的四筆記錄都花光，那麼P+P+P+E是比較適合的。所以可以用的四個partitions有3個主要及一個邏輯分割，
+                  剩餘的容量在延伸分割中。<br />
+                  <br />
+                </li>
+                <li>如果你要分割超過4槽以上時，一定要有Extended分割槽，而且必須將所有剩下的空間都分配給Extended，
+                  然後再以logical的分割來規劃Extended的空間。 <span class="text_import2">另外，考慮到磁碟的連續性，一般建議將Extended的磁柱號碼分配在最後面的磁柱內</span>。</li>
+              </ul></td>
+          </tr>
+        </table>
+        <br />
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 我能不能僅分割出一個Primary與一個Extended即可？ </div>
+              答：
+              <div class="block2"> 當然可以，這也是早期Windows作業系統慣用的手法！此外，邏輯分割槽的號碼在IDE可達63號，SATA則可達15號，
+                因此僅一個主要與一個延伸分割即可，因為延伸分割可繼續被分割出邏輯分割槽嘛！ </div></td>
+          </tr>
+        </table>
+        <br />
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 假如我的PC有兩顆SATA硬碟，我想在第二顆硬碟分割出6個可用的分割槽(可以被格式化來存取資料之用)，
+                那每個分割槽在Linux系統下的裝置檔名為何？且分割類型各為何？至少寫出兩種不同的分割方式。 </div>
+              答：
+              <div class="block2"> 由於P(primary)+E(extended)最多只能有四個，其中E最多只能有一個。現在題目要求6個可用的分割槽，因此不可能分出四個P。
+                底下我們假設兩種環境，一種是將前四號全部用完，一種是僅花費一個P及一個E的情況：
+                <ul>
+                  <li><span class="text_import2">P+P+P+E的環境：</span><br />
+                    <center>
+                      <img src="0130designlinux/partition-4.gif" alt="分割示意圖" title="分割示意圖" border="0" /><br />
+                      圖2.3.4、分割示意圖<br />
+                      <br />
+                    </center>
+                    實際可用的是/dev/sdb1, /dev/sdb2, /dev/sdb3, /dev/sdb5, /dev/sdb6, 
+                    /dev/sdb7這六個，至於/dev/sdb4這個延伸分割本身僅是提供來給邏輯分割槽建立之用。 <br />
+                    <br />
+                  </li>
+                  <li><span class="text_import2">P+E的環境：</span><br />
+                    <center>
+                      <img src="0130designlinux/partition-5.gif" alt="分割示意圖" title="分割示意圖" border="0" /><br />
+                      圖2.3.5、分割示意圖<br />
+                      <br />
+                    </center>
+                    注意到了嗎？因為1~4號是保留給主要/延伸分割槽的，因此第一個邏輯分割槽一定是由5號開始的！再次強調啊！
+                    所以/dev/sdb3, /dev/sdb4就會被保留下來沒有用到了！</li>
+                </ul>
+              </div></td>
+          </tr>
+        </table>
+        <br />
+      </div>
+      <hr />
+      <a name="partition_mbr" id="partition_mbr"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開機流程與主要開機記錄區(MBR)</span><br />
+      <div class="block2">
+        <p>我們在<a href="/linux_basic/0105computers.php">計算機概論</a>裡面談到了，沒有執行軟體的硬體是沒有用的，除了會電人之外...，
+          而為了電腦硬體系統的資源合理分配，因此有了作業系統這個系統軟體的產生。由於作業系統會控制所有的硬體並且提供核心功能，
+          因此我們的電腦就能夠認識硬碟內的檔案系統，並且進一步的讀取硬碟內的軟體檔案與執行該軟體來達成各項軟體的執行目的。</p>
+        <p>問題是，你有沒有發現，既然作業系統也是軟體，那麼我的電腦又是如何認識這個作業系統軟體並且執行他的？
+          明明開機時我的電腦還沒有任何軟體系統，那他要如何讀取硬碟內的作業系統檔案啊？嘿嘿！這就得要牽涉到電腦的開機程序了！
+          底下就讓我們來談一談這個開機程序吧！</p>
+        <p>在<a href="/linux_basic/0105computers.php">計算機概論</a>裡面我們有談到那個可愛的BIOS與CMOS兩個東西，
+          CMOS是記錄各項硬體參數且嵌入在主機板上面的儲存器，BIOS則是一個寫入到主機板上的一個韌體(再次說明，
+          韌體就是寫入到硬體上的一個軟體程式)。<span 
+		class="text_import2">這個BIOS就是在開機的時候，電腦系統會主動執行的第一個程式了！</span></p>
+        <p>接下來BIOS會去分析電腦裡面有哪些儲存設備，我們以硬碟為例，BIOS會依據使用者的設定去取得能夠開機的硬碟，
+          並且<span class="text_import2">到該硬碟裡面去讀取第一個磁區的MBR位置。
+            MBR這個僅有446 bytes的硬碟容量裡面會放置最基本的開機管理程式</span>，
+          此時BIOS就功成圓滿，而接下來就是MBR內的開機管理程式的工作了。</p>
+        <p><span class="text_import2">這個開機管理程式的目的是在載入(load)核心檔案</span>，
+          由於開機管理程式是作業系統在安裝的時候所提供的，所以他會認識硬碟內的檔案系統格式，因此就能夠讀取核心檔案，
+          然後接下來就是核心檔案的工作，開機管理程式也功成圓滿，之後就是大家所知道的作業系統的任務啦！</p>
+        <p>簡單的說，整個開機流程到作業系統之前的動作應該是這樣的：</p>
+        <ol class="text_import2">
+          <li><b>BIOS</b>：開機主動執行的韌體，會認識第一個可開機的裝置；</li>
+          <li><b>MBR</b>：第一個可開機裝置的第一個磁區內的主要開機記錄區塊，內含開機管理程式；</li>
+          <li><b>開機管理程式(boot loader)</b>：一支可讀取核心檔案來執行的軟體；</li>
+          <li><b>核心檔案</b>：開始作業系統的功能...</li>
+        </ol>
+        <p>由上面的說明我們會知道，BIOS與MBR都是硬體本身會支援的功能，至於Boot 
+          loader則是作業系統安裝在MBR上面的一套軟體了。由於MBR僅有446 bytes而已，因此這個開機管理程式是非常小而美的。
+          這個boot loader的主要任務有底下這些項目：</p>
+        <ul class="text_import2">
+          <li><b>提供選單</b>：使用者可以選擇不同的開機項目，這也是多重開機的重要功能！</li>
+          <li><b>載入核心檔案</b>：直接指向可開機的程式區段來開始作業系統；</li>
+          <li><b>轉交其他loader</b>：將開機管理功能轉交給其他loader負責。 </li>
+        </ul>
+        <p>上面前兩點還容易理解，但是第三點很有趣喔！那表示你的電腦系統裡面可能具有兩個以上的開機管理程式呢！
+          有可能嗎？我們的硬碟不是只有一個MBR而已？是沒錯啦！但是<span class="text_import2">開機管理程式除了可以安裝在MBR之外，
+            還可以安裝在每個分割槽的開機磁區(boot sector)</span>喔！瞎密？分割槽還有各別的開機磁區喔？
+          沒錯啊！這個特色才能造就『多重開機』的功能啊！</p>
+        <p>我們舉一個例子來說，假設你的個人電腦只有一個硬碟，裡面切成四個分割槽，其中第一、二分割槽分別安裝了Windows及Linux，
+          你要如何在開機的時候選擇用Windows還是Linux開機呢？假設MBR內安裝的是可同時認識Windows/Linux作業系統的開機管理程式，
+          那麼整個流程可以圖示如下：</p>
+        <center>
+          <img src="0130designlinux/loader.gif" alt="開機管理程式的工作執行示意圖" 
+		title="開機管理程式的工作執行示意圖" border="0" /><br />
+          圖2.4.1、開機管理程式的工作執行示意圖<br />
+        </center>
+        <p>在上圖中我們可以發現，MBR的開機管理程式提供兩個選單，選單一(M1)可以直接載入Windows的核心檔案來開機；
+          選單二(M2)則是將開機管理工作交給第二個分割槽的開機磁區(boot sector)。當使用者在開機的時候選擇選單二時，
+          那麼整個開機管理工作就會交給第二分割槽的開機管理程式了。
+          當第二個開機管理程式啟動後，該開機管理程式內(上圖中)僅有一個開機選單，因此就能夠使用Linux的核心檔案來開機囉。
+          這就是多重開機的工作情況啦！我們將上圖作個總結：</p>
+        <ul class="text_import2">
+          <li>每個分割槽都擁有自己的開機磁區(boot sector)</li>
+          <li>圖中的系統槽為第一及第二分割槽，</li>
+          <li>實際可開機的核心檔案是放置到各分割槽內的！</li>
+          <li>loader只會認識自己的系統槽內的可開機核心檔案，以及其他loader而已；</li>
+          <li>loader可直接指向或者是間接將管理權轉交給另一個管理程式。</li>
+        </ul>
+        <p>那現在請你想一想，為什麼人家常常說：『<span class="text_import2">如果要安裝多重開機，
+          最好先安裝Windows再安裝Linux</span>』呢？這是因為：</p>
+        <ul>
+          <li>Linux在安裝的時候，你可以選擇將開機管理程式安裝在MBR或各別分割槽的開機磁區，
+            而且Linux的loader可以手動設定選單(就是上圖的M1, M2...)，所以你可以在Linux的boot 
+            loader裡面加入Windows開機的選項；<br />
+            <br />
+          </li>
+          <li>Windows在安裝的時候，他的安裝程式會主動的覆蓋掉MBR以及自己所在分割槽的開機磁區，你沒有選擇的機會，
+            而且他沒有讓我們自己選擇選單的功能。</li>
+        </ul>
+        <p>因此，如果先安裝Linux再安裝Windows的話，那MBR的開機管理程式就只會有Windows的項目，而不會有Linux的項目
+          (因為原本在MBR內的Linux的開機管理程式就會被覆蓋掉)。
+          那需要重新安裝Linux一次嗎？當然不需要，你只要用盡各種方法來處理MBR的內容即可。
+          例如利用全中文的spfdisk(<a href="http://spfdisk.sourceforge.net/"
+		target="_blank">http://spfdisk.sourceforge.net/</a>)軟體來安裝認識Windows/Linux的管理程式，
+          也能夠利用Linux的救援模式來挽救MBR即可。</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 開機管理程式與Boot sector的觀念是非常重要的，我們會在<a 
+		href="/linux_basic/0510osloader.php">第二十章</a>分別介紹，您在這裡只要先對於(1)開機需要開機管理程式，
+                  而(2)開機管理程式可以安裝在MBR及Boot Sector兩處這兩個觀念有基本的認識即可，
+                  一開始就背太多東西會很混亂啦！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="partition_install" id="partition_install"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux安裝模式下，
+        磁碟分割的選擇(極重要)</span><br />
+      <div class="block2">
+        <ul class="list1">
+          <li class="text_import1">目錄樹結構(directory tree)</li>
+        </ul>
+        <p>我們前面有談過Linux內的所有資料都是以檔案的形態來呈現的，所以囉，整個Linux系統最重要的地方就是在於目錄樹架構。
+          所謂的目錄樹架構(directory tree)就是以根目錄為主，然後向下呈現分支狀的目錄結構的一種檔案架構。
+          所以，<span class="text_import2">整個目錄樹架構最重要的就是那個根目錄(root 
+            directory)，這個根目錄的表示方法為一條斜線『<b>/</b>』</span>，
+          所有的檔案都與目錄樹有關。目錄樹的呈現方式如下圖所示：</p>
+        <center>
+          <img src="0130designlinux/dirtree.gif" alt="目錄樹相關性示意圖" 
+		title="目錄樹相關性示意圖" border="0" /><br />
+          圖2.5.1、目錄樹相關性示意圖<br />
+        </center>
+        <p>如上圖所示，所有的檔案都是由根目錄(/)衍生來的，而次目錄之下還能夠有其他的資料存在。上圖中長方形為目錄，
+          波浪形則為檔案。那當我們想要取得mydata那個檔案時，系統就得由根目錄開始找，然後找到home接下來找到dmtsai，
+          最終的檔名為：/home/dmtsai/mydata的意思。</p>
+        <p>我們現在知道整個Linux系統使用的是目錄樹架構，但是我們的檔案資料其實是放置在磁碟分割槽當中的，
+          現在的問題是『<span class="text_import2">如何結合目錄樹的架構與磁碟內的資料</span>』呢？
+          這個時候就牽扯到『掛載(mount)』的問題啦！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">檔案系統與目錄樹的關係(掛載)</li>
+        </ul>
+        <p><span class="text_import2">所謂的『掛載』就是利用一個目錄當成進入點，將磁碟分割槽的資料放置在該目錄下；
+          也就是說，進入該目錄就可以讀取該分割槽</span>的意思。這個動作我們稱為『掛載』，那個進入點的目錄我們稱為『掛載點』。
+          由於整個Linux系統最重要的是根目錄，因此根目錄一定需要掛載到某個分割槽的。
+          至於其他的目錄則可依使用者自己的需求來給予掛載到不同的分割槽。我們以下圖來作為一個說明：</p>
+        <center>
+          <img src="0130designlinux/dir_3.png" alt="目錄樹與分割槽之間的相關性" 
+		title="目錄樹與分割槽之間的相關性" border="1" /><br />
+          圖2.5.2、目錄樹與分割槽之間的相關性<br />
+        </center>
+        <p>上圖中假設我的硬碟分為兩槽，partition 1是掛載到根目錄，至於partition 2則是掛載到/home這個目錄。
+          這也就是說，當我的資料放置在/home內的各次目錄時，資料是放置到partition 2的，如果不是放在/home底下的目錄，
+          那麼資料就會被放置到partition 1了！</p>
+        <p>其實判斷某個檔案在那個partition底下是很簡單的，透過反向追蹤即可。以上圖來說，
+          當我想要知道/home/vbird/test這個檔案在那個partition時，由<span class="text_import2">test 
+            --&gt; vbird --&gt; home --&gt; /，看那個『進入點』先被查到那就是使用的進入點了</span>。
+          所以test使用的是/home這個進入點而不是/喔！</p>
+        <table border="1" width="90%" cellspacing="0" cellpadding="5">
+          <tr>
+            <td> 例題：
+              <div class="block2"> 現在讓我們來想一想，我的電腦系統如何讀取光碟內的資料呢？在Windows裡面使用的是『光碟機』的代號方式處理(假設為E槽時)，
+                但在Linux底下我們依舊使用目錄樹喔！在預設的情況下，Linux是將光碟機的資料放置到/media/cdrom裡頭去的。
+                如果光碟片裡面有個檔案檔名為『我的檔案』時，那麼這個檔案是在哪裡？ </div>
+              答：
+              <div class="block2"> 這個檔案最終會在如下的完整檔名中：
+                <ul class="text_import2">
+                  <li>Windows： 桌面\我的電腦\E:\我的檔案</li>
+                  <li>Linux： /medai/cdrom/我的檔案</li>
+                </ul>
+                如果光碟機並非被掛載到/media/cdrom，而是掛載到/mnt這個目錄時，剛剛讀取的這個檔案的檔名會變成：
+                <ul class="text_import2">
+                  <li>/mnt/我的檔案</li>
+                </ul>
+                如果你瞭解這個檔名，這表示你已經知道掛載的意義了！初次接觸Linux時，這裡最容易搞混，因為他與Windows的分割槽代號完全不一樣！ </div></td>
+          </tr>
+        </table>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">distributions安裝時，掛載點與磁碟分割的規劃：</li>
+        </ul>
+        <p>既然我們在Linux系統下使用的是目錄樹系統，所以安裝的時候自然就得要規劃磁碟分割與目錄樹的掛載了。
+          實際上，在Linux安裝的時候已經提供了相當多的預設模式讓你選擇分割的方式了，
+          不過，無論如何，分割的結果可能都不是很能符合自己主機的樣子！因為畢竟每個人的『想法』都不太一樣！
+          因此，<span class="text_import2">強烈建議使用『自訂安裝, Custom 』這個安裝模式</span>！在某些Linux 
+          distribution中，會將這個模式寫的很厲害，叫做是『Expert, 專家模式』，這個就厲害了，
+          請相信您自己，瞭解上面的說明後，就請自稱為專家了吧！沒有問題！</p>
+        <ul style="padding-left: 20px">
+          <li><span class="text_import1">自訂安裝『Custom』：</span><br />
+            <div class="block2">
+              <ul class="list1">
+                <li class="text_import2">A：初次接觸Linux：只要分割『 / 』及『swap』即可：</li>
+              </ul>
+              <p>通常初次安裝Linux系統的朋友們，我們都會建議他直接以一個最大的分割槽『 / 』來安裝系統。
+                這樣作有個好處，就是不怕分割錯誤造成無法安裝的困境！例如/usr是Linux的可執行程式及相關的文件擺放的目錄，
+                所以他的容量需求蠻大的，萬一你分割了一塊分割槽給/usr，但是卻給的不夠大，那麼就傷腦筋了！
+                因為會造成無法將資料完全寫入的問題，就有可能會無法安裝啦！因此如果你是初次安裝的話，
+                那麼可以僅分割成兩個分割槽『 / 與 Swap 』即可。</p>
+              <ul class="list1">
+                <li class="text_import2">B：建議分割的方法：預留一個備用的剩餘磁碟容量！</li>
+              </ul>
+              <p>在想要學習Linux的朋友中，最麻煩的可能就是得要常常處理分割的問題，因為分割是系統管理員很重要的一個任務。
+                但如果你將整個硬碟的容量都用光了，那麼你要如何練習分割呢？^_^。所以鳥哥在後續的練習中也會這樣做，
+                就是請你特別預留一塊不分割的磁碟容量，作為後續練習時可以用來分割之用！</p>
+              <p>此外，預留的分割槽也可以拿來做為備份之用。因為我們在實際操作Linux系統的過程中，
+                可能會發現某些script或者是重要的檔案很值得備份時，就可以使用這個剩餘的容量分割出新的分割槽，
+                並使用來備份重要的設定檔或者是script。這有個最大的好處，
+                就是當我的Linux重新安裝的時候，我的一些軟體或工具程式馬上就可以直接在硬碟當中找到！呵呵！重新安裝比較便利啦。
+                為什麼要重新安裝？因為沒有安裝過Linux十次以上，不要說你學會了Linux了啦！慢慢體會這句話吧！ ^_^</p>
+            </div>
+          </li>
+          <li><span class="text_import1">選擇Linux安裝程式提供的預設硬碟分割方式：</span><br />
+            <div class="block2">
+              <p>對於首次接觸Linux的朋友們，鳥哥通常不建議使用各個distribution所提供預設的Server安裝方式，
+                因為會讓你無法得知Linux在搞什麼鬼，而且也不見得可以符合你的需求！而且要注意的是，
+                選擇Server的時候，請『確定』你的硬碟資料是不再需要！因為Linux會自動的把你的硬碟裡面舊有的資料全部殺掉！
+                此外，硬碟至少需要2 GB以上才可以選擇這一個模式！</p>
+            </div>
+          </li>
+        </ul>
+        <p>現在你知道Linux為什麼不好學了吧？因為很多基礎知識都得要先瞭解！否則連安裝都不知道怎麼安裝～
+          現在你知道Linux的可愛了吧！因為如果你學會了，嘿嘿！很多電腦系統/作業系統的概念都很清晰，
+          轉換到不同的資訊跑道是比較容易的喔！^_^</p>
+      </div>
+    </div>
+    <hr />
+    <a name="beforeinstall" id="beforeinstall"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">安裝Linux前的規劃</span><br />
+    <div class="block1">
+      <p>從前面的說明我們知道作業系統與硬體的相關性是很高的，而目前最熱門的電腦硬體系統為x86個人電腦系統。
+        我們也討論了一下各硬體元件在Linux當中的裝置檔名，同時也瞭解到磁碟分割與每個分割槽在Linux目錄樹的關係，
+        也簡單談論了開機管理程式的用途。接下來我們得要開始安裝Linux囉。</p>
+      <p>安裝最重要的第一件事，就是要取得Linux distributions的光碟資料，該如何去下載？
+        目前有這麼多的distributions，你應該要選擇哪一個版本比較好？為什麼會比較好？
+        在台灣，你可以在哪裡下載你所需要的Linux distribution呢？這都是這一小節所要討論的喔！<br />
+        <br />
+      </p>
+      <hr />
+      <a name="beforeinstall_distro" id="beforeinstall_distro"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">選擇適當的distribution</span><br />
+      <div class="block2">
+        <p>就如同<a href="/linux_basic/0110whatislinux.php#torvalds_dist">第一章、Linux是什麼</a>裡面的distributions談到的，
+          事實上每個Linux distributions使用的都是來自於<a href="http://www.kernel.org" target="_blank"
+		>http://www.kernel.org</a>官方網站所提供的Linux核心，各家distribution使用的軟體其實也都是大同小異，
+          最大的差別或許就是在於軟體的安裝模式而已。所以，您只要選擇其中一套，並且玩得出神入化，
+          那麼Linux肯定可以學的成的。</p>
+        <p>不過，由於近年來網路環境實在不很安全，因此你在選擇distribution時，特別要瞭解到該distribution適合的環境，
+          並且最好選擇<span class="text_import2">最新的distribution較佳</span>喔！
+          以鳥哥來說，如果是將Linux定位在伺服器上面的話，那麼Red Hat Enterprise Linux及SuSE Enterprise 
+          Linux應該是很不錯的選擇，因為他的版本更動幅度較小，並且更新支援的期限較長的原因。</p>
+        <p>在我們這次的練習中，不想給大家太沈重的$$負擔啦，所以鳥哥選擇CentOS這一個號稱與RHEL完全相容的版本來練習，
+          目前(2009/08)最新的版本是CentOS 5.3版，你可以選擇i386或x86_64的版本來安裝，請依據您的硬體來選擇。
+          如果你不知道你的硬體規格時，那麼建議就直接安裝i386的版本即可。因為i386的CentOS 5.x是可以安裝在x86_64的硬體中的。</p>
+        <p>你可以選擇到CentOS的官方網站去下載最新的版本，不過我們在台灣嘛！台灣有映設站台(mirror site)，
+          所以由映設站台來下載比較快啊！底下列出CentOS的下載點：</p>
+        <ul>
+          <li>國家高速網路中心：<a href="http://ftp.twaren.net/Linux/CentOS/5/isos/"
+			target="_blank">http://ftp.twaren.net/Linux/CentOS/5/isos/</a></li>
+          <li>義守大學：<a href="http://ftp.isu.edu.tw/pub/Linux/CentOS/5.3/isos/"
+			target="_blank">http://ftp.isu.edu.tw/pub/Linux/CentOS/5.3/isos/</a></li>
+          <li>CentOS官方網站：<a href="http://mirror.centos.org/centos/5/isos/"
+			target="_blank">http://mirror.centos.org/centos/5/isos/</a></li>
+        </ul>
+        <p>你要知道的是，因為Linux distributions裡面的軟體越包越多，所以使用到的光碟(CD)片越來越多了，
+          因此目前各distribution都有提供DVD的版本。以上面的連結來說，每個連結裡面的i386版本中，
+          你會發現到有DVD版本例如：CentOS-5.3-i386-bin-DVD.iso，也有CD版本例如：
+          CentOS-5.3-i386-bin-[1-6]of6.iso。鳥哥建議您可以下載DVD版本，因為只有一片，比較環保啦！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 你所下載的檔案副檔名是.iso，這就是所謂的image檔案(映像檔)。這種image檔案是由光碟直接燒錄成檔案的，
+                  檔案非常的大，建議你不要使用瀏覽器(IE/Firefox..)來下載，可以使用FTP用戶端程式來下載，例如Filezilla 
+                  (<a href="http://filezilla-project.org/download.php" target="_blank"
+		>http://filezilla-project.org/download.php</a>)等。這樣比較不需要擔心斷線的問題，因為可以續傳啊！<br />
+                  <br />
+                  此外，這種映像檔可不能以資料格式燒錄成為光碟/DVD的！你必須要使用燒錄程式的功能，
+                  將他<u>以『映像檔格式』燒錄成為光碟或DVD才行</u>！切記不要使用燒錄資料檔格式來燒錄喔！重要重要！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <hr />
+      <a name="beforeinstall_service" id="beforeinstall_service"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機的服務規劃與硬體的關係</span><br />
+      <div class="block2">
+        <p>我們前面已經提過，由於主機的服務目的不同，所需要的硬體等級與配備自然也就不一樣！
+          底下鳥哥稍微提一提每種服務可能會需要的硬體配備規劃，當然，還是得提醒，
+          每個朋友的需求都不一樣，所以設計您的主機之前，請先針對自己的需求進行考量。而，
+          如果您不知道自己的考量為何，那麼就先拿一部普通的電腦來玩一玩吧！不過要記得！ <span class="text_import2">不要將重要資料放在練習用的Linux主機上面。</span><br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">打造Windows與Linux共存的環境：</li>
+        </ul>
+        <p>在某些情況之下，你可能會想要在『<span class="text_import2">一部主機上面安裝兩套以上的作業系統</span>』，
+          例如底下這些狀況：</p>
+        <ul>
+          <li>我的環境裡面僅能允許我擁有一部主機，不論是經濟問題還是空間問題～</li>
+          <li>因為目前各主要硬體還是針對Windows進行驅動程式的開發，我想要同時保有Windows作業系統與Linux作業系統，
+            以確定在Linux底下的硬體應該使用那個I/O port或者是IRQ的分配等等；</li>
+          <li>我的工作需要同時使用到Windows與Linux作業系統。</li>
+        </ul>
+        <p>果真如此的話，那麼剛剛我們在上一個小節談到的<span class="text_import2">開機流程與多重開機</span>的資料就很重要了。
+          因為需要如此你才能夠在一部主機上面操弄兩種不同的作業系統嘛！</p>
+        <div style="padding: 10pt 0pt 10pt 0pt ;" align="right">
+          <table width="90%">
+            <tr>
+              <td><b>Tips:</b><br />
+                <span style="color : #009000"><font size="-1"> 一般來說，你還可以在Windows作業系統上面安裝Virtualbox (<a href="http://www.virtualbox.org/"
+		target="_blank">http://www.virtualbox.org/</a>) 之類的軟體，讓你可以在Windows系統上面『同時』使用Linux系統，
+                  就是兩個作業系統同時啟動！不過，那樣的環境比較複雜，尤其Virtualbox環境中很多硬體都是模擬的，
+                  會讓新手很難理解系統控制原理。基本上，鳥哥很不建議您使用這樣的方式來學習Linux喔！ </font></span></td>
+              <td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td>
+            </tr>
+          </table>
+        </div>
+        <p>如果你的Linux主機已經是想要拿來作為某些服務之用時，那麼務必不要選擇太久的硬體喔！
+          前面談到過，太老舊的硬體可能會有電子零件老化的問題～另外，如果你的Linux主機必須要全年無休的開機著，
+          那麼擺放這部主機的位置也需要選擇啊！好了，底下再來談一談，在一般小型企業或學校單位中，
+          常見的某些服務與你的硬體關係有哪些？<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">NAT(達成IP分享器的功能)：</li>
+        </ul>
+        <p>通常小型企業或者是學校單位大多僅會有一條對外的連線，然後全公司/學校內的電腦全部透過這條連線連到網際網路上。
+          此時我們就得要使用IP分享器來讓這一條對外連線分享給所有的公司內部員工使用。
+          那麼Linux能不能達到此一IP分享的功能呢？當然可以，就是透過NAT服務即可達成這項任務了！</p>
+        <p>在這種環境中，由於Linux作為一個內/外分離的實體，因此網路流量會比較大一點。
+          此時Linux主機的網路卡就需要比較好些的配備。其他的CPU、RAM、硬碟等等的影響就小很多。
+          事實上，單利用Linux作為NAT主機來分享IP是很不智的～因為PC的耗電能力比IP分享器要大的多～</p>
+        <p>那麼為什麼你還要使用Linux作為NAT呢？因為Linux NAT還可以額外的加裝很多分析軟體，
+          可以用來分析用戶端的連線，或者是用來控制頻寬與流量，達到更公平的頻寬使用呢！
+          更多的功能則有待後續更多的學習囉！你也可以參考我們在<a href="/linux_server/">伺服器架設篇</a>當中的資料囉！ <br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">SAMBA(加入Windows網路上的芳鄰)：</li>
+        </ul>
+        <p>在你的Windows系統之間如何傳輸資料呢？當然就是透過網路上的芳鄰來傳輸啦！那還用問。
+          這也是學校老師在上課過程中要分享資料給同學常用的機制了。問題是，Windows 
+          XP的網芳一般只能同時分享十部用戶端連線，超過的話就得要等待了～真不人性化。</p>
+        <p>我們可以使用Linux上面的SAMBA這個軟體來達成加入Windows網芳的功能喔！SAMBA的效能不錯，
+          也沒有用戶端連線數的限制，相當適合於一般學校環境的檔案伺服器(file server)的角色呢！</p>
+        <p>這種伺服器由於分享的資料量較大，對於系統的網路卡與硬碟的大小及速度就比較重要，
+          如果你還針對不同的使用者提供檔案伺服器功能，那麼/home這個目錄可以考慮獨立出來，並且加大容量。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">Mail(郵件伺服器)：</li>
+        </ul>
+        <p>郵件伺服器是非常重要的，尤其對於現代人來說，電子郵件幾乎已經取代了傳統的人工郵件遞送了。
+          拜硬碟價格大跌及Google/Yahoo/MicroSoft公平競爭之賜，一般免費的email信箱幾乎都提供了很不錯的郵件服務，
+          包過Web介面的傳輸、大於2GB以上的容量空間及全年無休的服務等等。例如非常多人使用的gmail就是一例： <a href="http://gmail.com" target="_blank">http://gmail.com</a>。</p>
+        <p>雖然免費的信箱已經非常夠用了，老實說，鳥哥也不建議您架設mail server了。問題是，
+          如果你是一間私人單位的公司，你的公司內傳送的email是具有商業機密或隱私性的，那你還想要交給免費信箱去管理嗎？
+          此時才有需要架設mail server囉。CentOS一安裝完畢就提供了Sendmail及Postfix兩種mail server軟體了！</p>
+        <p>在mail server上面，重要的也是硬碟容量與網路卡速度，在此情境中，也可以將/var目錄獨立出來，並加大容量。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">Web(WWW伺服器)：</li>
+        </ul>
+        <p>WWW伺服器幾乎是所有的網路主機都會安裝的一個功能，因為他除了可以提供Internet的WWW連線之外，
+          很多在網路主機上面的軟體功能(例如某些分析軟體所提供的最終分析結果的畫面)也都使用WWW作為顯示的介面，
+          所以這傢伙真是重要到不行的。</p>
+        <p>CentOS使用的是Apache這套軟體來達成WWW網站的功能，在WWW伺服器上面，如果你還有提供資料庫系統的話，
+          那麼CPU的等級就不能太低，而最重要的則是RAM了！要增加WWW伺服器的效能，通常提升RAM是一個不錯的考量。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">DHCP(提供用戶端自動取得IP的功能)：</li>
+        </ul>
+        <p>如果你是個區域網路管理員，你的區網內共有20部以上的電腦給一般員工使用，這些員工假設並沒有電腦網路的維護技能。
+          那你想要讓這些電腦在連上Internet時需要手動去設定IP還是他可以自動的取得IP呢？當然是自動取得比較方便啦！
+          這就是DHCP服務的功能了！用戶端電腦只要選擇『自動取得IP』，其他的，就是你系統管理員在DHCP伺服器上面設定一下即可。
+          這個咚咚的硬體要求可以不必很高囉。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">Proxy(代理伺服器)：</li>
+        </ul>
+        <p>這也是常常會安裝的一個伺服器軟體，尤其像中小學校的頻寬較不足的環境下，
+          Proxy將可有效的解決頻寬不足的問題！當然，你也可以在家裡內部安裝一個Proxy喔！但是，
+          這個伺服器的硬體要求可以說是相對而言最高的，他不但需要較強有力的CPU來運作，對於硬碟的速度與容量要求也很高！
+          自然，既然提供了網路服務，網路卡則是重要的一環！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">FTP：</li>
+        </ul>
+        <p>常常看到很多朋友喜歡架設FTP去進行網路資料的傳輸，甚至很多人會架設地下FTP網站去傳輸些違法的資料。
+          老實說，『FTP傳輸再怎麼地下化也是很容易被捉到的』啦！所以，鳥哥相當不建議您架設FTP的喔！
+          不過，對於大專院校來說，因為常常需要分享給全校師生一些免費的資源，
+          此時匿名使用者的FTP軟體功能就很需要存在了。對於FTP的硬體需求來說，硬碟容量與網路卡好壞相關性較高。</p>
+        <p>大致上我們會安裝的伺服器軟體就是這一些囉！
+          當然啦，還是那句老話，在目前你剛接觸Linux的這個階段中，還是以Linux基礎為主，
+          鳥哥也希望你先瞭解Linux的相關主機操作技巧，其他的架站，未來再談吧！
+          而上面列出的各項服務，僅是提供給你，如果想要架設某種網路服務的主機時，你應該如何規劃主機比較好！</p>
+      </div>
+      <hr />
+      <a name="beforeinstall_partition" id="beforeinstall_partition"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機硬碟的主要規劃</span><br />
+      <div class="block2">
+        <p>系統對於硬碟的需求跟剛剛提到的主機開放的服務有關，那麼除了這點之外，還有沒有其他的注意事項呢？
+          當然有，那就是資料的分類與資料安全性的考量。所謂的『資料安全』並不是指資料被網路cracker所破壞，
+          而是指『<span class="text_import2">當主機系統的硬體出現問題時，你的檔案資料能否安全的保存</span>』之意。</p>
+        <p>常常會發現網路上有些朋友在問『我的Linux主機因為跳電的關係，造成不正常的關機，結果導致無法開機，這該如何是好？』
+          呵呵，幸運一點的可以使用fsck來解決硬碟的問題，麻煩一點的可能還需要重新安裝Linux呢！傷腦筋吧！另外，
+          由於Linux是多人多工的環境，因此很可能上面已經有很多人的資料在其中了，
+          如果需要重新安裝的話，光是搬移與備份資料就會瘋掉了！所以硬碟的分割考量是相當重要的！</p>
+        <p>雖然我們在本章的第二小節部分有談論過磁碟分割了，但是，<span 
+		class="text_import2">硬碟的規劃對於Linux新鮮人而言，那將是造成你『頭疼』的主要兇手之一！
+          因為硬碟的分割技巧需要對於Linux檔案結構有相當程度的認知之後才能夠做比較完善的規劃的！</span> 所以，在這裡你只要有個基礎的認識即可。老實說，沒有安裝過十次以上的Linux系統，是學不會Linux與磁碟分割的啦！</p>
+        <p>無論如何，底下還是說明一下基本硬碟分割的模式吧！</p>
+        <ul>
+          <li><span class="text_import2">最簡單的分割方法</span>：<br />
+            這個在上面第二節已經談過了，就是僅分割出根目錄與記憶體置換空間( / &amp; swap )即可。
+            然後再預留一些剩餘的磁碟以供後續的練習之用。不過，這當然是不保險的分割方法(所以鳥哥常常說這是『懶人分割法』)！
+            因為如果任何一個小細節壞掉(例如壞軌的產生)，你的根目錄將可能整個的損毀～挽救方面較困難！<br />
+            <br />
+          </li>
+          <li><span class="text_import2">稍微麻煩一點的方式</span>：<br />
+            較麻煩一點的分割方式就是先分析這部主機的未來用途，然後根據用途去分析需要較大容量的目錄，
+            以及讀寫較為頻繁的目錄，將這些重要的目錄分別獨立出來而不與根目錄放在一起，
+            那當這些讀寫較頻繁的磁碟分割槽有問題時，至少不會影響到根目錄的系統資料，那挽救方面就比較容易啊！
+            在預設的CentOS環境中，底下的目錄是比較符合容量大且(或)讀寫頻繁的目錄囉：<br />
+            <ul>
+              <li>/</li>
+              <li>/usr</li>
+              <li>/home</li>
+              <li>/var</li>
+              <li>Swap</li>
+            </ul>
+          </li>
+        </ul>
+        <p>以鳥哥為例，通常我會希望我的郵件主機大一些，因此我的/var通常會給個數GB的大小，
+          如此一來就可以不擔心會有郵件空間不足的情況了！另外，由於我開放SAMBA服務，
+          因此提供每個研究室內人員的資料備份空間，所以囉，/home所開放的空間也很大！至於/usr/的容量，
+          大概只要給2-5GB即可！凡此種種均與您當初預計的主機服務有關！
+          因此，<span class="text_import2">請特別注意您的服務項目！然後才來進行硬碟的規劃</span>。</p>
+      </div>
+      <hr />
+      <a name="beforeinstall_vbird" id="beforeinstall_vbird"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">鳥哥說：關於練習機的安裝建議</span><br />
+      <div class="block2">
+        <ul class="list1">
+          <li class="text_import1">關於硬體方面</li>
+        </ul>
+        <p>老實說，安裝Linux是非常困難的一件事，所以在補教界的教材方面，安裝(Installation)通常是在系統管理教完後才教的。
+          那因為我們不是在補教業的教室中，所以沒有現成的Linux系統可以用，當然就得要自行安裝一個啦！
+          因此這裡才會先跟大家介紹如何安裝Linux的。雖然很多朋友都喜歡使用Virtualbox安裝Linux去學習，
+          但是Virtualbox或其他相關的虛擬化軟體都是用模擬的方式去啟動Linux的，新手學習方面常常會誤解～</p>
+        <p>有鑑於此，因此，鳥哥『<span class="text_import2">強烈的建議您，務必擁有一台獨立的主機，
+          而且內含一顆僅有Linux作業系統的硬碟</span>』，以鳥哥自己為例，我的主機上面有一個抽取式硬碟盒，而我有兩顆分離的硬碟，
+          分別安裝Windows與Linux系統，要使用不同的作業系統時就抽換硬碟，如此一來，主機很單純，
+          而抽換也很快速，不需要對機殼拆拆裝裝的，很方便！提供給您做為參考。<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">關於硬碟分割方面</span></li>
+        </ul>
+        <p>此外，在硬碟的分割方面，鳥哥也建議新手們，先暫時以/及swap兩個分割即可，而且，還要預留一個未分割的空間喔！
+          因為我們是練習機，暫時不會提供網路服務，所以只要有/及Swap提供給我們進行安裝Linux的空間即可。不過，
+          我們未來會針對系統的磁碟部分進行分割的練習以及磁碟配額(quota)的練習，因此，預留一個磁碟空間是必須要的！</p>
+        <p>舉例來說，如果你有一個20GB的硬碟，那麼建議你分15 GB給/來安裝Linux，512 MB給Swap，另外的4 
+          GB左右不要分割，先保留下來，未來我們可以繼續來練習喔！^_^<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li><span class="text_import1">關於軟體方面</span></li>
+        </ul>
+        <p>另一個容易發現問題的地方，在於使用者常常會找不到某些指令，導致無法按照書上的說明去執行某些指令。
+          因為無法執行指令，所以就會一直給他放在那邊，不會繼續往下學習啊！真是可惜！
+          為什麼會找不到指令呢？很簡單啊！就是因為沒有安裝該軟體啊！所以，『<span 
+		class="text_import2">強烈的建議新手，務必將所有的套件都給他安裝上去！</span>』也就是選擇『安裝所有套件』就是了。</p>
+        <p>當然啦，上面提到的都是針對『練習機』而言喔！如果是您自己預計要上線的Linux主機，
+          那就不建議按照上面的說明安裝了！切記切記！</p>
+      </div>
+      <hr />
+      <a name="vbirdcase" id="vbirdcase"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">鳥哥的兩個實際案例</span><br />
+      <div class="block2">
+        <p>這裡說一下鳥哥的兩個實際的案例，這兩個案例是目前還在運作的主機喔！
+          要先聲明的是，鳥哥的範例不見得是最好的，因為每個人的考量並不一樣。我只是提供相對可以使用的方案而已喔！<br />
+          <br />
+        </p>
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">案例一：家用的小型Linux伺服器，IP分享與檔案分享中心：</li>
+        </ul>
+        <ul>
+          <li><span class="text_import2">提供服務</span>：<br />
+            提供家裡的多部電腦的網路連線分享，所以需要NAT功能。提供家庭成員的資料存放容量，由於家裡使用Windows系統的成員不少，
+            所以建置SAMBA伺服器，提供網芳的網路磁碟功能。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">主機硬體配備</span>：<br />
+            <ul>
+              <li>CPU使用P-III 800 MHz；</li>
+              <li>記憶體大小為512 MB的RAM；</li>
+              <li>兩張網路卡，控制晶片為常見的螃蟹卡(Realtek)；</li>
+              <li>共有兩顆磁碟，一顆系統碟一顆資料碟。資料碟高達160 GB；</li>
+              <li>顯示卡為以前很流行的GeForce 2 MX含32 MB的記憶體；</li>
+              <li>安裝完畢後將螢幕,鍵盤,滑鼠,DVD-ROM等配備均移除，僅剩下網路線與電源線。</li>
+            </ul>
+            <br />
+          </li>
+          <li><span class="text_import2">硬碟分割</span>：<br />
+            <ul>
+              <li>分成/boot, /, /usr, /var, /tmp等目錄均獨立；</li>
+              <li>/home獨立出來，放置到那顆160GB的磁碟，提供給家庭成員存放個人資料；</li>
+              <li>1 GB的Swap；</li>
+            </ul>
+          </li>
+        </ul>
+        <br />
+        <hr />
+        <ul class="list1">
+          <li class="text_import1">案例二：提供Linux的PC叢集(Cluster)電腦群：</li>
+        </ul>
+        <ul>
+          <li><span class="text_import2">提供服務</span>：<br />
+            提供研究室成員對於模式模擬的軟、硬體平台，主要提供的服務並非網際網路服務，
+            而是研究室內部的研究工作分析。<br />
+            <br />
+          </li>
+          <li><span class="text_import2">主機硬體配備</span>：<br />
+            <ul>
+              <li>利用兩部雙CPU(均為雙核)的x86_64系統(泰安主機板提供的特殊功能)；</li>
+              <li>使用Geforce 7300顯示卡，內含64MB的記憶體；</li>
+              <li>使用一顆硬碟作為主系統，六顆磁碟組成磁碟陣列，以儲存模式模擬的結果；</li>
+              <li>使用PCI-Express介面的網路卡，速度為Gbps；</li>
+              <li>共有4 GB的主記憶體容量；</li>
+            </ul>
+            <br />
+          </li>
+          <li><span class="text_import2">硬碟分割</span>：<br />
+            <ul>
+              <li>全部的磁碟陣列容量均給/cluster/raid目錄，佔有2TB的容量；</li>
+              <li>2 GB的swap容量；</li>
+              <li>分割出/, /usr, /var, /tmp等目錄，避免程式錯誤造成系統的困擾；</li>
+              <li>/home也獨立出來，讓每個研究室成員可以擁有自己的資料存放容量；</li>
+            </ul>
+          </li>
+        </ul>
+        <p>在上面的案例中，案例一是屬於小規模的主機系統，因此只要使用預計被淘汰的配備即可進行主機的架設！
+          唯一可能需要購買的大概是網路卡吧！呵呵！而在案例二中，由於我需要大量的數值運算，
+          且運算結果的資料非常的龐大，因此就需要比較大的磁碟容量與較佳的網路系統了。
+          以上的資料請先記得，因為下一章節在實際安裝Linux之前，你得先進行主機的規劃呀！</p>
+      </div>
+      <hr />
+      <a name="largehd" id="largehd"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">大硬碟配合舊主機造成的無法開機問題</span><br />
+      <div class="block2">
+        <p>隨著時代的演變，在2009年中的目前，個人電腦上面的硬碟容量竟然都已經高達750 GB以上了！
+          這麼大的硬碟用起來當然是很爽快的啦～不過，也有一些問題的～那就是～開機的問題～</p>
+        <p>某些比較舊的主機板中，他們的BIOS可能找不到比較大容量的磁碟的。所以，你在舊主機板上面安裝新的大容量磁碟時，
+          很可能你的磁碟容量會被誤判！不過，即使是這樣，Linux還是能夠安裝喔！而且能夠順利的捉到完整的硬碟容量呢！
+          為什麼呢？因為當Linux核心順利開機啟動後，他會重新再去偵測一次整個硬體而不理會BIOS所提供的資訊，
+          所以就能夠順利的捉到正確的硬碟，並且讓你安裝Linux。</p>
+        <p>但是，安裝完畢後，可能會無法開機喔！為什麼啊？前一小節裡面我們不是談到過開機流程與MBR的內容嗎？
+          安裝的時候是以光碟開機並且由光碟載入Linux核心，所以核心可以被順利載入來安裝。但是若以這樣的配備來開機時，
+          因為BIOS捉到的硬碟是不對的，所以使用硬碟開機可能就會出現無法開機的錯誤了。那怎辦？</p>
+        <p>由於BIOS捉到的磁碟容量不對，但是至少在整顆磁碟前面的磁區他還讀的到啊！
+          因此，你只要將這個磁碟最前面的容量分割出一個小分割槽，並將這個分割槽與系統開機檔案的放置目錄擺在一起， <span class="text_import2">那就是 /boot 這個目錄</span>！就能夠解決了！很簡單吧！
+          其實，重點是：『<span class="text_import2">將開機磁區所在分割槽規範在小於1024個磁柱以內～</span>』
+          即可！那怎麼做到呢？很簡單，在進行安裝的時候，規劃出三個磁區，分別是：</p>
+        <ul class="text_import2">
+          <li>/boot</li>
+          <li>/</li>
+          <li>swap</li>
+        </ul>
+        <p>那個/boot只要給100M Bytes左右即可！而且/boot要放在整塊硬碟的最前面！這部份你先有印象與概念即可，未來我們談到<a 
+		href="/linux_basic/0510osloader.php">第二十章的開機流程</a>時，會再加強說明的！ ^_^</p>
+      </div>
+    </div>
+    <hr />
+    <a name="hint" id="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+    <div class="block1">
+      <ul class="text_import2">
+        <li>新添購電腦硬體配備時，需要考量的角度有『遊戲機/工作機的考量』、『效能/價格筆的考量』、『支援度的考量』等；</li>
+        <li>舊的硬體配備可能由於保存的問題或者是電子零件老化的問題， 導致電腦系統非常容易在運作過程中出現不明的當機情況</li>
+        <li>Red Hat的硬體支援：https://hardware.redhat.com/?pagename=hcl</li>
+        <li>在Linux系統中，每個裝置都被當成一個檔案來對待，每個裝置都會有裝置檔名。</li>
+        <li>磁碟的裝置檔名主要分為 (1)IDE介面的/dev/hd[a-d]及 (2)SATA/SCSI/USB介面的/dev/sd[a-p]兩種；</li>
+        <li>磁碟的第一個磁區主要記錄了兩個重要的資訊，分別是： (1)主要開機記錄區(Master Boot Record, 
+          MBR)：可以安裝開機管理程式的地方，有446 bytes (1)分割表(partition table)：記錄整顆硬碟分割的狀態，有64 bytes；</li>
+        <li>磁碟的主要與延伸分割最多可以有四個，邏輯分割的裝置檔名號碼，一定由5號開始；</li>
+        <li>開機的流程由：BIOS--&gt;MBR--&gt;--&gt;boot loader--&gt;核心檔案；</li>
+        <li>boot loader的功能主要有：提供選單、載入核心、轉交控制權給其他loader</li>
+        <li>boot loader可以安裝的地點有兩個，分別是 MBR 與 boot sector</li>
+        <li>Linux作業系統的檔案使用目錄樹系統，與磁碟的對應需要有『掛載』的動作才行；</li>
+        <li>新手的簡單分割，建議只要有/及swap兩個分割槽即可</li>
+      </ul>
+    </div>
+    <hr />
+    <a name="ex" id="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+    <div class="block1"> (要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看)<br />
+      實作題部分：
+      <ul>
+        <li>請分析你的家用電腦，以你的硬體配備來計算可能產生的耗電量，最終再以計算出來的總瓦數乘上你可能開機的時間，
+          以推估出一年你可能會花費多少錢在你的這部主機上面？
+          <div class="blockex"> 硬體裡面包括 CPU/硬碟/主機板/記憶體/顯示卡/螢幕等等都會消耗電力，同時電源供應器也會消耗一部份的電力。
+            若有實際測量工具時，請使用測量結果來計算。若無測量工具，請上網找出每個元件的最大理論消耗功率來計算。 </div>
+        </li>
+      </ul>
+      問答題部分：
+      <ul>
+        <li>一部電腦主機是否只要 CPU 夠快，整體速度就會提高？
+          <div class="blockex"> 不見得！一部電腦系統的速度與整體電腦系統的運作有關，每個元件皆會影響電腦的速度！
+            這包括了記憶體、CPU、AGP與顯示卡速度，硬碟的速度以及其他相關的輸入輸出介面等等！
+            所以，如果您的系統是升級的，那麼還得必須要注意各個舊元件是否可以保留，
+            或者舊的可以用的元件必須要捨棄！ </div>
+        </li>
+        <li>Linux 對於硬體的要求需要的考慮為何？是否一定要很高的配備才能安裝 Linux ？
+          <div class="blockex"> Linux 對於硬體的要求是因『服務種類、服務範圍及主機的角色』而定的。例如一部專門用來運算數值解析的
+            Linux 運算工作站，需要比較強大的 CPU 與足夠的 RAM 來進行工作，至於一般家庭用的僅用來做為
+            ADSL 寬頻分享器的 Linux 主機，則只要 P-III 等級的電腦，甚至 P-II 系列的等級，就可以很順利的運行
+            Linux 了。 </div>
+        </li>
+        <li>一部好的主機在安裝之前，最好先進行規劃，哪些是必定需要注意的 Linux 主機規劃事項？
+          <div class="blockex"> 依據上一題的答案內容，我們知道 Linux 對於硬體的要求是『因地制宜』地！所以，要進行
+            Linux 的安裝之前，一定需要規劃 Linux 主機的定位與角色！因此，
+            Linux 的主機是否開放網路服務？這部主機的未來規劃中，是否需要進行大量的運算？這
+            部主機是否需要提供很大的硬碟容量來服務客戶端的使用？這部主機預計開放的網路服務內容？
+            等等，都是需要經過考量的，尤其未來的『套件選擇安裝』上面，更需要依據這些規劃來設定。 </div>
+        </li>
+        <li>請寫下下列配備中，在 Linux 的裝置檔名： <br />
+          IDE 硬碟： <br />
+          CDROM： <br />
+          印表機： <br />
+          軟碟機： <br />
+          網路卡：
+          <div class="blockex">
+            <ul>
+              <li>IDE 硬碟：/dev/hd[a-d]</li>
+              <li>CDROM：/dev/cdrom</li>
+              <li>印表機：/dev/lp[0-2]</li>
+              <li>軟碟機：/dev/fd[0-1]</li>
+              <li>網路卡：/dev/eth[0-n]</li>
+            </ul>
+          </div>
+        </li>
+        <li>如果您的系統常常當機，又找不到方法解決，您可以朝硬體的那個方向去搜尋？
+          <div class="blockex"> 如果軟體沒有問題的話，那麼當然發生當機的，可能就是硬體的問題了。
+            1.可以先檢測系統有沒有超頻？ 2.再來則是查閱當系統運作時，系統的機殼內溫度會不會過高？
+            因為過高的溫度常常會造成當機。 3.再者，檢查一下 CPU 的溫度，這也很重要。
+            4.再來，則是檢查是否插了多條的記憶體，因為不同廠牌的記憶體混插很容易造成系統不穩定。
+            5.電源供應器是否合乎標準？這些都可以進行檢測喔！ </div>
+        </li>
+        <li>目前在個人電腦上面常見的硬碟與主機板的連接介面有哪兩個？
+          <div class="blockex"> 有早期的 IDE 介面與最近的 SATA 介面，購買時要分的很清楚！ </div>
+        </li>
+      </ul>
+    </div>
+    <hr />
+    <a name="reference" id="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+    <div class="block1">
+      <ul>
+        <li>SPFdisk <a href="http://spfdisk.sourceforge.net/" 
+		target="_blank">http://spfdisk.sourceforge.net/</a></li>
+      </ul>
+    </div>
+    <hr />
+    <span class="text_history"> 2002/04/08：第一次完成吧？<br />
+      2003/02/02：重新編排與加入 FAQ <br />
+      2005/06/04：將舊的文章移動到 <a href="0130designlinux/0130designlinux.php">這裡</a><br />
+      2005/06/12：風格修訂之外，新增了 Linux 練習機硬體選擇與軟體安裝的建議<br />
+      2005/06/15：感謝上奇編輯 Tim 兄來信告知一些可能有爭議的部分！包括 AthlonXP 已被 Sempron 取代，已經修訂！<br />
+      2008/07/29：將舊的FC4文章移動到<a href="0130designlinux/0130designlinux-fc4.php">此處</a>。<br />
+      2008/08/21：將整份文件作個重新整理，移除計概有談到的硬體部分，增加partition的資料量。<br />
+      2009/08/06：重新修訂習題與解答，尤其一些計概方面的問題將他挪開！<br />
+      </span>
+    <hr />
+    <br />    <br /></td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+</html>

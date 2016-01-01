@@ -1,0 +1,1284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="登錄檔的分析啦！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 登錄檔的分析啦！</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十九章、認識與分析登錄檔</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/14</span>
+</div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	當你的 Linux 系統出現不明原因的問題時，很多人都告訴你，你要查閱一下登錄檔才能夠知道系統出了什麼問題了，所以說，
+	了解登錄檔是很重要的事情呢。登錄檔可以記錄系統在什麼時間、哪個主機、哪個服務、出現了什麼訊息等資訊，
+	這些資訊也包括使用者識別資料、系統故障排除須知等資訊。如果你能夠善用這些登錄檔資訊的話，你的系統出現錯誤時，
+	你將可以在第一時間發現，而且也能夠從中找到解決的方案，而不是昏頭轉向的亂問人呢。
+	此外，登錄檔所記錄的資訊量是非常大的，要人眼分析實在很困難。此時利用 shell script 
+	或者是其他軟體提供的分析工具來處理複雜的登錄檔，可以幫助你很多很多喔！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#whatis_syslog">什麼是登錄檔</a>：
+	<span class="text_h2">
+		<a href="#whatis_syslog_im">登錄檔的重要性</a>, 
+		<a href="#whatis_syslog_file">常見檔名</a>,
+		<a href="#whatis_syslog_daemon">服務與程式</a>
+	</span><br />
+2. <a href="#syslogd">syslogd ：記錄登錄檔的服務</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#syslogd_format">登錄檔內容的一般格式</a><br />
+	　　2.2 <a href="#syslogd_conf">syslog 的設定檔： /etc/syslog.conf</a>, 
+		<a href="#syslog_conf_default">預設的 syslog.conf 內容</a><br />
+	　　2.3 <a href="#syslogd_secure">登錄檔的安全性設置</a><br />
+	　　2.4 <a href="#syslogd_server">登錄檔伺服器的設定</a><br />
+	</span>
+3. <a href="#rotate">登錄檔的輪替 (logrotate)</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#rotate_config">logrotate 的設定檔</a><br />
+	　　3.2 <a href="#rotate_command">實際測試 logrotate 的動作</a><br />
+	　　3.3 <a href="#rotate_user">自訂登錄檔的輪替功能</a><br />
+	</span>
+4. <a href="#analyze">分析登錄檔</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#logwatch">CentOS 預設提供的 logwatch</a><br />
+	　　4.2 <a href="#analyze_vbird">鳥哥自己寫的登錄檔分析工具：</a><br />
+	</span>
+5. <a href="#FAQ">本章習題練習</a><br />
+<span class="text_h2">
+6. <a href="http://phorum.vbird.org/viewtopic.php?t=23895"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23895</a>
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="whatis_syslog"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是登錄檔</span><br />
+<div class="block1">
+	<p>『<span class="text_import2">詳細而確實的分析以及備份系統的登錄檔</span>』是一個系統管理員應該要進行的任務之一。
+	那麼什麼是登錄檔呢？簡單的說，就是<span class="text_import2">記錄系統活動資訊的幾個檔案，
+	例如：何時、何地 (來源 IP)、何人 (什麼服務名稱)、做了什麼動作 (訊息登錄囉)</span>。
+	換句話說就是：<span class="text_import2">記錄系統在什麼時候由哪個程序做了什麼樣的行為時，發生了何種的事件等等</span>。</p>
+
+	<p>要知道的是，我們的 Linux 主機在背景之下有相當多的 daemons 同時在工作著，這些工作中的程序總是會顯示一些訊息，
+	這些顯示的訊息最終會被記載到登錄檔當中啦。也就是說，記錄這些系統的重要訊息就是登錄檔的工作啦！<br /><br /></p>
+
+	<a name="whatis_syslog_im"></a>
+	<hr /><span class="text_import1">登錄檔的重要性</span>
+
+	<p>為什麼說登錄檔很重要，重要到系統管理員需要隨時注意他呢？我們可以這麼說：</p>
+
+	<ul>
+	<li><span class="text_import2">解決系統方面的錯誤</span>：<br /><br />
+		用 Linux 這麼久了，你應該偶而會發現系統可能會出現一些錯誤，包括硬體捉不到或者是某些系統程式無法順利運作的情況。
+		此時你該如何是好？由於系統會將硬體偵測過程記錄在登錄檔內，你只要透過查詢登錄檔就能夠瞭解系統作了啥事！
+		並且由<a href="/linux_basic/0440processcontrol.php">第十七章我們也知道 SELinux</a> 
+		與登錄檔的關係更加的強烈！所以囉，查詢登錄檔可以克服一些系統問題啦！<br /><br /></li>
+
+	<li><span class="text_import2">解決網路服務的問題</span>：<br /><br />
+		你可能在做完了某些網路服務的設定後，卻一直無法順利啟動該服務，此時該怎辦？去廟裡面拜拜抽籤嗎？
+		三太子大大可能無法告訴你要怎麼處理呢！由於網路服務的各種問題通常都會被寫入特別的登錄檔，
+		其實你只要查詢登錄檔就會知道出了什麼差錯，還不需要請示三太子大大啦！舉例來說，如果你無法啟動郵件伺服器 (sendmail)，
+		那麼查詢一下 /var/log/maillog 通常可以得到不錯的解答！<br /><br /></li>
+
+	<li><span class="text_import2">過往事件記錄簿</span>：<br /><br />
+		這個東西相當的重要！例如：你發現 WWW 服務 (apache 軟體) 在某個時刻流量特別大，你想要瞭解為什麼時，
+		可以透過登錄檔去找出該時段是哪些 IP 在連線與查詢的網頁資料為何，就能夠知道原因。
+		此外，萬一哪天你的系統被入侵，並且被利用來攻擊他人的主機，由於被攻擊主機會記錄攻擊者，因此你的 IP 
+		就會被對方記錄。這個時候你要如何告知對方你的主機是由於被入侵所導致的問題，
+		並且協助對方繼續往惡意來源追查呢？呵呵！此時登錄檔可是相當重要的呢！</li>
+	</ul>
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		所以我們常說『天助自助者』是真的啦！你可以透過 (1)察看螢幕上面的錯誤訊息與
+		(2)登錄檔的錯誤資訊，幾乎可以解決大部分的 Linux 問題！
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+	<a name="whatis_syslog_file"></a>
+	<hr /><span class="text_import1">Linux 常見的登錄檔檔名</span>
+
+	<p>登錄檔可以幫助我們瞭解很多系統重要的事件，包括登入者的部分資訊，因此<span
+	class="text_import2">登錄檔的權限通常是設定為僅有 root 能夠讀取而已</span>。
+	而由於登錄檔可以記載系統這麼多的詳細資訊，所以啦，一個有經驗的主機管理員會隨時隨地查閱一下自己的登錄檔，
+	以隨時掌握系統的最新脈動！那麼常見的幾個登錄檔有哪些呢？一般而言，有下面幾個：</p>
+
+	<ul>
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/cron</span>：<br />
+		還記得<a href="/linux_basic/0430cron.php">第十六章例行性工作排程</a>吧？你的 crontab 排程有沒有實際被進行？
+		進行過程有沒有發生錯誤？你的 /etc/crontab 是否撰寫正確？在這個登錄檔內查詢看看。<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/dmesg</span>：<br />
+		記錄系統在開機的時候核心偵測過程所產生的各項資訊。由於 CentOS 預設將開機時核心的硬體偵測過程取消顯示，
+		因此額外將資料記錄一份在這個檔案中；<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/lastlog</span>：<br />
+		可以記錄系統上面所有的帳號最近一次登入系統時的相關資訊。<a 
+		href="/linux_basic/0410accountmanager.php#uselinux_find">第十四章講到的 lastlog</a> 
+		指令就是利用這個檔案的記錄資訊來顯示的。<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/maillog 或 /var/log/mail/*</span>：<br />
+		記錄郵件的往來資訊，其實主要是記錄 sendmail (SMTP 協定提供者) 與 dovecot (POP3 協定提供者) 所產生的訊息啦。
+		SMTP 是發信所使用的通訊協定， POP3 則是收信使用的通訊協定。 sendmail 與 dovecot 則分別是兩套達成通訊協定的軟體。
+		<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/messages</span>：<br />
+		這個檔案相當的重要，幾乎系統發生的錯誤訊息 (或者是重要的資訊) 都會記錄在這個檔案中；
+		如果系統發生莫名的錯誤時，這個檔案是一定要查閱的登錄檔之一。<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/secure</span>：<br />
+		基本上，只要牽涉到『需要輸入帳號密碼』的軟體，那麼當登入時 (不管登入正確或錯誤) 都會被記錄在此檔案中。
+		包括系統的 login 程式、圖形介面登入所使用的 gdm 程式、 su, sudo 等程式、還有網路連線的 ssh, telnet 等程式，
+		登入資訊都會被記載在這裡；<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/wtmp, /var/log/faillog</span>：<br />
+		這兩個檔案可以記錄正確登入系統者的帳號資訊 (wtmp) 與錯誤登入時所使用的帳號資訊 (faillog) ！
+		我們在<a href="/linux_basic/0320bash.php#last">第十一章談到的 last</a> 就是讀取 wtmp 來顯示的，
+		這對於追蹤一般帳號者的使用行為很有幫助！<br /><br /></li>
+
+	<li><span class="text_import2" style="font-family:'細明體'">/var/log/httpd/*, /var/log/news/*, /var/log/samba/*</span>：<br />
+		不同的網路服務會使用它們自己的登錄檔案來記載它們自己產生的各項訊息！上述的目錄內則是個別服務所制訂的登錄檔。</li>
+	</ul>
+
+	<p>常見的登錄檔就是這幾個，但是不同的 Linux distributions ，通常登錄檔的檔名不會相同 
+	(除了 /var/log/messages 之外 )。所以說，你還是得要查閱你 Linux 主機上面的登錄檔設定資料，
+	才能知道你的登錄檔主要檔名喔！<br /><br /></p>
+
+	<a name="whatis_syslog_daemon"></a>
+	<hr /><span class="text_import1">登錄檔所需相關服務 (daemon) 與程式</span>
+
+	<p>那麼這些登錄檔是怎麼產生的呢？基本上有兩種方式，一種是由軟體開發商自行定義寫入的登錄檔與相關格式，
+	例如 WWW 軟體 apache 就是這樣處理的。另一種則是由 Linux distribution 提供的登錄檔管理服務來統一管理。
+	你只要將訊息丟給這個服務後，他就會自己分門別類的將各種訊息放置到相關的登錄檔去！CentOS 提供 syslogd 
+	這個服務來統一管理登錄檔喔！</p>
+
+	<p>除了這個 syslogd 之外，我們的核心也需要額外的登錄服務來記錄核心產生的各項資訊，
+	這個專門記錄核心資訊的登錄檔服務就是 klogd 啦。所以說，登錄檔所需的服務主要就是 <span class="text_import2">syslogd
+	與 klogd</span> 這兩者。</p>
+
+	<p>不過要注意的是，如果你任憑登錄檔持續記錄的話，由於系統產生的資訊天天都有，那麼你的登錄檔的容量將會長大到無法無天～
+	如果你的登錄檔容量太大時，可能會導致大檔案讀寫效率不佳的問題 (因為要從磁碟讀入記憶體，越大的檔案消耗記憶體量越多)。
+	所以囉，你需要對登錄檔備份與更新。那...需要手動處理喔？當然不需要，我們可以透過 logrotate (登錄檔輪替) 
+	這玩意兒來自動化處理登錄檔容量與更新的問題喔！</p>
+
+	<p>所謂的 logrotate 基本上，就是將舊的登錄檔更改名稱，然後建立一個空的登錄檔，如此一來，
+	新的登錄檔將重新開始記錄，然後只要將舊的登錄檔留下一陣子，嗯！那就可以達到將登錄檔『輪轉』的目的啦！
+	此外，如果舊的紀錄 (大概要保存幾個月吧！) 保存了一段時間沒有問題，那麼就可以讓系統自動的將他砍掉，
+	免得佔掉很多寶貴的硬碟空間說！</p>
+
+	<p>總結一下，針對登錄檔所需的功能，我們需要的服務與程式有：</p>
+	<ul>
+	<li><span class="text_import1">syslogd</span>：主要登錄系統與網路等服務的訊息；</li>
+	<li><span class="text_import1">klogd</span>：主要登錄核心產生的各項資訊；</li>
+	<li><span class="text_import1">logrotate</span>：主要在進行登錄檔的輪替功能。</li>
+	</ul>
+
+	<p>由於我們著眼點在於想要瞭解系統上面軟體所產生的各項資訊，因此本章主要針對 syslogd 與 logrotate 來介紹。
+	接著下來我們來談一談怎麼樣規劃這兩個玩意兒。就由 syslogd 這支程式先談起吧！畢竟得先有登錄檔，才可以進行
+	logrotate 呀！您說是吧！</p>
+</div>
+
+
+<hr /><a name="syslogd"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">syslogd ：記錄登錄檔的服務</span><br />
+<div class="block1">
+	<p>剛剛提到說 Linux 的登錄檔主要是由 syslogd 在負責，那麼你的 Linux
+	是否有啟動 syslogd 呢？而且是否有設定開機時啟動呢？呵呵！檢查一下先：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ps aux | grep syslog</span>
+USER   PID %CPU %MEM  VSZ  RSS TTY  STAT START  TIME COMMAND
+root  4294  0.0  0.0 1716  568 ?    Ss   Mar31  0:00 <span class="term_write">syslogd -m 0</span>
+<span class="term_say"># 瞧！確實有啟動的！</span>
+
+[root@www ~]# <span class="term_command">chkconfig --list syslog</span>
+syslog    0:off  1:off  2:on   3:on   4:on   5:on   6:off
+<span class="term_say"># 預設情況下，文字介面與圖形介面 (3, 5) 都有啟動喔！</span>
+</pre></td></tr></table>
+
+	<p>看到 syslog 這個服務名稱了吧？所以知道他已經在系統中工作囉！好了，既然本章主要是講登錄檔，那麼你知道登錄檔的內容是如何展現的？
+	syslog 的設定檔在哪裡？如何設定？如果你的 Linux 主機想要當作整個區網的登錄檔伺服器時，又該如何設定？
+	底下就讓我們來玩玩這玩意！<br /><br /></p>
+
+	<hr /><a name="syslogd_format"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">登錄檔內容的一般格式</span><br />
+	<div class="block2">
+		<p>一般來說，系統產生的訊息經過 syslog 而記錄下來的資料中，每條訊息均會記錄底下的幾個重要資料：</p>
+
+		<ul class="text_import2">
+		<li>事件發生的日期與時間；</li>
+		<li>發生此事件的主機名稱；</li>
+		<li>啟動此事件的服務名稱 (如 samba, xinetd 等) 或函式名稱 (如 libpam ..)；</li>
+		<li>該訊息的實際資料內容。</li>
+		</ul>
+
+		<p>當然，這些資訊的『詳細度』是可以修改的，而且，這些資訊可以作為系統除錯之用呢！
+		我們拿登錄時一定會記載帳號資訊的 /var/log/secure 為例好了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /var/log/secure</span>
+<span class="term_note">1</span> Mar 14 15:38:00 www atd[18701]: pam_unix(atd:session): session opened for 
+  user root by (uid=0)
+<span class="term_note">2</span> Mar 14 15:38:00 www atd[18701]: pam_unix(atd:session): session closed for
+  user root
+<span class="term_note">3</span> Mar 16 16:01:51 www su: pam_unix(su-l:auth): authentication failure; logn
+  ame=vbird uid=500 euid=0 tty=pts/1 ruser=vbird rhost=  user=root
+<span class="term_note">4</span> Mar 16 16:01:55 www su: pam_unix(su-l:session): session opened for user 
+  root by vbird(uid=500)
+<span class="term_note">5</span> Mar 16 16:02:22 www su: pam_unix(su-l:session): session closed for user root
+<span class="term_say">  |--日期/時間---|-H-|-----服務與相關函數-------|--訊息說明------&gt;</span>
+</pre></td></tr></table>
+
+		<p>我們拿第一筆資料來說明好了，該資料是說：『<span class="text_import2">在三月14日 (Mar 14) 的下午 15:38 分，由 
+		www 這部主機的 atd [PID 為 18701] 傳來的消息，這個消息是透過 pam_unix 
+		這個模組所提出的。訊息內容為 root (uid=0) 這個帳號已經開啟 atd 的活動了。</span>』有夠清楚吧！
+		那請您自行翻譯一下後面的 4 條訊息內容是什麼喔！</p>
+
+		<p>其實還有很多的資訊值得查閱的呢！尤其是 /var/log/messages 的內容。記得一個好的系統管理員，
+		要常常去『巡視』登錄檔的內容喔！尤其是發生底下幾種情況時：</p>
+		<ul>
+		<li>當你覺得系統似乎不太正常時；</li>
+		<li>某個 daemon 老是無法正常啟動時；</li>
+		<li>某個使用者老是無法登入時；</li>
+		<li>某個 demon 執行過程老是不順暢時；</li>
+		</ul>
+		<p>還有很多啦！反正覺得系統不太正常，就得要查詢查詢登錄檔就是了。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		提供一個鳥哥常做的檢查方式。當我老是無法成功的啟動某個服務時，我會在最後一次啟動該服務後，立即檢查登錄檔，
+		先 (1)找到現在時間所登錄的資訊『第一欄位』； (2)找到我想要查詢的那個服務『第三欄位』，
+		(3)最後再仔細的查閱第四欄位的資訊，來藉以找到錯誤點。
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="syslogd_conf"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">syslog 的設定檔：/etc/syslog.conf</span><br />
+	<div class="block2">
+		<p>什麼？登錄檔還有設定檔？喔！不是啦～是 syslogd 這個 daemon 的設定檔啦！
+		我們現在知道 syslogd 可以負責主機產生的各個資訊的登錄，而這些資訊本身是有『嚴重等級』之分的，
+		而且，這些資料最終要傳送到哪個檔案去是可以修改的呢，所以我們才會在一開頭的地方講說，
+		每個 Linux distributions 放置的登錄檔檔名可能會有所差異啊！</p>
+
+		<p>基本上， syslog 針對各種服務與訊息記錄在某些檔案的設定檔就是 <span class="text_import2">/etc/syslog.conf</span>，
+		這個檔案規定了『<span class="text_import2">(1)什麼服務 (2)的什麼等級訊息 (3)需要被記錄在哪裡(裝置或檔案)</span>』
+		這三個咚咚，所以設定的語法會是這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+服務名稱[.=!]訊息等級		訊息記錄的檔名或裝置或主機
+<span class="term_say"># 底下以 mail 這個服務產生的 info 等級為例：</span>
+mail.info			/var/log/maillog_info
+<span class="term_say"># 這一行說明：mail 服務產生的大於等於 info 等級的訊息，都記錄到 
+# /var/log/maillog_info 檔案中的意思。</span>
+</pre></td></tr></table>
+
+		<p>我們將上面的資料簡單的分為三部分來說明：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">服務名稱</li></ul>
+
+		<p>syslog 本身有規範一些服務，你可以透過這些服務來儲存系統的訊息。syslog 認識的服務主要有底下這些：
+		(可使用 man 3 syslog 查詢到相關的資訊)</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>服務類別</td><td>說明</td></tr>
+<tr><td align="center"><span class="text_import2">auth (authpriv)</span></td>
+	<td>主要與認證有關的機制，例如 login, ssh, su 等需要帳號/密碼的咚咚；</td></tr>
+<tr><td align="center"><span class="text_import2">cron</span></td><td>就是例行性工作排程 cron/at 等產生訊息記錄的地方；</td></tr>
+<tr><td align="center"><span class="text_import2">daemon</span></td><td>與各個 daemon 有關的訊息；</td></tr>
+<tr><td align="center"><span class="text_import2">kern</span></td><td>就是核心 (kernel) 產生訊息的地方；</td></tr>
+<tr><td align="center"><span class="text_import2">lpr</span></td><td>亦即是列印相關的訊息啊！</td></tr>
+<tr><td align="center"><span class="text_import2">mail</span></td><td>只要與郵件收發有關的訊息紀錄都屬於這個；</td></tr>
+<tr><td align="center"><span class="text_import2">news</span></td><td>與新聞群組伺服器有關的東西；</td></tr>
+<tr><td align="center"><span class="text_import2">syslog</span></td><td>就是 syslogd 這支程式本身產生的資訊啊！</td></tr>
+<tr><td align="center"><span class="text_import2">user, uucp, local0 ~ local7</span></td>
+	<td>與 Unix like 機器本身有關的一些訊息。</td></tr>
+</table>
+
+		<p>上面談到的都是 syslog 自行制訂的服務名稱，軟體開發商可以透過呼叫上述的服務名稱來記錄他們的軟體。
+		舉例來說， sendmail 與 postfix 及 dovecot 都是與郵件有關的軟體，這些軟體在設計登錄檔記錄時，都會主動呼叫 syslogd 
+		內的 mail 服務名稱 (LOG_MAIL)，所以上述三個軟體 (sendmail, postfix, dovecot) 產生的訊息在 syslog 
+		看起來，就會『是 mail 』類型的服務了。我們可以將這個概念繪製如底下的圖示來理解：</p>
+
+		<center><img src="0570syslog/syslog_daemon.gif" alt="syslog 所制訂的服務名稱與軟體呼叫的方式" 
+		title="syslog 所制訂的服務名稱與軟體呼叫的方式" border="0" /><br />
+		圖 2.2.1、 syslog 所制訂的服務名稱與軟體呼叫的方式<br /></center>
+
+		<p>另外，每種服務所產生的資料量其實差異是很大的，舉例來說， mail 的登錄檔訊息多的要命，
+		每一封信件進入後， mail 至少需要記錄『寄信人的資訊；與收信者的訊息』等等；
+		而如果是用來做為工作站主機的，那麼登入者 (利用 login 登錄主機處理事情)
+		的數量一定不少，那個 authpriv 所管轄的內容可就多的要命了。</p>
+
+		<p>為了讓不同的資訊放置到不同的檔案當中，好讓我們分門別類的進行登錄檔的管理，
+		所以囉，將各種類別的服務之登錄檔，記錄在不同的檔案裡面，就是我們 /etc/syslog.conf 
+		所要作的規範了！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">訊息等級</li></ul>
+
+		<p>同一個服務所產生的訊息也是有差別的，有啟動時僅通知系統而已的一般訊息 (information)，
+		有出現還不至於影響到正常運作的警告訊息 (warn) ，還有系統硬體發生嚴重錯誤時，所產生的重大問題訊息 (error 等等)；
+		訊息到底有多少種嚴重的等級呢？基本上，syslog 將訊息分為七個主要的等級，依序是這樣的(由不重要排列到重要訊息等級)：</p>
+
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="30">等級</td><td width="60">等級名稱</td><td>說明</td></tr>
+<tr><td align="center">1</td><td align="center"><span class="text_import2">info</span></td>
+	<td>僅是一些基本的訊息說明而已；</td></tr>
+<tr><td align="center">2</td><td align="center"><span class="text_import2">notice</span></td>
+	<td>比 info 還需要被注意到的一些資訊內容；</td></tr>
+<tr><td align="center">3</td><td align="center"><span class="text_import2">warning<br />(warn)</span></td>
+	<td>警示的訊息，可能有問題，但是還不至於影響到某個 daemon 運作的資訊；基本上，
+	info, notice, warn 這三個訊息都是在告知一些基本資訊而已，應該還不至於造成一些系統運作困擾；</td></tr>
+<tr><td align="center">4</td><td align="center"><span class="text_import2">err <br />(error)</span></td>
+	<td>一些重大的錯誤訊息，例如設定檔的某些設定值造成該服務服法啟動的資訊說明，
+	通常藉由 err 的錯誤告知，應該可以瞭解到該服務無法啟動的問題呢！</td></tr>
+<tr><td align="center">5</td><td align="center"><span class="text_import2">crit</span></td>
+	<td>比 error 還要嚴重的錯誤資訊，這個 crit 是臨界點 
+	(critical) 的縮寫，這個錯誤已經很嚴重了喔！</td></tr>
+<tr><td align="center">6</td><td align="center"><span class="text_import2">alert</span></td>
+	<td>警告警告，已經很有問題的等級，比 crit 還要嚴重！</td></tr>
+<tr><td align="center">7</td><td align="center"><span class="text_import2">emerg <br />(panic)</span></td>
+	<td>疼痛等級，意指系統已經幾乎要當機的狀態！
+	很嚴重的錯誤資訊了。通常大概只有硬體出問題，導致整個核心無法順利運作，就會出現這樣的等級的訊息吧！</td></tr>
+</table>
+
+		<p>除了這些有等級的訊息外，還有兩個特殊的等級，那就是 <span class="text_import2">debug(錯誤偵測等級) 
+		與 none (不需登錄等級)</span> 兩個，當我們想要作一些錯誤偵測，或者是忽略掉某些服務的資訊時，
+		就用這兩個咚咚吧！</p>
+
+		<p>特別留意一下在訊息等級之前還有 [.=!] 的連結符號喔！他代表的意思是這樣的：</p>
+
+		<ul>
+		<li><span class="text_import1" style="font-family: '細明體'">. </span>：代表『比後面還要高的等級 (含該等級)
+			都被記錄下來』的意思，例如： mail.info 代表只要是 mail
+			的資訊，而且該資訊等級高於 info (含 info 本身)時，就會被記錄下來的意思。</li>
+		<li><span class="text_import1" style="font-family: '細明體'">.=</span>：代表所需要的等級就是後面接的等級而已，
+			其他的不要！</li>
+		<li><span class="text_import1" style="font-family: '細明體'">.!</span>：代表不等於，
+			亦即是除了該等級外的其他等級都記錄。</li>
+		</ul>
+		
+		<p>一般來說，我們比較常使用的是『.』這個連結符號啦！^_^<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">訊息記錄的檔名或裝置或主機</li></ul>
+
+		<p>再來則是這個訊息要放置在哪裡的紀錄了。通常我們使用的都是記錄的檔案啦！但是也可以輸出到裝置呦！
+		例如印表機之類的！也可以記錄到不同的主機上頭去呢！底下就是一些常見的放置處：</p>
+
+		<ul>
+		<li>檔案的絕對路徑：通常就是放在 /var/log 裡頭的檔案啦！</li>
+		<li>印表機或其他：例如 /dev/lp0 這個印表機裝置</li>
+		<li>使用者名稱：顯示給使用者囉！</li>
+		<li>遠端主機：例如 @www.vbird.tsai 當然啦，要對方主機也能支援才行！</li>
+		<li>*：代表『目前在線上的所有人』，類似 <a href="0410accountmanager.php#uselinux_talk">wall</a> 
+			這個指令的意義！</li>
+		</ul><br />
+
+		<hr /><ul class="list1"><li class="text_import1">syslog.conf 語法練習</li></ul>
+
+		<p>基本上，整個 syslog 的設定檔就只是這樣而已，底下我們來思考一些例題，好讓你可以更清楚的知道如何設定 
+		syslogd 啊！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+如果我要將我的 mail 相關的資料給他寫入 /var/log/maillog 當中，那麼在 /etc/syslog.conf 的語法如何設計？
+</div>
+答：<div class="block2">
+基本的寫法是這樣的：
+<blockquote class="text_import2" style="font-family: '細明體'">mail.info　　　/var/log/maillog</blockquote>
+注意到上面喔，當我們的等級使用 info 時，那麼『任何大於 info 等級(含 info 這個等級)之上的訊息，
+都會被寫入到後面接的檔案之中！』這樣可以瞭解嗎？也就是說，我們可以將所有 mail 的登錄資訊都紀錄在
+/var/log/maillog 裡面的意思啦！
+</div>
+</td></tr></table><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+我要將新聞群組資料 (news) 及例行性工作排程 (cron) 的訊息都寫入到一個稱為
+/var/log/cronnews 的檔案中，但是這兩個程序的警告訊息則額外的記錄在 /var/log/cronnews.warn 中，
+那該如何設定我的 syslog.conf 呢？
+</div>
+答：<div class="block2">
+很簡單啦！既然是兩個程序，那麼只好以分號來隔開了，此外，由於第二個指定檔案中，我只要記錄警告訊息，
+因此設定上需要指定『.=』這個符號，所以語法成為了：
+<blockquote class="text_import2" style="font-family: '細明體'">
+news.*;cron.*　　　　　/var/log/cronnews<br />
+news.=warn;cron.=warn　/var/log/cronnews.warn</blockquote>
+上面那個『.=』就是在指定等級的意思啦！由於指定了等級，因此，只有這個等級的訊息才會被紀錄在這個檔案裡面呢！
+此外你也必須要注意，news 與 cron 的警告訊息也會寫入 /var/log/cronnews 內喔！
+</div>
+</td></tr></table><br />
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+我的 messages 這個檔案需要記錄所有的資訊，但是就是不想要記錄 cron, mail 及 news 的資訊，那麼應該怎麼寫才好？
+</div>
+答：<div class="block2">
+可以有兩種寫法，分別是：
+<blockquote class="text_import2" style="font-family: '細明體'">
+*.*;news,cron,mail.none　　　　　　/var/log/messages<br />
+*.*;news.none;cron.none;mail.none　/var/log/messages</blockquote>
+使用『,』分隔時，那麼等級只要接在最後一個即可，如果是以『;』來分的話，
+那麼就需要將服務與等級都寫上去囉！這樣會設定了吧！
+</div>
+</td></tr></table><br />
+
+		<a name="syslog_conf_default"></a>
+		<hr /><ul class="list1"><li class="text_import1">CentOS 5.x 預設的 syslog.conf 內容</li></ul>
+
+		<p>瞭解語法之後，我們來看一看 syslog 有哪些系統服務已經在記錄了呢？就是瞧一瞧 /etc/syslog.conf 這個檔案的預設內容囉！
+		(注意！如果需要將該行做為註解時，那麼就加上 # 符號就可以啦)</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 來自 CentOS 5.x 的相關資料</span>
+[root@www ~]# <span class="term_command">vim /etc/syslog.conf</span>
+<span class="term_write"><span class="term_note">  1</span> #kern.*                                              /dev/console
+<span class="term_note">  2</span> *.info;mail.none;news.none;authpriv.none;cron.none   /var/log/messages
+<span class="term_note">  3</span> authpriv.*                                           /var/log/secure
+<span class="term_note">  4</span> mail.*                                              -/var/log/maillog
+<span class="term_note">  5</span> cron.*                                               /var/log/cron
+<span class="term_note">  6</span> *.emerg                                              *
+<span class="term_note">  7</span> uucp,news.crit                                       /var/log/spooler
+<span class="term_note">  8</span> local7.*                                             /var/log/boot.log
+<span class="term_note">  9</span> news.=crit                                         /var/log/news/news.crit
+<span class="term_note"> 10</span> news.=err                                          /var/log/news/news.err
+<span class="term_note"> 11</span> news.notice                                        /var/log/news/news.notice</span>
+</pre></td></tr></table>
+
+		<p>上面總共僅有十一行設定值，每一行的意義是這樣的：</p>
+		<ol>
+		<li>#kern.*：只要是核心產生的訊息，全部都送到 console(終端機) 去。console 通常是由外部裝置連接到系統而來，
+		舉例來說，很多封閉型主機 (沒有鍵盤、螢幕的系統) 可以透過連接 RS232 連接口將訊息傳輸到外部的系統中，
+		例如以筆記型電腦連接到封閉主機的 RS232 插口。這個項目通常應該是用在系統出現嚴重問題而無法使用預設的螢幕觀察系統時，
+		可以透過這個項目來連接取得核心的訊息。(<a href="#ps1">註1</a>)<br /><br /></li>
+
+		<li>*.info;mail.none;news.none;authpriv.none;cron.none：由於 mail, news, authpriv, cron 等類別產生的訊息較多，
+		且已經寫入底下的數個檔案中，因此在 /var/log/messages 裡面就不記錄這些項目。除此之外的其他訊息都寫入 /var/log/messages 
+		中。這也是為啥我們說這個 messages 檔案很重要的緣故！<br /><br /></li>
+
+		<li>authpriv.*：認證方面的訊息均寫入 /var/log/secure 檔案；<br /><br /></li>
+
+		<li>mail.*：郵件方面的訊息則均寫入 /var/log/maillog 檔案；<br /><br /></li>
+
+		<li>cron.*：例行性工作排程均寫入 /var/log/cron 檔案；<br /><br /></li>
+
+		<li>*.emerg：當產生最嚴重的錯誤等級時，將該等級的訊息以 wall 的方式廣播給所有在系統登入的帳號得知，
+		要這麼做的原因是希望在線的使用者能夠趕緊通知系統管理員來處理這麼可怕的錯誤問題。<br /><br /></li>
+
+		<li>uucp,news.crit：uucp 是早期 Unix-like 系統進行資料傳遞的通訊協定，後來常用在新聞群組的用途中。 news
+		則是新聞群組。當新聞群組方面的資訊有嚴重錯誤時就寫入 /var/log/spooler 檔案中；<br /><br /></li>
+
+		<li>local7.*：將本機開機時應該顯示到螢幕的訊息寫入到 /var/log/boot.log 檔案中；<br /><br /></li>
+
+		<li>後面的 news.=crit、news.=err、news.notice 則主要在分別記錄新聞群組產生的不同等級的訊息。</li>
+		</ol>
+
+		<p>在上面的第四行關於 mail 的記錄中，<span class="text_import2">在記錄的檔案 /var/log/maillog 
+		前面還有個減號『 - 』是幹嘛用的？由於郵件所產生的訊息比較多，因此我們希望郵件產生的訊息先儲存在速度較快的記憶體中 
+		(buffer) ，等到資料量夠大了才一次性的將所有資料都填入磁碟內</span>，這樣將有助於登錄檔的存取性能。
+		只不過由於訊息是暫存在記憶體內，因此若不正常關機導致登錄資訊未回填到登錄檔中，可能會造成部分資料的遺失。</p>
+
+		<p>此外，每個 Linux distributions 的 syslog.conf 設定差異是頗大的，如果你想要找到相對應的登錄資訊時，
+		可得要查閱一下 /etc/syslog.conf 這個檔案才行！否則可能會發生分析到錯誤的資訊喔！舉例來說，
+		<a href="#analyze_vbird">鳥哥有自己寫一支分析登錄檔的 script</a>，這個 script 是依據 Red Hat 
+		系統預設的登錄檔所寫的，因此不同的 distributions 
+		想要使用這支程式時，就得要自行設計與修改一下 /etc/syslog.conf 才行喔！否則就可能會分析到錯誤的資訊囉。
+		那麼如果你有自己的需要而得要修訂登錄檔時，該如何進行？<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">自行增加登錄檔檔案功能</li></ul>
+
+		<p>如果你有其他的需求，所以需要特殊的檔案來幫你記錄時，呵呵！別客氣，千萬給他記錄在
+		/etc/syslog.conf 當中，如此一來，你就可以重複的將許多的資訊記錄在不同的檔案當中，以方便你的管理呢！
+		讓我們來作個練習題吧！如果你想要讓『所有的資訊』都額外寫入到 /var/log/admin.log 這個檔案時，
+		你可以怎麼作呢？先自己想一想，並且作一下，再來看看底下的作法啦！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先設定好所要建立的檔案設置！</span>
+[root@www ~]# <span class="term_command">vim /etc/syslog.conf</span>
+<span class="term_write"># Add by VBird 2009/04/08       <span class="term_note">&lt;==再次強調，自己修改的時候加入一些說明</span>
+*.info      /var/log/admin.log</span>  <span class="term_note">&lt;==有用的是這行啦！</span>
+
+<span class="term_hd"># 2. 重新啟動 syslog 呢！</span>
+[root@www ~]# <span class="term_command">/etc/init.d/syslog restart</span>
+[root@www ~]# <span class="term_command">ll /var/log/admin.log</span>
+-rw------- 1 root root 118 Apr  8 13:50 /var/log/admin.log
+<span class="term_say"># 瞧吧！建立了這個登錄檔出現囉！</span>
+</pre></td></tr></table>
+
+		<p>很簡單吧！如此一來，所有的資訊都會寫入 /var/log/admin.log 裡面了！</p>
+	</div>
+
+	<hr /><a name="syslogd_secure"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">登錄檔的安全性設置</span><br />
+	<div class="block2">
+		<p>好了，由上一個小節裡面我們知道了 syslog.conf 的設定，也知道了登錄檔內容的重要性了，
+		所以，如果幻想你是一個很厲害的駭客，想利用他人的電腦幹壞事，然後又不想留下證據，
+		你會怎麼作？對啦！就是離開的時候將屁股擦乾淨，將所有可能的訊息都給他抹煞掉，
+		所以<span class="text_import2">第一個動腦筋的地方就是登錄檔的清除工作啦</span>～
+		如果你的登錄檔不見了，那該怎辦？</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		哇！鳥哥教人家幹壞事……喂！不要亂講話～俺的意思是，如果改天你發現你的登錄檔不翼而飛了，
+		或者是發現你的登錄檔似乎不太對勁的時候，最常發現的就是網友常常會回報說，他的
+		/var/log 這個目錄『不見了！』不要笑！這是真的事情！請記得，『趕快清查你的系統！』
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>傷腦筋呢！有沒有辦法防止登錄檔被刪除？或者是被 root 自己不小心變更呢？有呀！拔掉網路線或電源線就好了……呵呵！
+		別擔心，基本上，我們可以透過一個隱藏的屬性來設定你的登錄檔，成為『
+		<span class="text_import2">只可以增加資料，但是不能被刪除</span>
+		』的狀態，那麼或許可以達到些許的保護！不過，如果你的
+		root 帳號被破解了，那麼底下的設定還是無法保護的，因為你要記得『 <span class="text_import2">root
+		是可以在系統上面進行任何事情的</span> 』，因此，請將你的 root 
+		這個帳號的密碼設定的安全一些！千萬不要輕忽這個問題呢！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		為什麼登錄檔還要防止被自己 (root) 不小心所修改過呢？
+		鳥哥在教 Linux 的課程時，我的學生常常會舉手說：『老師，我的登錄檔不能記錄資訊了！糟糕！是不是被入侵了啊？』
+		怪怪！明明是電腦教室的主機，使用的是 Private IP 而且學校計中還有抵擋機制，不可能被攻擊吧？
+		查詢了才知道原來同學很喜歡使用『 :wq 』來離開 vim 的環境，但是 syslog 的登錄檔只要『被編輯過』就無法繼續記錄！
+		所以才會導致不能記錄的問題。此時你得要 (1)改變使用 vim 的習慣； (2)重新啟動 syslog 讓他再繼續提供服務才行喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>既然如此，那麼我們就來處理一下隱藏屬性的東東吧！我們在<a 
+		href="/linux_basic/0220filemanager.php">第七章</a>談到過 <a href="/linux_basic/0220filemanager.php#lsattr">lsattr</a>
+		與 <a href="/linux_basic/0220filemanager.php#chattr">chattr</a>
+		這兩個東西啦！如果將一個檔案以 chattr 設定 i 這個屬性時，那麼該檔案連 root
+		都不能殺掉！而且也不能新增資料，嗯！真安全！但是，如此一來登錄檔的功能豈不是也就消失了？
+		因為沒有辦法寫入呀！所以囉，<span class="text_import2">我們要使用的是
+		a 這個屬性</span>！你的登錄檔如果設定了這個屬性的話，那麼
+		<span class="text_import2">他將只能被增加，而不能被刪除</span>！嗯！
+		這個項目就非常的符合我們登錄檔的需求啦！因此，你可以這樣的增加你的登錄檔的隱藏屬性。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		請注意，底下的這個 chattr 的設定狀態：『僅適合已經對 Linux 系統很有概念的朋友』來設定，
+		對於新手來說，建議你直接使用系統的預設值就好了，免得到最後登錄檔無法寫入～
+		那就比較糗一點！ @_@
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chattr +a /var/log/messages</span>
+[root@www ~]# <span class="term_command">lsattr /var/log/messages</span>
+-----a------- /var/log/messages
+</pre></td></tr></table>
+
+		<p>加入了這個屬性之後，你的 /var/log/messages 登錄檔從此就僅能被增加，而不能被刪除，直到
+		root 以『 chattr -a /var/log/messages 』取消這個 a 的參數之後，才能被刪除或移動喔！</p>
+
+		<p>雖然，為了你登錄檔的資訊安全，這個 chattr 的 +a 旗標可以幫助你維護好這個檔案，
+		不過，如果你的系統已經被取得 root 的權限，而既然 root 可以下達 chattr -a 來取消這個旗標，
+		所以囉，還是有風險的啦！此外，前面也稍微提到，新手最好還是先不要增加這個旗標，
+		很容易由於自己的忘記，導致系統的重要訊息無法記錄呢。</p>
+
+		<p>基本上，鳥哥認為，這個旗標最大的用處除了在保護你登錄檔的資料外，
+		他還可以幫助你避免掉不小心寫入登錄檔的狀況喔。要注意的是，當『
+		<span class="text_import2">你不小心 "手動" 更動過登錄檔後，例如那個 /var/log/messages ，
+		你不小心用 vi 開啟他，離開卻下達 :wq 的參數，呵呵！那麼該檔案未來將不會再繼續進行登錄動作！</span> 
+		』這個問題真的很常發生！由於你以 vi 儲存了登錄檔，則 syslogd 會誤判為該檔案已被更動過，
+		將導致 syslogd 不再寫入該檔案新的內容～很傷腦筋的！</p>
+
+		<p>要讓該登錄檔可以繼續寫入，你只要重新啟動 syslog (/etc/init.d/syslog restart) 即可。
+		不過，總是比較麻煩。所以啊，如果你針對登錄檔下達 chattr +a 的參數，嘿嘿！
+		未來你就不需要害怕不小心更動到該檔案了！因為無法寫入嘛！除了可以新增之外～ ^_^</p>
+
+		<p>不過，也因為這個 +a 的屬性讓該檔案無法被刪除與修改，所以囉，當我們進行登錄檔案輪替時 (logrotate)
+		，將會無法移動該登錄檔的檔名呢！所以會造成很大的困擾。這個困擾雖然可以使用 logrotate 
+		的設定檔來解決，但是，還是先將登錄檔的 +a 旗標拿掉吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">chattr -a /var/log/messages</span>
+</pre></td></tr></table>
+	</div>
+
+	<hr /><a name="syslogd_server"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">登錄檔伺服器的設定</span><br />
+	<div class="block2">
+		<p>我們在之前稍微提到的，在 syslog.conf 檔案當中，可以將登錄資料傳送到印表機或者是遠端主機上面去。這樣做有什麼意義呢？
+		如果你將登錄資訊直接傳送到印表機上面的話，那麼萬一不小心你的系統被 cracker 所入侵，
+		他也將你的 /var/log/ 砍掉了，怎麼辦？沒關係啊！反正你已經將重要資料直接以印表機記錄起來了，
+		嘿嘿！他是無法逃開的啦！^_^</p>
+
+		<p>再想像一個環境，你的辦公室內有十部 Linux 主機，每一部負責一個網路服務，
+		你為了要瞭解每部主機的狀態，因此，你常常需要登入這十部主機去查閱你的登錄檔～
+		哇！光用想的，每天要進入十部主機去查資料，想到就煩～沒關係～這個時候我們可以讓某一部主機當成
+		『登錄檔伺服器』，用他來記錄所有的十部 linux 主機的資訊，嘿嘿！這樣我就直接進入一部主機就可以了！
+		省時又省事，真方便～</p>
+
+		<p>那要怎麼達到這樣的功能呢？很簡單啦，我們 CentOS 5.x 預設的 syslog 本身就已經具有這個登錄檔伺服器的功能了，
+		只是預設並沒有啟動該功能而已。你可以透過 man syslogd 去查詢一下相關的選項就能夠知道啦！
+		既然是登錄檔伺服器，那麼我們的 Linux 主機當然會啟動一個埠口來監聽了，那個預設的埠口就是 UDP 的 514 喔！</p>
+
+		<center><img src="0570syslog/syslog_server.gif" alt="登錄檔伺服器的架構" 
+		title="登錄檔伺服器的架構" border="0" /><br />
+		圖 2.4.1、登錄檔伺服器的架構<br /></center>
+
+		<p>如上圖所示，伺服器會啟動監聽的埠口，用戶端則將登錄檔再轉出一份送到伺服器去。
+		而既然是登錄檔『伺服器』，所以當然有伺服器與用戶端 (client) 囉！這兩者的設定分別是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. Server 端：修改 syslogd 的啟動設定檔，通常在 /etc/sysconfig 內！</span>
+[root@www ~]# <span class="term_command">vim /etc/sysconfig/syslog</span>
+<span class="term_say"># 找到底下這一行：</span>
+SYSLOGD_OPTIONS="-m 0"
+<span class="term_say"># 改成底下這樣子！</span>
+SYSLOGD_OPTIONS="-m 0 <span class="term_write">-r</span>"
+
+<span class="term_hd"># 2. 重新啟動與觀察 syslogd 喔！</span>
+[root@www ~]# <span class="term_command">/etc/init.d/syslog restart</span>
+[root@www ~]# <span class="term_command">netstat -lunp | grep syslog</span>
+Proto Recv-Q Send-Q Local Address  Foreign Address State   PID/Program name
+udp        0      0 0.0.0.0:<span class="term_write">514</span>    0.0.0.0:*               13981/<span class="term_write">syslogd</span>
+<span class="term_say"># 嘿嘿！你的登錄檔主機已經設定妥當囉！很簡單吧！</span>
+</pre></td></tr></table>
+
+		<p>透過這個簡單的動作，你的 Linux 主機已經可以接收來自其他主機的登錄資訊了！
+		當然啦，你必須要知道網路方面的相關基礎，這裡鳥哥只是先介紹，
+		未來瞭解了網路相關資訊後，再回頭來這裡瞧一瞧先！ ^_^</p>
+
+		<p>至於 client 端的設定就簡單多了！只要指定某個資訊傳送到這部主機即可！
+		舉例來說，我們的登錄檔伺服器 IP 為 192.168.1.100 ，而 client 端希望所有的資料都送給主機，
+		所以，可以在 /etc/syslog.conf 裡面新增這樣的一行：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim /etc/syslog.conf</span>
+<span class="term_write">*.*       @192.168.1.100</span>
+</pre></td></tr></table>
+
+		<p>再重新啟動 syslog 後，立刻就搞定了！而未來主機上面的登錄檔當中，每一行的『主機名稱』就會顯示來自不同主機的資訊了。
+		很簡單吧！ ^_^。接下來，讓我們來談一談，那麼如何針對登錄檔來進行輪轉 (rotate) 呢？</p>
+	</div>
+</div>
+
+
+<hr /><a name="rotate"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">登錄檔的輪替(logrotate)</span><br />
+<div class="block1">
+	<p>假設我們已經將登錄資料寫入了記錄檔中了，也已經利用 chattr 設定了 +a 這個屬性了，那麼該如何進行
+	logrotate 的工作呢？這裡請特別留意的是：『<span class="text_import2">syslog 利用的是 daemon 的方式來啟動的，
+	當有需求的時候立刻就會被執行的，但是 logrotate 卻是在規定的時間到了之後才來進行登錄檔的輪替，
+	所以這個 logrotate 程序當然就是掛在 <a href="/linux_basic/0430cron.php">cron</a> 底下進行的呦！</span>』
+	仔細看一下 /etc/cron.daily/ 裡面的檔案，嘿嘿～看到了吧！ /etc/cron.daily/logrotate 
+	就是記錄了每天要進行的登錄檔輪替的行為啦！ ^_^！底下我們就來談一談怎麼樣設計這個 logrotate 吧！<br /><br /></p>
+
+	<hr /><a name="rotate_config"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">logrotate 的設定檔</span><br />
+	<div class="block2">
+		<p>既然 logrotate 主要是針對登錄檔來進行輪替的動作，所以囉，他當然必須要記載『
+		在什麼狀態下才將登錄檔進行輪替』的設定啊！那麼 logrotate 這個程式的參數設定檔在哪裡呢？呵呵！那就是：</p>
+
+		<ul class="text_import2" style="font-family: '細明體'">
+		<li>/etc/logrotate.conf</li>
+		<li>/etc/logrotate.d/</li>
+		</ul>
+
+		<p>那個 logrotate.conf 才是主要的參數檔案，至於 logrotate.d 是一個目錄，
+		該目錄裡面的所有檔案都會被主動的讀入 /etc/logrotate.conf 當中來進行！另外，在
+		/etc/logrotate.d/ 裡面的檔案中，如果沒有規定到的一些細部設定，則以 /etc/logrotate.conf
+		這個檔案的規定來指定為預設值！</p>
+
+		<p>好了，剛剛我們提到 logrotate 的主要功能就是將舊的登錄檔案移動成舊檔，
+		並且重新建立一個新的空的檔案來記錄，他的執行結果有點類似底下的圖示：</p>
+
+		<center><img src="0570syslog/logrotate.gif" alt="登錄檔進行 logrotate 的結果" 
+		title="登錄檔進行 logrotate 的結果" border="0" /><br />
+		圖 3.1.1、 登錄檔進行 logrotate 的結果<br /></center>
+
+		<p>由上面的圖示我們可以清楚的知道，當第一次執行完 rotate 之後，原本的 messages 會變成 messages.1
+		而且會製造一個空的 messages 給系統來儲存登錄檔。而第二次執行之後，則 messages.1 會變成
+		messages.2 而 messages 會變成 messages.1 ，又造成一個空的 messages 
+		來儲存登錄檔！那麼如果我們僅設定保留三個登錄檔而已的話，那麼執行第四次時，則
+		messages.3 這個檔案就會被刪除，並由後面的較新的保存登錄檔所取代！基本的工作就是這樣啦！</p>
+
+		<p>那麼多久進行一次這樣的 logrotate 工作呢？這些都記錄在 logrotate.conf	裡面，我們來看一下預設的 
+		logrotate 的內容吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vim /etc/logrotate.conf</span>
+<span class="term_say"># 底下的設定是 "logrotate 的預設設定值" ，如果個別的檔案設定了其他的參數，
+# 則將以個別的檔案設定為主，若該檔案沒有設定到的參數則以這個檔案的內容為預設值！</span>
+
+<span class="term_write">weekly    <span class="term_note">&lt;==預設每個禮拜對登錄檔進行一次 rotate 的工作</span>
+rotate 4  <span class="term_note">&lt;==保留幾個登錄檔呢？預設是保留四個！</span>
+create    <span class="term_note">&lt;==由於登錄檔被更名，因此建立一個新的來繼續儲存之意！</span>
+#compress <span class="term_note">&lt;==被更動的登錄檔是否需要壓縮？如果登錄檔太大則可考慮此參數啟動</span>
+
+include /etc/logrotate.d
+<span class="term_say"># 將 /etc/logrotate.d/ 這個目錄中的所有檔案都讀進來執行 rotate 的工作！</span>
+
+/var/log/wtmp {       <span class="term_note">&lt;==僅針對 /var/log/wtmp 所設定的參數</span>
+    monthly           <span class="term_note">&lt;==每個月一次，取代每週！</span>
+    minsize 1M        <span class="term_note">&lt;==檔案容量一定要超過 1M 後才進行 rotate (略過時間參數)</span>
+    create 0664 root utmp <span class="term_note">&lt;==指定新建檔案的權限與所屬帳號/群組</span>
+    rotate 1          <span class="term_note">&lt;==僅保留一個，亦即僅有 wtmp.1 保留而已。</span>
+}</span>
+<span class="term_say"># 這個 wtmp 可記錄登入者與系統重新開機時的時間與來源主機及登入期間的時間。
+# 由於具有 minsize 的參數，因此不見得每個月一定會進行一次喔！要看檔案容量。
+# 由於僅保留一個登錄檔而已，不滿意的話可以將他改成 rotate 5 吧！</span>
+</pre></td></tr></table>
+
+		<p>由這個檔案的設定我們可以知道 /etc/logrotate.d 其實就是由 /etc/logrotate.conf
+		所規劃出來的目錄，所以，其實我們可以將所有的資料都給他寫入 /etc/logrotate.conf
+		即可，但是這樣一來這個檔案就實在是太複雜了，尤其是當我們使用很多的服務在系統上面時，
+		每個服務都要去修改 /etc/logrotate.conf 的設定也似乎不太合理～
+		所以，如果獨立出來一個目錄，那麼每個以 RPM 打包方式所建立的服務的登錄檔輪替設定，
+		就可以獨自成為一個檔案，並且放置到 /etc/logrotate.d/ 當中即可，真是方便又合理的做法啊！ ^_^</p>
+
+		<p>一般來說，這個 /etc/logrotate.conf 是『預設的輪替狀態』而已，
+		我們的各個服務都可以擁有自己的登錄檔輪替設定，你也可以自行修改成自己喜歡的樣式啊！
+		例如，如果你的系統的空間夠大，並且擔心除錯以及駭客的問題，那麼可以：</p>
+
+		<ul class="text_import2">
+		<li>將 rotate 4 改成 rotate 9 左右，以保存較多的備份檔案；</li>
+		<li>大部分的登錄檔不需要 compress 囉！但是空間太小就需要 compress ！尤其是很佔硬碟空間的 httpd 更需要 compress 的！</li>
+		</ul>
+
+		<p>好了，上面我們大致介紹了 /var/log/wtmp 這個檔案的設定，現在你知道了 logrotate.conf 的設定語法是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+登錄檔的絕對路徑檔名 ... {
+	個別的參數設定值，如 monthly, compress 等等
+}
+</pre></td></tr></table>
+
+		<p>底下我們再以 /etc/logrotate.d/syslog 這個輪替 syslog 服務的檔案，來看看該如何設定他的 rotate 呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/logrotate.d/syslog</span>
+/var/log/messages /var/log/secure /var/log/maillog /var/log/spooler \
+/var/log/boot.log /var/log/cron {
+  <u>sharedscripts</u>
+  <u>postrotate</u>
+    /bin/kill -HUP `cat /var/run/syslogd.pid 2&gt; /dev/null` 2&gt; /dev/null || true
+    /bin/kill -HUP `cat /var/run/rsyslogd.pid 2&gt; /dev/null` 2&gt; /dev/null || true
+  <u>endscript</u>
+}
+</pre></td></tr></table>
+
+		<p>在上面的語法當中，我們知道正確的 logrotate 的寫法為：</p>
+		<ul>
+		<li><span class="text_import2">檔名</span>：被處理的登錄檔絕對路徑檔名寫在前面，可以使用空白字元分隔多個登錄檔；</li>
+		<li><span class="text_import2">參數</span>：上述檔名進行輪替的參數使用 { } 包括起來；</li>
+		<li><span class="text_import2">執行腳本</span>：可呼叫外部指令來進行額外的命令下達，這個設定需與 
+			sharedscripts .... endscript 設定合用才行。至於可用的環境為：<br />
+			<ul>
+			<li><span class="text_import2">prerotate</span>：在啟動 logrotate 
+			之前進行的指令，例如修改登錄檔的屬性等動作；</li>
+			<li><span class="text_import2">postrotate</span>：在做完 logrotate 之後啟動的指令，例如重新啟動
+				(kill -HUP) 某個服務！</li>
+			<li>Prerotate 與 postrotate 對於已加上特殊屬性的檔案處理上面，是相當重要的執行程序！</li>
+			</ul></li>
+		</ul>
+
+		<p>那麼 /etc/logrotate.d/syslog 內設定的六個檔案的輪替功能就變成了：</p>
+
+		<ul>
+		<li>該設定只對 /var/log/ 內的 messages, secure, maillog, spooler, boot.log, cron 有效；</li>
+		<li>登錄檔輪替每週一次、保留四個、且輪替下來的登錄檔不進行壓縮(未更改預設值)；</li>
+		<li>輪替完畢後 (postrotate) 取得 syslog 的 PID 後，以 kill -HUP 重新啟動 syslogd </li>
+		</ul>
+
+		<p>假設我們有針對 /var/log/messages 這個檔案增加 chattr +a 的屬性時，
+		依據 logrotate 的工作原理，我們知道，這個 /var/log/messages 將會被更名成為 
+		/var/log/messages.1 才是。但是由於加上這個 +a 的參數啊，所以更名是不可能成功的！
+		那怎麼辦呢？呵呵！就利用 prerotate 與 postrotate 來進行登錄檔輪替前、後所需要作的動作啊！
+		果真如此時，那麼你可以這樣修改一下這個檔案喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/logrotate.d/syslog</span>
+/var/log/messages /var/log/secure /var/log/maillog /var/log/spooler \
+/var/log/boot.log /var/log/cron {
+  sharedscripts
+  <span class="term_write">prerotate
+    /usr/bin/chattr -a /var/log/messages
+  endscript
+  sharedscripts</span>
+  postrotate
+    /bin/kill -HUP `cat /var/run/syslogd.pid 2&gt; /dev/null` 2&gt; /dev/null || true
+    /bin/kill -HUP `cat /var/run/rsyslogd.pid 2&gt; /dev/null` 2&gt; /dev/null || true
+    <span class="term_write">/usr/bin/chattr +a /var/log/message</span>
+  endscript
+}
+</pre></td></tr></table>
+
+		<p>看到否？就是先給他去掉 a 這個屬性，讓登錄檔 /var/log/messages 可以進行輪替的動作，
+		然後執行了輪替之後，再給他加入這個屬性！請特別留意的是，那個
+		/bin/kill -HUP ... 的意義，這一行的目的在於將系統的 syslogd
+		重新以其參數檔 (syslog.conf) 的資料讀入一次！也可以想成是 reload 的意思啦！
+		由於我們建立了一個新的空的紀錄檔，如果不執行此一行來重新啟動服務的話，
+		那麼記錄的時候將會發生錯誤呦！(請回到<a href="/linux_basic/0440processcontrol.php">第十七章</a>讀一下
+		kill 後面的 signal 的內容說明)</p>
+	</div>
+
+	<hr /><a name="rotate_command"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實際測試 logrotate 的動作</span><br />
+	<div class="block2">
+		<p>好了，設定完成之後，我們來測試看看這樣的設定是否可行呢？給他執行底下的指令：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">logrotate [-vf] logfile</span>
+<span class="term_say">選項與參數：
+-v  ：啟動顯示模式，會顯示 logrotate 運作的過程喔！
+-f  ：不論是否符合設定檔的資料，強制每個登錄檔都進行 rotate 的動作！</span>
+
+<span class="term_hd">範例一：執行一次 logrotate 看看整個流程為何？</span>
+[root@www ~]# <span class="term_command">logrotate -v /etc/logrotate.conf</span>
+reading config file /etc/logrotate.conf <span class="term_note">&lt;==讀取主要設定檔</span>
+including /etc/logrotate.d              <span class="term_note">&lt;==呼叫外部的設定</span>
+reading config file acpid               <span class="term_note">&lt;==就是外部設定啊！</span>
+<span class="term_say">....(中間省略)....</span>
+Handling 21 logs                        <span class="term_note">&lt;==共有 21 個登錄檔被記錄</span>
+<span class="term_say">....(中間省略)....</span>
+rotating pattern: /var/log/messages /var/log/secure /var/log/maillog \
+/var/log/spooler /var/log/boot.log /var/log/cron  weekly (4 rotations)
+empty log files are rotated, old logs are removed
+considering log /var/log/messages       <span class="term_note">&lt;==開始處理 messages</span>
+  log does not need rotating            <span class="term_note">&lt;==因為時間未到，不需要更動！</span>
+<span class="term_say">....(底下省略)....</span>
+
+<span class="term_hd">範例二：強制進行 logrotate 的動作</span>
+[root@www ~]# <span class="term_command">logrotate -vf /etc/logrotate.conf</span>
+<span class="term_say">....(前面省略)....</span>
+<span style="font-size: 9pt">rotating log /var/log/messages, log-&gt;rotateCount is 4
+renaming /var/log/messages.4 to /var/log/messages.5 (rotatecount 4, logstart 1, i 4),
+renaming /var/log/messages.3 to /var/log/messages.4 (rotatecount 4, logstart 1, i 3),
+renaming /var/log/messages.2 to /var/log/messages.3 (rotatecount 4, logstart 1, i 2),
+renaming /var/log/messages.1 to /var/log/messages.2 (rotatecount 4, logstart 1, i 1),
+renaming /var/log/messages.0 to /var/log/messages.1 (rotatecount 4, logstart 1, i 0),
+old log /var/log/messages.0 does not exist</span>
+<span class="term_say">....(底下省略)....</span>
+<span class="term_say"># 看到否？整個 rotate 的動作就是這樣一步一步進行的～</span>
+
+[root@www ~]# <span class="term_command">ll /var/log/messages*; lsattr /var/log/messages</span>
+-rw------- 1 root root    63 Apr  8 15:19 /var/log/messages
+-rw------- 1 root root   670 Apr  8 14:22 /var/log/messages.1
+-rw------- 1 root root 24984 Apr  1 19:26 /var/log/messages.2
+-rw------- 1 root root  1911 Mar 28 11:32 /var/log/messages.3
+-rw------- 1 root root 25193 Mar 22 04:02 /var/log/messages.4
+-----a------- /var/log/messages <span class="term_note">&lt;==主動加入 a 的隱藏屬性囉！</span>
+</pre></td></tr></table>
+
+		<p>上面那個 -f 具有『強制執行』的意思，如果一切的設定都沒有問題的話，那麼理論上，你的
+		/var/log 這個目錄就會起變化囉！而且應該不會出現錯誤訊息才對！嘿嘿！這樣就
+		OK 了！很棒不是嗎？！</p>
+
+		<p>由於 logrotate 的工作已經加入 crontab 裡頭了！所以現在每天系統都會自動的給他查看
+		logrotate 囉！不用擔心的啦！只是要注意一下那個 /var/log/messages 裡頭是否常常有類似底下的字眼：</p>
+		<blockquote class="text_import2" style="font-family:'細明體'">
+		Apr  8 15:19:47 www syslogd 1.4.1: restart (remote reception).</blockquote>
+
+		<p>這說明的是 syslogd 重新啟動的時間啦 (就是因為 /etc/logrotate.d/syslog 的設定之緣故！)
+		底下我們來進行一些例題的練習，讓你更詳細的瞭解 logrotate 的功用啊！</p>
+	</div>
+
+	<hr /><a name="rotate_user"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">自訂登錄檔的輪替功能</span><br />
+	<div class="block2">
+		<p>假設前提是這樣的，前一小節當中，假設你已經建立了 /var/log/admin.log 這個檔案，
+		現在，你想要將該檔案加上 +a 這個隱藏標籤，而且設定底下的相關資訊：</p>
+
+		<ul>
+		<li>登錄檔輪替一個月進行一次；</li>
+		<li>該登錄檔若大於 10MB 時，則主動進行輪替，不需要考慮一個月的期限；</li>
+		<li>保存五個備份檔案；</li>
+		<li>備份檔案需要壓縮</li>
+		</ul>
+
+		<p>那你可以怎麼樣設定呢？呵呵～很簡單啊！看看底下的動作吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先建立 +a 這個屬性啊！</span>
+[root@www ~]# <span class="term_command">chattr +a /var/log/admin.log</span>
+[root@www ~]# <span class="term_command">lsattr /var/log/admin.log</span>
+-----a------- /var/log/admin.log
+[root@www ~]# <span class="term_command">mv /var/log/admin.log /var/log/admin.log.1</span>
+mv: cannot move `/var/log/admin.log' to `/var/log/admin.log.1': 
+Operation not permitted
+<span class="term_say"># 這裡確定了加入 a 的隱藏屬性！所以 root 無法移動此登錄檔！</span>
+
+<span class="term_hd"># 2. 開始建立 logrotate 的設定檔，增加一個檔案在 /etc/logrotate.d 內就對了！</span>
+[root@www ~]# <span class="term_command">vi /etc/logrotate.d/admin</span>
+<span class="term_write"># This configuration is from VBird 2009/04/08
+/var/log/admin.log {
+        monthly   <span class="term_note">&lt;==每個月進行一次</span>
+        size=10M  <span class="term_note">&lt;==檔案容量大於 10M 則開始處置</span>
+        rotate 5  <span class="term_note">&lt;==保留五個！</span>
+        compress  <span class="term_note">&lt;==進行壓縮工作！</span>
+        sharedscripts
+        prerotate
+                /usr/bin/chattr -a /var/log/admin.log
+        endscript
+        sharedscripts
+        postrotate
+                /usr/bin/killall -HUP syslogd
+                /usr/bin/chattr +a /var/log/admin.log
+        endscript
+}</span>
+
+<span class="term_hd"># 3. 測試一下 logrotate 相關功能的資訊顯示：</span>
+[root@www ~]# <span class="term_command">logrotate -v /etc/logrotate.conf</span>
+<span class="term_say">....(前面省略)....</span>
+rotating pattern: /var/log/admin.log  10485760 bytes (5 rotations)
+empty log files are rotated, old logs are removed
+considering log /var/log/admin.log
+  log does not need rotating
+not running prerotate script, since no logs will be rotated
+not running postrotate script, since no logs were rotated
+<span class="term_say">....(底下省略)....
+# 因為還不足一個月，檔案也沒有大於 10M，所以不需進行輪替！</span>
+
+<span class="term_hd"># 4. 測試一下強制 logrotate 與相關功能的資訊顯示：</span>
+[root@www ~]# <span class="term_command">logrotate -vf /etc/logrotate.d/admin</span>
+<span style="font-size: 9pt">reading config file /etc/logrotate.d/admin
+reading config info for /var/log/admin.log
+
+Handling 1 logs
+
+rotating pattern: /var/log/admin.log  forced from command line (5 rotations)
+empty log files are rotated, old logs are removed
+considering log /var/log/admin.log
+  log needs rotating
+rotating log /var/log/admin.log, log-&gt;rotateCount is 5
+renaming /var/log/admin.log.5.gz to /var/log/admin.log.6.gz (rotatecount 5, logstart 1, i 5),
+old log /var/log/admin.log.5.gz does not exist
+renaming /var/log/admin.log.4.gz to /var/log/admin.log.5.gz (rotatecount 5, logstart 1, i 4),
+old log /var/log/admin.log.4.gz does not exist
+renaming /var/log/admin.log.3.gz to /var/log/admin.log.4.gz (rotatecount 5, logstart 1, i 3),
+old log /var/log/admin.log.3.gz does not exist
+renaming /var/log/admin.log.2.gz to /var/log/admin.log.3.gz (rotatecount 5, logstart 1, i 2),
+old log /var/log/admin.log.2.gz does not exist
+renaming /var/log/admin.log.1.gz to /var/log/admin.log.2.gz (rotatecount 5, logstart 1, i 1),
+old log /var/log/admin.log.1.gz does not exist
+renaming /var/log/admin.log.0.gz to /var/log/admin.log.1.gz (rotatecount 5, logstart 1, i 0),
+old log /var/log/admin.log.0.gz does not exist
+log /var/log/admin.log.6.gz doesn't exist -- won't try to dispose of it
+running prerotate script
+renaming /var/log/admin.log to /var/log/admin.log.1
+running postrotate script
+compressing log with: /bin/gzip</span>
+
+
+[root@www ~]# <span class="term_command">lsattr /var/log/admin.log*</span>
+-----a------- /var/log/admin.log
+------------- /var/log/admin.log.1.gz  <span class="term_note">&lt;==有壓縮過喔！</span>
+</pre></td></tr></table>
+
+		<p>看到了嗎？透過這個方式，我們可以建立起屬於自己的 logrotate 設定檔案，
+		很簡便吧！尤其是要注意的， /etc/syslog.conf 與 /etc/logrotate.d/* 
+		檔案常常要搭配起來，例如剛剛我們提到的兩個案例中所建立的 /var/log/admin.log
+		就是一個很好的例子～建立後，還要使用 logrotate 來輪替啊！ ^_^</p>
+	</div>
+</div>
+
+
+<hr /><a name="analyze"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">分析登錄檔</span><br />
+<div class="block1">
+	<p>登錄檔的分析是很重要的！你可以自行以 vi 進入登錄檔去查閱相關的資訊。而系統也提供一些軟體可以讓你從登錄檔中取得資料，
+	例如之前談過的 last, lastlog, dmesg 等等指令。不過，這些資料畢竟都非常的分散，如果你想要一口氣讀取所有的登錄資訊，
+	其實有點困擾的。不過，好在 CentOS 有提供 logwatch 這個登錄檔分析程式，你可以藉由該程式來瞭解登錄檔資訊。
+	此外，鳥哥也依據 Red Hat 系統的 syslog 寫了一支小程式給大家使用喔！<br /><br /></p>
+
+	<hr /><a name="logwatch"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">CentOS 預設提供的 logwatch</span><br />
+	<div class="block2">
+		<p>雖然有一些有用的系統指令，不過，要瞭解系統的狀態，還是得要分析整個登錄檔才行～
+		事實上，目前已經有相當多的登錄檔分析工具，例如 CentOS 5.x 上面預設的 logwatch 這個套件所提供的分析工具，
+		他會每天分析一次登錄檔案，並且將資料以 email 的格式寄送給 root 呢！
+		你也可以直接到 logwatch 的官方網站上面看看：</p>
+
+		<ul><li><a href="http://www.logwatch.org/" target="_blank">http://www.logwatch.org/</a></li></ul>
+
+		<p>logwatch 分析的結果如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mail</span>
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/root": 433 messages 433 new
+<span style="font-size: 9pt">&gt;N  1 logwatch@www.vbird.t  Fri Sep  5 11:42  43/1542  "Logwatch for www.vbird.tsai (Linux)"
+ N  2 logwatch@www.vbird.t  Sat Sep  6 15:34  92/2709  "Logwatch for www.vbird.tsai (Linux)"
+ N  3 logwatch@www.vbird.t  Mon Sep  8 15:26  43/1542  "Logwatch for www.vbird.tsai (Linux)"
+<span class="term_say">....(中間省略)....</span>
+ <u>N431 logwatch@www.vbird.t  Wed Apr  8 04:02  53/1772  "Logwatch for www.vbird.tsai (Linux)"</u></span>
+&amp; <span class="term_command">431</span>
+Message 431:
+From root@www.vbird.tsai  Wed Apr  8 04:02:05 2009
+Date: Wed, 8 Apr 2009 04:02:05 +0800
+To: root@www.vbird.tsai
+From: logwatch@www.vbird.tsai
+Subject: Logwatch for www.vbird.tsai (Linux)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+
+<span class="term_say"># 先會說明分析的日期與相關的分析期間！</span>
+ ################### Logwatch 7.3 (03/24/06) ####################
+        Processing Initiated: Wed Apr  8 04:02:05 2009
+        Date Range Processed: yesterday
+                              ( 2009-Apr-07 )
+                              Period is day.
+      Detail Level of Output: 0
+              Type of Output: unformatted
+           Logfiles for Host: www.vbird.tsai
+  ##################################################################
+
+<span class="term_say"># 底下則是依據各種服務來進行各項分析！先是登入者的 ssh 服務分析</span>
+ --------------------- SSHD Begin ------------------------
+
+ Users logging in through sshd:
+    root:
+       192.168.100.101: 1 time
+       192.168.100.254: 1 time
+
+ ---------------------- SSHD End -------------------------
+
+<span class="term_say"># 磁碟容量分析！可以避免你的系統使用過量磁碟，導致的系統不穩問題！</span>
+ --------------------- Disk Space Begin ------------------------
+
+ Filesystem            Size  Used Avail Use% Mounted on
+ /dev/hda2             9.5G  3.8G  5.3G  42% /
+ /dev/hda3             4.8G  1.1G  3.5G  23% /home
+ /dev/hda1              99M   21M   73M  23% /boot
+
+ ---------------------- Disk Space End -------------------------
+ ###################### Logwatch End #########################
+</pre></td></tr></table>
+
+		<p>由於鳥哥的測試用主機尚未啟動許多服務，所以分析的項目很少。若你的系統已經啟動許多服務的話，
+		那麼分析的項目理應會多很多才對。</p>
+	</div>
+
+	<hr /><a name="analyze_vbird"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">鳥哥自己寫的登錄檔分析工具：</span><br />
+	<div class="block2">
+		<p>雖然已經有了類似 logwatch 的工具，但是鳥哥自己想要分析的資料畢竟與對方不同～
+		所以囉，鳥哥就自己寫了一支小程式 (shell script 的語法) 用來分析自己的登錄檔，
+		這支程式分析的登錄檔資料其實是固定的，包括有：</p>
+
+		<ul class="text_import2">
+		<li>/var/log/secure</li>
+		<li>/var/log/messages</li>
+		<li>/var/log/maillog</li></ul>
+
+		<p>當然啦，還不只這些啦，包括各個主要常見的服務，如 pop3, mail, ftp, su 等會使用到 pam 的服務，
+		都可以透過鳥哥寫的這個小程式來分析與處理呢～整個資料還會輸出一些系統資訊。如果你想要使用這個程式的話，
+		歡迎下載：</p>
+		<ul><li><a href="http://linux.vbird.org/download/index.php?action=detail&amp;fileid=69"
+		>http://linux.vbird.org/download/index.php?action=detail&amp;fileid=69</a></li></ul>
+
+		<p>安裝的方法也很簡單，只要將上述檔案下載並解壓縮後，就會得到一個名為 logfile 的目錄，
+		將此目錄移動到 /usr/local/virus/ 目錄下並修改一下： /usr/local/virus/logfile.sh 檔案，
+		裡面的 email 與相關的資訊只要修改一下，你就可以使用啦～啊！還要記得，將這支程式的執行寫入 /etc/crontab 當中喔！
+		可以在每天的 12:10am 執行這支小程式啦！ ^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkdir /usr/local/virus</span>
+[root@www ~]# <span class="term_command">tar -zxvf logfile-0.1-4-2.tgz -C /usr/local/virus</span>
+[root@www ~]# <span class="term_command">cd /usr/local/virus/logfile</span>
+[root@www ~]# <span class="term_command">vi logfile.sh</span>
+<span class="term_write">email="root@localhost" <span class="term_note">&lt;==大約在 93 行左右，請填入你的 email ，否則保留預設值</span>
+basedir="/usr/local/virus/logfile"</span> <span class="term_note">&lt;==保留預設值，除非你的執行目錄不同與此！</span>
+
+[root@www ~]# <span class="term_command">sh logfile.sh</span>
+<span class="term_say"># 開始嘗試分析系統的登錄檔，依據你的登錄檔大小，分析的時間不固定！</span>
+
+[root@www ~]# <span class="term_command">vi /etc/crontab</span>
+<span class="term_write">10 0 * * * root /usr/local/virus/logfile/logfile.sh</span>
+<span class="term_say"># 增加這一行！讓系統在每天的凌晨自己進行登錄檔分析！</span>
+
+[root@www ~]# <span class="term_command">mail</span>
+<span class="term_say"># 自己找到剛剛輸出的結果，該結果的輸出有點像底下這樣：</span>
+
+<span class="term_say"># 先進行程式的宣告！你也可以在底下的連結找到一些錯誤回報！</span>
+##########################################################
+歡迎使用本程式來查驗您的登錄檔
+本程式目前版本為： Version 0.1-4-2
+程式最後更新日期為： 2006-09-22
+若在您的系統中發現本程式有問題, 歡迎與我聯絡！
+鳥哥的首頁 http://linux.vbird.org
+問題回報： http://phorum.vbird.org/viewtopic.php?t=3425
+##########################################################
+
+<span class="term_say"># 先看看你的硬體與作業系統的相關情況，尤其是 partition 的使用量更需要隨時注意！</span>
+=============== 系統彙整 =================================
+核心版本  : Linux version 2.6.18-92.el5 (mockbuild@builder16.centos.org)
+CPU 資訊  : Intel(R) Celeron(TM) CPU
+          : 1200.062 MHz
+主機名稱  : www.vbird.tsai
+統計日期  : 2009/April/08 17:00:59 ( Wednesday )
+分析的日期: Apr  8
+已開機期間: 7 days, 22:46,
+目前主機掛載的 partitions
+       Filesystem            Size  Used Avail Use% Mounted on
+       /dev/hda2             9.5G  3.8G  5.3G  42% /
+       /dev/hda3             4.8G  1.1G  3.5G  23% /home
+       /dev/hda1              99M   21M   73M  23% /boot
+       tmpfs                 363M     0  363M   0% /dev/shm
+
+<span class="term_say"># 這個程式會將針對 internet 與內部監聽的埠口分開來顯示！</span>
+================= Ports 的相關分析資訊 =======================
+主機啟用的 port 與相關的 process owner：
+僅對本機介面開放的 ports (PID|owner|command)
+       tcp 25|(root)|sendmail: accepting connections
+       tcp 631|(root)|cupsd
+       tcp 2207|(root)|python ./hpssd.py
+       tcp 2208|(root)|./hpiod
+對外部介面開放的 ports (PID|owner|command)
+       tcp 22|(root)|/usr/sbin/sshd
+       tcp 111|(rpc)|portmap
+       tcp 737|(root)|rpc.statd
+       udp 111|(rpc)|portmap
+       udp 514|(root)|syslogd -m 0 -r
+       udp 631|(root)|cupsd
+       udp 731|(root)|rpc.statd
+       udp 734|(root)|rpc.statd
+       udp 5353|(avahi)|avahi-daemon: running [www.local]
+       udp 32768|(avahi)|avahi-daemon: running [www.local]
+       udp 32769|(avahi)|avahi-daemon: running [www.local]
+
+<span class="term_say"># 以下針對有啟動的服務個別進行分析！</span>
+================= SSH 的登錄檔資訊彙整 =======================
+今日沒有使用 SSH 的紀錄
+
+
+================= Sednamil 的登錄檔資訊彙整 ==================
+您的主機有進行 SASL 身份認證的功能
+
+今日沒有 sendmail 的相關資訊
+
+
+================= 全部的登錄檔資訊彙整 =======================
+1. 重要的登錄記錄檔 ( Secure file )
+   說明：已經取消了 pop3 的資訊！
+Apr  8 15:46:22 www su: session opened for user vbird by root(uid=0)
+Apr  8 15:47:02 www su: session closed for user vbird
+
+2. 使用 last 這個指令輸出的結果
+
+wtmp begins Wed Apr  8 15:19:47 2009
+
+3. 將特重要的 /var/log/messages 列出來瞧瞧！
+   已經取消 crond 與 snmpd 的訊息
+Apr  8 15:19:47 www syslogd 1.4.1: restart (remote reception).
+Apr  8 15:34:25 www syslogd 1.4.1: restart (remote reception).
+</pre></td></tr></table>
+
+		<p>目前鳥哥都是透過這支程式去分析自己管理的主機，然後再據以瞭解系統狀況，如果有特殊狀況則即時進行系統處理！
+		而且鳥哥都是將上述的 email 調整成自己可以在 Internet 上面讀到的郵件，這樣我每天都可以收到正確的登錄檔分析資訊哩！</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>登錄檔可以記錄一個事件的何時、何地、何人、何事等四大資訊，故系統有問題時務必查詢登錄檔；</li>
+	<li>系統的登錄檔預設都集中放置到 /var/log/ 目錄內，其中又以 messages 記錄的資訊最多！</li>
+	<li>登錄檔記錄的主要服務與程式為： syslogd, klogd, log</li>
+	<li>syslogd 的設定檔在 /etc/syslog.conf ，內容語法為：『 服務.等級 記載裝置或檔案』</li>
+	<li>syslogd 本身有提供登錄檔伺服器的功能，透過修改 /etc/sysconfig/syslog 內容即可達成；</li>
+	<li>logrotate 程式利用 crontab 來進行登錄檔的輪替功能；</li>
+	<li>logrotate 的設定檔為 /etc/logrotate.conf ，而額外的設定則可寫入 /etc/logrotate.d/* 內；</li>
+	<li>logwatch 為 CentOS 5 預設提供的一個登錄檔分析軟體。</li>
+</ul>
+</div>
+
+
+<hr /><a name="FAQ"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+實作題：
+<ul>
+	<li>請在你的 CentOS 5.x 上面，依照鳥哥提供的 logfile.sh 去安裝，並將結果取出分析看看。</li>
+</ul><br />
+<hr />簡答題部分：
+<ul>
+	<li>syslogd 可以作為登錄檔伺服器，請以 man page 的方式配合 network 關鍵字，查出 syslogd 需要加上什麼選項就能夠成為登錄檔伺服器？
+	<div class="blockex">
+		透過 man syslogd ，查詢到 -r 的選項。
+	</div></li>
+
+	<li>如果你想要將 auth 這個服務的結果中，只要訊息等級高於 warn 就給予發送 email 到 root 的信箱，該如何處理？
+	<div class="blockex">
+		利用 vim 去編輯 /etc/syslog.conf 檔案，內容為<br />
+		auth.warn   root
+	</div></li>
+
+	<li>啟動系統登錄資訊時，需要啟動哪兩個 daemon 呢？
+	<div class="blockex">
+		syslogd 記錄系統軟體， klogd 記錄核心資訊。
+	</div></li>
+
+	<li>syslogd 以及 logrotate 個別透過什麼機制來執行？
+	<div class="blockex">
+		syslogd 為 super daemon 的機制； logrotate 則是透過 crontab 來執行的！只是個指令而已。
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：關於 console 的說明可以參考底下的連結：<br />
+		<a href="http://en.wikipedia.org/wiki/Console" target="_blank">http://en.wikipedia.org/wiki/Console</a><br />
+		<a href="http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.files/doc/aixfiles/console.htm"
+		target="_blank">http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.files/doc/aixfiles/console.htm</a></li>
+
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/06/24：第一次完成<br />
+2003/02/11：重新編排與加入 FAQ<br />
+2005/10/12：舊的文章已經被移動到 <a href="0570syslog/0570syslog.php">此處</a>。<br />
+2005/10/24：終於寫完了～啊！怎麼寫這麼久？？<br />
+2006/07/23：修改了 /etc/logrotate.d/syslog 的設定資料<br />
+2009/03/31：將舊的基於 FC4 版本的資料移動至 <a href="/linux_basic/0570syslog/0570syslog-fc4.php">此處</a><br />
+2009/09/14：加入了一些例題而已。這一篇太簡單了～想不到什麼好的題目說～<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

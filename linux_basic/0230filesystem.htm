@@ -1,0 +1,3502 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW"><!-- InstanceBegin template="/Templates/tp_basic.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="Linux 最重要是基礎學習，在這個單元中，我們介紹很多 Linux 基礎觀念！" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+    <title>鳥哥的 Linux 私房菜 -- 基礎學習篇</title>
+    <!-- InstanceEndEditable -->
+    <!-- InstanceBeginEditable name="head" -->
+    <!-- InstanceEndEditable -->
+</head>
+<body style="margin:0; padding:0">
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  
+  <!-- InstanceBeginEditable name="content" -->
+<td width="718">
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第八章、<span class="text_head_en">Linux </span>磁碟與檔案系統管理</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/08/30</span>
+</div>
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	系統管理員很重要的任務之一就是管理好自己的磁碟檔案系統，每個分割槽不可太大也不能太小，
+	太大會造成磁碟容量的浪費，太小則會產生檔案無法儲存的困擾。此外，我們在前面幾章談到的檔案權限與屬性中，
+	這些權限與屬性分別記錄在檔案系統的那個區塊內？這就得要談到 filesystem 中的 inode 與 block 了。
+	在本章我們的重點在於如何製作檔案系統，包括分割、格式化與掛載等，是很重要的一個章節喔！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+
+<span class="text_h1">
+1. <a href="#harddisk">認識 EXT2 檔案系統</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#harddisk-physical">硬碟組成與分割的複習</a><br />
+	　　1.2 <a href="#harddisk-filesystem">檔案系統特性</a>： <a href="#indexed_allocation">索引式檔案系統</a><br />
+	　　1.3 <a href="#harddisk-inode">Linux 的 EXT2 檔案系統(inode)</a>: 
+		<a href="#block">data block</a>, <a href="#inode">inode table</a>, <a href="#super_block">superblock</a>,
+		<a href="#dumpe2fs">dumpe2fs</a><br />
+
+	　　1.4 <a href="#harddisk-dir">與目錄樹的關係</a><br />
+	　　1.5 <a href="#harddisk-journal">EXT2/EXT3 檔案的存取與日誌式檔案系統的功能</a><br />
+	　　1.6 <a href="#harddisk-filerun">Linux 檔案系統的運作</a><br />
+	　　1.7 <a href="#harddisk-mount">掛載點的意義 (mount point)</a><br />
+	　　1.8 <a href="#harddisk-other">其他 Linux 支援的檔案系統與 VFS</a><br />
+
+	</span>
+2. <a href="#filesys">檔案系統的簡單操作</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#filesys_1">磁碟與目錄的容量：</a> <a href="#df">df</a>, <a href="#du">du</a><br />
+	　　2.2 <a href="#link">實體連結與符號連結：</a> <a href="#ln">ln</a><br />
+
+	</span>
+3. <a href="#disk">磁碟的分割、格式化、檢驗與掛載</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#fdisk">磁碟分割： fdisk</a>, <a href="#partprobe">partprobe</a><br />
+	　　3.2 <a href="#format">磁碟格式化：</a> <a href="#mkfs">mkfs</a>, <a href="#mke2fs">mke2fs</a><br />
+
+	　　3.3 <a href="#fsck">磁碟檢驗： fsck</a>, <a href="#badblocks">badblocks</a><br />
+	　　3.4 <a href="#mount">磁碟掛載與卸載： mount</a>, <a href="#umount">umount</a><br />
+	　　3.5 <a href="#diskpara">磁碟參數修訂</a>： <a href="#mknod">mknod</a>, 
+		<a href="#e2label">e2label</a>, <a href="#tune2fs">tune2fs</a>, 
+		<a href="#hdparm">hdparm</a><br />
+
+	</span>
+4. <a href="#bootup">設定開機掛載：</a><br />
+	<span class="text_h2">
+	　　4.1 <a href="#fstab">開機掛載 /etc/fstab 及 /etc/mtab</a><br />
+	　　4.2 <a href="#loop">特殊裝置 loop 掛載(映象檔不燒錄就掛載使用)</a><br />
+	</span>
+
+5. <a href="#swap">記憶體置換空間(swap)之建置：</a><br />
+	<span class="text_h2">
+	　　5.1 <a href="#swapdevice">使用實體分割槽建置swap</a><br />
+	　　5.2 <a href="#swapfile">使用檔案建置swap</a><br />
+	　　5.3 <a href="#swapuse">swap使用上的限制</a><br />
+
+	</span>
+6. <a href="#special">檔案系統的特殊觀察與操作</a><br />
+	<span class="text_h2">
+	　　6.1 <a href="#special_boot_sector">boot sector 與 superblock 的關係</a><br />
+	　　6.2 <a href="#special_waste">磁碟空間之浪費問題</a><br />
+	　　6.3 <a href="#parted">利用 GNU 的 parted 進行分割行為</a><br />
+
+	</span>
+7. <a href="#hint">重點回顧</a><br />
+8. <a href="#ex">本章習題</a><br />
+9. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+10. <a href="http://phorum.vbird.org/viewtopic.php?t=23881"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23881</a>
+</span>
+</span>
+
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="harddisk"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">認識 EXT2 檔案系統</span><br />
+<div class="block1">
+	<p>Linux最傳統的磁碟檔案系統(filesystem)使用的是EXT2這個啦！所以要瞭解檔案系統就得要由認識EXT2開始！
+	而檔案系統是建立在硬碟上面的，因此我們得瞭解硬碟的物理組成才行。磁碟物理組成的部分我們在<a
+	href="/linux_basic/0105computers.php#pc_hd">第零章</a>談過了，至於磁碟分割則在<a
+	href="/linux_basic/0130designlinux.php#partition">第三章</a>談過了，所以底下只會很快的複習這兩部份。
+	重點在於inode, block還有superblock等檔案系統的基本部分喔！<br /><br /></p>
+
+	<hr /><a name="harddisk-physical"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">硬碟組成與分割的複習</span><br />
+
+	<div class="block2">
+		<p>由於各項磁碟的物理組成我們在<a href="/linux_basic/0105computers.php#pc_hd">第零章</a>裡面就介紹過，
+		同時<a href="/linux_basic/0130designlinux.php#partition">第三章</a>也談過分割的概念了，
+		所以這個小節我們就拿之前的重點出來介紹就好了！詳細的資訊請您回去那兩章自行複習喔！^_^。
+		好了，首先說明一下磁碟的物理組成，整顆磁碟的組成主要有：</p>
+		<ul class="text_import2">
+		<li>圓形的磁碟盤(主要記錄資料的部分)；</li>
+		<li>機械手臂，與在機械手臂上的磁碟讀取頭(可讀寫磁碟盤上的資料)；</li>
+
+		<li>主軸馬達，可以轉動磁碟盤，讓機械手臂的讀取頭在磁碟盤上讀寫資料。</li></ul>
+
+		<p>從上面我們知道資料儲存與讀取的重點在於磁碟盤，而磁碟盤上的物理組成則為(假設此磁碟為單碟片，
+		磁碟盤圖示請參考<a href="/linux_basic/0130designlinux.php#fig2.2.1">第三章圖2.2.1的示意</a>)：</p>
+		<ul class="text_import2">
+		<li>磁區(Sector)為最小的物理儲存單位，每個磁區為 512 bytes；</li>
+		<li>將磁區組成一個圓，那就是磁柱(Cylinder)，磁柱是分割槽(partition)的最小單位；</li>
+
+		<li>第一個磁區最重要，裡面有：(1)主要開機區(Master boot record, MBR)及分割表(partition table)，
+		其中 MBR 佔有 446 bytes，而 partition table 則佔有 64 bytes。</li></ul>
+
+		<p>各種介面的磁碟在Linux中的檔案名稱分別為：</p>
+		<ul class="text_import2">
+		<li>/dev/sd[a-p][1-15]：為SCSI, SATA, USB, Flash隨身碟等介面的磁碟檔名；</li>
+		<li>/dev/hd[a-d][1-63]：為 IDE 介面的磁碟檔名；</li></ul>
+
+		<p>複習完物理組成後，來複習一下磁碟分割吧！所謂的磁碟分割指的是告訴作業系統『<span 
+		class="text_import2">我這顆磁碟在此分割槽可以存取的區域是由 A 磁柱到 B 磁柱之間的區塊</span>』，
+		如此一來作業系統就能夠知道他可以在所指定的區塊內進行檔案資料的讀/寫/搜尋等動作了。
+		也就是說，磁碟分割意即指定分割槽的啟始與結束磁柱就是了。</p>
+
+		<p>那麼指定分割槽的磁柱範圍是記錄在哪裡？就是第一個磁區的分割表中啦！但是因為分割表僅有64bytes而已，
+		因此最多只能記錄四筆分割槽的記錄，這<span class="text_import2">四筆記錄我們稱為主要 (primary) 
+		或延伸 (extended) 分割槽，其中延伸分割槽還可以再分割出邏輯分割槽 (logical) ，
+		而能被格式化的則僅有主要分割與邏輯分割而已。</span></p>
+
+		<p>最後，我們再將第三章關於分割的定義拿出來說明一下囉：</p>
+		<ul class="text_import2">
+		<li>主要分割與延伸分割最多可以有四筆(硬碟的限制)</li>
+		<li>延伸分割最多只能有一個(作業系統的限制)</li>
+
+		<li>邏輯分割是由延伸分割持續切割出來的分割槽；</li>
+		<li>能夠被格式化後，作為資料存取的分割槽為主要分割與邏輯分割。延伸分割無法格式化；</li>
+		<li>邏輯分割的數量依作業系統而不同，在Linux系統中，IDE硬碟最多有59個邏輯分割(5號到63號)，
+		SATA硬碟則有11個邏輯分割(5號到15號)。</li></ul>
+	</div>
+
+	<hr /><a name="harddisk-filesystem"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">檔案系統特性</span><br />
+	<div class="block2">
+
+		<p>我們都知道磁碟分割完畢後還需要進行格式化(format)，之後作業系統才能夠使用這個分割槽。
+		為什麼需要進行『格式化』呢？這是因為每種作業系統所設定的檔案屬性/權限並不相同，
+		為了存放這些檔案所需的資料，因此就需要將分割槽進行格式化，以成為作業系統能夠利用的『檔案系統格式(filesystem)』。</p>
+
+		<p>由此我們也能夠知道，每種作業系統能夠使用的檔案系統並不相同。
+		舉例來說，windows 98 以前的微軟作業系統主要利用的檔案系統是 FAT (或 FAT16)，windows 2000 以後的版本有所謂的 NTFS
+		檔案系統，至於 <span class="text_import2">Linux 的正統檔案系統則為 Ext2 (Linux second extended file 
+		system, ext2fs</span>)這一個。此外，在預設的情況下，windows 作業系統是不會認識 Linux 的 Ext2 的。</p>
+
+		<p>傳統的磁碟與檔案系統之應用中，一個分割槽就是只能夠被格式化成為一個檔案系統，所以我們可以說一個 filesystem
+		就是一個 partition。但是由於新技術的利用，例如我們常聽到的LVM與軟體磁碟陣列(software raid)，
+		這些技術可以將一個分割槽格式化為多個檔案系統(例如LVM)，也能夠將多個分割槽合成一個檔案系統(LVM, RAID)！
+		所以說，目前我們在格式化時已經不再說成針對 partition 來格式化了，
+		通常我們可以稱呼<span class="text_import2">一個可被掛載的資料為一個檔案系統而不是一個分割槽</span>喔！</p>
+
+		<p>那麼檔案系統是如何運作的呢？這與作業系統的檔案資料有關。較新的作業系統的檔案資料除了檔案實際內容外，
+		通常含有非常多的屬性，例如 Linux 作業系統的檔案權限(rwx)與檔案屬性(擁有者、群組、時間參數等)。
+		<span class="text_import2">檔案系統通常會將這兩部份的資料分別存放在不同的區塊，權限與屬性放置到 
+		inode 中，至於實際資料則放置到 data block 區塊中</span>。
+		另外，還有一個超級區塊 (superblock) 會記錄整個檔案系統的整體資訊，包括 inode 與 block 的總量、使用量、剩餘量等。</p>
+
+		<p>每個 inode 與 block 都有編號，至於這三個資料的意義可以簡略說明如下：</p>
+
+		<ul class="text_import2">
+		<li>superblock：記錄此 filesystem 的整體資訊，包括inode/block的總量、使用量、剩餘量，
+		以及檔案系統的格式與相關資訊等；</li>
+		<li>inode：記錄檔案的屬性，一個檔案佔用一個inode，同時記錄此檔案的資料所在的 block 號碼；</li>
+		<li>block：實際記錄檔案的內容，若檔案太大時，會佔用多個 block 。</li>
+		</ul>
+
+		<p>由於每個 inode 與 block 都有編號，而每個檔案都會佔用一個 inode ，inode 內則有檔案資料放置的 block 號碼。
+		因此，我們可以知道的是，如果能夠找到檔案的 inode 的話，那麼自然就會知道這個檔案所放置資料的 block 號碼，
+		當然也就能夠讀出該檔案的實際資料了。這是個比較有效率的作法，因為如此一來我們的磁碟就能夠在短時間內讀取出全部的資料，
+		讀寫的效能比較好囉。</p>
+
+		<a name="indexed_allocation"></a>
+		<p>我們將 inode 與 block 區塊用圖解來說明一下，如下圖所示，檔案系統先格式化出 inode 與 block 
+		的區塊，假設某一個檔案的屬性與權限資料是放置到 inode 4 號(下圖較小方格內)，而這個 inode 記錄了檔案資料的實際放置點為
+		2, 7, 13, 15 這四個 block 號碼，此時我們的作業系統就能夠據此來排列磁碟的讀取順序，可以一口氣將四個 block 內容讀出來！
+		那麼資料的讀取就如同下圖中的箭頭所指定的模樣了。</p>
+
+		<center><img src="0230filesystem/filesystem-1.jpg" alt="inode/block 資料存取示意圖" 
+		title="inode/block 資料存取示意圖" border="0" /><br />
+		圖1.2.1、inode/block 資料存取示意圖<br /></center>
+
+		<p>這種資料存取的方法我們稱為<span class="text_import2">索引式檔案系統(indexed 
+		allocation)</span>。那有沒有其他的慣用檔案系統可以比較一下啊？
+		有的，那就是我們慣用的隨身碟(快閃記憶體)，隨身碟使用的檔案系統一般為 FAT 格式。FAT 這種格式的檔案系統並沒有 inode
+		存在，所以 FAT 沒有辦法將這個檔案的所有 block 在一開始就讀取出來。每個 block 號碼都記錄在前一個 block 當中，
+		他的讀取方式有點像底下這樣：</p>
+
+		<center><img src="0230filesystem/filesystem-2.jpg" alt="FAT檔案系統資料存取示意圖" 
+		title="FAT檔案系統資料存取示意圖" border="0" /><br />
+		圖1.2.2、FAT檔案系統資料存取示意圖<br /></center>
+
+		<p>上圖中我們假設檔案的資料依序寫入1-&gt;7-&gt;4-&gt;15號這四個 block 號碼中，
+		但這個檔案系統沒有辦法一口氣就知道四個 block 的號碼，他得要一個一個的將 block 讀出後，才會知道下一個 block 在何處。
+		如果同一個檔案資料寫入的 block 分散的太過厲害時，則我們的磁碟讀取頭將無法在磁碟轉一圈就讀到所有的資料，
+		因此磁碟就會多轉好幾圈才能完整的讀取到這個檔案的內容！</p>
+
+		<a name="disk_replace"></a>
+		<p>常常會聽到所謂的『磁碟重組』吧？<span class="text_import2">
+		需要磁碟重組的原因就是檔案寫入的 block 太過於離散了，此時檔案讀取的效能將會變的很差所致。</span>
+		這個時候<span class="text_import2">可以透過磁碟重組將同一個檔案所屬的 blocks 彙整在一起，這樣資料的讀取會比較容易啊！
+		</span>想當然爾，FAT 的檔案系統需要三不五時的磁碟重組一下，那麼 Ext2 是否需要磁碟重整呢？</p>
+
+		<p>由於 Ext2 是索引式檔案系統，基本上不太需要常常進行磁碟重組的。但是如果檔案系統使用太久，
+		常常刪除/編輯/新增檔案時，那麼還是可能會造成檔案資料太過於離散的問題，此時或許會需要進行重整一下的。
+		不過，老實說，鳥哥倒是沒有在 Linux 作業系統上面進行過 Ext2/Ext3 檔案系統的磁碟重組說！似乎不太需要啦！^_^</p>
+
+	</div>
+
+	<hr /><a name="harddisk-inode"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 的 EXT2 檔案系統(inode)：</span><br />
+	<div class="block2">
+		<p>在<a href="/linux_basic/0210filepermission.php">第六章</a>當中我們介紹過 Linux 
+		的檔案除了原有的資料內容外，還含有非常多的權限與屬性，這些權限與屬性是為了保護每個使用者所擁有資料的隱密性。
+		而前一小節我們知道 filesystem 裡面可能含有的 inode/block/superblock
+		等。為什麼要談這個呢？因為標準的 Linux 檔案系統 Ext2 就是使用這種 inode 為基礎的檔案系統啦！</p>
+
+		<a name="ext2_filesystem"></a>
+		<p>而如同前一小節所說的，inode 的內容在記錄檔案的權限與相關屬性，至於 block 區塊則是在記錄檔案的實際內容。
+		而且<span class="text_import2">檔案系統一開始就將 inode 與 block 規劃好了，除非重新格式化(或者利用 resize2fs 
+		等指令變更檔案系統大小)，否則 inode 與 block 固定後就不再變動</span>。但是如果仔細考慮一下，如果我的檔案系統高達數百GB時，
+		那麼將所有的 inode 與 block 通通放置在一起將是很不智的決定，因為 inode 與 block 的數量太龐大，不容易管理。</p>
+
+		<p>為此之故，因此 Ext2 檔案系統在格式化的時候基本上是區分為多個區塊群組 (block group) 的，每個區塊群組都有獨立的 
+		inode/block/superblock 系統。感覺上就好像我們在當兵時，一個營裡面有分成數個連，每個連有自己的聯絡系統，
+		但最終都向營部回報連上最正確的資訊一般！這樣分成一群群的比較好管理啦！整個來說，Ext2 格式化後有點像底下這樣：</p>
+
+		<a name="fig1.3.1"></a>
+		<center><img src="0230filesystem/ext2_filesystem.jpg" alt="ext2檔案系統示意圖" 
+		title="ext2檔案系統示意圖" border="0" /><br />
+		圖1.3.1、ext2檔案系統示意圖(<a href="#ps1">註1</a>)<br /></center>
+
+		<p>在整體的規劃當中，<span class="text_import2">檔案系統最前面有一個開機磁區(boot 
+		sector)，這個開機磁區可以安裝開機管理程式</span>，
+		這是個非常重要的設計，因為如此一來我們就能夠將不同的開機管理程式安裝到個別的檔案系統最前端，而不用覆蓋整顆硬碟唯一的 MBR，
+		這樣也才能夠製作出多重開機的環境啊！至於每一個區塊群組(block group)的六個主要內容說明如後：<br /><br /></p>
+
+		<a name="block"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">data block (資料區塊)</li></ul>
+		<p>data block 是用來放置檔案內容資料地方，<span class="text_import2">在 Ext2 檔案系統中所支援的 block 大小有
+		1K, 2K 及 4K 三種而已</span>。在格式化時 block 的大小就固定了，且每個 block 都有編號，以方便 inode 的記錄啦。
+		不過要注意的是，由於 block 大小的差異，會導致該檔案系統能夠支援的最大磁碟容量與最大單一檔案容量並不相同。
+		因為 block 大小而產生的 Ext2 檔案系統限制如下：(<a href="#ps2">註2</a>)</p>
+
+<a name="filesystem_limit"></a>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>Block 大小</td><td>1KB</td><td>2KB</td><td>4KB</td></tr>
+<tr align="center"><td bgcolor="lightblue">最大單一檔案限制</td><td>16GB</td><td>256GB</td><td>2TB</td></tr>
+<tr align="center"><td bgcolor="lightblue">最大檔案系統總容量</td><td>2TB</td><td>8TB</td><td>16TB</td></tr>
+</table>
+
+		<p>你需要注意的是，雖然 Ext2 已經能夠支援大於 2GB 以上的單一檔案容量，不過某些應用程式依然使用舊的限制，
+		也就是說，某些程式只能夠捉到小於 2GB 以下的檔案而已，這就跟檔案系統無關了！
+		舉例來說，鳥哥在環工方面的應用中有一套秀圖軟體稱為PAVE(<a href="#ps3">註3</a>)，
+		這套軟體就無法捉到鳥哥在數值模式模擬後產生的大於 2GB 以上的檔案！害的鳥哥常常還要重跑數值模式...</p>
+
+		<p>除此之外 Ext2 檔案系統的 block 還有什麼限制呢？有的！基本限制如下：</p>
+		<ul class="text_import2">
+		<li>原則上，block 的大小與數量在格式化完就不能夠再改變了(除非重新格式化)；</li>
+		<li>每個 block 內最多只能夠放置一個檔案的資料；</li>
+
+		<li>承上，如果檔案大於 block 的大小，則一個檔案會佔用多個 block 數量；</li>
+		<li>承上，若檔案小於 block ，則該 block 的剩餘容量就不能夠再被使用了(磁碟空間會浪費)。</li>
+		</ul>
+		<p>如上第四點所說，由於每個 block 僅能容納一個檔案的資料而已，因此如果你的檔案都非常小，但是你的 block 
+		在格式化時卻選用最大的 4K 時，可能會產生一些容量的浪費喔！我們以底下的一個簡單例題來算一下空間的浪費吧！</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假設你的Ext2檔案系統使用 4K block ，而該檔案系統中有 10000 個小檔案，每個檔案大小均為 50bytes，
+請問此時你的磁碟浪費多少容量？
+</div>
+
+答：<div class="block2">
+由於 Ext2 檔案系統中一個 block 僅能容納一個檔案，因此每個 block 會浪費『 4096 - 50 = 4046 (byte)』，
+系統中總共有一萬個小檔案，所有檔案容量為：50 x 10000 (bytes) = 488.3Kbytes，但此時浪費的容量為：『 4046 x 10000
+(bytes) = 38.6MBytes 』。想一想，不到 1MB 的總檔案容量卻浪費將近 40MB 的容量，且檔案越多將造成越多的磁碟容量浪費。
+</div>
+</td></tr></table><br />
+
+		<p>什麼情況會產生上述的狀況呢？例如 BBS 網站的資料啦！如果 BBS 上面的資料使用的是純文字檔案來記載每篇留言，
+		而留言內容如果都寫上『如題』時，想一想，是否就會產生很多小檔案了呢？</p>
+
+		<p>好，既然大的 block 可能會產生較嚴重的磁碟容量浪費，那麼我們是否就將 block 大小訂為 1K 即可？
+		這也不妥，因為如果 block 較小的話，那麼大型檔案將會佔用數量更多的 block ，而 inode 
+		也要記錄更多的 block 號碼，此時將可能導致檔案系統不良的讀寫效能。</p>
+		<p>所以我們可以說，在您進行檔案系統的格式化之前，請先想好該檔案系統預計使用的情況。
+		以鳥哥來說，我的數值模式模擬平台隨便一個檔案都好幾百 MB，那麼 block 容量當然選擇較大的！至少檔案系統就不必記錄太多的 
+		block 號碼，讀寫起來也比較方便啊！<br /><br /></p>
+
+		<a name="inode"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">inode table (inode 表格)</li></ul>
+		<p>再來討論一下 inode 這個玩意兒吧！如前所述 inode 的內容在記錄檔案的屬性以及該檔案實際資料是放置在哪幾號 block 內！
+		基本上，inode 記錄的檔案資料至少有底下這些：(<a href="#ps4">註4</a>)</p>
+		<ul class="text_import2">
+		<li>該檔案的存取模式(read/write/excute)；</li>
+
+		<li>該檔案的擁有者與群組(owner/group)；</li>
+		<li>該檔案的容量；</li>
+		<li>該檔案建立或狀態改變的時間(ctime)；</li>
+		<li>最近一次的讀取時間(atime)；</li>
+		<li>最近修改的時間(mtime)；</li>
+		<li>定義檔案特性的旗標(flag)，如 SetUID...；</li>
+
+		<li>該檔案真正內容的指向 (pointer)；</li></ul>
+
+		<p>inode 的數量與大小也是在格式化時就已經固定了，除此之外 inode 還有些什麼特色呢？</p>
+		<ul class="text_import2">
+		<li>每個 inode 大小均固定為 128 bytes；</li>
+		<li>每個檔案都僅會佔用一個 inode 而已；</li>
+		<li>承上，因此檔案系統能夠建立的檔案數量與 inode 的數量有關；</li>
+
+		<li>系統讀取檔案時需要先找到 inode，並分析 inode 所記錄的權限與使用者是否符合，若符合才能夠開始實際讀取 
+		block 的內容。</li>
+		</ul>
+
+		<p>我們約略來分析一下 inode / block 與檔案大小的關係好了。inode 要記錄的資料非常多，但偏偏又只有 128bytes 而已，
+		而 inode 記錄一個 block 號碼要花掉 4byte ，假設我一個檔案有 400MB 且每個 block 為 4K 時，
+		那麼至少也要十萬筆 block 號碼的記錄呢！inode 哪有這麼多可記錄的資訊？為此我們的系統很聰明的將 inode 記錄 block 
+		號碼的區域定義為12個直接，一個間接, 一個雙間接與一個三間接記錄區。這是啥？我們將 inode 的結構畫一下好了。</p>
+
+		<center><img src="0230filesystem/inode.jpg" alt="inode 結構示意圖" 
+		title="inode 結構示意圖" border="1" /><br />
+		圖1.3.2、inode 結構示意圖(<a href="#ps5">註5</a>)<br /></center>
+
+		<p>上圖最左邊為 inode 本身 (128 bytes)，裡面有 12 個直接指向 block 號碼的對照，這 12 筆記錄就能夠直接取得 block 號碼啦！
+		至於所謂的間接就是<span class="text_import2">再拿一個 block 來當作記錄 block 號碼的記錄區，如果檔案太大時，
+		就會使用間接的 block 來記錄號碼。</span>如上圖 1.3.2 當中間接只是拿一個 block 來記錄額外的號碼而已。
+		同理，如果檔案持續長大，那麼就會利用所謂的雙間接，第一個 block 僅再指出下一個記錄號碼的 block 在哪裡，
+		實際記錄的在第二個 block 當中。依此類推，三間接就是利用第三層 block 來記錄號碼啦！</p>
+
+		<p>這樣子 inode 能夠指定多少個 block 呢？我們以較小的 1K block 來說明好了，可以指定的情況如下：</p>
+		<ul>
+		<li>12 個直接指向： 12*1K=12K<br />
+		由於是直接指向，所以總共可記錄 12 筆記錄，因此總額大小為如上所示；<br /><br /></li>
+
+		<li>間接： 256*1K=256K<br />
+		每筆 block 號碼的記錄會花去 4bytes，因此 1K 的大小能夠記錄 256 筆記錄，因此一個間接可以記錄的檔案大小如上；
+		<br /><br /></li>
+		<li>雙間接： 256*256*1K=256<sup>2</sup>K<br />
+		第一層 block 會指定 256 個第二層，每個第二層可以指定 256 個號碼，因此總額大小如上；<br /><br /></li>
+		<li>三間接： 256*256*256*1K=256<sup>3</sup>K<br />
+
+		第一層 block 會指定 256 個第二層，每個第二層可以指定 256 個第三層，每個第三層可以指定 256 
+		個號碼，因此總額大小如上；<br /><br /></li>
+		<li><span class="text_import2">總額：將直接、間接、雙間接、三間接加總，得到 12 + 256 + 256*256 + 
+		256*256*256 (K) = 16GB</span></li>
+		</ul>
+
+		<p>此時我們知道當檔案系統將 block 格式化為 1K 大小時，能夠容納的最大檔案為 16GB，比較一下<a
+		href="#filesystem_limit">檔案系統限制表</a>的結果可發現是一致的！但這個方法不能用在 2K 及 4K block 大小的計算中，
+		因為大於 2K 的 block 將會受到 Ext2 檔案系統本身的限制，所以計算的結果會不太符合之故。<br /><br /></p>
+
+		<a name="super_block"></a>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">Superblock (超級區塊)</li></ul>
+		<p>Superblock 是記錄整個 filesystem 相關資訊的地方， 沒有 Superblock ，就沒有這個 
+		filesystem 了。他記錄的資訊主要有：</p>
+		<ul class="text_import2">
+		<li>block 與 inode 的總量；</li>
+		<li>未使用與已使用的 inode / block 數量；</li>
+		<li>block 與 inode 的大小 (block 為 1, 2, 4K，inode 為 128 bytes)；</li>
+
+		<li>filesystem 的掛載時間、最近一次寫入資料的時間、最近一次檢驗磁碟 (fsck) 的時間等檔案系統的相關資訊；</li>
+		<li>一個 valid bit 數值，若此檔案系統已被掛載，則 valid bit 為 0 ，若未被掛載，則 valid bit 為 1 。</li>
+		</ul>
+		<p>Superblock 是非常重要的，因為我們這個檔案系統的基本資訊都寫在這裡，因此，如果 superblock 死掉了，
+		你的檔案系統可能就需要花費很多時間去挽救啦！一般來說， superblock 的大小為 1024bytes。相關的 superblock 
+		訊息我們等一下會以 <a href="#dumpe2fs">dumpe2fs</a> 指令來呼叫出來觀察喔！</p>
+
+		<a name="20090401"></a>
+
+		<p>此外，每個 block group 都可能含有 superblock 喔！但是我們也說一個檔案系統應該僅有一個 superblock 而已，那是怎麼回事啊？
+		事實上除了第一個 block group 內會含有 superblock 之外，後續的 block group 不一定含有 superblock ，
+		而若含有 superblock 則該 superblock 主要是做為第一個 block group 內 superblock 的備份咯，這樣可以進行 superblock
+		的救援呢！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">Filesystem Description (檔案系統描述說明)</li></ul>
+		<p>這個區段可以描述每個 block group 的開始與結束的 block 號碼，以及說明每個區段 (superblock, bitmap, inodemap,
+		data block) 分別介於哪一個 block 號碼之間。這部份也能夠用 <a href="#dumpe2fs">dumpe2fs</a> 來觀察的。<br /><br /></p>
+
+		<hr />
+
+		<ul class="list1"><li class="text_import1">block bitmap (區塊對照表)</li></ul>
+		<p>如果你想要新增檔案時總會用到 block 吧！那你要使用那個 block 來記錄呢？當然是選擇『空的 block 』來記錄新檔案的資料囉。
+		那你怎麼知道那個 block 是空的？這就得要透過 block bitmap 的輔助了。從 block bitmap 當中可以知道哪些 block
+		是空的，因此我們的系統就能夠很快速的找到可使用的空間來處置檔案囉。</p>
+
+		<p>同樣的，如果你刪除某些檔案時，那麼那些檔案原本佔用的 block 號碼就得要釋放出來，
+		此時在 block bitmpap 當中相對應到該 block 號碼的標誌就得要修改成為『未使用中』囉！這就是 bitmap 的功能。<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">inode bitmap (inode 對照表)</li></ul>
+		<p>這個其實與 block bitmap 是類似的功能，只是 block bitmap 記錄的是使用與未使用的 block 號碼，
+		至於 inode bitmap 則是記錄使用與未使用的 inode 號碼囉！<br /><br /></p>
+
+		<a name="dumpe2fs"></a>
+		<hr />
+		<p>瞭解了檔案系統的概念之後，再來當然是觀察這個檔案系統囉！剛剛談到的各部分資料都與 block 號碼有關！
+		每個區段與 superblock 的資訊都可以使用 dumpe2fs 這個指令來查詢的！查詢的方法與實際的觀察如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dumpe2fs [-bh] 裝置檔名</span>
+<span class="term_say">選項與參數：
+-b ：列出保留為壞軌的部分(一般用不到吧！？)
+-h ：僅列出 superblock 的資料，不會列出其他的區段內容！</span>
+
+<span class="term_hd">範例：找出我的根目錄磁碟檔名，並觀察檔案系統的相關資訊</span>
+
+[root@www ~]# <span class="term_command">df</span>   <span class="term_note">&lt;==這個指令可以叫出目前掛載的裝置</span>
+Filesystem    1K-blocks      Used Available Use% Mounted on
+<u>/dev/hdc2       9920624   3822848   5585708  41% /</u>        <span class="term_note">&lt;==就是這個光！</span>
+/dev/hdc3       4956316    141376   4559108   4% /home
+/dev/hdc1        101086     11126     84741  12% /boot
+tmpfs            371332         0    371332   0% /dev/shm
+
+[root@www ~]# <span class="term_command">dumpe2fs /dev/hdc2</span>
+dumpe2fs 1.39 (29-May-2006)
+<span class="term_write">Filesystem volume name:   /1</span>             <span class="term_note">&lt;==這個是檔案系統的名稱(Label)</span>
+
+Filesystem features:      has_journal ext_attr resize_inode dir_index 
+  filetype needs_recovery sparse_super large_file
+<span class="term_write">Default mount options:    user_xattr acl</span> <span class="term_note">&lt;==預設掛載的參數</span>
+<span class="term_write">Filesystem state:         clean</span>          <span class="term_note">&lt;==這個檔案系統是沒問題的(clean)</span>
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              2560864        <span class="term_note">&lt;==inode的總數</span>
+Block count:              2560359        <span class="term_note">&lt;==block的總數</span>
+Free blocks:              1524760        <span class="term_note">&lt;==還有多少個 block 可用</span>
+
+Free inodes:              2411225        <span class="term_note">&lt;==還有多少個 inode 可用</span>
+First block:              0
+<span class="term_write">Block size:               4096</span>           <span class="term_note">&lt;==每個 block 的大小啦！</span>
+Filesystem created:       Fri Sep  5 01:49:20 2008
+Last mount time:          Mon Sep 22 12:09:30 2008
+Last write time:          Mon Sep 22 12:09:30 2008
+Last checked:             Fri Sep  5 01:49:20 2008
+First inode:              11
+<span class="term_write">Inode size:               128</span>            <span class="term_note">&lt;==每個 inode 的大小</span>
+Journal inode:            8              <span class="term_note">&lt;==底下這三個與下一小節有關</span>
+Journal backup:           inode blocks
+Journal size:             128M
+
+Group 0: (Blocks 0-32767) <span class="term_note">&lt;==第一個 data group 內容, 包含 block 的啟始/結束號碼</span>
+
+  Primary superblock at 0, Group descriptors at 1-1  <span class="term_note">&lt;==超級區塊在 0 號 block</span>
+  Reserved GDT blocks at 2-626
+  Block bitmap at 627 (+627), Inode bitmap at 628 (+628)
+  Inode table at 629-1641 (+629)                     <span class="term_note">&lt;==inode table 所在的 block</span>
+  0 free blocks, 32405 free inodes, 2 directories    <span class="term_note">&lt;==所有 block 都用完了！</span>
+  Free blocks:
+  Free inodes: 12-32416                              <span class="term_note">&lt;==剩餘未使用的 inode 號碼</span>
+Group 1: (Blocks 32768-65535)
+
+<span class="term_say">....(底下省略)....
+# 由於資料量非常的龐大，因此鳥哥將一些資訊省略輸出了！上表與你的螢幕會有點差異。
+# 前半部在秀出 supberblock 的內容，包括標頭名稱(Label)以及inode/block的相關資訊
+# 後面則是每個 block group 的個別資訊了！您可以看到各區段資料所在的號碼！
+# 也就是說，基本上所有的資料還是與 block 的號碼有關就是了！很重要！</span>
+</pre></td></tr></table>
+
+		<p>如上所示，利用 dumpe2fs 可以查詢到非常多的資訊，不過依內容主要可以區分為上半部是 superblock 內容，
+		下半部則是每個 block group 的資訊了。從上面的表格中我們可以觀察到這個 /dev/hdc2 規劃的 block 為 4K，
+		第一個 block 號碼為 0 號，且 block group 內的所有資訊都以 block 的號碼來表示的。
+		然後在 superblock 中還有談到目前這個檔案系統的可用 block  與 inode 數量喔！</p>
+
+		<p>至於 block group 的內容我們單純看 Group0 資訊好了。從上表中我們可以發現：</p>
+
+		<ul>
+		<li>Group0 所佔用的 block 號碼由 0 到 32767 號，superblock 則在第 0 號的 block 區塊內！</li>
+
+		<li>檔案系統描述說明在第 1 號 block 中；</li>
+		<li>block bitmap 與 inode bitmap 則在 627 及 628 的 block 號碼上。</li>
+		<li>至於 inode table 分佈於 629-1641 的 block 號碼中！</li>
+		<li>由於 (1)一個 inode 佔用 128 bytes ，(2)總共有 1641 - 629 + 1(629本身) = 1013 個 block 花在 inode table 上，
+		(3)每個 block 的大小為 4096 bytes(4K)。由這些數據可以算出 inode 的數量共有 1013 * 4096 / 128 = 32416 個 inode 啦！</li>
+		<li>這個 Group0 目前沒有可用的 block 了，但是有剩餘 32405 個 inode 未被使用；</li>
+		<li>剩餘的 inode 號碼為 12 號到 32416 號。</li></ul>
+
+		<p>如果你對檔案系統的詳細資訊還有更多想要瞭解的話，那麼請參考本章最後一小節的介紹喔！
+		否則檔案系統看到這裡對於基礎認知您應該是已經相當足夠啦！底下則是要探討一下，
+		那麼這個檔案系統概念與實際的目錄樹應用有啥關連啊？</p>
+	</div>
+
+	<hr /><a name="harddisk-dir"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">與目錄樹的關係</span><br />
+	<div class="block2">
+		<p>由前一小節的介紹我們知道在 Linux 系統下，每個檔案(不管是一般檔案還是目錄檔案)都會佔用一個 inode ，
+		且可依據檔案內容的大小來分配多個 block 給該檔案使用。而由<a 
+		href="/linux_basic/0210filepermission.php#filepermission_dir">第六章的權限說明</a>中我們知道目錄的內容在記錄檔名，
+		一般檔案才是實際記錄資料內容的地方。那麼目錄與檔案在 Ext2 檔案系統當中是如何記錄資料的呢？
+		基本上可以這樣說：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">目錄</li></ul>
+
+		<p>當我們在 Linux 下的 ext2 檔案系統建立一個目錄時，<span class="text_import2"> ext2 會分配一個 inode 
+		與至少一塊 block 給該目錄</span>。其中，inode 記錄該目錄的相關權限與屬性，並可記錄分配到的那塊 block 號碼；
+		而 block 則是記錄在這個目錄下的檔名與該檔名佔用的 inode 號碼資料。也就是說目錄所佔用的 block 內容在記錄如下的資訊：</p>
+
+		<center><img src="0230filesystem/dir_block.jpg" alt="目錄佔用的 block 記錄的資料示意圖" 
+		title="目錄佔用的 block 記錄的資料示意圖" border="0" /><br />
+		圖1.4.1、目錄佔用的 block 記錄的資料示意圖<br /></center>
+
+		<p>如果想要實際觀察 root 家目錄內的檔案所佔用的 inode 號碼時，可以使用 ls -i 這個選項來處理：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -li</span>
+total 92
+<span class="term_write">654683</span> -rw------- 1 root root  1474 Sep  4 18:27 anaconda-ks.cfg
+<span class="term_write">648322</span> -rw-r--r-- 1 root root 42304 Sep  4 18:26 install.log
+<span class="term_write">648323</span> -rw-r--r-- 1 root root  5661 Sep  4 18:25 install.log.syslog
+
+</pre></td></tr></table>
+
+		<p>由於每個人所使用的電腦並不相同，系統安裝時選擇的項目與 partition 都不一樣，因此你的環境不可能與我的 inode 
+		號碼一模一樣！上表的右邊所列出的 inode 僅是鳥哥的系統所顯示的結果而已！而由這個目錄的 block 結果我們現在就能夠知道，
+		當你使用『 ll / 』時，出現的目錄幾乎都是 1024 的倍數，為什麼呢？因為每個 block 的數量都是 1K, 2K, 4K 嘛！
+		看一下鳥哥的環境：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll -d / /bin /boot /proc /lost+found /sbin</span>
+drwxr-xr-x 23 root root  4096 Sep 22 12:09 /           <span class="term_note">&lt;==一個 4K block</span>
+drwxr-xr-x  2 root root  4096 Sep 24 00:07 /bin        <span class="term_note">&lt;==一個 4K block</span>
+drwxr-xr-x  4 root root  1024 Sep  4 18:06 /boot       <span class="term_note">&lt;==一個 1K block</span>
+
+drwx------  2 root root 16384 Sep  5 01:49 /lost+found <span class="term_note">&lt;==四個 4K block</span>
+dr-xr-xr-x 96 root root     0 Sep 22 20:07 /proc       <span class="term_note">&lt;==此目錄不佔硬碟空間</span>
+drwxr-xr-x  2 root root 12288 Sep  5 12:33 /sbin       <span class="term_note">&lt;==三個 4K block</span>
+</pre></td></tr></table>
+
+		<p>由於鳥哥的根目錄 /dev/hdc2 使用的 block 大小為 4K ，因此每個目錄幾乎都是 4K 的倍數。
+		其中由於 /sbin 的內容比較複雜因此佔用了 3 個 block ，此外，鳥哥的系統中 /boot 為獨立的 partition ，
+		該 partition 的 block 為 1K 而已，因此該目錄就僅佔用 1024 bytes 的大小囉！至於奇怪的 /proc
+		我們在<a href="/linux_basic/0210filepermission.php#dir">第六章</a>就講過該目錄不佔硬碟容量，
+		所以當然耗用的 block 就是 0 囉！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		由上面的結果我們知道目錄並不只會佔用一個 block 而已，也就是說：
+		在目錄底下的檔案數如果太多而導致一個 block 無法容納的下所有的檔名與 inode 對照表時，Linux 
+		會給予該目錄多一個 block 來繼續記錄相關的資料；
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr /><ul class="list1"><li class="text_import1">檔案：</li></ul>
+
+		<p>當我們在 Linux 下的 ext2 建立一個一般檔案時， ext2 會分配一個 inode 
+		與相對於該檔案大小的 block 數量給該檔案。例如：假設我的一個 block 為 4 Kbytes 
+		，而我要建立一個 100 KBytes 的檔案，那麼 linux 將分配一個 inode 與 25 個 block 來儲存該檔案！
+		但同時請注意，由於 inode 僅有 12 個直接指向，因此還要多一個 block 來作為區塊號碼的記錄喔！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">目錄樹讀取：</li></ul>
+
+		<p>好了，經過上面的說明你也應該要很清楚的知道 inode 本身並不記錄檔名，檔名的記錄是在目錄的 block 當中。
+		因此在<a href="/linux_basic/0210filepermission.php#filepermission_dir">第六章檔案與目錄的權限</a>說明中，
+		我們才會提到『新增/刪除/更名檔名與目錄的 w 權限有關』的特色！那麼因為檔名是記錄在目錄的 block 當中，
+		因此當我們要讀取某個檔案時，就務必會經過目錄的 inode 與 block ，然後才能夠找到那個待讀取檔案的 inode 號碼，
+		最終才會讀到正確的檔案的 block 內的資料。</p>
+
+		<p>由於目錄樹是由根目錄開始讀起，因此系統透過掛載的資訊可以找到掛載點的 inode 號碼(通常一個 filesystem 的最頂層 inode
+		號碼會由 2 號開始喔！)，此時就能夠得到根目錄的 inode 內容，並依據該 inode 讀取根目錄的 block 
+		內的檔名資料，再一層一層的往下讀到正確的檔名。</p>
+
+		<p>舉例來說，如果我想要讀取 /etc/passwd 這個檔案時，系統是如何讀取的呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll -di / /etc /etc/passwd</span>
+
+<span class="term_write">      2</span> drwxr-x<span class="term_write">r-x</span>  23 root root  4096 Sep 22 12:09 /
+<span class="term_write">1912545</span> drwxr-x<span class="term_write">r-x</span> 105 root root 12288 Oct 14 04:02 /etc
+<span class="term_write">1914888</span> -rw-r--<span class="term_write">r--</span>   1 root root  1945 Sep 29 02:21 /etc/passwd
+
+</pre></td></tr></table>
+
+		<p>在鳥哥的系統上面與 /etc/passwd 有關的目錄與檔案資料如上表所示，該檔案的讀取流程為(假設讀取者身份為 vbird 
+		這個一般身份使用者)：</p>
+		<ol class="text_import2">
+		<li>/ 的 inode：<br /> 透過掛載點的資訊找到 /dev/hdc2 的 inode 號碼為 2 的根目錄 inode，且 inode 
+			規範的權限讓我們可以讀取該 block 的內容(有 r 與 x) ；<br /><br /></li>
+		<li>/ 的 block：<br /> 經過上個步驟取得 block 的號碼，並找到該內容有 etc/ 目錄的 inode 號碼 (1912545)；
+			<br /><br /></li>
+
+		<li>etc/ 的 inode：<br /> 讀取 1912545 號 inode 得知 vbird 具有 r 與 x 的權限，因此可以讀取 etc/ 的 block 內容；
+			<br /><br /></li>
+		<li>etc/ 的 block：<br /> 經過上個步驟取得 block 號碼，並找到該內容有 passwd 檔案的 inode 號碼 (1914888)；
+			<br /><br /></li>
+		<li>passwd 的 inode：<br /> 讀取 1914888 號 inode 得知 vbird 具有 r 的權限，因此可以讀取 passwd  的 block 內容；
+			<br /><br /></li>
+		<li>passwd 的 block：<br /> 最後將該 block 內容的資料讀出來。</li>
+
+		</ol>
+		<br />
+
+		<hr /><ul class="list1"><li class="text_import1">filesystem 大小與磁碟讀取效能：</li></ul>
+
+		<p>另外，關於檔案系統的使用效率上，當你的一個檔案系統規劃的很大時，例如 100GB 這麼大時，
+		由於硬碟上面的資料總是來來去去的，所以，整個檔案系統上面的檔案通常無法連續寫在一起(block 號碼不會連續的意思)，
+		而是填入式的將資料填入沒有被使用的 block 當中。如果檔案寫入的 block 真的分的很散，
+		此時就會有所謂的<span class="text_import2">檔案資料離散</span>的問題發生了。</p>
+
+		<p>如前所述，雖然我們的 ext2 在 inode 處已經將該檔案所記錄的 block 號碼都記上了，
+		所以資料可以一次性讀取，但是如果檔案真的太過離散，確實還是會發生讀取效率低落的問題。
+		因為磁碟讀取頭還是得要在整個檔案系統中來來去去的頻繁讀取！
+		果真如此，那麼可以將整個 filesystme 內的資料全部複製出來，將該 filesystem 重新格式化，
+		再將資料給他複製回去即可解決這個問題。</p>
+
+		<p>此外，如果 filesystem 真的太大了，那麼當一個檔案分別記錄在這個檔案系統的最前面與最後面的 block 號碼中，
+		此時會造成硬碟的機械手臂移動幅度過大，也會造成資料讀取效能的低落。而且讀取頭再搜尋整個 filesystem 時，
+		也會花費比較多的時間去搜尋！因此， partition 的規劃並不是越大越好，
+		而是真的要針對您的主機用途來進行規劃才行！^_^ </p>
+	</div>
+
+	<hr /><a name="harddisk-journal"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">EXT2/EXT3 
+	檔案的存取與日誌式檔案系統的功能</span><br />
+	<div class="block2">
+		<p>上一小節談到的僅是讀取而已，那麼如果是新建一個檔案或目錄時，我們的 Ext2 是如何處理的呢？
+		這個時候就得要 block bitmap 及 inode bitmap 的幫忙了！假設我們想要新增一個檔案，此時檔案系統的行為是：</p>
+		<ol class="text_import2">
+
+		<li>先確定使用者對於欲新增檔案的目錄是否具有 w 與 x 的權限，若有的話才能新增；</li>
+		<li>根據 inode bitmap 找到沒有使用的 inode 號碼，並將新檔案的權限/屬性寫入；</li>
+		<li>根據 block bitmap 找到沒有使用中的 block 號碼，並將實際的資料寫入 block 中，且更新 inode 的 block 
+		指向資料；</li>
+		<li>將剛剛寫入的 inode 與 block 資料同步更新 inode bitmap 與 block bitmap，並更新 superblock 的內容。</li>
+		</ol>
+
+		<p>一般來說，我們將 inode table 與 data block 稱為資料存放區域，至於其他例如 superblock、
+		block bitmap 與 inode bitmap 等區段就被稱為 metadata (中介資料) 囉，因為 <span
+		class="text_import2">superblock, inode bitmap 及 block bitmap
+		的資料是經常變動的，每次新增、移除、編輯時都可能會影響到這三個部分的資料，因此才被稱為中介資料</span>的啦。
+		<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">資料的不一致 (Inconsistent) 狀態</li></ul>
+
+		<p>在一般正常的情況下，上述的新增動作當然可以順利的完成。但是如果有個萬一怎麼辦？
+		例如你的檔案在寫入檔案系統時，因為不知名原因導致系統中斷(例如突然的停電啊、
+		系統核心發生錯誤啊～等等的怪事發生時)，所以寫入的資料僅有 inode table 及 data block 而已，
+		最後一個同步更新中介資料的步驟並沒有做完，此時就會發生 metadata 的內容與實際資料存放區產生<span 
+		class="text_import2">不一致 (Inconsistent)</span> 的情況了。</p>
+
+		<p>既然有不一致當然就得要克服！在早期的 Ext2 檔案系統中，如果發生這個問題，
+		那麼系統在重新開機的時候，就會藉由 Superblock 當中記錄的 valid bit (是否有掛載) 與 
+		filesystem state (clean 與否) 等狀態來判斷是否強制進行資料一致性的檢查！若有需要檢查時則以 <a 
+		href="#fsck">e2fsck</a> 這支程式來進行的。</p>
+
+		<p>不過，這樣的檢查真的是很費時～因為要針對 metadata 區域與實際資料存放區來進行比對，
+		呵呵～得要搜尋整個 filesystem 呢～如果你的檔案系統有 100GB 以上，而且裡面的檔案數量又多時，
+		哇！系統真忙碌～而且在對 Internet 提供服務的伺服器主機上面，
+		這樣的檢查真的會造成主機復原時間的拉長～真是麻煩～這也就造成後來所謂日誌式檔案系統的興起了。<br /><br /></p>
+
+		<a name="journal"></a>
+		<hr /><ul class="list1"><li class="text_import1">日誌式檔案系統 (Journaling filesystem)</li></ul>
+
+		<p>為了避免上述提到的檔案系統不一致的情況發生，因此我們的前輩們想到一個方式，
+		如果在我們的 filesystem 當中規劃出一個區塊，該區塊專門在記錄寫入或修訂檔案時的步驟，
+		那不就可以簡化一致性檢查的步驟了？也就是說：</p>
+
+		<ol class="text_import2">
+
+		<li>預備：當系統要寫入一個檔案時，會先在日誌記錄區塊中紀錄某個檔案準備要寫入的資訊；</li>
+		<li>實際寫入：開始寫入檔案的權限與資料；開始更新 metadata 的資料；</li>
+		<li>結束：完成資料與 metadata 的更新後，在日誌記錄區塊當中完成該檔案的紀錄。</li></ol>
+
+		<p>在這樣的程序當中，萬一資料的紀錄過程當中發生了問題，那麼我們的系統只要去檢查日誌記錄區塊，
+		就可以知道那個檔案發生了問題，針對該問題來做一致性的檢查即可，而不必針對整塊 filesystem 去檢查，
+		這樣就可以達到快速修復 filesystem 的能力了！這就是日誌式檔案最基礎的功能囉～</p>
+
+		<p>那麼我們的 ext2 可達到這樣的功能嗎？當然可以啊！
+		就透過 ext3 即可！ ext3 是 ext2 的升級版本，並且可向下相容 ext2 版本呢！
+		所以囉，目前我們才建議大家，可以直接使用 ext3 這個 filesystem 啊！
+		如果你還記得 <a href="#dumpe2fs">dumpe2fs</a> 輸出的訊息，可以發現 superblock 裡面含有底下這樣的資訊：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Journal inode:            8 
+Journal backup:           inode blocks
+Journal size:             128M
+</pre></td></tr></table>
+
+		<p>看到了吧！透過 inode 8 號記錄 journal 區塊的 block 指向，而且具有 128MB 的容量在處理日誌呢！
+		這樣對於所謂的日誌式檔案系統有沒有比較有概念一點呢？^_^。如果想要知道為什麼 Ext3 檔案系統會更適用於目前的 Linux 系統，
+		我們可以參考 Red Hat 公司中，首席核心開發者 Michael K. Johnson 的話：(<a href="#ps6">註6</a>)</p>
+
+<table border="1" width="95%" cellspacing="0" cellpadding="5"><tr><td>
+『為什麼你想要從ext2轉換到ext3呢？有四個主要的理由：<span class="text_import2">可利用性、資料完整性、速度及易於轉換</span>』
+『可利用性』，他指出，這意味著從系統中止到快速重新復原而不是持續的讓e2fsck執行長時間的修復。ext3
+的日誌式條件可以避免資料毀損的可能。他也指出：
+『除了寫入若干資料超過一次時，ext3往往會較快於ext2，因為ext3的日誌使硬碟讀取頭的移動能更有效的進行』
+然而或許決定的因素還是在Johnson先生的第四個理由中。<br /><br />
+
+『它是可以輕易的從ext2變更到ext3來獲得一個強而有力的日誌式檔案系統而不需要重新做格式化』。『那是正確的，為了體驗一下
+ext3 的好處是不需要去做一種長時間的，冗長乏味的且易於產生錯誤的備份工作及重新格式化的動作』。
+</td></tr></table>
+	</div>
+
+	<hr /><a name="harddisk-filerun"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Linux 檔案系統的運作：</span><br />
+	<div class="block2">
+		<p>我們現在知道了目錄樹與檔案系統的關係了，但是由<a href="/linux_basic/0105computers.php">第零章</a>的內容我們也知道，
+		所有的資料都得要載入到記憶體後 CPU 才能夠對該資料進行處理。想一想，如果你常常編輯一個好大的檔案，
+		在編輯的過程中又頻繁的要系統來寫入到磁碟中，由於磁碟寫入的速度要比記憶體慢很多，
+		因此你會常常耗在等待硬碟的寫入/讀取上。真沒效率！</p>
+
+		<p>為了解決這個效率的問題，因此我們的 Linux 使用的方式是透過一個稱為非同步處理 (asynchronously) 
+		的方式。所謂的非同步處理是這樣的：</p>
+
+		<p>當系統載入一個檔案到記憶體後，如果該檔案沒有被更動過，則在記憶體區段的檔案資料會被設定為乾淨(clean)的。
+		<span class="text_import2">但如果記憶體中的檔案資料被更改過了(例如你用 nano 
+		去編輯過這個檔案)，此時該記憶體中的資料會被設定為髒的
+		(Dirty)。此時所有的動作都還在記憶體中執行，並沒有寫入到磁碟中</span>！
+		系統會不定時的將記憶體中設定為『Dirty』的資料寫回磁碟，以保持磁碟與記憶體資料的一致性。
+		你也可以利用<a href="/linux_basic/0160startlinux.php#sync">第五章談到的 sync</a>指令來手動強迫寫入磁碟。</p>
+
+		<p>我們知道記憶體的速度要比硬碟快的多，因此如果能夠將常用的檔案放置到記憶體當中，這不就會增加系統性能嗎？
+		沒錯！是有這樣的想法！因此我們 Linux 系統上面檔案系統與記憶體有非常大的關係喔：</p>
+
+		<ul class="text_import2">
+		<li>系統會將常用的檔案資料放置到主記憶體的緩衝區，以加速檔案系統的讀/寫；</li>
+
+		<li>承上，因此 Linux 的實體記憶體最後都會被用光！這是正常的情況！可加速系統效能；</li>
+		<li>你可以手動使用 sync 來強迫記憶體中設定為 Dirty 的檔案回寫到磁碟中；</li>
+		<li>若正常關機時，關機指令會主動呼叫 sync 來將記憶體的資料回寫入磁碟內；</li>
+		<li>但若不正常關機(如跳電、當機或其他不明原因)，由於資料尚未回寫到磁碟內，
+		因此重新開機後可能會花很多時間在進行磁碟檢驗，甚至可能導致檔案系統的損毀(非磁碟損毀)。</li>
+		</ul>
+	</div>
+
+	<hr /><a name="harddisk-mount"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">掛載點的意義 (mount point)：</span><br />
+	<div class="block2">
+		<p>每個 filesystem 都有獨立的 inode / block / superblock 等資訊，這個檔案系統要能夠連結到目錄樹才能被我們使用。
+		將檔案系統與目錄樹結合的動作我們稱為『<span class="text_import2">掛載</span>』。
+		關於掛載的一些特性我們在<a href="/linux_basic/0130designlinux.php#partition_install">第三章</a>稍微提過，
+		重點是：<span class="text_import2">掛載點一定是目錄，該目錄為進入該檔案系統的入口。</span>
+		因此並不是你有任何檔案系統都能使用，必須要『掛載』到目錄樹的某個目錄後，才能夠使用該檔案系統的。</p>
+
+		<p>舉例來說，如果你是依據鳥哥的方法<a href="/linux_basic/0157installcentos5.php">安裝你的 CentOS 5.x</a> 的話，
+		那麼應該會有三個掛載點才是，分別是 /, /boot, /home 三個 (鳥哥的系統上對應的裝置檔名為 /dev/hdc2, /dev/hdc1, /dev/hdc3)。
+		那如果觀察這三個目錄的 inode 號碼時，我們可以發現如下的情況：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -lid / /boot /home</span>
+<span class="term_write">2</span> drwxr-xr-x 23 root root 4096 Sep 22 12:09 /
+<span class="term_write">2</span> drwxr-xr-x  4 root root 1024 Sep  4 18:06 /boot
+
+<span class="term_write">2</span> drwxr-xr-x  6 root root 4096 Sep 29 02:21 /home
+</pre></td></tr></table>
+
+		<p>看到了吧！由於 filesystem 最頂層的目錄之 inode 一般為 2 號，因此可以發現 /, /boot, /home 為三個不同的 filesystem 囉！
+		(因為每一行的檔案屬性並不相同，且三個目錄的掛載點也均不相同之故。)
+		我們在<a href="/linux_basic/0220filemanager.php">第七章一開始的路徑</a>中曾經提到根目錄下的 . 與 .. 是相同的東西，
+		因為權限是一模一樣嘛！如果使用檔案系統的觀點來看，<span class="text_import2">同一個 filesystem 
+		的某個 inode 只會對應到一個檔案內容而已(因為一個檔案佔用一個 inode 之故)</span>，
+		因此我們可以透過判斷 inode 號碼來確認不同檔名是否為相同的檔案喔！所以可以這樣看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -ild /  /.  /..</span>
+
+2 drwxr-xr-x 23 root root 4096 Sep 22 12:09 /
+2 drwxr-xr-x 23 root root 4096 Sep 22 12:09 /.
+2 drwxr-xr-x 23 root root 4096 Sep 22 12:09 /..
+</pre></td></tr></table>
+
+		<p>上面的資訊中由於掛載點均為 / ，因此三個檔案 (/, /., /..) 均在同一個 filesystem 內，而這三個檔案的
+		inode 號碼均為 2 號，因此這三個檔名都指向同一個 inode 號碼，當然這三個檔案的內容也就完全一模一樣了！
+		也就是說，根目錄的上層 (/..) 就是他自己！這麼說，看的懂了嗎？ ^_^</p>
+	</div>
+
+	<hr /><a name="harddisk-other"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">其他 Linux 支援的檔案系統與 VFS</span><br />
+	<div class="block2">
+		<p>雖然 Linux 的標準檔案系統是 ext2 ，且還有增加了日誌功能的 ext3 ，事實上，Linux 還有支援很多檔案系統格式的，
+		尤其是最近這幾年推出了好幾種速度很快的日誌式檔案系統，包括 SGI 的 XFS 檔案系統，
+		可以適用更小型檔案的 Reiserfs 檔案系統，以及 Windows 的 FAT 檔案系統等等，
+		都能夠被 Linux 所支援喔！常見的支援檔案系統有：</p>
+
+		<ul>
+		<li>傳統檔案系統：ext2 / minix / MS-DOS / FAT (用 vfat 模組) / iso9660 (光碟)等等；</li>
+		<li>日誌式檔案系統： ext3 / ReiserFS / Windows' NTFS / IBM's JFS / SGI's XFS</li>
+		<li>網路檔案系統： NFS / SMBFS </li></ul>
+
+		<p>想要知道你的 Linux 支援的檔案系統有哪些，可以察看底下這個目錄：</p>
+
+<table class="term"><tr><td class="term"><pre>
+
+[root@www ~]# <span class="term_command">ls -l /lib/modules/$(uname -r)/kernel/fs</span>
+</pre></td></tr></table>
+
+		<p>系統目前已載入到記憶體中支援的檔案系統則有：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /proc/filesystems</span>
+</pre></td></tr></table>
+
+		<ul class="list1"><li class="text_import1">Linux VFS (Virtual Filesystem Switch)</li></ul>
+
+		<p>瞭解了我們使用的檔案系統之後，再來則是要提到，那麼 Linux 的核心又是如何管理這些認識的檔案系統呢？
+		其實，整個 Linux 的系統都是透過一個名為 Virtual Filesystem Switch 的核心功能去讀取 filesystem 的。 
+		也就是說，整個 Linux 認識的 filesystem 其實都是 VFS 在進行管理，我們使用者並不需要知道每個 partition 上頭的 
+		filesystem 是什麼～ VFS 會主動的幫我們做好讀取的動作呢～</p>
+
+		<p>假設你的 / 使用的是 /dev/hda1 ，用 ext3 ，而 /home 使用 /dev/hda2 ，用 reiserfs ，
+		那麼你取用 /home/dmtsai/.bashrc 時，有特別指定要用的什麼檔案系統的模組來讀取嗎？
+		應該是沒有吧！這個就是 VFS 的功能啦！透過這個 VFS 的功能來管理所有的 filesystem，
+		省去我們需要自行設定讀取檔案系統的定義啊～方便很多！整個 VFS 可以約略用下圖來說明：</p>
+
+		<center><img src="0230filesystem/vfs.gif" alt="VFS 檔案系統的示意圖" 
+		title="VFS 檔案系統的示意圖" border="0" /><br />
+		圖 1.8.1、VFS 檔案系統的示意圖<br /></center>
+
+		<p>老實說，檔案系統真的不好懂！
+		如果你想要對檔案系統有更深入的瞭解，<a href="#ps7">文末的相關連結(註7)</a>務必要參考參考才好喔！
+		鳥哥有找了一些資料放置於這裡：</p>
+
+		<ul><li><a href="/linux_basic/1010appendix_B.php">Ext2/Ext3 檔案系統：http://linux.vbird.org/linux_basic/1010appendix_B.php</a></li></ul>
+
+		<p>有興趣的朋友務必要前往參考參考才好！</p>
+	</div>
+</div>
+
+<hr /><a name="filesys"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">檔案系統的簡單操作</span><br />
+<div class="block1">
+	<p>稍微瞭解了檔案系統後，再來我們得要知道如何查詢整體檔案系統的總容量與每個目錄所佔用的容量囉！
+	此外，前兩章談到的檔案類型中尚未講的很清楚的連結檔 (Link file) 也會在這一小節當中介紹的。<br /><br /></p>
+
+	<hr /><a name="filesys_1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟與目錄的容量：</span><br />
+	<div class="block2">
+		<p>現在我們知道磁碟的整體資料是在 superblock 區塊中，但是每個各別檔案的容量則在 inode 當中記載的。
+		那在文字介面底下該如何叫出這幾個資料呢？底下就讓我們來談一談這兩個指令：</p>
+		<ul>
+		<li>df：列出檔案系統的整體磁碟使用量；</li>
+		<li>du：評估檔案系統的磁碟使用量(常用在推估目錄所佔容量)</li>
+
+		</ul><br />
+
+		<a name="df"></a><hr />
+		<ul class="list1"><li class="text_import1">df</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">df [-ahikHTm] [目錄或檔名]</span>
+<span class="term_say">選項與參數：
+-a  ：列出所有的檔案系統，包括系統特有的 /proc 等檔案系統；
+-k  ：以 KBytes 的容量顯示各檔案系統；
+-m  ：以 MBytes 的容量顯示各檔案系統；
+<u>-h  ：以人們較易閱讀的 GBytes, MBytes, KBytes 等格式自行顯示；</u>
+-H  ：以 M=1000K 取代 M=1024K 的進位方式；
+-T  ：連同該 partition 的 filesystem 名稱 (例如 ext3) 也列出；
+
+<u>-i  ：不用硬碟容量，而以 inode 的數量來顯示</u></span>
+
+<span class="term_hd">範例一：將系統內所有的 filesystem 列出來！</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem      <span class="term_write">1K-blocks</span>      Used Available Use% Mounted on
+/dev/hdc2         9920624   3823112   5585444  41% /
+/dev/hdc3         4956316    141376   4559108   4% /home
+/dev/hdc1          101086     11126     84741  12% /boot
+tmpfs              371332         0    371332   0% /dev/shm
+<span class="term_say"># 在 Linux 底下如果 df 沒有加任何選項，那麼預設會將系統內所有的 
+# (不含特殊記憶體內的檔案系統與 swap) 都以 1 Kbytes 的容量來列出來！
+# 至於那個 /dev/shm 是與記憶體有關的掛載，先不要理他！</span>
+
+<span class="term_hd">範例二：將容量結果以易讀的容量格式顯示出來</span>
+
+[root@www ~]# <span class="term_command">df -h</span>
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hdc2             9.5G  3.7G  5.4G  41% /
+/dev/hdc3             4.8G  139M  4.4G   4% /home
+/dev/hdc1              99M   11M   83M  12% /boot
+tmpfs                 363M     0  363M   0% /dev/shm
+<span class="term_say"># 不同於範例一，這裡會以 G/M 等容量格式顯示出來，比較容易看啦！</span>
+
+<span class="term_hd">範例三：將系統內的所有特殊檔案格式及名稱都列出來</span>
+[root@www ~]# <span class="term_command">df -aT</span>
+Filesystem    <span class="term_write">Type</span> 1K-blocks    Used Available Use% Mounted on
+/dev/hdc2     ext3   9920624 3823112   5585444  41% /
+proc          proc         0       0         0   -  /proc
+sysfs        sysfs         0       0         0   -  /sys
+devpts      devpts         0       0         0   -  /dev/pts
+/dev/hdc3     ext3   4956316  141376   4559108   4% /home
+/dev/hdc1     ext3    101086   11126     84741  12% /boot
+tmpfs        tmpfs    371332       0    371332   0% /dev/shm
+none   binfmt_misc         0       0         0   -  /proc/sys/fs/binfmt_misc
+sunrpc  rpc_pipefs         0       0         0   -  /var/lib/nfs/rpc_pipefs
+<span class="term_say"># 系統裡面其實還有很多特殊的檔案系統存在的。那些比較特殊的檔案系統幾乎
+# 都是在記憶體當中，例如 /proc 這個掛載點。因此，這些特殊的檔案系統
+# 都不會佔據硬碟空間喔！ ^_^</span>
+
+<span class="term_hd">範例四：將 /etc 底下的可用的磁碟容量以易讀的容量格式顯示</span>
+[root@www ~]# <span class="term_command">df -h /etc</span>
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hdc2             9.5G  3.7G  5.4G  41% /
+<span class="term_say"># 這個範例比較有趣一點啦，在 df 後面加上目錄或者是檔案時， df
+# 會自動的分析該目錄或檔案所在的 partition ，並將該 partition 的容量顯示出來，
+# 所以，您就可以知道某個目錄底下還有多少容量可以使用了！ ^_^</span>
+
+<span class="term_hd">範例五：將目前各個 partition 當中可用的 inode 數量列出</span>
+[root@www ~]# <span class="term_command">df -ih </span>
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/hdc2               2.5M    147K    2.3M    6% /
+/dev/hdc3               1.3M      46    1.3M    1% /home
+/dev/hdc1                26K      34     26K    1% /boot
+tmpfs                    91K       1     91K    1% /dev/shm
+<span class="term_say"># 這個範例則主要列出可用的 inode 剩餘量與總容量。分析一下與範例一的關係，
+# 你可以清楚的發現到，通常 inode 的數量剩餘都比 block 還要多呢</span>
+
+</pre></td></tr></table>
+
+		<p>先來說明一下範例一所輸出的結果訊息為：</p>
+		<ul>
+		<li><span class="text_import2">Filesystem</span>：代表該檔案系統是在哪個 partition ，所以列出裝置名稱；</li>
+		<li><span class="text_import2">1k-blocks</span>：說明底下的數字單位是 1KB 呦！可利用 -h 或 -m 來改變容量；</li>
+		<li><span class="text_import2">Used</span>：顧名思義，就是使用掉的硬碟空間啦！</li>
+
+		<li><span class="text_import2">Available</span>：也就是剩下的磁碟空間大小；</li>
+		<li><span class="text_import2">Use%</span>：就是磁碟的使用率啦！如果使用率高達 90% 以上時，
+			最好需要注意一下了，免得容量不足造成系統問題喔！(例如最容易被灌爆的 /var/spool/mail 這個放置郵件的磁碟)</li>
+		<li><span class="text_import2">Mounted on</span>：就是磁碟掛載的目錄所在啦！(掛載點啦！)</li>
+		</ul>
+
+		<p>由於 df 主要讀取的資料幾乎都是針對一整個檔案系統，因此讀取的範圍主要是在 Superblock 內的資訊，
+		所以這個指令顯示結果的速度非常的快速！在顯示的結果中你需要特別留意的是那個根目錄的剩餘容量！
+		因為我們所有的資料都是由根目錄衍生出來的，因此當根目錄的剩餘容量剩下 0 時，那你的 Linux 可能就問題很大了。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		說個陳年老笑話！鳥哥還在唸書時，別的研究室有個管理 Sun 工作站的研究生發現，
+		他的硬碟明明還有好幾 GB ，但是就是沒有辦法將光碟內幾 MB 的資料 copy 進去，
+		他就去跟老闆講說機器壞了！嘿！明明才來維護過幾天而已為何會壞了！
+		結果他老闆就將維護商叫來罵了 2 小時左右吧！<br /><br />
+
+		後來，維護商發現原來硬碟的『總空間』還有很多，
+		只是某個分割槽填滿了，偏偏該研究生就是要將資料 copy 去那個分割槽！呵呵！
+		後來那個研究生就被命令『再也不許碰 Sun 主機』了～～
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>另外需要注意的是，如果使用 -a 這個參數時，系統會出現 /proc 這個掛載點，但是裡面的東西都是 
+		0 ，不要緊張！ /proc 的東西都是 Linux 系統所需要載入的系統資料，而且是掛載在『記憶體當中』的，
+		所以當然沒有佔任何的硬碟空間囉！</p>
+
+		<p>至於<span class="text_import2">那個 /dev/shm/ 目錄，其實是利用記憶體虛擬出來的磁碟空間！</span>
+
+		由於是透過記憶體模擬出來的磁碟，因此你在這個目錄底下建立任何資料檔案時，存取速度是非常快速的！(在記憶體內工作)
+		不過，也由於他是記憶體模擬出來的，因此這個檔案系統的大小在每部主機上都不一樣，而且建立的東西在下次開機時就消失了！
+		因為是在記憶體中嘛！<br /><br /></p>
+
+		<a name="du"></a><hr />
+		<ul class="list1"><li class="text_import1">du</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">du [-ahskm] 檔案或目錄名稱</span>
+<span class="term_say">選項與參數：
+-a  ：列出所有的檔案與目錄容量，因為預設僅統計目錄底下的檔案量而已。
+-h  ：以人們較易讀的容量格式 (G/M) 顯示；
+<u>-s  ：列出總量而已，而不列出每個各別的目錄佔用容量；</u>
+
+-S  ：不包括子目錄下的總計，與 -s 有點差別。
+-k  ：以 KBytes 列出容量顯示；
+-m  ：以 MBytes 列出容量顯示；</span>
+
+<span class="term_hd">範例一：列出目前目錄下的所有檔案容量</span>
+[root@www ~]# <span class="term_command">du</span>
+8       ./test4     <span class="term_note">&lt;==每個目錄都會列出來</span>
+8       ./test2
+<span class="term_say">....中間省略....</span>
+12      ./.gconfd   <span class="term_note">&lt;==包括隱藏檔的目錄</span>
+
+220     .           <span class="term_note">&lt;==這個目錄(.)所佔用的總量</span>
+<span class="term_say"># 直接輸入 du 沒有加任何選項時，則 du 會分析『目前所在目錄』
+# 的檔案與目錄所佔用的硬碟空間。但是，實際顯示時，僅會顯示目錄容量(不含檔案)，
+# 因此 . 目錄有很多檔案沒有被列出來，所以全部的目錄相加不會等於 . 的容量喔！
+# 此外，輸出的數值資料為 1K 大小的容量單位。</span>
+
+<span class="term_hd">範例二：同範例一，但是將檔案的容量也列出來</span>
+[root@www ~]# <span class="term_command">du -a</span>
+12      ./install.log.syslog   <span class="term_note">&lt;==有檔案的列表了</span>
+8       ./.bash_logout
+8       ./test4
+8       ./test2
+<span class="term_say">....中間省略....</span>
+
+12      ./.gconfd
+220     .
+
+<span class="term_hd">範例三：檢查根目錄底下每個目錄所佔用的容量</span>
+[root@www ~]# <span class="term_command">du -sm /*</span>
+7       /bin
+6       /boot
+<span class="term_say">.....中間省略....</span>
+0       /proc
+<span class="term_say">.....中間省略....</span>
+1       /tmp
+3859    /usr     <span class="term_note">&lt;==系統初期最大就是他了啦！</span>
+77      /var
+<span class="term_say"># 這是個很常被使用的功能～利用萬用字元 * 來代表每個目錄，
+# 如果想要檢查某個目錄下，那個次目錄佔用最大的容量，可以用這個方法找出來
+# 值得注意的是，如果剛剛安裝好 Linux 時，那麼整個系統容量最大的應該是 /usr 
+# 而 /proc 雖然有列出容量，但是那個容量是在記憶體中，不佔硬碟空間。</span>
+
+</pre></td></tr></table>
+
+		<p>與 df 不一樣的是，du 這個指令其實會直接到檔案系統內去搜尋所有的檔案資料，
+		所以上述第三個範例指令的運作會執行一小段時間！此外，在預設的情況下，容量的輸出是以 KB 來設計的，
+		如果你想要知道目錄佔了多少 MB ，那麼就使用 -m 這個參數即可囉！而，
+		如果你只想要知道該目錄佔了多少容量的話，使用 -s 就可以啦！</p>
+
+		<a name="20090830"></a>
+		<p>至於 -S 這個選項部分，由於 du 預設會將所有檔案的大小均列出，因此假設你在 /etc 底下使用 du 時，
+		所有的檔案大小，包括 /etc 底下的次目錄容量也會被計算一次。然後最終的容量 (/etc) 也會加總一次，
+		因此很多朋友都會誤會 du 分析的結果不太對勁。所以囉，如果想要列出某目錄下的全部資料，
+		或許也可以加上 -S 的選項，減少次目錄的加總喔！</p>
+
+	</div>
+
+	<hr /><a name="link"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實體連結與符號連結： ln</span><br />
+
+	<div class="block2">
+		<p>關於連結(link)資料我們第六章的<a 
+		href="/linux_basic/0210filepermission.php#filepermission_perm">Linux檔案屬性</a>及<a
+		href="/linux_basic/0210filepermission.php#filepermission_type">Linux檔案種類與副檔名</a>當中提過一些資訊，
+		不過當時由於尚未講到檔案系統，因此無法較完整的介紹連結檔啦。不過在上一小節談完了檔案系統後，
+		我們可以來瞭解一下連結檔這玩意兒了。</p>
+
+		<p>在 Linux 底下的連結檔有兩種，一種是類似 Windows 的捷徑功能的檔案，可以讓你快速的連結到目標檔案(或目錄)；
+		另一種則是透過檔案系統的 inode 連結來產生新檔名，而不是產生新檔案！這種稱為實體連結 (hard link)。
+		這兩種玩意兒是完全不一樣的東西呢！現在就分別來談談。<br /><br /></p>
+
+		<a name="hard_link"></a><hr />
+		<ul class="list1"><li class="text_import1">Hard Link (實體連結, 硬式連結或實際連結)</li></ul>
+
+		<p>在前一小節當中，我們知道幾件重要的資訊，包括：</p>
+		<ul>
+		<li>每個檔案都會佔用一個 inode ，檔案內容由 inode 的記錄來指向；</li>
+		<li>想要讀取該檔案，必須要經過目錄記錄的檔名來指向到正確的 inode 號碼才能讀取。</li>
+		</ul>
+
+		<p>也就是說，其實檔名只與目錄有關，但是檔案內容則與 inode 有關。那麼想一想，
+		<span class="text_import2">有沒有可能有多個檔名對應到同一個 inode 號碼呢？</span>有的！那就是 hard link 的由來。
+		所以簡單的說：<span class="text_import2">hard link 只是在某個目錄下新增一筆檔名連結到某 inode 號碼的關連記錄而已。
+		</span></p>
+
+		<p>舉個例子來說，假設我系統有個 /root/crontab 他是 /etc/crontab 的實體連結，也就是說這兩個檔名連結到同一個 inode ，
+		自然這兩個檔名的所有相關資訊都會一模一樣(除了檔名之外)。實際的情況可以如下所示：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ln /etc/crontab .</span>   <span class="term_note">&lt;==建立實體連結的指令</span>
+[root@www ~]# <span class="term_command">ll -i /etc/crontab /root/crontab</span>
+<span class="term_write">1912701</span> -rw-r--r-- <span class="term_write">2</span> root root 255 Jan  6  2007 /etc/crontab
+
+<span class="term_write">1912701</span> -rw-r--r-- <span class="term_write">2</span> root root 255 Jan  6  2007 /root/crontab
+</pre></td></tr></table>
+
+		<p>你可以發現兩個檔名都連結到 1912701 這個 inode 號碼，所以您瞧瞧，是否檔案的權限/屬性完全一樣呢？
+		因為這兩個『檔名』其實是一模一樣的『檔案』啦！而且你也會發現第二個欄位由原本的 1 變成 2 了！
+		那個欄位稱為『連結』，這個欄位的意義為：『<span class="text_import2">有多少個檔名連結到這個 inode 號碼</span>』的意思。
+		如果將讀取到正確資料的方式畫成示意圖，就類似如下畫面：</p>
+
+		<center><img src="0230filesystem/hard_link1.gif" alt="實體連結的檔案讀取示意圖" 
+		title="實體連結的檔案讀取示意圖" border="0" /><br />
+		圖 2.2.1、實體連結的檔案讀取示意圖<br /></center>
+
+		<p>上圖的意思是，你可以透過 1 或 2 的目錄之 inode 指定的 block 
+		找到兩個不同的檔名，而不管使用哪個檔名均可以指到 real 那個 inode
+		去讀取到最終資料！那這樣有什麼好處呢？最大的好處就是『安全』！如同上圖中，
+		<span class="text_import2">如果你將任何一個『檔名』刪除，其實 inode 與 block 都還是存在的！</span>
+		此時你可以透過另一個『檔名』來讀取到正確的檔案資料喔！此外，不論你使用哪個『檔名』來編輯，
+		最終的結果都會寫入到相同的 inode 與 block 中，因此均能進行資料的修改哩！</p>
+
+		<p>一般來說，使用 hard link 設定連結檔時，磁碟的空間與 inode 的數目都不會改變！
+		我們還是由圖 2.2.1 來看，由圖中可以知道， hard link 只是在某個目錄下的 block 
+		多寫入一個關連資料而已，既不會增加 inode 也不會耗用 block 數量哩！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		hard link 的製作中，其實還是可能會改變系統的 block 的，那就是當你新增這筆資料卻剛好將目錄的 block 
+		填滿時，就可能會新加一個 block 來記錄檔名關連性，而導致磁碟空間的變化！不過，一般 hard link 
+		所用掉的關連資料量很小，所以通常不會改變 inode 與磁碟空間的大小喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+
+		<p>由圖 2.2.1 其實我們也能夠知道，事實上 hard link 應該僅能在單一檔案系統中進行的，應該是不能夠跨檔案系統才對！
+		因為圖 2.2.1 就是在同一個 filesystem 上嘛！所以 hard link 是有限制的：</p>
+
+		<ul class="text_import2">
+		<li>不能跨 Filesystem；</li>
+		<li>不能 link 目錄。</li></ul>
+
+		<p>不能跨 Filesystem 還好理解，那不能 hard link 到目錄又是怎麼回事呢？這是因為如果使用 hard link 連結到目錄時，
+		連結的資料需要連同被連結目錄底下的所有資料都建立連結，舉例來說，如果你要將 /etc
+		使用實體連結建立一個 /etc_hd 的目錄時，那麼在 /etc_hd 底下的所有檔名同時都與 /etc
+		底下的檔名要建立 hard link 的，而不是僅連結到 /etc_hd 與 /etc 而已。
+		並且，未來如果需要在 /etc_hd 底下建立新檔案時，連帶的， 
+		/etc 底下的資料又得要建立一次 hard link ，因此造成環境相當大的複雜度。
+		所以囉，目前 hard link 對於目錄暫時還是不支援的啊！<br /><br /></p>
+
+		<a name="slink"></a><hr />
+		<ul class="list1"><li class="text_import1">Symbolic Link (符號連結，亦即是捷徑)</li></ul>
+
+		<p>相對於 hard link ， Symbolic link 可就好理解多了，基本上，
+		<span class="text_import2">Symbolic link 就是在建立一個獨立的檔案，而這個檔案會讓資料的讀取指向他 
+		link 的那個檔案的檔名</span>！由於只是利用檔案來做為指向的動作，
+		所以，<span class="text_import2">當來源檔被刪除之後，symbolic link 的檔案會『開不了』</span>，
+		會一直說『無法開啟某檔案！』。實際上就是找不到原始『檔名』而已啦！</p>
+
+		<p>舉例來說，我們先建立一個符號連結檔連結到 /etc/crontab 去看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ln -s /etc/crontab crontab2</span>
+[root@www ~]# <span class="term_command">ll -i /etc/crontab /root/crontab2</span>
+<span class="term_write">1912701</span> -rw-r--r-- 2 root root 255 Jan  6  2007 /etc/crontab
+<span class="term_write"> 654687</span> lrwxrwxrwx 1 root root  <span class="term_write">12</span> Oct 22 13:58 <span class="term_write">/root/crontab2 -&gt; /etc/crontab</span>
+
+</pre></td></tr></table>
+
+		<p>由上表的結果我們可以知道兩個檔案指向不同的 inode 號碼，當然就是兩個獨立的檔案存在！
+		而且<span class="text_import2">連結檔的重要內容就是他會寫上目標檔案的『檔名』</span>，
+		你可以發現為什麼上表中連結檔的大小為 12 bytes 呢？
+		因為箭頭(--&gt;)右邊的檔名『/etc/crontab』總共有 12 個英文，每個英文佔用 1 個 byes ，所以檔案大小就是 12bytes了！</p>
+
+		<p>關於上述的說明，我們以如下圖示來解釋：</p>
+
+		<center><img src="0230filesystem/symbolic_link1.gif" alt="符號連結的檔案讀取示意圖" 
+		title="符號連結的檔案讀取示意圖" border="0" /><br />
+		圖 2.2.2、符號連結的檔案讀取示意圖<br /></center>
+
+		<p>由 1 號 inode 讀取到連結檔的內容僅有檔名，根據檔名連結到正確的目錄去取得目標檔案的 inode ，
+		最終就能夠讀取到正確的資料了。你可以發現的是，如果目標檔案(/etc/crontab)被刪除了，那麼整個環節就會無法繼續進行下去，
+		所以就會發生無法透過連結檔讀取的問題了！</p>
+
+
+		<p>這裡還是得特別留意，這個 <span class="text_import2">Symbolic Link 與 Windows 
+		的捷徑可以給他劃上等號，由 Symbolic link 所建立的檔案為一個獨立的新的檔案，所以會佔用掉 
+		inode 與 block </span>喔！<br /><br /></p>
+		<hr />
+
+		<p>由上面的說明來看，似乎 hard link 比較安全，因為即使某一個目錄下的關連資料被殺掉了，
+		也沒有關係，只要有任何一個目錄下存在著關連資料，那麼該檔案就不會不見！舉上面的例子來說，我的
+		/etc/crontab 與 /root/crontab 指向同一個檔案，如果我刪除了 /etc/crontab
+		這個檔案，該刪除的動作其實只是將 /etc 目錄下關於 crontab 的關連資料拿掉而已，
+		crontab 所在的 inode 與 block 其實都沒有被變動喔！</p>
+
+		<p>不過由於 Hard Link 的限制太多了，包括無法做『目錄』的 link ，
+		所以在用途上面是比較受限的！反而是 Symbolic Link 的使用方面較廣喔！好了，
+		說的天花亂墜，看你也差不多快要昏倒了！沒關係，實作一下就知道怎麼回事了！要製作連結檔就必須要使用
+		ln 這個指令呢！</p>
+
+<a name="ln"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ln [-sf] 來源檔 目標檔</span>
+<span class="term_say">選項與參數：
+<u>-s  ：如果不加任何參數就進行連結，那就是hard link，至於 -s 就是symbolic link</u>
+-f  ：如果 目標檔 存在時，就主動的將目標檔直接移除後再建立！</span>
+
+<span class="term_hd">範例一：將 /etc/passwd 複製到 /tmp 底下，並且觀察 inode 與 block</span>
+
+[root@www ~]# <span class="term_command">cd /tmp</span>
+[root@www tmp]# <span class="term_command">cp -a /etc/passwd .</span>
+[root@www tmp]# <span class="term_command">du -sb ; df -i .</span>
+<span class="term_write">18340</span>   .  <span class="term_note">&lt;==先注意一下這裡的容量是多少！</span>
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/hdc2            2560864  <span class="term_write">149738</span> 2411126    6% /
+
+<span class="term_say"># 利用 du 與 df 來檢查一下目前的參數～那個 du -sb 
+# 是計算整個 /tmp 底下有多少 bytes 的容量啦！</span>
+
+<span class="term_hd">範例二：將 /tmp/passwd 製作 hard link 成為 passwd-hd 檔案，並觀察檔案與容量</span>
+[root@www tmp]# <span class="term_command">ln passwd passwd-hd</span>
+[root@www tmp]# <span class="term_command">du -sb ; df -i .</span>
+<span class="term_write">18340</span>   .
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/hdc2            2560864  <span class="term_write">149738</span> 2411126    6% /
+
+<span class="term_say"># 仔細看，即使多了一個檔案在 /tmp 底下，整個 inode 與 block 的容量並沒有改變！</span>
+
+[root@www tmp]# <span class="term_command">ls -il passwd*</span>
+<span class="term_write">586361</span> -rw-r--r-- <span class="term_write">2</span> root root 1945 Sep 29 02:21 passwd
+<span class="term_write">586361</span> -rw-r--r-- <span class="term_write">2</span> root root 1945 Sep 29 02:21 passwd-hd
+
+<span class="term_say"># 原來是指向同一個 inode 啊！這是個重點啊！另外，那個第二欄的連結數也會增加！</span>
+
+<span class="term_hd">範例三：將 /tmp/passwd 建立一個符號連結</span>
+[root@www tmp]# <span class="term_command">ln -s passwd passwd-so</span>
+[root@www tmp]# <span class="term_command">ls -li passwd*</span>
+586361 -rw-r--r-- 2 root root 1945 Sep 29 02:21 passwd
+586361 -rw-r--r-- 2 root root 1945 Sep 29 02:21 passwd-hd
+<span class="term_write">586401</span> lrwxrwxrwx 1 root root    <span class="term_write">6</span> Oct 22 14:18 passwd-so -&gt; passwd
+
+<span class="term_say"># passwd-so 指向的 inode number 不同了！這是一個新的檔案～這個檔案的內容是指向 
+# passwd 的。passwd-so 的大小是 6bytes ，因為 passwd 共有六個字元之故</span>
+
+[root@www tmp]# <span class="term_command">du -sb ; df -i .</span>
+<span class="term_write">18346</span>   .
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/hdc2            2560864  <span class="term_write">149739</span> 2411125    6% /
+<span class="term_say"># 呼呼！整個容量與 inode 使用數都改變囉～確實如此啊！</span>
+
+<span class="term_hd">範例四：刪除原始檔案 passwd ，其他兩個檔案是否能夠開啟？</span>
+
+[root@www tmp]# <span class="term_command">rm passwd</span>
+[root@www tmp]# <span class="term_command">cat passwd-hd</span>
+<span class="term_say">......正常顯示完畢！</span>
+[root@www tmp]# <span class="term_command">cat passwd-so</span>
+cat: passwd-so: No such file or directory
+[root@www tmp]# <span class="term_command">ll passwd*</span>
+-rw-r--r-- 1 root root 1945 Sep 29 02:21 passwd-hd
+lrwxrwxrwx 1 root root    6 Oct 22 14:18 <span class="term_white">passwd-so</span> -&gt; <span class="term_white">passwd</span>
+
+<span class="term_say"># 怕了吧！符號連結果然無法開啟！另外，如果符號連結的目標檔案不存在，
+# 其實檔名的部分就會有特殊的顏色顯示喔！</span>
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		還記得<a href="/linux_basic/0210filepermission.php#dir">第六章</a>當中，我們提到的 /tmp 
+		這個目錄是幹嘛用的嗎？是給大家作為暫存檔用的啊！
+		所以，您會發現，過去我們在進行測試時，都會將資料移動到 /tmp 底下去練習～
+		嘿嘿！因此，有事沒事，記得將 /tmp 底下的一些怪異的資料清一清先！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>要注意囉！<span class="text_import2">使用 ln 如果不加任何參數的話，那麼就是 Hard Link</span>
+		囉！如同範例二的情況，增加了 hard link 之後，可以發現使用 ls -l 時，顯示的 link 那一欄屬性增加了！而如果這個時候砍掉 
+		passwd 會發生什麼事情呢？passwd-hd 的內容還是會跟原來 passwd 相同，但是 passwd-so 
+		就會找不到該檔案啦！</p>
+
+		<p>而如果 ln 使用 -s 的參數時，就做成差不多是 Windows 底下的『捷徑』的意思。當你修改 Linux 下的 
+		symbolic link 檔案時，則更動的其實是『原始檔』，
+		所以不論你的這個原始檔被連結到哪裡去，只要你修改了連結檔，原始檔就跟著變囉！
+		以上面為例，由於你使用 -s 的參數建立一個名為 passwd-so 的檔案，則你修改 passwd-so 
+		時，其內容與 passwd 完全相同，並且，當你按下儲存之後，被改變的將是 passwd 這個檔案！</p>
+
+		<p>此外，如果你做了底下這樣的連結：</p>
+		<blockquote style="font-family: '細明體'; color: #000088;">
+		ln -s /bin /root/bin
+		</blockquote>
+
+		<p>那麼如果你進入 /root/bin 這個目錄下，『請注意呦！<span class="text_import2">該目錄其實是 
+		/bin 這個目錄，因為你做了連結檔了</span>！』所以，如果你進入 /root/bin 這個剛剛建立的連結目錄，
+		並且將其中的資料殺掉時，嗯！ /bin 裡面的資料就通通不見了！這點請千萬注意！所以趕緊利用『rm /root/bin 』
+		將這個連結檔刪除吧！</p>
+
+		<p>基本上， Symbolic link 的用途比較廣，所以您要特別留意 symbolic link
+		的用法呢！未來一定還會常常用到的啦！<br /><br /></p>
+
+		<a name="link_dir"></a><hr />
+		<ul class="list1"><li class="text_import1">關於目錄的 link 數量：</li></ul>
+
+		<p>或許您已經發現了，那就是，當我們以 hard link 進行『檔案的連結』時，可以發現，在 ls -l 
+		所顯示的第二欄位會增加一才對，那麼請教，如果建立目錄時，他預設的 link 數量會是多少？
+		讓我們來想一想，一個『空目錄』裡面至少會存在些什麼？呵呵！就是存在 . 與 .. 這兩個目錄啊！
+		那麼，當我們建立一個新目錄名稱為 /tmp/testing 時，基本上會有三個東西，那就是：</p>
+
+		<ul style="font-family: '細明體'">
+
+		<li>/tmp/testing</li><li>/tmp/testing/.</li><li>/tmp/testing/..</li></ul>
+
+		<p>而其中 /tmp/testing 與 /tmp/testing/. 其實是一樣的！都代表該目錄啊～而 /tmp/testing/.. 
+		則代表 /tmp 這個目錄，所以說，當我們建立一個新的目錄時，
+		『<span class="text_import2">新的目錄的 link 數為 2 ，而上層目錄的 link 數則會增加 1 </span>』
+		不信的話，我們來作個測試看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ls -ld /tmp</span>
+drwxrwxrwt <span class="term_write">5</span> root root 4096 Oct 22 14:22 /tmp
+[root@www ~]# <span class="term_command">mkdir /tmp/testing1</span>
+
+[root@www ~]# <span class="term_command">ls -ld /tmp</span>
+drwxrwxrwt <span class="term_write">6</span> root root 4096 Oct 22 14:37 /tmp
+[root@www ~]# <span class="term_command">ls -ld /tmp/testing1</span>
+drwxr-xr-x <span class="term_write">2</span> root root 4096 Oct 22 14:37 /tmp/testing1
+</pre></td></tr></table>
+
+		<p>瞧！原本的所謂上層目錄 /tmp 的 link 數量由 5 增加為 6 ，至於新目錄 /tmp/testing 
+		則為 2 ，這樣可以理解目錄的 link 數量的意義了嗎？ ^_^</p>
+
+	</div>
+</div>
+
+
+<hr /><a name="disk"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">磁碟的分割、格式化、檢驗與掛載：</span><br />
+<div class="block1">
+	<p>對於一個系統管理者( root )而言，磁碟的的管理是相當重要的一環，尤其近來硬碟已經漸漸的被當成是消耗品了
+	..... 如果我們想要在系統裡面新增一顆硬碟時，應該有哪些動作需要做的呢：</p>
+	<ol class="text_import2">
+	<li>對磁碟進行分割，以建立可用的 partition ；</li>
+	<li>對該 partition 進行格式化( format )，以建立系統可用的 filesystem；</li>
+
+	<li>若想要仔細一點，則可對剛剛建立好的 filesystem 進行檢驗；</li>
+	<li>在 Linux 系統上，需要建立掛載點 ( 亦即是目錄 )，並將他掛載上來；</li>
+	</ol>
+
+	<p>當然囉，在上述的過程當中，還有很多需要考慮的，例如磁碟分割槽 (partition) 需要定多大？
+	是否需要加入 journal 的功能？inode 與 block 的數量應該如何規劃等等的問題。但是這些問題的決定，
+	都需要與你的主機用途來加以考量的～所以，在這個小節裡面，鳥哥僅會介紹幾個動作而已，
+	更詳細的設定值，則需要以你未來的經驗來參考囉！<br /><br /></p>
+
+	<hr /><a name="fdisk"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟分割： fdisk</span><br />
+	<div class="block2">
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk [-l] 裝置名稱</span>
+<span class="term_say">選項與參數：
+-l  ：輸出後面接的裝置所有的 partition 內容。若僅有 fdisk -l 時，
+      則系統將會把整個系統內能夠搜尋到的裝置的 partition 均列出來。</span>
+
+<span class="term_hd">範例：找出你系統中的根目錄所在磁碟，並查閱該硬碟內的相關資訊</span>
+[root@www ~]# <span class="term_command">df /          </span>  <span class="term_note">&lt;==注意：重點在找出磁碟檔名而已</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_write">/dev/hdc2</span>              9920624   3823168   5585388  41% /
+
+[root@www ~]# <span class="term_command">fdisk /dev/hdc</span>  <span class="term_note">&lt;==仔細看，不要加上數字喔！</span>
+
+<span class="term_write">The number of cylinders for this disk is set to 5005.</span>
+There is nothing wrong with that, but this is larger than <span class="term_write">1024</span>,
+and could in certain setups cause problems with:
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+   (e.g., DOS FDISK, OS/2 FDISK)
+
+Command (m for help): <span class="term_white"> </span>   <span class="term_note">&lt;==等待你的輸入！</span>
+</pre></td></tr></table>
+
+		<p>由於每個人的環境都不一樣，因此每部主機的磁碟數量也不相同。所以你可以先使用 df 這個指令找出可用磁碟檔名，
+		然後再用 fdisk 來查閱。在你進入 fdisk 這支程式的工作畫面後，如果您的硬碟太大的話(通常指磁柱數量多於 
+		1024 以上)，就會出現如上訊息。這個訊息僅是在告知你，因為某些舊版的軟體與作業系統並無法支援大於 1024 磁柱 (cylinter) 
+		後的磁區使用，不過我們新版的 Linux 是沒問題啦！底下繼續來看看 fdisk 內如何操作相關動作吧！</p>
+
+
+<table class="term"><tr><td class="term"><pre>
+
+Command (m for help): <span class="term_command">m</span>   <span class="term_note">&lt;== 輸入 m 後，就會看到底下這些指令介紹</span>
+Command action
+   a   toggle a bootable flag
+   b   edit bsd disklabel
+   c   toggle the dos compatibility flag
+   <u><span class="term_write">d   delete a partition</span></u>            <span class="term_note">&lt;==刪除一個partition</span>
+   l   list known partition types
+   m   print this menu
+   <u><span class="term_write">n   add a new partition</span></u>           <span class="term_note">&lt;==新增一個partition</span>
+   o   create a new empty DOS partition table
+   <u><span class="term_write">p   print the partition table</span></u>     <span class="term_note">&lt;==在螢幕上顯示分割表</span>
+
+   <u><span class="term_write">q   quit without saving changes</span></u>   <span class="term_note">&lt;==不儲存離開fdisk程式</span>
+   s   create a new empty Sun disklabel
+   t   change a partition's system id
+   u   change display/entry units
+   v   verify the partition table
+   <u><span class="term_write">w   write table to disk and exit</span></u>  <span class="term_note">&lt;==將剛剛的動作寫入分割表</span>
+   x   extra functionality (experts only)
+</pre></td></tr></table>
+
+		<p>老實說，使用 fdisk 這支程式是完全不需要背指令的！如同上面的表格中，你只要按下 m 就能夠看到所有的動作！
+		比較重要的動作在上面已經用底線畫出來了，你可以參考看看。其中比較不一樣的是『q 與 w』這兩個玩意兒！
+		不管你進行了什麼動作，<span class="text_import2">只要離開 fdisk 時按下『q』，那麼所有的動作『都不會生效！』相反的，
+		按下『w』就是動作生效的意思</span>。所以，你可以隨便玩 fdisk ，只要離開時按下的是『q』即可。 ^_^！
+		好了，先來看看分割表資訊吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+Command (m for help): <span class="term_command">p</span>  <span class="term_note">&lt;== 這裡可以輸出目前磁碟的狀態</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes        <span class="term_note">&lt;==這個磁碟的檔名與容量</span>
+255 heads, 63 sectors/track, <span class="term_write">5005</span> cylinders      <span class="term_note">&lt;==磁頭、磁區與磁柱大小</span>
+
+Units = cylinders of 16065 * 512 = 8225280 bytes <span class="term_note">&lt;==每個磁柱的大小</span>
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdc1   *           1          13      104391   83  Linux
+/dev/hdc2              14        1288    10241437+  83  Linux
+/dev/hdc3            1289        1925     5116702+  83  Linux
+/dev/hdc4            <span class="term_write">1926        5005</span>    24740100    5  Extended
+/dev/hdc5            1926        <span class="term_write">2052</span>     1020096   82  Linux swap / Solaris
+<span class="term_say"># 裝置檔名 開機區否 開始磁柱    結束磁柱  1K大小容量 磁碟分割槽內的系統</span>
+
+Command (m for help): <span class="term_command">q</span>
+
+<span class="term_say"># 想要不儲存離開嗎？按下 q 就對了！不要隨便按 w 啊！</span>
+</pre></td></tr></table>
+
+		<p>使用『 p 』可以列出目前這顆磁碟的分割表資訊，這個資訊的上半部在顯示整體磁碟的狀態。
+		以鳥哥這顆磁碟為例，這個磁碟共有 41.1GB 左右的容量，共有 5005 個磁柱，每個磁柱透過 255 個磁頭在管理讀寫，
+		每個磁頭管理 63 個磁區，而每個磁區的大小均為 512bytes ，因此每個磁柱為『 255*63*512 = 16065*512 = 8225280bytes 』。</p>
+
+		<p>下半部的分割表資訊主要在列出每個分割槽的個別資訊項目。每個項目的意義為：</p>
+		<ul>
+		<li>Device：裝置檔名，依據不同的磁碟介面/分割槽位置而變。</li>
+		<li>Boot：是否為開機啟動區塊？通常 Windows 系統的 C 需要這塊！</li>
+
+		<li>Start, End：這個分割槽在哪個磁柱號碼之間，可以決定此分割槽的大小；</li>
+		<li>Blocks：就是以 1K 為單位的容量。如上所示，/dev/hdc1 大小為104391K = 102MB</li>
+		<li>ID, System：代表這個分割槽內的檔案系統應該是啥！不過這個項目只是一個提示而已，
+		不見得真的代表此分割槽內的檔案系統喔！</li>
+		</ul>
+
+		<p>從上表我們可以發現幾件事情：</p>
+		<ul>
+
+		<li>整部磁碟還可以進行額外的分割，因為最大磁柱為 5005 ，但只使用到 2052 號而已；</li>
+		<li>/dev/hdc5 是由 /dev/hdc4 分割出來的，因為 /dev/hdc4 為 Extended，且 /dev/hdc5 磁柱號碼在 /dev/hdc4 之內；</li>
+		</ul>
+
+		<p>fdisk 還可以直接秀出系統內的所有 partition 喔！舉例來說，鳥哥剛剛插入一個 USB 磁碟到這部 Linux 系統中，
+		那該如何觀察 (1)這個磁碟的代號與 (2)這個磁碟的分割槽呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例：查閱目前系統內的所有 partition 有哪些？</span>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdc1   *           1          13      104391   83  Linux
+/dev/hdc2              14        1288    10241437+  83  Linux
+/dev/hdc3            1289        1925     5116702+  83  Linux
+/dev/hdc4            1926        5005    24740100    5  Extended
+/dev/hdc5            1926        2052     1020096   82  Linux swap / Solaris
+
+Disk /dev/sda: 8313 MB, 8313110528 bytes
+59 heads, 58 sectors/track, <span class="term_write">4744</span> cylinders
+Units = cylinders of 3422 * 512 = 1752064 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_write">/dev/sda1               1        4745     8118260    b  W95 FAT32</span>
+</pre></td></tr></table>
+
+		<p>由上表的資訊我們可以看到我有兩顆磁碟，磁碟檔名為『/dev/hdc 與 /dev/sda』，/dev/hdc 已經在上面談過了，
+		至於 /dev/sda 則有 8GB 左右的容量，且全部的磁柱都已經分割給 /dev/sda1 ，該檔案系統應該為 Windows 的 FAT 
+		檔案系統。這樣很容易查閱到分割方面的資訊吧！</p>
+
+		<p>這個 fdisk 只有 root 才能執行，此外，請注意，
+		<span class="text_import2">使用的『裝置檔名』請不要加上數字，因為 partition 
+		是針對『整個硬碟裝置』而不是某個 partition 呢</span>！所以執行『 fdisk /dev/hdc1 』
+		就會發生錯誤啦！要使用 fdisk /dev/hdc 才對！那麼我們知道可以利用 fdisk 
+		來查閱硬碟的 partition 資訊外，底下再來說一說進入 fdisk 之後的幾個常做的工作！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		再次強調，你可以使用 fdisk 在您的硬碟上面胡搞瞎搞的進行實際操作，都不打緊，
+		但是請『千萬記住，不要按下 w 即可！』離開的時候按下 q 就萬事無妨囉！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr />
+		<ul class="list1"><li class="text_import1">刪除磁碟分割槽</li></ul>
+
+		<p>如果你是按照鳥哥建議的方式去安裝你的 CentOS ，那麼你的磁碟應該會預留一塊容量來做練習的。
+		實際練習新增硬碟之前，我們先來玩一玩恐怖的刪除好了～如果想要測試一下如何將你的 /dev/hdc 
+		全部的分割槽刪除，應該怎麼做？</p>
+
+		<ol>
+
+		<li><span class="text_import2">fdisk /dev/hdc</span> ：先進入 fdisk 畫面；</li>
+		<li><span class="text_import2">p</span> ：先看一下分割槽的資訊，假設要殺掉 /dev/hdc1；</li>
+		<li><span class="text_import2">d</span> ：這個時候會要你選擇一個 partition ，就選 1 囉！</li>
+		<li><span class="text_import2">w (or) q</span> ：按 w 可儲存到磁碟資料表中，並離開 fdisk ；當然囉，
+			如果你反悔了，呵呵，直接按下 q 就可以取消剛剛的刪除動作了！</li></ol>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 練習一： 先進入 fdisk 的畫面當中去！</span>
+[root@www ~]# <span class="term_command">fdisk /dev/hdc</span>
+
+<span class="term_hd"># 練習二： 先看看整個分割表的情況是如何</span>
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdc1   *           1          13      104391   83  Linux
+/dev/hdc2              14        1288    10241437+  83  Linux
+/dev/hdc3            1289        1925     5116702+  83  Linux
+/dev/hdc4            1926        5005    24740100    5  Extended
+/dev/hdc5            1926        2052     1020096   82  Linux swap / Solaris
+
+<span class="term_hd"># 練習三： 按下 d 給他刪除吧！</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-5): <span class="term_command">4</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-4): <span class="term_command">3</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_write">/dev/hdc1   *           1          13      104391   83  Linux
+/dev/hdc2              14        1288    10241437+  83  Linux</span>
+<span class="term_say"># 因為 /dev/hdc5 是由 /dev/hdc4 所衍生出來的邏輯分割槽，因此 /dev/hdc4 被刪除，
+# /dev/hdc5 就自動不見了！最終就會剩下兩個分割槽而已喔！</span>
+
+Command (m for help): <span class="term_command">q</span>
+<span class="term_say"># 鳥哥這裡僅是做一個練習而已，所以，按下 q 就能夠離開囉～</span>
+</pre></td></tr></table><br />
+
+		<hr />
+		<ul class="list1"><li class="text_import1">練習新增磁碟分割槽</li></ul>
+
+		<p>新增磁碟分割槽有好多種情況，因為新增 Primary / Extended / Logical 的顯示結果都不太相同。
+		底下我們先將 /dev/hdc 全部刪除成為乾淨未分割的磁碟，然後依序新增給大家瞧瞧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 練習一： 進入 fdisk 的分割軟體畫面中，並刪除所有分割槽：</span>
+[root@www ~]# <span class="term_command">fdisk /dev/hdc</span>
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-5): <span class="term_command">4</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-4): <span class="term_command">3</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-4): <span class="term_command">2</span>
+
+Command (m for help): <span class="term_command">d</span>
+
+Selected partition 1
+<span class="term_say"># 由於最後僅剩下一個 partition ，因此系統主動選取這個 partition 刪除去！</span>
+
+<span class="term_hd"># 練習二： 開始新增，我們先新增一個 Primary  的分割槽，且指定為 4 號看看！</span>
+Command (m for help): <span class="term_command">n</span>
+Command action            <span class="term_note">&lt;==因為是全新磁碟，因此只會問extended/primary而已</span>
+   e   extended
+   p   primary partition (1-4)
+<span class="term_command">p</span>                         <span class="term_note">&lt;==選擇 Primary 分割槽</span>
+
+Partition number (1-4): <span class="term_command">4</span> <span class="term_note">&lt;==設定為 4 號！</span>
+First cylinder (1-5005, default 1): <span class="term_note">&lt;==直接按下[enter]按鍵決定！</span>
+Using default value 1               <span class="term_note">&lt;==啟始磁柱就選用預設值！</span>
+Last cylinder or +size or +sizeM or +sizeK (1-5005, default 5005): <span class="term_command">+512M</span>
+<span class="term_say"># 這個地方有趣了！我們知道 partition 是由 n1 到 n2 的磁柱號碼 (cylinder)，
+# 但磁柱的大小每顆磁碟都不相同，這個時候可以填入 +512M 來讓系統自動幫我們找出
+# 『最接近 512M 的那個 cylinder 號碼』！因為不可能剛好等於 512MBytes 啦！
+# 如上所示：這個地方輸入的方式有兩種：
+
+# <u>1) 直接輸入磁柱的號碼，你得要自己計算磁柱/分割槽的大小才行；</u>
+
+# <u>2) 用 +XXM 來輸入分割槽的大小，讓系統自己捉磁柱的號碼。</u>
+#    <u>+與M是必須要有的，XX為數字</u></span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_write">/dev/hdc4               1          63      506016   83  Linux</span>
+<span class="term_say"># 注意！只有 4 號！ 1 ~ 3 保留下來了！</span>
+</pre></td></tr></table>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 練習三： 繼續新增一個，這次我們新增 Extended 的分割槽好了！</span>
+Command (m for help): <span class="term_command">n</span>
+Command action
+   e   extended
+   p   primary partition (1-4)
+<span class="term_command">e</span>    <span class="term_note">&lt;==選擇的是 Extended 喔！</span>
+Partition number (1-4): <span class="term_command">1</span>
+First cylinder (64-5005, default 64): <span class="term_note">&lt;=[enter]</span>
+
+Using default value 64
+Last cylinder or +size or +sizeM or +sizeK (64-5005, default 5005): <span class="term_note">&lt;=[enter]</span>
+Using default value 5005
+<span class="term_say"># 還記得我們在<a href="/linux_basic/0130designlinux.php#partition_table">第三章的磁碟分割表</a>曾經談到過的，延伸分割最好能夠包含所有
+# 未分割的區間；所以在這個練習中，我們將所有未配置的磁柱都給了這個分割槽喔！
+# 所以在開始/結束磁柱的位置上，按下兩個[enter]用預設值即可！</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_write">/dev/hdc1              64        5005    39696615    5  Extended</span>
+/dev/hdc4               1          63      506016   83  Linux
+
+<span class="term_say"># 如上所示，所有的磁柱都在 /dev/hdc1 裡面囉！</span>
+</pre></td></tr></table>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 練習四： 這次我們隨便新增一個 2GB 的分割槽看看！</span>
+Command (m for help): <span class="term_command">n</span>
+Command action
+   l   logical (5 or over)     <span class="term_note">&lt;==因為已有 extended ，所以出現 logical 分割槽</span>
+   p   primary partition (1-4)
+<span class="term_command">p</span>   <span class="term_note">&lt;==偷偷玩一下，能否新增主要分割槽</span>
+
+Partition number (1-4): <span class="term_command">2</span>
+No free sectors available   <span class="term_note">&lt;==肯定不行！因為沒有多餘的磁柱可供配置</span>
+
+Command (m for help): <span class="term_command">n</span>
+Command action
+   l   logical (5 or over)
+   p   primary partition (1-4)
+<span class="term_command">l</span>   <span class="term_note">&lt;==乖乖使用邏輯分割槽吧！</span>
+First cylinder (64-5005, default 64): <span class="term_note">&lt;=[enter]</span>
+
+Using default value 64
+Last cylinder or +size or +sizeM or +sizeK (64-5005, default 5005): <span class="term_command">+2048M</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdc1              64        5005    39696615    5  Extended
+/dev/hdc4               1          63      506016   83  Linux
+<span class="term_write">/dev/hdc5              64         313     2008093+  83  Linux</span>
+<span class="term_say"># 這樣就新增了 2GB 的分割槽，且由於是 logical ，所以由 5 號開始！</span>
+Command (m for help): <span class="term_command">q</span>
+<span class="term_say"># 鳥哥這裡僅是做一個練習而已，所以，按下 q 就能夠離開囉～</span>
+
+</pre></td></tr></table>
+
+		<p>上面的練習非常重要！您得要自行練習一下比較好！注意，不要按下 w 喔！會讓你的系統損毀的！
+		由上面的一連串練習中，最重要的地方其實就在於建立分割槽的形式( primary/extended/logical
+		)以及分割槽的大小了！一般來說建立分割槽的形式會有底下的數種狀況：</p>
+
+		<ul>
+		<li><span class="text_import2">1-4 號尚有剩餘，且系統未有 extended：</span><br />
+		此時會出現讓你挑選 Primary / Extended 的項目，且你可以指定 1~4 號間的號碼；<br /><br /></li>
+		<li><span class="text_import2">1-4 號尚有剩餘，且系統有 extended：</span><br />
+
+		此時會出現讓你挑選 Primary / Logical 的項目；若選擇 p 則你還需要指定 1~4 號間的號碼；
+		若選擇 l(L的小寫) 則不需要設定號碼，因為系統會自動指定邏輯分割槽的檔名號碼；<br /><br /></li>
+		<li><span class="text_import2">1-4 沒有剩餘，且系統有 extended：</span><br />
+		此時不會讓你挑選分割槽類型，直接會進入 logical 的分割槽形式。<br /><br /></li>
+		</ul>
+
+<table border="1" width="95%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+請依照你的系統情況，建立一個大約 1GB 左右的分割槽，並顯示該分割槽的相關資訊：
+</div>
+
+答：<div class="block2">
+鳥哥的磁碟為 /dev/hdc ，尚有剩餘磁柱號碼，因此可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk /dev/hdc</span>
+Command (m for help): <span class="term_command">n</span>
+First cylinder (2053-5005, default 2053): <span class="term_note">&lt;==[enter]</span>
+Using default value 2053
+Last cylinder or +size or +sizeM or +sizeK (2053-5005, default 5005): <span class="term_command">+2048M</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hdc: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdc1   *           1          13      104391   83  Linux
+/dev/hdc2              14        1288    10241437+  83  Linux
+/dev/hdc3            1289        1925     5116702+  83  Linux
+/dev/hdc4            1926        5005    24740100    5  Extended
+/dev/hdc5            1926        2052     1020096   82  Linux swap / Solaris
+<span class="term_write">/dev/hdc6            2053        2302     2008093+  83  Linux</span>
+
+Command (m for help): <span class="term_command">w</span>
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+
+WARNING: Re-reading the partition table failed with error 16: Device or 
+resource busy.
+The kernel still uses the old table.
+The new table will be used at the next reboot.
+Syncing disks. <span class="term_note">&lt;==見鬼了！竟然需要 reboot 才能夠生效！我可不要重新開機！</span>
+<a name="partprobe"></a>
+[root@www ~]# <span class="term_command">partprobe</span>  <span class="term_note">&lt;==強制讓核心重新捉一次 partition table</span>
+
+</pre></td></tr></table>
+在這個實作題中，請務必要按下『 w 』這個動作！因為我們實際上確實要建立這個分割槽嘛！
+但請仔細看一下最後的警告訊息，<span class="text_import2">因為我們的磁碟無法卸載(因為含有根目錄)，所以核心無法重新取得分割表資訊，
+因此此時系統會要求我們重新開機(reboot)以更新核心的分割表資訊才行</span>。
+</div>
+</td></tr></table>
+
+		<p>如上的練習中，最終寫入分割表後竟然會讓核心無法捉到分割表資訊！此時你可以直接使用 reboot 來處理，
+		也可以使用 GNU 推出的工具程式來處置，那就是 partprobe 這個指令。這個指令的執行很簡單，
+		他僅是告知核心必須要讀取新的分割表而已，因此並不會在螢幕上出現任何資訊才是！
+		這樣一來，我們就不需要 reboot 囉！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">操作環境的說明</li></ul>
+		<p>以 root 的身份進行硬碟的 partition 時，最好是在單人維護模式底下比較安全一些，
+		此外，在進行 fdisk 的時候，<span class="text_import2">如果該硬碟某個 partition 還在使用當中，
+		那麼很有可能系統核心會無法重新載入硬碟的 partition table ，解決的方法就是將該使用中的 
+		partition 給他卸載，然後再重新進入 fdisk 一遍，重新寫入 partition table ，那麼就可以成功囉！</span><br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">注意事項：</li></ul>
+		<p>另外在實作過程中請特別注意，因為 SATA 硬碟最多能夠支援到 15 號的分割槽， IDE 則可以支援到 63 號。
+		但目前大家常見的系統都是 SATA 磁碟，因此在練習的時候千萬不要讓你的分割槽超過 15 號！
+		否則即使你還有剩餘的磁柱容量，但還是會無法繼續進行分割的喔！</p>
+
+		<p>另外需要特別留意的是，<span class="text_import2">fdisk 沒有辦法處理大於 2TB 以上的磁碟分割槽</span>！
+		這個問題比較嚴重！因為雖然 Ext3 檔案系統已經支援達到 16TB 以上的磁碟，但是分割指令卻無法支援。
+		時至今日(2009)所有的硬體價格大跌，硬碟也已經出到單顆 1TB 之譜，若加上磁碟陣列 (RAID) ，
+		高於 2TB 的磁碟系統應該會很常見！此時你就得使用 <a href="#parted">parted</a> 
+		這個指令了！我們會在本章最後談一談這個指令的用法。</p>
+
+	</div>
+
+	<hr /><a name="format"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟格式化</span><br />
+	<div class="block2">
+		<p>分割完畢後自然就是要進行檔案系統的格式化囉！格式化的指令非常的簡單，那就是『make filesystem, mkfs』
+		這個指令啦！這個指令其實是個綜合的指令，他會去呼叫正確的檔案系統格式化工具軟體！
+		不囉唆，讓我們來瞧瞧吧！<br /><br /></p>
+
+		<hr />
+		<a name="mkfs"></a><ul class="list1"><li class="text_import1">mkfs</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkfs [-t 檔案系統格式] 裝置檔名</span>
+<span class="term_say">選項與參數：
+-t  ：可以接檔案系統格式，例如 ext3, ext2, vfat 等(系統有支援才會生效)</span>
+
+<span class="term_hd">範例一：請將上個小節當中所製作出來的 /dev/hdc6 格式化為 ext3 檔案系統</span>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /dev/hdc6</span>
+mke2fs 1.39 (29-May-2006)
+<span class="term_write">Filesystem label=</span>                <span class="term_note">&lt;==這裡指的是分割槽的名稱(label)</span>
+
+OS type: Linux
+<span class="term_write">Block size=4096 (log=2)</span>          <span class="term_note">&lt;==block 的大小設定為 4K </span>
+Fragment size=4096 (log=2)
+<span class="term_write">251392 inodes, 502023 blocks</span>     <span class="term_note">&lt;==由此設定決定的inode/block數量</span>
+25101 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=515899392
+16 block groups
+32768 blocks per group, 32768 fragments per group
+15712 inodes per group
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912
+
+Writing inode tables: done
+<span class="term_write">Creating journal (8192 blocks): done</span> <span class="term_note">&lt;==有日誌記錄</span>
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 34 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+<span class="term_say"># 這樣就建立起來我們所需要的 Ext3 檔案系統了！簡單明瞭！</span>
+
+[root@www ~]# <span class="term_command">mkfs[tab][tab]</span>
+mkfs         mkfs.cramfs  mkfs.ext2    mkfs.ext3    mkfs.msdos   mkfs.vfat
+<span class="term_say"># 按下兩個[tab]，會發現 mkfs 支援的檔案格式如上所示！可以格式化 vfat 喔！</span>
+</pre></td></tr></table>
+
+		<p>mkfs 其實是個綜合指令而已，事實上如同上表所示，當我們使用『 mkfs -t ext3 ...』時，
+		系統會去呼叫 mkfs.ext3 這個指令來進行格式化的動作啦！若如同上表所展現的結果，
+		那麼鳥哥這個系統支援的檔案系統格式化工具有『cramfs, ext2, ext3, msdoc, vfat』等，
+		而最常用的應該是 ext3, vfat 兩種啦！ vfat 可以用在 Windows/Linux 共用的 USB 隨身碟囉。</p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+將剛剛的 /dev/hdc6 格式化為 Windows 可讀的 vfat 格式吧！
+
+</div>
+答：<div class="block2">
+mkfs -t vfat /dev/hdc6
+</div>
+</td></tr></table>
+
+		<p>在格式化為 Ext3 的範例中，我們可以發現結果裡面含有非常多的資訊，由於我們沒有詳細指定檔案系統的細部項目，
+		因此系統會使用預設值來進行格式化。其中比較重要的部分為：<span 
+		class="text_import2">檔案系統的標頭(Label)、Block的大小以及 inode 的數量</span>。
+		如果你要指定這些東西，就得要瞭解一下 Ext2/Ext3 的公用程式，亦即 mke2fs 這個指令囉！<br /><br /></p>
+
+		<hr />
+		<a name="mke2fs"></a><ul class="list1"><li class="text_import1">mke2fs</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mke2fs [-b block大小] [-i block大小] [-L 標頭] [-cj] 裝置</span>
+<span class="term_say">選項與參數：
+-b  ：可以設定每個 block 的大小，目前支援 1024, 2048, 4096 bytes 三種；
+-i  ：多少容量給予一個 inode 呢？
+-c  ：檢查磁碟錯誤，僅下達一次 -c 時，會進行快速讀取測試；
+      如果下達兩次 -c -c 的話，會測試讀寫(read-write)，會很慢～
+-L  ：後面可以接標頭名稱 (Label)，這個 label 是有用的喔！<a href="#e2label">e2label</a>指令介紹會談到～
+-j  ：本來 mke2fs 是 EXT2 ，加上 -j 後，會主動加入 journal 而成為 EXT3。</span>
+</pre></td></tr></table>
+
+		<p>mke2fs 是一個很詳細但是很麻煩的指令！因為裡面的細部設定太多了！現在我們進行如下的假設：</p>
+		<ul>
+		<li>這個檔案系統的標頭設定為：vbird_logical</li>
+
+		<li>我的 block 指定為 2048 大小；</li>
+		<li>每 8192 bytes 分配一個 inode ；</li>
+		<li>建置為 journal 的 Ext3 檔案系統。</li>
+		</ul>
+
+		<p>開始格式化 /dev/hdc6 結果會變成如下所示：</p>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mke2fs -j -L "vbird_logical" -b 2048 -i 8192 /dev/hdc6</span>
+
+mke2fs 1.39 (29-May-2006)
+<span class="term_write">Filesystem label=vbird_logical</span>
+OS type: Linux
+<span class="term_write">Block size=2048 (log=1)</span>
+Fragment size=2048 (log=1)
+<span class="term_write">251968 inodes, 1004046 blocks</span>
+50202 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=537919488
+62 block groups
+16384 blocks per group, 16384 fragments per group
+4064 inodes per group
+Superblock backups stored on blocks:
+        16384, 49152, 81920, 114688, 147456, 409600, 442368, 802816
+
+Writing inode tables: done
+<span class="term_write">Creating journal (16384 blocks): done</span>
+Writing superblocks and filesystem accounting information: done
+<span class="term_say"># 比較看看，跟上面的範例用預設值的結果，有什麼不一樣的啊？</span>
+</pre></td></tr></table>
+
+		<p>其實 mke2fs 所使用的各項選項/參數也可以用在『 mkfs -t ext3 ... 』後面，因為最終使用的公用程式是相同的啦！
+		特別要注意的是 -b, -i 及 -j 這幾個選項，尤其是 -j 這個選項，<span class="text_import2">當沒有指定 -j 的時候， 
+		mke2fs 使用 ext2 為格式化檔案格式，若加入 -j 時，則格式化為 ext3 這個 Journaling 的 filesystem 呦！</span></p>
+
+		<p>老實說，如果沒有特殊需求的話，使用『 mkfs -t ext3....』不但容易記憶，而且就非常好用囉！</p>
+	</div>
+
+	<hr /><a name="fsck"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟檢驗： fsck, badblocks</span><br />
+	<div class="block2">
+		<p>由於系統在運作時誰也說不準啥時硬體或者是電源會有問題，所以『當機』可能是難免的情況(不管是硬體還是軟體)。
+		現在我們知道檔案系統運作時會有硬碟與記憶體資料非同步的狀況發生，因此莫名其妙的當機非常可能導致檔案系統的錯亂。
+		問題來啦，如果檔案系統真的發生錯亂的話，那該如何是好？就...挽救啊！此時那個好用的 filesystem check, fsck 
+		就得拿來仔細瞧瞧囉。<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">fsck</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fsck [-t 檔案系統] [-ACay] 裝置名稱</span>
+<span class="term_say">選項與參數：
+-t  ：如同 mkfs 一樣，fsck 也是個綜合軟體而已！因此我們同樣需要指定檔案系統。
+      不過由於現今的 Linux 太聰明了，他會自動的透過 superblock 去分辨檔案系統，
+      因此通常可以不需要這個選項的囉！請看後續的範例說明。
+-A  ：依據 /etc/fstab 的內容，將需要的裝置掃瞄一次。/etc/fstab 於下一小節說明，
+      通常開機過程中就會執行此一指令了。
+-a  ：自動修復檢查到的有問題的磁區，所以你不用一直按 y 囉！
+-y  ：與 -a 類似，但是某些 filesystem 僅支援 -y 這個參數！
+-C  ：可以在檢驗的過程當中，使用一個長條圖來顯示目前的進度！
+
+EXT2/EXT3 的額外選項功能：(e2fsck 這支指令所提供)
+-f  ：強制檢查！一般來說，如果 fsck 沒有發現任何 unclean 的旗標，不會主動進入
+      細部檢查的，如果您想要強制 fsck 進入細部檢查，就得加上 -f 旗標囉！
+-D  ：針對檔案系統下的目錄進行最佳化配置。</span>
+
+<span class="term_hd">範例一：強制的將前面我們建立的 /dev/hdc6 這個裝置給他檢驗一下！</span>
+[root@www ~]# <span class="term_command">fsck -C -f -t ext3 /dev/hdc6 </span>
+
+fsck 1.39 (29-May-2006)
+e2fsck 1.39 (29-May-2006)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+vbird_logical: 11/251968 files (9.1% non-contiguous), 36926/1004046 blocks
+<span class="term_say"># 如果沒有加上 -f 的選項，則由於這個檔案系統不曾出現問題，
+# 檢查的經過非常快速！若加上 -f 強制檢查，才會一項一項的顯示過程。</span>
+
+<span class="term_hd">範例二：系統有多少檔案系統支援的 fsck 軟體？</span>
+[root@www ~]# <span class="term_command">fsck[tab][tab]</span>
+fsck         fsck.cramfs  fsck.ext2    fsck.ext3    fsck.msdos   fsck.vfat
+</pre></td></tr></table>
+
+		<p>這是用來檢查與修正檔案系統錯誤的指令。<span class="text_import2">注意：通常只有身為 
+		root 且你的檔案系統有問題的時候才使用這個指令，否則在正常狀況下使用此一指令，
+		可能會造成對系統的危害</span>！通常使用這個指令的場合都是在系統出現極大的問題，導致你在 
+		Linux 開機的時候得進入單人單機模式下進行維護的行為時，才必須使用此一指令！</p>
+
+		<p>另外，如果你懷疑剛剛格式化成功的硬碟有問題的時後，也可以使用 fsck 
+		來檢查一硬碟呦！其實就有點像是 Windows 的 scandisk 啦！此外，由於 fsck 
+		在掃瞄硬碟的時候，可能會造成部分 filesystem 的損壞，所以『<span class="text_import2">執行 fsck 時，
+		被檢查的 partition 務必不可掛載到系統上！亦即是需要在卸載的狀態喔！</span>』</p>
+
+		<p>不知道你還記不記得<a href="/linux_basic/0210filepermission.php#dir">第六章的目錄配置</a>中我們提過，
+		ext2/ext3 檔案系統的最頂層(就是掛載點那個目錄底下)會存在一個『lostt+found』的目錄吧！
+		該目錄就是在當你使用 fsck 檢查檔案系統後，若出現問題時，有問題的資料會被放置到這個目錄中喔！
+		所以理論上這個目錄不應該會有任何資料，若系統自動產生資料在裡面，那...你就得特別注意你的檔案系統囉！</p>
+
+		<p>另外，我們的系統實際執行的 fsck 指令，其實是呼叫 e2fsck 這個軟體啦！可以 man e2fsck 找到更多的選項輔助喔！
+		<br /><br /></p>
+
+		<a name="badblocks"></a><hr />
+		<ul class="list1"><li class="text_import1">badblocks</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">badblocks -[svw] 裝置名稱</span>
+<span class="term_say">選項與參數：
+-s  ：在螢幕上列出進度
+-v  ：可以在螢幕上看到進度
+-w  ：使用寫入的方式來測試，建議不要使用此一參數，尤其是待檢查的裝置已有檔案時！</span>
+
+[root@www ~]# <span class="term_command">badblocks -sv /dev/hdc6</span>
+Checking blocks 0 to 2008093
+Checking for bad blocks (read-only test): done
+Pass completed, 0 bad blocks found.
+
+</pre></td></tr></table>
+
+		<p>剛剛談到的 fsck 是用來檢驗檔案系統是否出錯，至於 badblocks 則是用來檢查硬碟或軟碟磁區有沒有壞軌的指令！
+		由於這個指令其實可以透過『 mke2fs -c 裝置檔名 』在進行格式化的時候處理磁碟表面的讀取測試，
+		因此目前大多不使用這個指令囉！</p>
+	</div>
+
+	<hr /><a name="mount"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟掛載與卸載</span><br />
+	<div class="block2">
+		<p>我們在本章一開始時的<a href="#harddisk-mount">掛載點的意義</a>當中提過掛載點是目錄，
+		而這個目錄是進入磁碟分割槽(其實是檔案系統啦！)的入口就是了。不過要進行掛載前，你最好先確定幾件事：</p>
+
+		<ul class="text_import2">
+		<li>單一檔案系統不應該被重複掛載在不同的掛載點(目錄)中；</li>
+		<li>單一目錄不應該重複掛載多個檔案系統；</li>
+		<li>要作為掛載點的目錄，理論上應該都是空目錄才是。</li>
+		</ul>
+
+		<p>尤其是上述的後兩點！如果你要用來掛載的目錄裡面並不是空的，<span 
+		class="text_import2">那麼掛載了檔案系統之後，原目錄下的東西就會暫時的消失</span>。
+		舉個例子來說，假設你的 /home 原本與根目錄 (/) 在同一個檔案系統中，底下原本就有 
+		/home/test 與 /home/vbird 兩個目錄。然後你想要加入新的硬碟，並且直接掛載 /home 
+		底下，那麼當你掛載上新的分割槽時，則 /home 目錄顯示的是新分割槽內的資料，至於原先的 test 與 
+		vbird 這兩個目錄就會暫時的被隱藏掉了！注意喔！並不是被覆蓋掉，
+		而是暫時的隱藏了起來，等到新分割槽被卸載之後，則 /home 原本的內容就會再次的跑出來啦！</p>
+
+		<p>而要將檔案系統掛載到我們的 Linux 系統上，就要使用 mount 這個指令啦！
+		不過，這個指令真的是博大精深～粉難啦！我們學簡單一點啊～ ^_^</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -a</span>
+[root@www ~]# <span class="term_command">mount [-l]</span>
+[root@www ~]# <span class="term_command">mount [-t 檔案系統] [-L Label名] [-o 額外選項] \
+ [-n]  裝置檔名  掛載點</span>
+<span class="term_say">選項與參數：
+-a  ：依照設定檔 <a href="#fstab">/etc/fstab</a> 的資料將所有未掛載的磁碟都掛載上來
+-l  ：單純的輸入 mount 會顯示目前掛載的資訊。加上 -l 可增列 Label 名稱！
+-t  ：與 <a href="#mkfs">mkfs</a> 的選項非常類似的，可以加上檔案系統種類來指定欲掛載的類型。
+      常見的 Linux 支援類型有：ext2, ext3, vfat, reiserfs, iso9660(光碟格式),
+      nfs, cifs, smbfs(此三種為網路檔案系統類型)
+-n  ：在預設的情況下，系統會將實際掛載的情況即時寫入 /etc/mtab 中，以利其他程式
+      的運作。但在某些情況下(例如單人維護模式)為了避免問題，會刻意不寫入。
+      此時就得要使用這個 -n 的選項了。
+-L  ：系統除了利用裝置檔名 (例如 /dev/hdc6) 之外，還可以利用檔案系統的標頭名稱
+      (Label)來進行掛載。最好為你的檔案系統取一個獨一無二的名稱吧！
+-o  ：後面可以接一些掛載時額外加上的參數！比方說帳號、密碼、讀寫權限等：
+      ro, rw:       掛載檔案系統成為唯讀(ro) 或可讀寫(rw)
+      async, sync:  此檔案系統是否使用同步寫入 (sync) 或非同步 (async) 的
+                    記憶體機制，請參考<a href="#harddisk-filerun">檔案系統運作方式</a>。預設為 async。
+      auto, noauto: 允許此 partition 被以 mount -a 自動掛載(auto)
+      dev, nodev:   是否允許此 partition 上，可建立裝置檔案？ dev 為可允許
+      suid, nosuid: 是否允許此 partition 含有 suid/sgid 的檔案格式？
+      exec, noexec: 是否允許此 partition 上擁有可執行 binary 檔案？
+      user, nouser: 是否允許此 partition 讓任何使用者執行 mount ？一般來說，
+                    mount 僅有 root 可以進行，但下達 user 參數，則可讓
+                    一般 user 也能夠對此 partition 進行 mount 。
+      defaults:     預設值為：rw, suid, dev, exec, auto, nouser, and async
+      remount:      重新掛載，這在系統出錯，或重新更新參數時，很有用！</span>
+
+</pre></td></tr></table>
+
+		<p>會不會覺得光是看這個指令的細部選項就快要昏倒了？如果有興趣的話看一下 man mount ，那才會真的昏倒的。
+		事實上 mount 是個很萬用的指令，他可以掛載 ext3/vfat/nfs 等檔案系統，由於每種檔案系統的資料並不相同，
+		想當然爾，詳細的參數與選項自然也就不相同啦！不過實際應用時卻簡單的會讓你想笑呢！
+		看看底下的幾個簡單範例先！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">掛載Ext2/Ext3檔案系統</li></ul>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：用預設的方式，將剛剛建立的 /dev/hdc6 掛載到 /mnt/hdc6 上面！</span>
+[root@www ~]# <span class="term_command">mkdir /mnt/hdc6</span>
+
+[root@www ~]# <span class="term_command">mount /dev/hdc6 /mnt/hdc6</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_say">.....中間省略.....</span>
+/dev/hdc6              1976312     42072   <span class="term_write">1833836</span>   3% /mnt/hdc6
+<span class="term_say"># 看起來，真的有掛載！且檔案大小約為 2GB 左右啦！</span>
+</pre></td></tr></table>
+
+		<p>瞎密？竟然這麼簡單！利用『mount 裝置檔名 掛載點』就能夠順利的掛載了！真是方便啊！
+		為什麼可以這麼方便呢(甚至不需要使用 -t 這個選項)？由於檔案系統幾乎都有 superblock ，
+		我們的 Linux 可以透過分析 superblock 搭配 Linux 自己的驅動程式去測試掛載，
+		如果成功的套和了，就立刻自動的使用該類型的檔案系統掛載起來啊！
+		那麼系統有沒有指定哪些類型的 filesystem 才需要進行上述的掛載測試呢？
+		主要是參考底下這兩個檔案：</p>
+		<ul class="text_import2">
+		<li>/etc/filesystems：系統指定的測試掛載檔案系統類型；</li>
+		<li>/proc/filesystems：Linux系統已經載入的檔案系統類型。</li>
+		</ul>
+		<p>那我怎麼知道我的 Linux 有沒有相關檔案系統類型的驅動程式呢？我們 Linux 
+		支援的檔案系統之驅動程式都寫在如下的目錄中：</p>
+
+		<ul class="text_import2">
+		<li>/lib/modules/$(uname -r)/kernel/fs/</li>
+		</ul>
+		<p>例如 vfat 的驅動程式就寫在『/lib/modules/$(uname -r)/kernel/fs/vfat/』這個目錄下啦！
+		簡單的測試掛載後，接下來讓我們檢查看看目前已掛載的檔案系統狀況吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：觀察目前『已掛載』的檔案系統，包含各檔案系統的Label名稱</span>
+[root@www ~]# <span class="term_command">mount -l</span>
+
+/dev/hdc2 on / type ext3 (rw) <span class="term_write">[/1]</span>
+proc on /proc type proc (rw)
+sysfs on /sys type sysfs (rw)
+devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+/dev/hdc3 on /home type ext3 (rw) <span class="term_write">[/home]</span>
+/dev/hdc1 on /boot type ext3 (rw) <span class="term_write">[/boot]</span>
+tmpfs on /dev/shm type tmpfs (rw)
+none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
+sunrpc on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw)
+/dev/hdc6 on /mnt/hdc6 type ext3 (rw) <span class="term_write">[vbird_logical]</span>
+<span class="term_say"># 除了實際的檔案系統外，很多特殊的檔案系統(proc/sysfs...)也會被顯示出來！
+# 值得注意的是，加上 -l 選項可以列出如上特殊字體的標頭(label)喔</span>
+</pre></td></tr></table>
+
+		<p>這個指令輸出的結果可以讓我們看到非常多資訊，以 /dev/hdc2 這個裝置來說好了(上面表格的第一行)，
+		他的意義是：『<span class="text_import2">/dev/hdc2 是掛載到 / 目錄，檔案系統類型為 ext3
+		，且掛載為可讀寫 (rw) ，另外，這個 filesystem 有標頭，名字(label)為 /1</span> 』
+		這樣，你會解釋上述表格中的最後一行輸出結果了嗎？自己解釋一下先。^_^。
+		接下來請拿出你的 CentOS DVD 放入光碟機中，並拿 FAT 格式的 USB 隨身碟(不要用 
+		NTFS 的)插入 USB 插槽中，我們來測試掛載一下！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">掛載 CD 或 DVD 光碟</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：將你用來安裝 Linux 的 CentOS 原版光碟拿出來掛載！</span>
+[root@www ~]# <span class="term_command">mkdir /media/cdrom</span>
+[root@www ~]# <span class="term_command">mount -t iso9660 /dev/cdrom /media/cdrom</span>
+[root@www ~]# <span class="term_command">mount /dev/cdrom /media/cdrom </span>
+
+<span class="term_say"># 你可以指定 -t iso9660 這個光碟片的格式來掛載，也可以讓系統自己去測試掛載！
+# 所以上述的指令只要做一個就夠了！但是目錄的建立初次掛載時必須要進行喔！</span>
+ 
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_say">.....中間省略.....</span>
+<span class="term_write">/dev/hdd               4493152   4493152         0 100% /media/cdrom</span>
+<span class="term_say"># 因為我的光碟機使用的是 /dev/hdd 的 IDE 介面之故！</span>
+</pre></td></tr></table>
+
+		<p><span class="text_import2">光碟機一掛載之後就無法退出光碟片了！除非你將他卸載才能夠退出</span>！
+		從上面的資料你也可以發現，因為是光碟嘛！所以磁碟使用率達到 100% ，因為你無法直接寫入任何資料到光碟當中ㄇㄟ！
+		另外，其實 /dev/cdrom 是個連結檔，正確的磁碟檔名得要看你的光碟機是什麼連接介面的環境。
+		以鳥哥為例，我的光碟機接在 /dev/hdd，所以正確的掛載應該是『<span 
+		class="text_import2">mount /dev/hdd /media/cdrom</span>』比較正確喔！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		話說當時年記小 (其實是剛接觸 Linux 的那一年)，摸 Linux 到處碰壁！連將 CDROM 掛載後，
+		光碟機竟然都不讓我退片！那個時候難過的要死！解決的方法竟然是『重新開機！』囧的可以啊！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<hr />
+		<ul class="list1"><li class="text_import1">格式化與掛載軟碟</li></ul>
+
+		<p>軟碟的格式化可以直接使用 mkfs 即可。但是軟碟也是可以格式化成為 ext3 或 vfat 格式的。
+		掛載的時候我們同樣的使用系統自動測試掛載即可！真是粉簡單！如果你有軟碟片的話(很少人有了吧？)，
+		請先放置到軟碟機當中囉！底下來測試看看(軟碟片請勿放置任何資料，且將防寫打開！)。</p>
+
+<table class="term"><tr><td class="term"><pre>
+
+<span class="term_hd">範例四：格式化後掛載軟碟到 /media/floppy/ 目錄中。</span>
+[root@www ~]# <span class="term_command">mkfs -t vfat /dev/fd0</span>
+<span class="term_say"># 我們格式化軟碟成為 Windows/Linux 可共同使用的 FAT 格式吧！</span>
+[root@www ~]# <span class="term_command">mkdir /media/floppy</span>
+[root@www ~]# <span class="term_command">mount -t vfat /dev/fd0 /media/floppy</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+
+<span class="term_say">.....中間省略.....</span>
+/dev/fd0                  1424       164      1260  12% /media/floppy
+</pre></td></tr></table>
+
+		<p>與光碟機不同的是，你掛載了軟碟後竟然還是可以退出軟碟喔！不過，如此一來你的檔案系統將會有莫名奇妙的問題發生！
+		<span class="text_import2">整個 Linux 最重要的就是檔案系統，而檔案系統是直接掛載到目錄樹上頭，
+		幾乎任何指令都會或多或少使用到目錄樹的資料，因此你當然不可以隨意的將光碟/軟碟拿出來！</span>
+		所以，軟碟也請卸載之後再退出！很重要的一點！<br /><br /></p>
+
+		<a name="cp950"></a>
+		<hr />
+
+		<ul class="list1"><li class="text_import1">掛載隨身碟</li></ul>
+
+		<p>請拿出你的隨身碟並插入 Linux 主機的 USB 槽中！注意，你的這個隨身碟不能夠是 NTFS 的檔案系統喔！
+		接下來讓我們測試測試吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例五：找出你的隨身碟裝置檔名，並掛載到 /mnt/flash 目錄中</span>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+<span class="term_say">.....中間省略.....</span>
+<span class="term_write">Disk /dev/sda: 8313 MB</span>, 8313110528 bytes
+59 heads, 58 sectors/track, 4744 cylinders
+Units = cylinders of 3422 * 512 = 1752064 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+
+<span class="term_write">/dev/sda1</span>               1        4745     8118260    b  W95 FAT32
+<span class="term_say"># 從上的特殊字體，可得知磁碟的大小以及裝置檔名，知道是 /dev/sda1 </span>
+
+[root@www ~]# <span class="term_command">mkdir /mnt/flash</span>
+[root@www ~]# <span class="term_command">mount -t vfat -o iocharset=cp950 /dev/sda1 /mnt/flash</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_say">.....中間省略.....</span>
+
+/dev/sda1              8102416   4986228   3116188  62% /mnt/flash
+</pre></td></tr></table>
+
+		<p>如果帶有中文檔名的資料，那麼可以在掛載時指定一下掛載檔案系統所使用的語系資料。
+		在 man mount 找到 vfat 檔案格式當中可以使用 iocharset 來指定語系，而中文語系是 cp950 ，
+		所以也就有了上述的掛載指令項目囉。</p>
+
+		<p>萬一你使用的是隨身硬碟，也就是利用筆記型電腦所做出來的USB磁碟時，通常這樣的硬碟都使用 NTFS 格式的～
+		怎辦？沒關係，可以參考底下這個網站：(<a href="#ps8">註8</a>)</p>
+		<ul>
+		<li>NTFS 檔案系統官網：Linux-NTFS Project: <a href="http://www.linux-ntfs.org/"
+			target="_blank">http://www.linux-ntfs.org/</a></li>
+
+		<li>CentOS 5.x 版的相關驅動程式下載頁面：<a href="http://www.linux-ntfs.org/doku.php?id=redhat:rhel5"
+			target="_blank">http://www.linux-ntfs.org/doku.php?id=redhat:rhel5</a></li></ul>
+		<p>將她們提供的驅動程式捉下來並且安裝之後，就能夠使用 NTFS 的檔案系統了！
+		只是由於檔案系統與 Linux 核心有很大的關係，因此以後如果你的 Linux 系統有升級 (update) 時，
+		你就得要重新下載一次相對應的驅動程式版本喔！<br /><br /></p>
+
+		<a name="remount"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">重新掛載根目錄與掛載不特定目錄</li></ul>
+
+		<p>整個目錄樹最重要的地方就是根目錄了，所以根目錄根本就不能夠被卸載的！問題是，如果你的掛載參數要改變，
+		或者是根目錄出現『唯讀』狀態時，如何重新掛載呢？最可能的處理方式就是重新開機 (reboot)！
+		不過你也可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例六：將 / 重新掛載，並加入參數為 rw 與 auto</span>
+[root@www ~]# <span class="term_command">mount -o remount,rw,auto /</span>
+</pre></td></tr></table>
+
+		<p>重點是那個『 -o remount,xx 』的選項與參數！請注意，要重新掛載 (remount) 時，
+		這是個非常重要的機制！尤其是當你進入單人維護模式時，你的根目錄常會被系統掛載為唯讀，這個時候這個指令就太重要了！
+		</p>
+		<a name="bind"></a>
+		<p>另外，我們也可以利用 mount 來將某個目錄掛載到另外一個目錄去喔！這並不是掛載檔案系統，而是額外掛載某個目錄的方法！
+		雖然底下的方法也可以使用 symbolic link 來連結，不過在某些不支援符號連結的程式運作中，還是得要透過這樣的方法才行。</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例七：將 /home 這個目錄暫時掛載到 /mnt/home 底下：</span>
+[root@www ~]# <span class="term_command">mkdir /mnt/home</span>
+[root@www ~]# <span class="term_command">mount --bind /home /mnt/home</span>
+[root@www ~]# <span class="term_command">ls -lid /home/ /mnt/home</span>
+2 drwxr-xr-x 6 root root 4096 Sep 29 02:21 /home/
+2 drwxr-xr-x 6 root root 4096 Sep 29 02:21 /mnt/home
+
+[root@www ~]# <span class="term_command">mount -l</span>
+/home on /mnt/home type none (rw,<span class="term_write">bind</span>)
+
+</pre></td></tr></table>
+
+		<p>看起來，其實兩者連結到同一個 inode 嘛！ ^_^ 沒錯啦！透過這個 mount --bind 的功能，
+		您可以將某個目錄掛載到其他目錄去喔！而並不是整塊 filesystem 的啦！所以從此進入 /mnt/home 就是進入 /home 
+		的意思喔！<br /><br /></p>
+
+		<a name="umount"></a><hr />
+		<ul class="list1"><li class="text_import1">umount (將裝置檔案卸載)</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">umount [-fn] 裝置檔名或掛載點</span>
+<span class="term_say">選項與參數：
+-f ：強制卸載！可用在類似網路檔案系統 (NFS) 無法讀取到的情況下；
+-n ：不更新 /etc/mtab 情況下卸載。</span>
+
+</pre></td></tr></table>
+
+		<p>就是直接將已掛載的檔案系統給他卸載即是！卸載之後，可以使用 df 或 mount -l 看看是否還存在目錄樹中？
+		卸載的方式，可以下達裝置檔名或掛載點，均可接受啦！底下的範例做看看吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例八：將本章之前自行掛載的檔案系統全部卸載：</span>
+[root@www ~]# <span class="term_command">mount</span>
+<span class="term_say">.....前面省略.....</span>
+<span class="term_write">/dev/hdc6</span> on <span class="term_write">/mnt/hdc6</span> type ext3 (rw)
+
+<span class="term_write">/dev/hdd</span> on <span class="term_write">/media/cdrom</span> type iso9660 (rw)
+<span class="term_write">/dev/sda1</span> on <span class="term_write">/mnt/flash</span> type vfat (rw,iocharset=cp950)
+<span class="term_write">/home</span> on <span class="term_write">/mnt/home</span> type none (rw,bind)
+
+<span class="term_say"># 先找一下已經掛載的檔案系統，如上所示，特殊字體即為剛剛掛載的裝置囉！</span>
+
+[root@www ~]# <span class="term_command">umount /dev/hdc6    </span>  <span class="term_note">&lt;==用裝置檔名來卸載</span>
+[root@www ~]# <span class="term_command">umount /media/cdrom </span>  <span class="term_note">&lt;==用掛載點來卸載</span>
+[root@www ~]# <span class="term_command">umount /mnt/flash   </span>  <span class="term_note">&lt;==因為掛載點比較好記憶！</span>
+
+[root@www ~]# <span class="term_command">umount /dev/fd0     </span>  <span class="term_note">&lt;==用裝置檔名較好記！</span>
+[root@www ~]# <span class="term_command">umount /mnt/home    </span>  <span class="term_note">&lt;==一定要用掛載點！因為掛載的是目錄</span>
+</pre></td></tr></table>
+
+		<p>由於通通卸載了，此時你才可以退出光碟片、軟碟片、USB隨身碟等設備喔！如果你遇到這樣的情況：</p>
+
+<table class="term"><tr><td class="term"><pre>
+
+[root@www ~]# <span class="term_command">mount /dev/cdrom /media/cdrom</span>
+[root@www ~]# <span class="term_command">cd /media/cdrom</span>
+[root@www cdrom]# <span class="term_command">umount /media/cdrom</span>
+umount: /media/cdrom: device is busy
+umount: /media/cdrom: device is busy
+</pre></td></tr></table>
+
+		<p>由於你目前正在 /media/cdrom/ 的目錄內，也就是說其實『你正在使用該檔案系統』的意思！
+		所以自然無法卸載這個裝置！那該如何是好？就『<span 
+		class="text_import2">離開該檔案系統的掛載點</span>』即可。以上述的案例來說，
+		你可以使用『 cd / 』回到根目錄，就能夠卸載 /media/cdrom 囉！簡單吧！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">使用 Label name 進行掛載的方法</li></ul>
+
+		<p>除了磁碟的裝置檔名之外，其實我們可以使用檔案系統的標頭(label)名稱來掛載喔！
+		舉例來說，我們剛剛卸載的 /dev/hdc6 標頭名稱是『vbird_logical』，你也可以使用 <a href="#dumpe2fs">dumpe2fs</a>
+		這個指令來查詢一下啦！然後就這樣做即可：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例九：找出 /dev/hdc6 的 label name，並用 label 掛載到 /mnt/hdc6 </span>
+
+[root@www ~]# <span class="term_command">dumpe2fs -h /dev/hdc6</span>
+Filesystem volume name:   <span class="term_write">vbird_logical</span>
+<span class="term_say">.....底下省略.....
+# 找到啦！標頭名稱為 vbird_logical 囉！</span>
+
+[root@www ~]# <span class="term_command">mount -L "vbird_logical" /mnt/hdc6</span>
+</pre></td></tr></table>
+
+		<p>這種掛載的方法有一個很大的好處：『<span class="text_import2">系統不必知道該檔案系統所在的介面與磁碟檔名！</span>』
+		更詳細的說明我們會在下一小節當中的 <a href="#e2label">e2label</a> 介紹的！</p>
+
+	</div>
+
+	<hr /><a name="diskpara"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟參數修訂</span><br />
+	<div class="block2">
+		<p>某些時刻，你可能會希望修改一下目前檔案系統的一些相關資訊，舉例來說，你可能要修改 Label name ，
+		或者是 journal 的參數，或者是其他硬碟運作時的相關參數 (例如 DMA 啟動與否～)。
+		這個時候，就得需要底下這些相關的指令功能囉～<br /><br /></p>
+
+		<a name="mknod"></a><hr />
+		<ul class="list1"><li class="text_import1">mknod</li></ul>
+
+		<p>還記得我們說過，在 Linux 底下所有的裝置都以檔案來代表吧！但是那個檔案如何代表該裝置呢？
+		很簡單！<span class="text_import2">就是透過檔案的 major 與 minor 數值來替代的</span>～所以，那個 
+		major 與 minor 數值是有特殊意義的，不是隨意設定的喔！舉例來說，在鳥哥的這個測試機當中，
+		那個用到的磁碟 /dev/hdc 的相關裝置代碼如下：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll /dev/hdc*</span>
+brw-r----- 1 root disk <span class="term_write">22, 0</span> Oct 24 15:55 /dev/hdc
+brw-r----- 1 root disk <span class="term_write">22, 1</span> Oct 20 08:47 /dev/hdc1
+brw-r----- 1 root disk <span class="term_write">22, 2</span> Oct 20 08:47 /dev/hdc2
+brw-r----- 1 root disk <span class="term_write">22, 3</span> Oct 20 08:47 /dev/hdc3
+brw-r----- 1 root disk <span class="term_write">22, 4</span> Oct 24 16:02 /dev/hdc4
+brw-r----- 1 root disk <span class="term_write">22, 5</span> Oct 20 16:46 /dev/hdc5
+brw-r----- 1 root disk <span class="term_write">22, 6</span> Oct 25 01:33 /dev/hdc6
+
+</pre></td></tr></table>
+
+		<p>上表當中 22 為主要裝置代碼 (Major) 而 0~6 則為次要裝置代碼 (Minor)。
+		我們的 Linux 核心認識的裝置資料就是透過這兩個數值來決定的！舉例來說，常見的硬碟檔名 /dev/hda 與 /dev/sda 
+		裝置代碼如下所示：</p>
+
+		<table width="80%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow" style="color:#000088">
+		<tr bgcolor="lightblue" align="center"><td>磁碟檔名</td><td>Major</td><td>Minor</td></tr>
+		<tr align="center"><td>/dev/hda</td><td>3</td><td>0~63</td></tr>
+
+		<tr align="center"><td>/dev/hdb</td><td>3</td><td>64~127</td></tr>
+		<tr align="center"><td>/dev/sda</td><td>8</td><td>0-15</td></tr>
+		<tr align="center"><td>/dev/sdb</td><td>8</td><td>16-31</td></tr>
+		</table><br />
+
+		<p>如果你想要知道更多核心支援的硬體裝置代碼 (major, minor) 請參考官網的連結(<a href="#ps9">註9</a>)：</p>
+
+		<ul><li><a href="http://www.kernel.org/pub/linux/docs/device-list/devices.txt"
+		target="_blank">http://www.kernel.org/pub/linux/docs/device-list/devices.txt</a></li></ul>
+
+		<p>基本上，Linux 核心 2.6 版以後，硬體檔名已經都可以被系統自動的即時產生了，我們根本不需要手動建立裝置檔案。
+		不過某些情況底下我們可能還是得要手動處理裝置檔案的，例如在某些服務被關到特定目錄下時(chroot)，
+		就需要這樣做了。此時這個 mknod 就得要知道如何操作才行！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mknod 裝置檔名 [bcp] [Major] [Minor]</span>
+
+<span class="term_say">選項與參數：
+裝置種類：
+   b  ：設定裝置名稱成為一個周邊儲存設備檔案，例如硬碟等；
+   c  ：設定裝置名稱成為一個周邊輸入設備檔案，例如滑鼠/鍵盤等；
+   p  ：設定裝置名稱成為一個 FIFO 檔案；
+Major ：主要裝置代碼；
+Minor ：次要裝置代碼；</span>
+
+<span class="term_hd">範例一：由上述的介紹我們知道 /dev/hdc10 裝置代碼 22, 10，請建立並查閱此裝置</span>
+[root@www ~]# <span class="term_command">mknod /dev/hdc10 b 22 10</span>
+[root@www ~]# <span class="term_command">ll /dev/hdc10</span>
+<span class="term_write">b</span>rw-r--r-- 1 root root <span class="term_write">22, 10</span> Oct 26 23:57 /dev/hdc10
+<span class="term_say"># 上面那個 22 與 10 是有意義的，不要隨意設定啊！</span>
+
+<span class="term_hd">範例二：建立一個 FIFO 檔案，檔名為 /tmp/testpipe</span>
+[root@www ~]# <span class="term_command">mknod /tmp/testpipe p</span>
+[root@www ~]# <span class="term_command">ll /tmp/testpipe</span>
+<span class="term_write">p</span>rw-r--r-- 1 root root 0 Oct 27 00:00 /tmp/testpipe
+<span class="term_say"># 注意啊！這個檔案可不是一般檔案，不可以隨便就放在這裡！
+# 測試完畢之後請刪除這個檔案吧！看一下這個檔案的類型！是 p 喔！^_^</span>
+</pre></td></tr></table>
+
+		<br /><a name="e2label"></a><hr />
+
+		<ul class="list1"><li class="text_import1">e2label</li></ul>
+
+		<p>我們在 <a href="#mkfs">mkfs</a> 指令介紹時有談到設定檔案系統標頭 (Label) 的方法。
+		那如果格式化完畢後想要修改標頭呢？就用這個 e2label 來修改了。那什麼是 Label 呢？
+		我們拿你曾用過的 Windows 系統來說明。當你打開『檔案總管』時，C/D等槽不是都會有個名稱嗎？
+		那就是 label (如果沒有設定名稱，就會顯示『本機磁碟機』的字樣)</p>
+
+		<p>這個東西除了有趣且可以讓你知道磁碟的內容是啥玩意兒之外，也會被使用到一些設定檔案當中！
+		舉例來說，剛剛我們聊到的磁碟的掛載時，不就有用到 Label name 來進行掛載嗎？
+		目前 CentOS 的設定檔，也就是那個 /etc/fstab 檔案的設定都預設使用 Label name 呢！
+		那這樣做有什麼好處與缺點呢？</p>
+		<ul class="text_import2">
+		<li>優點：不論磁碟檔名怎麼變，不論你將硬碟插在那個 IDE / SATA 介面，由於系統是透過 Label 
+			，所以，磁碟插在哪個介面將不會有影響；<br /><br /></li>
+
+		<li>缺點：如果插了兩顆硬碟，剛好兩顆硬碟的 Label 有重複的，那就慘了～
+			因為系統可能會無法判斷那個磁碟分割槽才是正確的！</li></ul>
+
+		<p>鳥哥一直是個比較『硬派』作風，所以我還是比較喜歡直接利用磁碟檔名來掛載啦！
+		不過，如果沒有特殊需求的話，那麼利用 Label 來掛載也成！
+		但是<span class="text_import2">你就不可以隨意修改 Label 的名稱了</span>！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">e2label 裝置名稱  新的Label名稱</span>
+
+<span class="term_hd">範例一：將 /dev/hdc6 的標頭改成 my_test 並觀察是否修改成功？</span>
+
+[root@www ~]# <span class="term_command">dumpe2fs -h /dev/hdc6</span>
+Filesystem volume name:   <span class="term_write">vbird_logical</span>  <span class="term_note">&lt;==原本的標頭名稱</span>
+<span class="term_say">.....底下省略.....</span>
+
+[root@www ~]# <span class="term_command">e2label /dev/hdc6 "my_test"</span>
+[root@www ~]# <span class="term_command">dumpe2fs -h /dev/hdc6</span>
+
+Filesystem volume name:   <span class="term_write">my_test      </span>  <span class="term_note">&lt;==改過來啦！</span>
+<span class="term_say">.....底下省略.....</span>
+</pre></td></tr></table>
+
+		<br />
+
+		<a name="tune2fs"></a><hr />
+		<ul class="list1"><li class="text_import1">tune2fs</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">tune2fs [-jlL] 裝置代號</span>
+<span class="term_say">選項與參數：
+-l  ：類似 dumpe2fs -h 的功能～將 superblock 內的資料讀出來～
+-j  ：將 ext2 的 filesystem 轉換為 ext3 的檔案系統；
+-L  ：類似 e2label 的功能，可以修改 filesystem 的 Label 喔！</span>
+
+<span class="term_hd">範例一：列出 /dev/hdc6 的 superblock 內容</span>
+[root@www ~]# <span class="term_command">tune2fs -l /dev/hdc6</span>
+</pre></td></tr></table>
+
+		<p>這個指令的功能其實很廣泛啦～上面鳥哥僅列出很簡單的一些參數而已，
+		更多的用法請自行參考 man tune2fs 。比較有趣的是，如果你的某個 partition 
+		原本是 ext2 的檔案系統，如果想要將他更新成為 ext3 檔案系統的話，利用 tune2fs 就可以很簡單的轉換過來囉～<br /><br /></p>
+
+		<a name="hdparm"></a><hr />
+		<ul class="list1"><li class="text_import1">hdparm</li></ul>
+
+		<p>如果你的硬碟是 IDE 介面的，那麼這個指令可以幫助你設定一些進階參數！如果你是使用 SATA 介面的，
+		那麼這個指令就沒有多大用途了！另外，目前的 Linux 系統都已經稍微最佳化過，所以這個指令最多是用來測試效能啦！
+		而且建議你不要隨便調整硬碟參數，檔案系統容易出問題喔！除非你真的知道你調整的資料是啥！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">hdparm [-icdmXTt] 裝置名稱</span>
+<span class="term_say">選項與參數：
+-i  ：將核心偵測到的硬碟參數顯示出來！
+-c  ：設定 32-bit (32位元)存取模式。這個 32 位元存取模式指的是在硬碟在與 
+      PCI 介面之間傳輸的模式，而硬碟本身是依舊以 16 位元模式在跑的！
+      預設的情況下，這個設定值都會被打開，建議直接使用 c1 即可！
+-d  ：設定是否啟用 dma 模式， -d1 為啟動， -d0 為取消；
+-m  ：設定同步讀取多個 sector 的模式。一般來說，設定此模式，可降低系統因為
+      讀取磁碟而損耗的效能～不過， WD 的硬碟則不怎麼建議設定此值～
+      一般來說，設定為 16/32 是最佳化，不過，WD 硬碟建議值則是 4/8 。
+      這個值的最大值，可以利用 hdparm -i /dev/hda 輸出的 <span class="term_note_b">MaxMultSect</span>
+
+      來設定喔！一般如果不曉得，設定 16 是合理的！
+-X  ：設定 UtraDMA 的模式，一般來說， UDMA 的模式值加 64 即為設定值。
+      並且，硬碟與主機板晶片必須要同步，所以，取最小的那個。一般來說：
+      33 MHz DMA mode 0~2 (X64~X66)
+      66 MHz DMA mode 3~4 (X67~X68)
+      100MHz DMA mode 5   (X69)
+      如果您的硬碟上面顯示的是 UATA 100 以上的，那麼設定 X69 也不錯！
+-T  ：測試暫存區 cache 的存取效能
+-t  ：測試硬碟的實際存取效能 （較正確！）</span>
+
+<span class="term_hd">範例一：取得我硬碟的最大同步存取 sector 值與目前的 UDMA 模式</span>
+[root@www ~]# <span class="term_command">hdparm -i /dev/hdc</span>
+ Model=IC35L040AVER07-0, FwRev=ER4OA41A, SerialNo=SX0SXL98406 <span class="term_note">&lt;==硬碟的廠牌型號</span>
+ Config={ HardSect NotMFM HdSw&gt;15uSec Fixed DTR&gt;10Mbs }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=40
+ BuffType=DualPortCache, <span class="term_write">BuffSize=1916kB, MaxMultSect=16, MultSect=16</span>
+
+ CurCHS=<span class="term_write">16383/16/63</span>, CurSects=16514064, LBA=yes, LBAsects=80418240
+ IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ <span class="term_write">UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5</span> <span class="term_note">&lt;==有 * 為目前的值</span>
+ AdvancedPM=yes: disabled (255) WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-5 T13 1321D revision 1:  
+    ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5
+<span class="term_say"># 這顆硬碟緩衝記憶體只有 2MB(BuffSize)，但使用的是 udma5 ！還可以。</span>
+
+<span class="term_hd">範例二：由上個範例知道最大 16 位元/UDMA 為 mode 5，所以可以設定為：</span>
+[root@www ~]# <span class="term_command">hdparm -d1 -c1 -X69 /dev/hdc</span>
+
+<span class="term_hd">範例三：測試這顆硬碟的讀取效能</span>
+[root@www ~]# <span class="term_command">hdparm -Tt /dev/hdc</span>
+/dev/hdc:
+ Timing cached reads:   428 MB in  2.00 seconds = 213.50 MB/sec
+ Timing buffered disk reads:  114 MB in  3.00 seconds =  38.00 MB/sec
+<span class="term_say"># 鳥哥的這部測試機沒有很好啦～這樣的速度.....差強人意～</span>
+</pre></td></tr></table>
+
+		<p>如果你是使用 SATA 硬碟的話，這個指令唯一可以做的，就是最後面那個測試的功能而已囉！
+		雖然這樣的測試不是很準確，至少是一個可以比較的基準。鳥哥在我的 cluster 機器上面測試的 SATA (/dev/sda) 與
+		RAID (/dev/sdb) 結果如下，可以提供給你參考看看。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">hdparm -Tt /dev/sda /dev/sdb</span>
+
+/dev/sda:
+ Timing cached reads:   4152 MB in  2.00 seconds = 2075.28 MB/sec
+ Timing buffered disk reads:  304 MB in  3.01 seconds = 100.91 MB/sec
+
+/dev/sdb:
+ Timing cached reads:   4072 MB in  2.00 seconds = 2036.31 MB/sec
+ Timing buffered disk reads:  278 MB in  3.00 seconds =  92.59 MB/sec
+</pre></td></tr></table>
+
+	</div>
+</div>
+
+
+<hr /><a name="bootup"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">設定開機掛載：</span><br />
+<div class="block1">
+	<p>手動處理 mount 不是很人性化，我們總是需要讓系統『自動』在開機時進行掛載的！本小節就是在談這玩意兒！
+	另外，從 FTP 伺服器捉下來的映像檔能否不用燒錄就可以讀取內容？我們也需要談談先！<br /><br /></p>
+
+	<hr /><a name="fstab"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開機掛載 /etc/fstab 及 /etc/mtab</span><br />
+
+	<div class="block2">
+		<p>剛剛上面說了許多，那麼可不可以在開機的時候就將我要的檔案系統都掛好呢？這樣我就不需要每次進入 
+		Linux 系統都還要在掛載一次呀！當然可以囉！那就直接到 <span class="text_import2">/etc/fstab</span> 
+		裡面去修修就行囉！不過，在開始說明前，這裡要先跟大家說一說系統掛載的一些限制：</p>
+
+		<ul class="text_import2">
+		<li>根目錄 / 是必須掛載的﹐而且一定要先於其它 mount point 被掛載進來。</li>
+		<li>其它 mount point 必須為已建立的目錄﹐可任意指定﹐但一定要遵守必須的系統目錄架構原則</li>
+
+		<li>所有 mount point 在同一時間之內﹐只能掛載一次。</li>
+		<li>所有 partition 在同一時間之內﹐只能掛載一次。</li>
+		<li>如若進行卸載﹐您必須先將工作目錄移到 mount point(及其子目錄) 之外。</li></ul>
+
+		<p>讓我們直接查閱一下 /etc/fstab 這個檔案的內容吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /etc/fstab</span>
+
+<span class="term_say"># Device        Mount point   filesystem parameters    dump fsck</span>
+<span class="term_write">LABEL=/1          /           ext3       defaults        1 1
+LABEL=/home       /home       ext3       defaults        1 2
+LABEL=/boot       /boot       ext3       defaults        1 2</span>
+tmpfs             /dev/shm    tmpfs      defaults        0 0
+devpts            /dev/pts    devpts     gid=5,mode=620  0 0
+sysfs             /sys        sysfs      defaults        0 0
+proc              /proc       proc       defaults        0 0
+LABEL=SWAP-hdc5   swap        swap       defaults        0 0
+<span class="term_say"># 上述特殊字體的部分與實際磁碟有關！其他則是虛擬檔案系統或
+# 與記憶體置換空間 (swap) 有關。</span>
+</pre></td></tr></table>
+
+		<p>其實 /etc/fstab (filesystem table) 就是將我們利用 <a href="#mount">mount</a> 指令進行掛載時，
+		將所有的選項與參數寫入到這個檔案中就是了。除此之外， /etc/fstab 還加入了 dump 這個備份用指令的支援！
+		與開機時是否進行檔案系統檢驗 <a href="#fsck">fsck</a> 等指令有關。</p>
+
+		<p>這個檔案的內容共有六個欄位，這六個欄位非常的重要！你『一定要背起來』才好！
+		各個欄位的詳細資料如下：</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		鳥哥比較龜毛一點，因為某些 distributions 的 /etc/fstab 檔案排列方式蠻醜的，
+		雖然每一欄之間只要以空白字元分開即可，但就是覺得醜，所以通常鳥哥就會自己排列整齊，
+		並加上註解符號(就是 # )，來幫我記憶這些資訊！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<ul class="list1"><li class="text_import1">第一欄：磁碟裝置檔名或該裝置的 Label：</li></ul>
+
+		<p>這個欄位請填入檔案系統的裝置檔名。但是由上面表格的預設值我們知道系統預設使用的是 Label 名稱！
+		在鳥哥的這個測試系統中 /dev/hdc2 標頭名稱為 /1，所以上述表格中的『LABEL=/1』也可以被取代成為『/dev/hdc2』的意思。
+		至於Label可以使用 <a href="#dumpe2fs">dumpe2fs</a> 指令來查閱的。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		記得有一次有個網友寫信給鳥哥，他說，依照 <a href="#e2label">e2label</a>
+		的設定去練習修改自己的 partition 的 Label name 之後，卻發現，再也無法順利開機成功！
+		後來才發現，原來他的 /etc/fstab 就是以 Label name 去掛載的。但是因為在練習的時候，
+		將 Label name 改名字過了，導致在開機的過程當中再也找不到相關的Label name了。<br /><br />
+		所以啦，這裡再次的強調，利用裝置名稱 (ex&gt; /dev/hda1) 來掛載 partition 時，
+		雖然是被固定死的，所以您的硬碟不可以隨意插在任意的插槽，不過他還是有好處的。
+		而使用 Label name 來掛載，雖然就沒有插槽方面的問題，不過，您就得要隨時注意您的
+		Label name 喔！尤其是新增硬碟的時候！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<ul class="list1"><li class="text_import1">第二欄：掛載點 (mount point)：：</li></ul>
+
+		<p>就是掛載點啊！掛載點是什麼？一定是目錄啊～要知道啊！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">第三欄：磁碟分割槽的檔案系統：</li></ul>
+		<p>在手動掛載時可以讓系統自動測試掛載，但在這個檔案當中我們必須要手動寫入檔案系統才行！
+		包括 ext3, reiserfs, nfs, vfat 等等。<br /><br /></p>
+
+		<a name="mount_option"></a>
+		<ul class="list1"><li class="text_import1">第四欄：檔案系統參數：</li></ul>
+		<p>記不記得我們在 <a href="#mount">mount</a> 這個指令中談到很多特殊的檔案系統參數？
+		還有我們使用過的『-o iocharset=cp950』？這些特殊的參數就是寫入在這個欄位啦！
+		雖然之前在 <a href="#mount">mount</a> 已經提過一次，這裡我們利用表格的方式再彙整一下：</p>
+
+		<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow" style="color:#000088">
+		<tr bgcolor="lightblue" align="center"><td width="180">參數</td><td>內容意義</td></tr>
+		<tr><td align="center">async/sync<br />非同步/同步</td>
+			<td>設定磁碟是否以非同步方式運作！預設為 async(效能較佳)</td></tr>
+		<tr><td align="center">auto/noauto<br />自動/非自動</td>
+
+			<td>當下達 mount -a 時，此檔案系統是否會被主動測試掛載。預設為 auto。</td></tr>
+		<tr><td align="center">rw/ro<br />可讀寫/唯讀</td>
+			<td>讓該分割槽以可讀寫或者是唯讀的型態掛載上來，如果你想要分享的資料是不給使用者隨意變更的，
+			這裡也能夠設定為唯讀。則不論在此檔案系統的檔案是否設定 w 權限，都無法寫入喔！</td></tr>
+		<tr><td align="center">exec/noexec<br />可執行/不可執行</td>
+			<td>限制在此檔案系統內是否可以進行『執行』的工作？如果是純粹用來儲存資料的，
+			那麼可以設定為 noexec 會比較安全，相對的，會比較麻煩！</td></tr>
+
+		<tr><td align="center">user/nouser<br />允許/不允許使用者掛載</td>
+			<td>是否允許使用者使用 mount 指令來掛載呢？一般而言，我們當然不希望一般身份的 user 
+			能使用 mount 囉，因為太不安全了，因此這裡應該要設定為 nouser 囉！</td></tr>
+		<tr><td align="center">suid/nosuid<br />具有/不具有 suid 權限</td>
+			<td>該檔案系統是否允許 SUID 的存在？如果不是執行檔放置目錄，也可以設定為 nosuid 來取消這個功能！</td></tr>
+		<tr><td align="center">usrquota</td>
+
+			<td>注意名稱是『 <b>usrquota</b> 』不要拼錯了！這個是在啟動 filesystem 
+			支援<a href="/linux_basic/0420quota.php">磁碟配額</a>模式，更多資料我們在第四篇再談。</td></tr>
+		<tr><td align="center">grpquota</td>
+			<td>注意名稱是『<b>grpquota</b>』，啟動 filesystem 對群組磁碟配額模式的支援。</td></tr>
+		<tr><td align="center">defaults</td>
+
+			<td>同時具有 <b>rw, suid, dev, exec, auto, nouser, async</b> 等參數。
+			基本上，預設情況使用 defaults 設定即可！</td></tr>
+		</table><br />
+
+		<ul class="list1"><li class="text_import1">第五欄：能否被 dump 備份指令作用：</li></ul>
+		<p>dump 是一個用來做為備份的指令(我們會在<a href="/linux_basic/0580backup.php">第二十五章備份策略</a>中談到這個指令)，
+		我們可以透過 fstab 指定哪個檔案系統必須要進行 dump 備份！
+		0 代表不要做 dump 備份， 1 代表要每天進行 dump 的動作。 2 也代表其他不定日期的 dump 備份動作，
+		通常這個數值不是 0  就是 1 啦！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">是否以 fsck 檢驗磁區：</li></ul>
+		<p>開機的過程中，系統預設會以 <a href="#fsck">fsck</a> 檢驗我們的 filesystem 是否完整 (clean)。
+		不過，某些 filesystem 是不需要檢驗的，例如記憶體置換空間 (swap) ，或者是特殊檔案系統例如 
+		/proc 與 /sys 等等。所以，在這個欄位中，我們可以設定是否要以 fsck 檢驗該 filesystem 喔。
+		0 是不要檢驗， 1 表示最早檢驗(一般只有根目錄會設定為 1)， 2 也是要檢驗，不過 1 會比較早被檢驗啦！
+		一般來說，根目錄設定為 1 ，其他的要檢驗的 filesystem 都設定為 2 就好了。<br /><br /></p>
+
+<table border="1" width="90%" cellspacing="0" cellpadding="5"><tr><td>
+例題：<div class="block2">
+假設我們要將 /dev/hdc6 每次開機都自動掛載到 /mnt/hdc6 ，該如何進行？
+</div>
+答：<div class="block2">
+
+首先，請用 <a href="/linux_basic/0160startlinux.php#nano">nano</a> 將底下這一行寫入 /etc/fstab 當中；
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">nano /etc/fstab</span>
+<span class="term_write">/dev/hdc6  /mnt/hdc6    ext3    defaults   1 2</span>
+</pre></td></tr></table>
+
+再來看看 /dev/hdc6 是否已經掛載，如果掛載了，請務必卸載再說！
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">df</span>
+
+Filesystem           1K-blocks      Used Available Use% Mounted on
+<span class="term_write">/dev/hdc6              1976312     42072   1833836   3% /mnt/hdc6</span>
+<span class="term_say"># 竟然不知道何時被掛載了？趕緊給他卸載先！</span>
+
+[root@www ~]# <span class="term_command">umount /dev/hdc6</span>
+</pre></td></tr></table>
+
+最後測試一下剛剛我們寫入 /etc/fstab 的語法有沒有錯誤！這點很重要！<span class="text_import2">因為這個檔案如果寫錯了，
+則你的 Linux 很可能將無法順利開機完成！</span>所以請務必要測試測試喔！
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -a</span>
+
+[root@www ~]# <span class="term_command">df</span>
+</pre></td></tr></table>
+
+最終有看到 /dev/hdc6 被掛載起來的資訊才是成功的掛載了！而且以後每次開機都會順利的將此檔案系統掛載起來的！
+由於這個範例僅是測試而已，請務必回到 /etc/fstab 當中，將上述這行給他註解或者是刪除掉！
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">nano /etc/fstab</span>
+<span class="term_write">#</span> /dev/hdc6  /mnt/hdc6    ext3    defaults   1 2
+</pre></td></tr></table>
+</div>
+</td></tr></table><br />
+
+		<p>/etc/fstab 是開機時的設定檔，不過，<span class="text_import2">實際 filesystem 的掛載是記錄到 
+		/etc/mtab 與 /proc/mounts 這兩個檔案當中的</span>。每次我們在更動 
+		filesystem 的掛載時，也會同時更動這兩個檔案喔！但是，萬一發生您在 /etc/fstab 
+		輸入的資料錯誤，導致無法順利開機成功，而進入單人維護模式當中，那時候的 / 可是 read only 
+		的狀態，當然您就無法修改 /etc/fstab ，也無法更新 /etc/mtab 囉～那怎麼辦？
+		沒關係，可以利用底下這一招：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -n -o remount,rw /</span>
+</pre></td></tr></table>
+
+	</div>
+
+	<hr /><a name="loop"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">特殊裝置 loop 掛載 
+	(映象檔不燒錄就掛載使用)</span><br />
+
+	<div class="block2">
+		<ul class="list1"><li class="text_import1">掛載光碟/DVD映象檔</li></ul>
+		<p>想像一下如果今天我們從國家高速網路中心(<a href="http://ftp.twaren.net/"
+		target="_blank">http://ftp.twaren.net</a>)或者是義守大學(<a href="http://ftp.isu.edu.tw/" 
+		target="_blank">http://ftp.isu.edu.tw</a>)下載了 Linux 或者是其他所需光碟/DVD的映象檔後，
+		難道一定需要燒錄成為光碟才能夠使用該檔案裡面的資料嗎？當然不是啦！我們可以透過 loop 裝置來掛載的！</p>
+
+		<p>那要如何掛載呢？鳥哥將整個 CentOS 5.2 的 DVD 映象檔捉到測試機上面，然後利用這個檔案來掛載給大家參考看看囉！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll -h /root/centos5.2_x86_64.iso</span>
+-rw-r--r-- 1 root root <span class="term_write">4.3G</span> Oct 27 17:34 /root/centos5.2_x86_64.iso
+<span class="term_say"># 看到上面的結果吧！這個檔案就是映象檔，檔案非常的大吧！</span>
+
+[root@www ~]# <span class="term_command">mkdir /mnt/centos_dvd</span>
+[root@www ~]# <span class="term_command">mount -o loop /root/centos5.2_x86_64.iso /mnt/centos_dvd</span>
+
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/root/centos5.2_x86_64.iso
+                       4493152   4493152         0 100% /mnt/centos_dvd
+<span class="term_say"># 就是這個項目！ .iso 映象檔內的所有資料可以在 /mnt/centos_dvd 看到！</span>
+
+[root@www ~]# <span class="term_command">ll /mnt/centos_dvd</span>
+total 584
+drwxr-xr-x 2 root root 522240 Jun 24 00:57 CentOS <span class="term_note">&lt;==瞧！就是DVD的內容啊！</span>
+-rw-r--r-- 8 root root    212 Nov 21  2007 EULA
+-rw-r--r-- 8 root root  18009 Nov 21  2007 GPL
+drwxr-xr-x 4 root root   2048 Jun 24 00:57 images
+<span class="term_say">.....底下省略.....</span>
+
+[root@www ~]# <span class="term_command">umount /mnt/centos_dvd/</span>
+<span class="term_say"># 測試完成！記得將資料給他卸載！</span>
+</pre></td></tr></table>
+
+		<p>非常方便吧！如此一來我們不需要將這個檔案燒錄成為光碟或者是 DVD 就能夠讀取內部的資料了！
+		換句話說，你也可以在這個檔案內『動手腳』去修改檔案的！這也是為什麼很多映象檔提供後，還得要提供驗證碼 (MD5)
+		給使用者確認該映象檔沒有問題！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">建立大檔案以製作 loop 裝置檔案！</li></ul>
+
+		<p>想一想，既然能夠掛載 DVD 的映象檔，那麼我能不能製作出一個大檔案，然後將這個檔案格式化後掛載呢？
+		好問題！這是個有趣的動作！而且還能夠幫助我們解決很多系統的分割不良的情況呢！舉例來說，如果當初在分割時，
+		你只有分割出一個根目錄，假設你已經沒有多餘的容量可以進行額外的分割的！偏偏根目錄的容量還很大！
+		此時你就能夠製作出一個大檔案，然後將這個檔案掛載！如此一來感覺上你就多了一個分割槽囉！
+		用途非常的廣泛啦！</p>
+
+		<p>底下我們在 /home 下建立一個 512MB 左右的大檔案，然後將這個大檔案格式化並且實際掛載來玩一玩！
+		這樣你會比較清楚鳥哥在講啥！</p>
+
+		<a name="dd"></a>
+		<ul>
+		<li><span class="text_import1">建立大型檔案</span><br /><br />
+		首先，我們得先有一個大的檔案吧！怎麼建立這個大檔案呢？在 Linux  底下我們有一支很好用的程式
+		<a href="/linux_basic/0240tarcompress.php#dd">dd</a> ！他可以用來建立空的檔案喔！詳細的說明請先翻到下一章
+		<a href="/linux_basic/0240tarcompress.php">壓縮指令的運用</a> 來查閱，這裡鳥哥僅作一個簡單的範例而已。
+		假設我要建立一個空的檔案在 /home/loopdev ，那可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dd if=/dev/zero of=/home/loopdev bs=1M count=512</span>
+512+0 records in   <span class="term_note">&lt;==讀入 512 筆資料</span>
+512+0 records out  <span class="term_note">&lt;==輸出 512 筆資料</span>
+536870912 bytes (537 MB) copied, 12.3484 seconds, 43.5 MB/s
+<span class="term_say"># 這個指令的簡單意義如下：
+# if 是 input file ，輸入檔案。那個 /dev/zero 是會一直輸出 0 的裝置！
+# of 是 output file ，將一堆零寫入到後面接的檔案中。
+# bs 是每個 block 大小，就像檔案系統那樣的 block 意義；
+# count 則是總共幾個 bs 的意思。</span>
+
+[root@www ~]# <span class="term_command">ll -h /home/loopdev</span>
+
+-rw-r--r-- 1 root root 512M Oct 28 02:29 /home/loopdev
+</pre></td></tr></table>
+
+		dd 就好像在疊磚塊一樣，將 512 塊，每塊 1MB 的磚塊堆疊成為一個大檔案 (/home/loopdev) ！
+		最終就會出現一個 512MB 的檔案！粉簡單吧！<br /><br /></li>
+
+		<li><span class="text_import1">格式化</span><br /><br />
+		很簡單就建立起一個 512MB 的檔案了吶！接下來當然是格式化囉！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /home/loopdev</span>
+
+mke2fs 1.39 (29-May-2006)
+/home/loopdev is not a block special device.
+Proceed anyway? (y,n) <span class="term_command">y</span>  <span class="term_note">&lt;==由於不是正常的裝置，所以這裡會提示你！</span>
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+131072 inodes, 524288 blocks
+26214 blocks (5.00%) reserved for the super user
+<span class="term_say">.....以下省略.....</span>
+</pre></td></tr></table><br /></li>
+
+		<li><span class="text_import1">掛載</span><br /><br />
+		那要如何掛載啊？利用 mount 的特殊參數，那個 -o loop 的參數來處理！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -o loop /home/loopdev /media/cdrom/</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/home/loopdev           507748     18768    462766   4% /media/cdrom
+</pre></td></tr></table></li>
+
+		</ul>
+
+		<p>透過這個簡單的方法，感覺上你就可以在原本的分割槽在不更動原有的環境下製作出你想要的分割槽就是了！
+		這東西很好用的！尤其是想要玩 Linux 上面的『虛擬主機』的話，
+		也就是以一部 Linux 主機再切割成為數個獨立的主機系統時，類似 VMware 這類的軟體，
+		在 Linux 上使用 xen 這個軟體，他就可以配合這種 loop device 的檔案類型來進行根目錄的掛載，
+		真的非常有用的喔！ ^_^</p>
+	</div>
+
+</div>
+
+
+<hr /><a name="swap"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">記憶體置換空間(swap)之建置</span><br />
+<div class="block1">
+	<p>還記得在安裝 Linux 之前大家常常會告訴你的話吧！就是安裝時一定需要的兩個 partition 囉！
+	一個是根目錄，另外一個就是 swap(記憶體置換空間)。關於記憶體置換空間的解釋在<a 
+	href="/linux_basic/0157installcentos5.php#centos5_4">第四章安裝 Linux 內的磁碟分割</a>時有約略提過，
+	swap 的功能就是在應付實體記憶體不足的情況下所造成的記憶體延伸記錄的功能。</p>
+
+	<p>一般來說，如果硬體的配備足夠的話，那麼 swap 應該不會被我們的系統所使用到，
+	swap 會被利用到的時刻通常就是實體記憶體不足的情況了。從<a 
+	href="/linux_basic/0105computers.php">第零章的計算機概論</a>當中，我們知道 CPU 所讀取的資料都來自於記憶體，
+	那當記憶體不足的時候，為了讓後續的程式可以順利的運作，因此在記憶體中暫不使用的程式與資料就會被挪到 swap 中了。
+	此時記憶體就會空出來給需要執行的程式載入。由於 swap 是用硬碟來暫時放置記憶體中的資訊，
+	所以用到 swap 時，你的主機硬碟燈就會開始閃個不停啊！</p>
+
+	
+	<p>雖然目前(2009)主機的記憶體都很大，至少都有 1GB 以上囉！因此在個人使用上你不要設定 swap 應該也沒有什麼太大的問題。
+	不過伺服器可就不這麼想了～由於你不會知道何時會有大量來自網路的要求，因此你最好能夠預留一些 swap 來緩衝一下系統的記憶體用量！
+	至少達到『備而不用』的地步啊！</p>
+
+	<p>現在想像一個情況，你已經將系統建立起來了，此時卻才發現你沒有建置 swap ～那該如何是好呢？
+	透過本章上面談到的方法，你可以使用如下的方式來建立你的 swap 囉！</p>
+
+	<ul class="text_import2">
+	<li>設定一個 swap partition </li>
+	<li>建立一個虛擬記憶體的檔案</li></ul>
+
+	<p>不囉唆，就立刻來處理處理吧！<br /><br /></p>
+
+	<hr /><a name="swapdevice"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用實體分割槽建置swap</span><br />
+	<div class="block2">
+		<p>建立 swap 分割槽的方式也是非常的簡單的！透過底下幾個步驟就搞定囉：</p>
+		<ol>
+		<li>分割：先使用 fdisk 在你的磁碟中分割中一個分割槽給系統作為 swap 。由於 Linux 的 fdisk 
+		預設會將分割槽的 ID 設定為 Linux 的檔案系統，所以你可能還得要設定一下 system ID 就是了。</li>
+
+		<li>格式化：利用建立 swap 格式的『mkswap 裝置檔名』就能夠格式化該分割槽成為 swap 格式囉</li>
+		<li>使用：最後將該 swap 裝置啟動，方法為：『swapon 裝置檔名』。</li>
+		<li>觀察：最終透過 free 這個指令來觀察一下記憶體的用量吧！</li>
+		</ol>
+
+		<p>不囉唆，立刻來實作看看！既然我們還有多餘的磁碟容量可以分割，那麼讓我們繼續分割出 256MB 的磁碟分割槽吧！
+		然後將這個磁碟分割槽做成 swap 吧！<br /><br /></p>
+
+		<hr />
+
+		<ul class="list1"><li class="text_import1">1. 先進行分割的行為囉！</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk /dev/hdc</span>
+Command (m for help): <span class="term_command">n</span>
+First cylinder (2303-5005, default 2303):  <span class="term_note">&lt;==這裡按[enter]</span>
+Using default value 2303
+Last cylinder or +size or +sizeM or +sizeK (2303-5005, default 5005): <span class="term_command">+256M</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_say">.....中間省略.....</span>
+/dev/hdc6            2053        2302     2008093+  83  Linux
+<span class="term_write">/dev/hdc7            2303        2334      257008+  <u>83  Linux</u></span> <span class="term_note">&lt;==新增的項目</span>
+
+Command (m for help): <span class="term_command">t</span>             <span class="term_note">&lt;==修改系統 ID</span>
+
+Partition number (1-7): <span class="term_command">7</span>           <span class="term_note">&lt;==從上結果看到的，七號partition</span>
+Hex code (type L to list codes): <span class="term_command">82</span> <span class="term_note">&lt;==改成 swap 的 ID</span>
+Changed system type of partition 7 to 82 (Linux swap / Solaris)
+
+Command (m for help): <span class="term_command">p</span>
+
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_say">.....中間省略.....</span>
+
+/dev/hdc6            2053        2302     2008093+  83  Linux
+<span class="term_write">/dev/hdc7            2303        2334      257008+  <u>82  Linux swap / Solaris</u></span>
+
+Command (m for help): <span class="term_command">w</span>
+<span class="term_say"># 此時就將 partition table 更新了！</span>
+
+[root@www ~]# <span class="term_command">partprobe</span>
+<span class="term_say"># 這個玩意兒很重要的啦！不要忘記讓核心更新 partition table 喔！</span>
+</pre></td></tr></table><br />
+
+		<a name="mkswap"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">2. 開始建置 swap 格式</li></ul>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkswap /dev/hdc7</span>
+Setting up swapspace version 1, size = 263172 kB  <span class="term_note">&lt;==非常快速！</span>
+</pre></td></tr></table><br />
+
+		<a name="swapon"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">3. 開始觀察與載入看看吧！</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">free</span>
+             total       used       free     shared    buffers     cached
+Mem:        742664     684592      58072          0      43820     497144
+-/+ buffers/cache:     143628     599036
+Swap:      1020088         96    1019992
+<span class="term_say"># 我有 742664K 的實體記憶體，使用 684592K 剩餘 58072K ，使用掉的記憶體有
+# 43820K / 497144K 用在緩衝/快取的用途中。
+# 至於 swap 已經存在了 1020088K 囉！這樣會看了吧？！</span>
+
+[root@www ~]# <span class="term_command">swapon /dev/hdc7</span>
+[root@www ~]# <span class="term_command">free</span>
+             total       used       free     shared    buffers     cached
+Mem:        742664     684712      57952          0      43872     497180
+-/+ buffers/cache:     143660     599004
+Swap:      1277088         96    1276992  <span class="term_note">&lt;==有增加囉！看到否？</span>
+
+[root@www ~]# <span class="term_command">swapon -s</span>
+Filename                 Type            Size    Used    Priority
+/dev/hdc5                partition       1020088 96      -1
+/dev/hdc7                partition       257000  0       -2
+<span class="term_say"># 上面列出目前使用的 swap 裝置有哪些的意思！</span>
+
+</pre></td></tr></table><br />
+
+	</div>
+
+	<hr /><a name="swapfile"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">使用檔案建置swap</span><br />
+	<div class="block2">
+		<p>如果是在實體分割槽無法支援的環境下，此時前一小節提到的 loop 裝置建置方法就派的上用場啦！
+		與實體分割槽不一樣的只是利用 dd 去建置一個大檔案而已。多說無益，我們就再透過檔案建置的方法建立一個
+		128 MB 的記憶體置換空間吧！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">1. 使用 dd 這個指令來新增一個 128MB 的檔案在 /tmp 底下：</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dd if=/dev/zero of=/tmp/swap bs=1M count=128</span>
+128+0 records in
+128+0 records out
+134217728 bytes (134 MB) copied, 1.7066 seconds, 78.6 MB/s
+
+[root@www ~]# <span class="term_command">ll -h /tmp/swap</span>
+-rw-r--r-- 1 root root <span class="term_write">128M</span> Oct 28 15:33 /tmp/swap
+</pre></td></tr></table>
+
+		這樣一個 128MB 的檔案就建置妥當。若忘記上述的各項參數的意義，請回<a href="#loop">前一小節</a>查閱一下囉！<br /><br />
+
+		<hr />
+		<ul class="list1"><li class="text_import1">2. 使用 mkswap 將 /tmp/swap 這個檔案格式化為 swap 的檔案格式：</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkswap /tmp/swap</span>
+Setting up swapspace version 1, size = 134213 kB
+<span class="term_say"># 這個指令下達時請『特別小心』，因為下錯字元控制，將可能使您的檔案系統掛掉！</span>
+</pre></td></tr></table><br />
+
+		<hr />
+
+		<ul class="list1"><li class="text_import1">3. 使用 swapon 來將 /tmp/swap 啟動囉！</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">free</span>
+             total       used       free     shared    buffers     cached
+Mem:        742664     450860     291804          0      45584     261284
+-/+ buffers/cache:     143992     598672
+Swap:      1277088         96    1276992
+
+[root@www ~]# <span class="term_command">swapon /tmp/swap</span>
+[root@www ~]# <span class="term_command">free</span>
+             total       used       free     shared    buffers     cached
+Mem:        742664     450860     291804          0      45604     261284
+-/+ buffers/cache:     143972     598692
+Swap:      1408152         96    1408056
+
+[root@www ~]# <span class="term_command">swapon -s</span>
+
+Filename                 Type            Size    Used    Priority
+/dev/hdc5                partition       1020088 96      -1
+/dev/hdc7                partition       257000  0       -2
+<u>/tmp/swap                file            131064  0       -3</u>
+</pre></td></tr></table><br />
+
+		<a name="swapoff"></a>
+		<hr />
+		<ul class="list1"><li class="text_import1">4. 使用 swapoff 關掉 swap file</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">swapoff /tmp/swap</span>
+
+[root@www ~]# <span class="term_command">swapoff /dev/hdc7</span>
+[root@www ~]# <span class="term_command">free</span>
+             total       used       free     shared    buffers     cached
+Mem:        742664     450860     291804          0      45660     261284
+-/+ buffers/cache:     143916     598748
+Swap:      1020088         96    1019992  <span class="term_note">&lt;==回復成最原始的樣子了！</span>
+</pre></td></tr></table><br />
+	</div>
+
+	<hr /><a name="swapuse"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">swap使用上的限制</span><br />
+
+	<div class="block2">
+		<p>說實話，swap 在目前的桌上型電腦來講，存在的意義已經不大了！這是因為目前的 x86 
+		主機所含的記憶體實在都太大了 (一般入門級至少也都有 512MB 了)，所以，我們的 Linux 
+		系統大概都用不到 swap 這個玩意兒的。不過，
+		如果是針對伺服器或者是工作站這些常年上線的系統來說的話，那麼，無論如何，swap 還是需要建立的。</p>
+
+		<p>因為 swap 主要的功能是當實體記憶體不夠時，則某些在記憶體當中所佔的程式會暫時被移動到 swap 
+		當中，讓實體記憶體可以被需要的程式來使用。另外，如果你的主機支援電源管理模式，
+		也就是說，你的 Linux 主機系統可以進入『休眠』模式的話，那麼，
+		運作當中的程式狀態則會被紀錄到 swap 去，以作為『喚醒』主機的狀態依據！
+		另外，有某些程式在運作時，本來就會利用 swap 的特性來存放一些資料段，
+		所以， swap 來是需要建立的！只是不需要太大！</p>
+
+		<p>不過， swap 在被建立時，是有限制的喔！</p>
+
+		<ul class="text_import2"><li>在核心 2.4.10 版本以後，單一 swap 量已經沒有 2GB 的限制了，</li>
+
+		<li>但是，最多還是僅能建立到 32 個 swap 的數量！</li>
+		<li>而且，由於目前 x86_64 (64位元) 最大記憶體定址到 64GB，
+		因此， swap 總量最大也是僅能達 64GB 就是了！</li></ul>
+	</div>
+</div>
+
+
+<hr /><a name="special"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">檔案系統的特殊觀察與操作</span><br />
+<div class="block1">
+	<p>檔案系統實在是非常有趣的東西，鳥哥學了好幾年還是很多東西不很懂呢！
+	在學習的過程中很多朋友在討論區都有提供一些想法！這些想法將他歸納起來有底下幾點可以參考的資料呢！<br /><br /></p>
+
+	<hr /><a name="special_boot_sector"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">boot sector 與 
+	superblock 的關係</span><br />
+	<div class="block2">
+		<p>在過去非常多的文章都寫到開機管理程式是安裝到 superblock 內的，但是我們由官方的 How to 
+		文件知道，圖解(<a href="#fig1.3.1">圖 1.3.1</a>)的結果是<span class="text_import2">將可安裝開機資訊的
+		boot sector (開機磁區) 獨立出來，並非放置到 superblock 當中的</span>！
+		那麼也就是說過去的文章寫錯了？這其實還是可以討論討論的！</p>
+
+		<p>經過一些搜尋，鳥哥找到幾篇文章(非官方文件)的說明，大多是網友分析的結果啦！如下所示：(<a href="#ps10">註10</a>)</p>
+
+		<ul>
+		<li>The Second Extended File System: <a href="http://www.nongnu.org/ext2-doc/ext2.html"
+		target="_blank">http://www.nongnu.org/ext2-doc/ext2.html</a></li>
+		<li>Rob's ext2 documentation: <a href="http://www.landley.net/code/toybox/ext2.html"
+		target="_blank">http://www.landley.net/code/toybox/ext2.html</a></li>
+		<li>Life is different blog: ext2文件系統分析： <a href="http://www.qdhedu.com/blog/post/7.html"
+		target="_blank">http://www.qdhedu.com/blog/post/7.html</a></li>
+		</ul>
+
+		<p>這幾篇文章有幾個重點，歸納一下如下：</p>
+		<ul class="text_import2">
+		<li>superblock 的大小為 1024 bytes；</li>
+		<li>superblock 前面需要保留 1024 bytes 下來，以讓開機管理程式可以安裝。</li>
+		</ul>
+
+		<p>分析上述兩點我們知道 boot sector 應該會佔有 1024 bytes 的大小吧！但是整個檔案系統主要是依據 block 大小來決定的啊！
+		因此要討論 boot sector 與 superblock 的關係時，不得不將 block 的大小拿出來討論討論喔！<br /><br /></p>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">block 為 1024 bytes (1K) 時：</li></ul>
+
+		<p>如果 block 大小剛好是 1024 的話，那麼 boot sector 與 superblock 各會佔用掉一個 block ，
+		所以整個檔案系統圖示就會如同<a href="#fig1.3.1">圖 1.3.1</a> 所顯示的那樣，boot sector 是獨立於 superblock 外面的！
+		由於鳥哥在基礎篇安裝的環境中有個 /boot 的獨立檔案系統在 /dev/hdc1 中，使用 <a href="#dumpe2fs">dumpe2fs</a> 
+		觀察的結果有點像底下這樣(如果你是按照鳥哥的教學安裝你的 CentOS 時，可以發現相同的情況喔！)：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dumpe2fs /dev/hdc1</span>
+dumpe2fs 1.39 (29-May-2006)
+<span class="term_write">Filesystem volume name:   /boot</span>
+<span class="term_say">....(中間省略)....</span>
+<span class="term_write">First block:              1
+Block size:               1024</span>
+<span class="term_say">....(中間省略)....</span>
+
+Group 0: (Blocks 1-8192)
+  <span class="term_write">Primary superblock at 1</span>, Group descriptors at 2-2
+  Reserved GDT blocks at 3-258
+
+  Block bitmap at 259 (+258), Inode bitmap at 260 (+259)
+  Inode table at 261-511 (+260)
+  511 free blocks, 1991 free inodes, 2 directories
+  Free blocks: 5619-6129
+  Free inodes: 18-2008
+
+<span class="term_say"># 看到最後一個特殊字體的地方嗎？ Group0 的 superblock 是由 1  號 block 開始喔！</span>
+</pre></td></tr></table>
+
+		<p>由上表我們可以確實的發現 0 號 block 是保留下來的，那就是留給 boot sector 用的囉！
+		所以整個分割槽的檔案系統分區有點像底下這樣的圖示：</p>
+
+		<center><img src="0230filesystem/bootsector_1.gif" alt="1K block 的 boot sector 示意圖" 
+		title="1K block 的 boot sector 示意圖" border="0" /><br />
+		圖 6.1.1、1K block 的 boot sector 示意圖<br /></center>
+
+		<hr />
+		<ul class="list1"><li class="text_import1">block 大於 1024 bytes (2K, 4K) 時：</li></ul>
+
+		<p>如果 block 大於 1024 的話，那麼 superblock 將會在 0 號！我們擷取本章一開始介紹 
+		<a href="#dumpe2fs">dumpe2fs</a> 時的內容來說明一下好了！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">dumpe2fs /dev/hdc2</span>
+dumpe2fs 1.39 (29-May-2006)
+<span class="term_say">....(中間省略)....</span>
+<span class="term_write">Filesystem volume name:   /1</span> 
+
+<span class="term_say">....(中間省略)....</span>
+<span class="term_write">Block size:               4096</span>
+<span class="term_say">....(中間省略)....</span>
+
+Group 0: (Blocks 0-32767) 
+  <span class="term_write">Primary superblock at 0</span>, Group descriptors at 1-1
+  Reserved GDT blocks at 2-626
+  Block bitmap at 627 (+627), Inode bitmap at 628 (+628)
+  Inode table at 629-1641 (+629)
+  0 free blocks, 32405 free inodes, 2 directories
+  Free blocks:
+  Free inodes: 12-32416
+</pre></td></tr></table>
+
+		<p>我們可以發現 superblock 就在第一個 block (第 0 號) 上頭！但是 superblock 其實就只有 1024bytes 嘛！
+		為了怕浪費更多空間，因此<span class="text_import2">第一個 block 內就含有 boot sector 與 superblock 兩者</span>
+		！舉上頭的表格來說，因為每個 block 佔有 4K ，因此在第一個 block 內 superblock 僅佔有 1024-2047
+		( 由 0 號起算的話)之間的咚咚，至於 2048bytes 以後的空間就真的是保留啦！而 0-1023 就保留給 boot sector 來使用。</p>
+
+		<center><img src="0230filesystem/bootsector_2.gif" alt="4K block 的 boot sector 示意圖" 
+		title="4K block 的 boot sector 示意圖" border="0" /><br />
+		圖 6.1.2、4K block 的 boot sector 示意圖<br /></center>
+
+		<p>因為上述的情況，如果在比較大的 block 尺寸(size)中，我們可能可以說你能夠將開機管理程式安裝到 superblock
+		所在的 block  號碼中！就是上表的 0 號囉！但事實上還是安裝到 boot sector 的保留區域中啦！所以說，
+		以前的文章說開機管理程式可以安裝到 superblock 內也不能算全錯～但比較正確的說法，應該是安裝到該 filesystem
+		最前面的 1024 bytes 內的區域，就是 boot sector 這樣比較好！</p>
+	</div>
+
+	<hr /><a name="special_waste"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">磁碟空間之浪費問題</span><br />
+	<div class="block2">
+
+		<p>我們在前面的 <a href="#harddisk-inode">block</a> 介紹中談到了一個 block 只能放置一個檔案，
+		因此太多小檔案將會浪費非常多的磁碟容量。但你有沒有注意到，整個檔案系統中包括 superblock, inode table
+		與其他中介資料等其實都會浪費磁碟容量喔！所以當我們在 /dev/hdc6 建立起 ext3 檔案系統時，
+		一掛載就立刻有很多容量被用掉了！</p>
+
+		<p>另外，不知道你有沒有發現到，當你使用 ls -l 去查詢某個目錄下的資料時，第一行都會出現一個『total』的字樣！
+		那是啥東西？其實那就是該目錄下的所有資料所耗用的實際 block 數量 * block 大小的值。
+		我們可以透過 ll -s 來觀察看看上述的意義：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">ll -s</span>
+total <span class="term_write">104</span>
+
+<span class="term_write"> 8</span> -rw------- 1 root root  1474 Sep  4 18:27 anaconda-ks.cfg
+<span class="term_write"> 8</span> -rw-r--r-- 2 root root   255 Jan  6  2007 crontab
+<span class="term_write"> 4</span> lrwxrwxrwx 1 root root    12 Oct 22 13:58 crontab2 -&gt; /etc/crontab
+<span class="term_write">48</span> -rw-r--r-- 1 root root 42304 Sep  4 18:26 install.log
+
+<span class="term_write">12</span> -rw-r--r-- 1 root root  5661 Sep  4 18:25 install.log.syslog
+<span class="term_write"> 4</span> -rw-r--r-- 1 root root     0 Sep 27 00:25 test1
+<span class="term_write"> 8</span> drwxr-xr-x 2 root root  4096 Sep 27 00:25 test2
+<span class="term_write"> 4</span> -rw-rw-r-- 1 root root     0 Sep 27 00:36 test3
+<span class="term_write"> 8</span> drwxrwxr-x 2 root root  4096 Sep 27 00:36 test4
+
+</pre></td></tr></table>
+
+		<p>從上面的特殊字體部分，那就是每個檔案所使用掉 block 的容量！舉例來說，那個 crontab 雖然僅有 255bytes ，
+		不過他卻佔用了兩個 block (每個 block 為 4K)，將所有的 block 加總就得到 104Kbytes 那個數值了。
+		如果計算每個檔案實際容量的加總結果，其實只有 56.5K 而已～所以囉，這樣就耗費掉好多容量了！</p>
+
+		<p>如果想要查詢某個目錄所耗用的所有容量時，那就使用 du 吧！不過 du 如果加上 -s 這個選項時，
+		還可以依據不同的規範去找出檔案系統所消耗的容量喔！舉例來說，我們就來看看 /etc/ 這個目錄的容量狀態吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">du -sb /etc</span>
+108360494       /etc   <span class="term_note">&lt;==單位是 bytes 喔！</span>
+
+[root@www ~]# <span class="term_command">du -sm /etc</span>
+118     /etc           <span class="term_note">&lt;==單位是 Kbytes 喔！</span>
+</pre></td></tr></table>
+
+		<p>使用 bytes 去分析時，發現到實際的資料佔用約 103.3Mbytes，但是使用 block 去測試，就發現其實耗用了 118Mbytes，
+		此時檔案系統就耗費了約 15Mbytes 囉！這樣看的懂我們在講的資料了吧？</p>
+	</div>
+
+	<hr /><a name="parted"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 GNU 的 parted 進行分割行為</span><br />
+
+	<div class="block2">
+		<p>雖然你可以使用 fdisk 很快速的將你的分割槽切割妥當，不過 fdisk 卻無法支援到高於 2TB 以上的分割槽！
+		此時就得需要 parted 來處理了。不要覺得 2TB 你用不著！ 2009 年的現在已經有單顆硬碟高達 2TB 的容量了！
+		如果再搭配主機系統有內建磁碟陣列裝置，要使用數個 TB 的單一磁碟裝置也不是不可能的！
+		所以，還是得要學一下這個重要的工具！ parted ！</p>
+
+		<p>parted 可以直接在一行指令列就完成分割，是一個非常好用的指令！他的語法有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">parted [裝置] [指令 [參數]]</span>
+<span class="term_say">選項與參數：
+指令功能：
+新增分割：mkpart [primary|logical|extended] [ext3|vfat] 開始 結束
+分割表  ：print
+刪除分割：rm [partition]</span>
+
+<span class="term_hd">範例一：以 parted 列出目前本機的分割表資料</span>
+[root@www ~]# <span class="term_command">parted /dev/hdc print</span>
+Model: IC35L040AVER07-0 (ide)              <span class="term_note">&lt;==硬碟介面與型號</span>
+Disk /dev/hdc: 41.2GB                      <span class="term_note">&lt;==磁碟檔名與容量</span>
+Sector size (logical/physical): 512B/512B  <span class="term_note">&lt;==每個磁區的大小</span>
+Partition Table: msdos                     <span class="term_note">&lt;==分割表形式</span>
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      32.3kB  107MB   107MB   primary   ext3         boot
+ 2      107MB   10.6GB  10.5GB  primary   ext3
+ 3      10.6GB  15.8GB  5240MB  primary   ext3
+ 4      15.8GB  41.2GB  25.3GB  extended
+ 5      15.8GB  16.9GB  1045MB  logical   linux-swap
+ 6      16.9GB  18.9GB  2056MB  logical   ext3
+ 7      18.9GB  19.2GB  263MB   logical   linux-swap
+<span class="term_say">[  1 ]  [  2 ]  [  3  ] [  4  ] [  5  ]   [  6  ]</span>
+</pre></td></tr></table>
+
+		<p>上面是最簡單的 parted 指令功能簡介，你可以使用『 man parted 』，或者是『 parted /dev/hdc help 
+		mkpart 』去查詢更詳細的資料。比較有趣的地方在於分割表的輸出。我們將上述的分割表示意拆成六部分來說明：</p>
+		<ol>
+		<li>Number：這個就是分割槽的號碼啦！舉例來說，1號代表的是 /dev/hdc1 的意思；</li>
+		<li>Start：起始的磁柱位置在這顆磁碟的多少 MB 處？有趣吧！他以容量作為單位喔！</li>
+
+		<li>End：結束的磁柱位置在這顆磁碟的多少 MB 處？</li>
+		<li>Size：由上述兩者的分析，得到這個分割槽有多少容量；</li>
+		<li>Type：就是分割槽的類型，有primary, extended, logical等類型；</li>
+		<li>File system：就如同 fdisk 的 System ID 之意。</li>
+		</ol>
+
+		<p>接下來我們嘗試來建立一個全新的分割槽吧！因為我們僅剩下邏輯分割槽可用，所以等一下底下我們選擇的會是 logical 
+		的分割類型喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例二：建立一個約為 512MB 容量的邏輯分割槽</span>
+[root@www ~]# <span class="term_command">parted /dev/hdc mkpart logical ext3 19.2GB 19.7GB</span>
+<span class="term_say"># 請參考前一表格的指令介紹，因為我們的 /dev/hdc7 在 19.2GB  位置結束，
+# 所以我們當然要由 19.2GB 位置處繼續下一個分割，這樣懂了吧？</span>
+[root@www ~]# <span class="term_command">parted /dev/hdc print</span>
+<span class="term_say">.....前面省略.....</span>
+ 7      18.9GB  19.2GB  263MB   logical   linux-swap
+<span class="term_write"> 8      19.2GB  19.7GB  502MB   logical</span>  <span class="term_note">&lt;==就是剛剛建立的啦！</span>
+
+</pre></td></tr></table>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例三：將剛剛建立的第八號磁碟分割槽刪除掉吧！</span>
+[root@www ~]# <span class="term_command">parted /dev/hdc rm 8</span>
+<span class="term_say"># 這樣就刪除了！實在很厲害！所以這個指令的下達要特別注意！
+# 因為...指令一下去就立即生效了～如果寫錯的話，會哭死～</span>
+</pre></td></tr></table>
+
+		<p>關於 parted 的介紹我們就到這裡啦！除非你有使用到大於 2TB 以上的磁碟，
+		否則請愛用 fdisk 這個程式來進行分割喔！拜託拜託！</p>
+	</div>
+
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>基本上 Linux 的正統檔案系統為 Ext2 ，該檔案系統內的資訊主要有：<br />
+		<ul>
+		<li>superblock：記錄此 filesystem 的整體資訊，包括inode/block的總量、使用量、剩餘量， 以及檔案系統的格式與相關資訊等；</li>
+		<li>inode：記錄檔案的屬性，一個檔案佔用一個inode，同時記錄此檔案的資料所在的 block 號碼；</li>
+
+		<li>block：實際記錄檔案的內容，若檔案太大時，會佔用多個 block 。</li></ul></li>
+	<li>Ext2 檔案系統的資料存取為索引式檔案系統(indexed allocation)</li>
+	<li>需要磁碟重組的原因就是檔案寫入的 block 太過於離散了，此時檔案讀取的效能將會變的很差所致。
+		這個時候可以透過磁碟重組將同一個檔案所屬的 blocks 彙整在一起。</li>
+	<li>Ext2檔案系統主要有：boot sector, superblock, inode bitmap, block bitmap, inode table, data block 等六大部分。</li>
+	<li>data block 是用來放置檔案內容資料地方，在 Ext2 檔案系統中所支援的 block 大小有 1K, 2K 及 4K 三種而已</li>
+	<li>inode 記錄檔案的屬性/權限等資料，其他重要項目為： 每個 inode 大小均固定為 128 bytes； 每個檔案都僅會佔用一個 inode 而已；
+		因此檔案系統能夠建立的檔案數量與 inode 的數量有關；</li>
+
+	<li>檔案的 block 在記錄檔案的實際資料，目錄的 block 則在記錄該目錄底下檔名與其 inode 號碼的對照表；</li>
+	<li>日誌式檔案系統 (journal) 會多出一塊記錄區，隨時記載檔案系統的主要活動，可加快系統復原時間；</li>
+	<li>Linux 檔案系統為增加效能，會讓主記憶體作為大量的磁碟快取；</li>
+	<li>實體連結只是多了一個檔名對該 inode 號碼的連結而已；</li>
+	<li>符號連結就類似Windows的捷徑功能。</li>
+	<li>磁碟的使用必需要經過：分割、格式化與掛載，分別慣用的指令為：fdisk, mkfs, mount三個指令</li>
+
+	<li>開機自動掛載可參考/etc/fstab之設定，設定完畢務必使用 mount -a 測試語法正確否；</li>
+
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題：</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+	<li>情境模擬題一：復原本章的各例題練習，本章新增非常多 partition ，請將這些 partition 
+		刪除，恢復到原本剛安裝好時的狀態。<br /><br />
+		<ul>
+
+		<li>目標：瞭解到刪除分割槽需要注意的各項資訊；</li>
+		<li>前提：本章的各項範例練習你都必須要做過，才會擁有 /dev/hdc6, /dev/hdc7 出現；</li>
+		<li>需求：熟悉 fdisk, umount, swapoff 等指令。</li>
+		</ul><br />
+		由於本章處理完畢後，將會有 /dev/hdc6 與 /dev/hdc7 這兩個新增的 partition ，所以請刪除掉這兩個 partition 。
+		刪除的過程需要注意的是：<br /><br />
+		<ol><li>需先以<span class="text_import1"> free / swapon -s / mount</span> 等指令查閱， /dev/hdc6, /dev/hdc7 不可以被使用！
+		如果有被使用，則你必須要使用 <span class="text_import1">umount</span> 卸載檔案系統。如果是記憶體置換空間，則需使用 
+		<span class="text_import1">swapon -s</span> 找出被使用的分割槽，
+		再以 <span class="text_import1">swapoff</span> 去卸載他！<br /><br /></li>
+
+		<li>觀察 <span class="text_import1">/etc/fstab</span> ，該檔案不能存在這兩個 partition；<br /><br /></li>
+		<li>使用『 <span class="text_import1">fdisk /dev/hdc</span> 』刪除，注意，由於是邏輯分割槽，這些分割槽一定從 5 
+		號開始連續編號，因此你最好不要從 6 
+		號刪除！否則原本的 7  號在你刪除 6 號後，將會變成 6 號！因此，你應該由 7 號刪除掉，再刪除 6 號。</li>
+		</ol><br /></li>
+
+	<li>情境模擬題二：由於我的系統原本分割的不夠好，我的用戶希望能夠獨立一個 filesystem 附掛在 /srv/myproject 目錄下。
+		那你該如何建立新的 filesystem ，並且讓這個 filesystem 每次開機都能夠自動的掛載到 /srv/myproject ，
+		且該目錄是給 project 這個群組共用的，其他人不可具有任何權限。且該 filesystem 具有 5GB 的容量。<br /><br />
+
+		<ul>
+		<li>目標：理解檔案系統的建置、自動掛載檔案系統與專案開發必須要的權限；</li>
+		<li>前提：你需要進行過第七章的情境模擬才可以繼續本章；</li>
+		<li>需求：本章的所有概念必須要清楚！</li></ul><br />
+
+		那就讓我們開始來處理這個流程吧！<br /><br />
+		<ol>
+
+		<li>首先，我們必須要使用 <span class="text_import1">fdisk /dev/hdc</span> 來建立新的 partition 
+		，由於本章之前範例的 partition 已經在上一個練習中刪除，
+		因此你應該會多出一個 /dev/hdc6 才對：『<span class="text_import1">fdisk /dev/hdc</span>』，然後按下『
+		<span class="text_import1">n</span> 』，按下『Enter』選擇預設的啟始磁柱，
+		按下『<span class="text_import1">+5000M</span>』建立 5GB 的磁碟分割槽，可以多按一次『<span class="text_import1">p</span>
+		』看看是否正確，若無問題則按下『<span class="text_import1">w</span>』寫入分割表；<br /><br /></li>
+
+		<li>避免重新開機，因此使用『 <span class="text_import1">partprobe</span> 』強制核心更新分割表；如果螢幕出現類似：『
+		end_request: I/O error dev fd0, sector 0 』的錯誤時，不要擔心啊！這個說明的是『找不到軟碟』，我們本來就沒有軟碟，
+		所以這個錯誤是可以忽略的。<br /><br /></li>
+
+		<li>建立完畢後，開始進行格式化的動作如下：『<span class="text_import1">mkfs -t ext3 /dev/hdc6</span>』，這樣就 OK 了！<br /><br /></li>
+
+		<li>開始建立掛載點，利用：『 <span class="text_import1">mkdir /srv/myproject</span> 』來建立即可；<br /><br /></li>
+
+		<li>編寫自動掛載的設定檔：『 <span class="text_import1">nano /etc/fstab</span> 』，這個檔案最底下新增一行，內容如下：<br />
+		<span style="font-family: '細明體'; color: #0000aa">/dev/hdc6 /srv/myproject ext3 defaults 1 2</span><br /><br /></li>
+
+		<li>測試自動掛載：『 <span class="text_import1">mount -a</span> 』，然後使用『 df 』觀察看看有無掛載即可！<br /><br /></li>
+
+		<li>設定最後的權限，使用：『 <span class="text_import1">chgrp project /srv/myproject</span> 』以及『 
+		<span class="text_import1">chmod 2770 /srv/myproject</span> 』即可。</li>
+		</ol></li>
+</ul>
+
+<hr />簡答題部分：
+<ul>
+	<li>如果由於你的主機磁碟容量不夠大，你想要增加一顆新磁碟，並將該磁碟全部分割成單一分割槽，且將該分割槽掛載到 /home 目錄，
+	你該如何處置？
+	<div class="blockex">
+
+		詳細的流程可以分為硬體組裝、磁碟分割、格式化、資料搬移與掛載等。
+		<ul>
+		<li>安裝硬碟：關掉 Linux 主機電源，若為 IDE 介面時，需要處理跳針 (jump) 
+		，放入主機後插好硬碟的排線與電源線，重新啟動電源；</li>
+		<li>磁碟分割：透過類似上述情境模擬二的動作，將整顆磁碟分割成單一主要分割槽，類似 /dev/sdb1 佔有全部容量；</li>
+		<li>格式化：透過 mkfs -t ext3 來格式化；</li>
+		<li>資料搬移：由於原本的 /home 還會有資料存在，因此你可以 mount /dev/sdb1 /mnt ，再將 /home 的資料複製到 /mnt/ 
+		中，例如：『 cp -a /home/* /mnt 』即可。複製完畢後卸載 /home 以及 /mnt</li>
+		<li>重新掛載：編輯 /etc/fstab ，將 /home 所在的 filesystem 裝置改為 /dev/sdb1 之類的新分割槽，然後 mount -a
+		測試看看是否正確，如果正確的話，才是順利結束了這次的動作。</li>
+
+		</ul>
+	</div></li>
+
+	<li>如果磁區 /dev/hda3 有問題，偏偏他是被掛載上的，請問我要如何修理此一磁區？<br />
+	<div class="blockex">
+		umount /dev/hda3<br />
+		fsck /dev/hda3
+	</div></li>
+
+	<li>我們常常說，開機的時候，『發現硬碟有問題』，請問，這個問題的產生是『filesystem 的損毀』，還是『硬碟的損毀』？<br />
+	<div class="blockex">
+		特別需要注意的是，如果您某個 filesystem 裡面，由於操作不當，可能會造成 Superblock 資料的損毀，
+		或者是 inode 的架構損毀，或者是 block area 的記錄遺失等等，這些問題當中，其實您的『硬碟』還是好好的，
+		不過，在硬碟上面的『檔案系統』則已經無法再利用！一般來說，我們的 Linux 很少會造成 filesystem 的損毀，
+		所以，發生問題時，很可能整個硬碟都損毀了。但是，如果您的主機常常不正常斷電，那麼，
+		很可能硬碟是沒問題的，但是，檔案系統則有損毀之虞。此時，重建檔案系統 (reinstall) 即可！
+		不需要換掉硬碟啦！ ^_^
+	</div></li>
+
+	<li>當我有兩個檔案，分別是 file1 與 file2 ，這兩個檔案互為 hard link 的檔案，請問，
+	若我將 file1 刪除，然後再以類似 vi 的方式重新建立一個名為 file1 的檔案，
+	則 file2 的內容是否會被更動？<br />
+	<div class="blockex">
+		這是來自網友的疑問。當我刪除 file1 之後， file2 則為一個正規檔案，並不會與他人共同分享同一個
+		inode 與 block ，因此，當我重新建立一個檔名為 file1 時，他所利用的 inode 與 block 
+		都是由我們的 filesystem 主動去搜尋 meta data ，找到空的 inode 與 block 來建立的，
+		與原本的 file1 並沒有任何關連性喔！所以，新建的 file1 並不會影響 file2 呢！
+	</div></li>
+
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：根據The Linux Document Project的文件所繪製的圖示，詳細的參考文獻可以參考如下連結：<br />
+		Filesystem How-To: <a href="http://tldp.org/HOWTO/Filesystems-HOWTO-6.html"
+		target="_blank">http://tldp.org/HOWTO/Filesystems-HOWTO-6.html</a></li>
+	<li><a name="ps2"></a>註2：參考維基百科所得資料，連結網址如下：<br />
+
+		條目： Ext2 介紹 <a href="http://en.wikipedia.org/wiki/Ext2"
+		target="_blank">http://en.wikipedia.org/wiki/Ext2</a></li>
+	<li><a name="ps3"></a>註3：PAVE為一套秀圖軟體，常應用於數值模式的輸出檔案之再處理：<br />
+		PAVE 使用手冊： <a href="http://www.ie.unc.edu/cempd/EDSS/pave_doc/index.shtml"
+		target="_blank">http://www.ie.unc.edu/cempd/EDSS/pave_doc/index.shtml</a></li>
+	<li><a name="ps4"></a>註4：詳細的 inode 表格所定義的旗標可以參考如下連結：<br />
+		John's spec of the second extended filesystem: <a href="http://uranus.it.swin.edu.au/~jn/explore2fs/es2fs.htm"
+		target="_blank">http://uranus.it.swin.edu.au/~jn/explore2fs/es2fs.htm</a></li>
+
+	<li><a name="ps5"></a>註5：參考 Ext2 官網提供的解說文件，這份文件非常值得參考的！<br />
+		文章名稱：『Design and Implementation of the Second Extended Filesystem 』<br />
+		<a href="http://e2fsprogs.sourceforge.net/ext2intro.html" 
+		target="_blank">http://e2fsprogs.sourceforge.net/ext2intro.html</a></li>
+	<li><a name="ps6"></a>註6：Red Hat 自己推出的白皮書內容：<br />
+		文章名稱：Whitepaper: Red Hat's New Journaling File System: ext3<br />
+		<a href="http://www.redhat.com/support/wpapers/redhat/ext3/" 
+		target="_blank">http://www.redhat.com/support/wpapers/redhat/ext3/</a></li>
+
+	<li><a name="ps7"></a>註7：其他值得參考的 Ext2 相關檔案系統文章之連結如下：<br />
+		The Second Extended File System - An introduction:
+			<a href="http://www.freeos.com/articles/3912/"
+			target="_blank">http://www.freeos.com/articles/3912/</a><br />
+		ext3 or ReiserFS? Hans Reiser Says Red Hat's Move Is Understandable<br />
+			<a href="http://www.linuxplanet.com/linuxplanet/reports/3726/1/"
+			target="_blank">http://www.linuxplanet.com/linuxplanet/reports/3726/1/</a>
+		檔案系統的比較：維基百科：<a href="http://en.wikipedia.org/wiki/Comparison_of_file_systems"
+			target="_blank">http://en.wikipedia.org/wiki/Comparison_of_file_systems</a><br />
+
+		</li>
+	<li><a name="ps8"></a>註8：NTFS 檔案系統官網：Linux-NTFS Project: 
+			<a href="http://www.linux-ntfs.org/"
+			target="_blank">http://www.linux-ntfs.org/</a></li>
+	<li><a name="ps9"></a>註9： Linux 核心所支援的硬體之裝置代號(Major, Minor)查詢：<br />
+		<a href="http://www.kernel.org/pub/linux/docs/device-list/devices.txt"
+		target="_blank">http://www.kernel.org/pub/linux/docs/device-list/devices.txt</a></li>
+	<li><a name="ps10"></a>註10：與 Boot sector 及 Superblock 的探討有關的討論文章：<br />
+		The Second Extended File System: <a href="http://www.nongnu.org/ext2-doc/ext2.html"
+			target="_blank">http://www.nongnu.org/ext2-doc/ext2.html</a><br />
+
+		Rob's ext2 documentation: <a href="http://www.landley.net/code/toybox/ext2.html"
+			target="_blank">http://www.landley.net/code/toybox/ext2.html</a><br />
+		Life is different blog: ext2文件系統分析： <a href="http://www.qdhedu.com/blog/post/7.html"
+		target="_blank">http://www.qdhedu.com/blog/post/7.html</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/07/15：第一次完成<br />
+2003/02/07：重新編排與加入 FAQ<br />
+
+2004/03/15：修改 inode 的說明，並且將連結檔的說明移動至這個章節當中！<br />
+2005/07/20：將舊的文章移動到 <a href="0230filesystem/0230filesystem.php">這裡</a> 。<br />
+2005/07/22：將原本的附錄一與附錄二移動成為<a href="1010appendix_B.php">附錄 B</a> 啦！<br />
+2005/07/26：做了一個比較完整的修訂，加入較完整的 ext3 的說明～<br />
+2005/09/08：<a href="#2005-09-08">看到了一篇討論，說明 FC4 在預設的環境中，使用 mkswap 會有問題。</a><br />
+
+2005/10/11：新增加了一個<a href="#link_dir">目錄的 link 數量</a>說明！<br />
+2005/11/11：增加了一個 fsck 的 -f  參數在裡頭！<br />
+2006/03/02：參考：<a href="http://www.tldp.org/LDP/sag/html/sag.html#FILESYSTEMS" 
+		target="_blank">這裡</a>的說明，將 ext2/ext3 最大檔案系統由 16TB 改為 32TB。<br />
+2006/03/31：增加了虛擬記憶體的相關說明在 <a href="#swapuse">這裡</a><br />
+2006/05/01：將硬碟磁區的圖做個修正，感謝網友 LiaoLiang 兄提供的資訊！並加入參考文獻！<br />
+2006/06/09：增加 hard link 不能連結到目錄的原因，詳情參考：<a 
+		href="http://phorum.study-area.org/viewtopic.php?t=12235"
+		target="_blank">http://phorum.study-area.org/viewtopic.php?t=12235</a><br />
+
+2006/06/28：增加關於 <a href="#loop">loop device</a> 的相關說明吶！<br />
+2006/09/08：加入 <a href="#mknod">mknod 內的裝置代號說明</a> ，以及列出 Linux 核心網站的裝置代號查詢。<br />
+2008/09/29：原本的FC4系列文章移動到<a href="0230filesystem/0230filesystem-fc4.php">此處</a><br />
+2008/10/24：由於軟碟的使用已經越來越少了，所以將 fdformat 及 mkbootdisk 拿掉了！<br />
+2008/10/31：這個月事情好多～花了一個月才將資料整理完畢！修改幅度非常的大喔！<br />
+
+2008/11/01：最後一節的<a href="#parted">利用 GNU 的 parted 進行分割行為</a>誤植為 GUN ！感謝網友阿賢的來信告知！<br />
+2008/12/05：感謝網友 ian_chen 的告知，之前將 flash 當成 flush 了！真抱歉！已更新！<br />
+2009/04/01：感謝討論區網友<a href="http://phorum.vbird.org/viewtopic.php?t=32583" target="_blank">提供的說明</a>，
+		鳥哥之前 <a href="#20090401">superblock 這裡寫得不夠好</a>，有訂正說明，請幫忙看看。<br />
+2009/08/19：加入兩題情境模擬，重新修訂一題簡答題。<br />
+2009/08/30：加入 <a href="#20090830">du 的 -S</a> 說明中。
+
+</span>
+<hr />
+<br /><br />
+    </td>
+  <!-- InstanceEndEditable -->
+  
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+</div>
+</center>
+</body>
+<!-- InstanceEnd --></html>

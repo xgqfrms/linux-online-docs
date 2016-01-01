@@ -1,0 +1,2633 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="可以公平使用磁碟容量的 Quota 以及可增加磁碟容量的 RAID, LVM, iSCSI 設備等介紹" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- Quota, Software RAID, LVM, iSCSI</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第十五章、磁碟配額<span class="text_head_en">(Quota)</span>與進階檔案系統管理</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/09/10</span>
+</div>
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	如果您的 Linux 伺服器有多個用戶經常存取資料時，為了維護所有使用者在硬碟容量的公平使用，磁碟配額 
+	(Quota) 就是一項非常有用的工具！另外，如果你的用戶常常抱怨磁碟容量不夠用，那麼更進階的檔案系統就得要學習學習。
+	本章我們會介紹磁碟陣列 (RAID) 及邏輯捲軸檔案系統 (LVM)，這些工具都可以幫助你管理與維護使用者可用的磁碟容量喔！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#the_quota">磁碟配額 (Quota) 的應用與實作</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#the_quota_whatis">什麼是 Quota</a>：<a href="#the_quota_use">一般用途</a>,  
+		<a href="#the_quota_limit">限制</a>, 
+		<a href="#the_quota_set">規範 (inode/block, soft/hard, grace time)</a><br />
+	　　1.2 <a href="#quota_flow">一個 Quota 的實作範例</a><br />
+	　　1.3 <a href="#quota_flow_1">實作 Quota 流程-1：檔案系統支援</a> <a href="#fstab">(/etc/fstab, /etc/mtab)</a><br />
+	　　1.4 <a href="#quota_flow_2">實作 Quota 流程-2：建立 quota 記錄檔</a> (<a href="#quotacheck">quotacheck</a>)<br />
+	　　1.5 <a href="#quota_flow_3">實作 Quota 流程-3：啟動、關閉與限制值設定</a> (<a href="#quotaon">quotaon</a>, 
+		<a href="#quotaoff">quotaoff</a>, <a href="#edquota">edquota</a>)<br />
+	　　1.6 <a href="#quota_flow_4">實作 Quota 流程-4：Quota 限制值的報表</a> (<a href="#quota">quota</a>,
+		<a href="#repquota">repquota</a>)<br />
+	　　1.7 <a href="#quota_flow_5">實作 Quota 流程-5：測試與管理</a> (<a href="#quota_flow_5">測試</a>,
+		<a href="#warnquota">warnquota</a>, <a href="#setquota">setquota</a>)<br />
+	　　1.8 <a href="#quota_nochange">不更動既有系統的 Quota 實例</a><br />
+	</span>
+2. <a href="#raid">軟體磁碟陣列 (Software RAID)</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#raid_what">什麼是 RAID</a>： <a href="#raid0">RAID-0</a>, <a href="#raid1">RAID-1</a>,
+		<a href="#raid0_1">RAID0+1</a>, <a href="#raid5">RAID-5</a>, <a href="#spare">Spare disk</a><br />
+	　　2.2 <a href="#raid_so_ha">software, hardware RAID</a><br />
+	　　2.3 <a href="#raid_setup">軟體磁碟陣列的設定</a>： <a href="#mdadm_create">mdadm --create</a><br />
+	　　2.4 <a href="#raid_rescue">模擬 RAID 錯誤的救援模式</a>： <a href="#mdadm_manage">mdadm --manage</a><br />
+	　　2.5 <a href="#raid_auto">開機自動啟動 RAID 並自動掛載</a><br />
+	　　2.6 <a href="#raid_stop">關閉軟體 RAID(重要！)</a><br />
+	</span>
+3. <a href="#lvm">邏輯捲軸管理員 (Logical Volume Manager)</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#lvm_whatis">什麼是 LVM： PV, PE, VG, LV 的意義</a><br />
+	　　3.2 <a href="#lvm_flow">LVM 實作流程</a>： <a href="#the_pv">PV 階段</a>, <a href="#the_vg">VG 階段</a>,
+		<a href="#the_lv">LV 階段</a>, <a href="#the_file">檔案系統階段</a><br />
+	　　3.3 <a href="#lvm_large">放大 LV 容量</a>： <a href="#resize2fs">resize2fs</a><br />
+	　　3.4 <a href="#lvm_small">縮小 LV 容量</a><br />
+	　　3.5 <a href="#lvm_snapshot">LVM 的系統快照</a>： <a href="#snapshot_create">建立</a>, <a href="#snapshot_rescue">還原</a>,
+		<a href="#snapshot_test">用於測試環境</a><br />
+	　　3.6 <a href="#lvm_hint">LVM 相關指令彙整與 LVM 的關閉</a><br />
+	</span>
+4. <a href="#hint">重點回顧</a><br />
+5. <a href="#ex">本章習題</a><br />
+6. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+7. <a href="http://phorum.vbird.org/viewtopic.php?t=23888"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23888</a>
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="the_quota"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">磁碟配額 (Quota) 的應用與實作</span><br />
+<div class="block1">
+	<p>Quota 這個玩意兒就字面上的意思來看，就是有多少『限額』的意思啦！如果是用在零用錢上面，
+	就是類似『<span class="text_import2">有多少零用錢一個月</span>』的意思之類的。如果是在電腦主機的磁碟使用量上呢？以
+	Linux 來說，就是有多少容量限制的意思囉。我們可以使用 quota 來讓磁碟的容量使用較為公平，
+	底下我們會介紹什麼是 quota ，然後以一個完整的範例來介紹 quota 的實作喔！<br /><br /></p>
+
+	<hr /><a name="the_quota_whatis"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 Quota</span><br />
+	<div class="block2">
+		<p>在 Linux 系統中，由於是多人多工的環境，所以會有多人共同使用一個硬碟空間的情況發生，
+		如果其中有少數幾個使用者大量的佔掉了硬碟空間的話，那勢必壓縮其他使用者的使用權力！
+		因此管理員應該適當的限制硬碟的容量給使用者，以妥善的分配系統資源！避免有人抗議呀！</p>
+
+		<p>舉例來說，我們使用者的預設家目錄都是在 /home 底下，如果 /home 是個獨立的 partition ，
+		假設這個分割槽有 10G 好了，而 /home 底下共有 30 個帳號，也就是說，每個使用者平均應該會有 333MB 的空間才對。
+		偏偏有個使用者在他的家目錄底下塞了好多隻影片，佔掉了 8GB 的空間，想想看，是否造成其他正常使用者的不便呢？
+		如果想要讓磁碟的容量公平的分配，這個時候就得要靠 quota 的幫忙囉！<br /><br /></p>
+
+		<a name="the_quota_use"></a>
+		<hr /><ul class="list1"><li class="text_import1">Quota 的一般用途</li></ul>
+
+		<p>quota 比較常使用的幾個情況是：</p>
+		<ul class="text_import2">
+		<li>針對 WWW server ，例如：每個人的網頁空間的容量限制！</li>
+		<li>針對 mail server，例如：每個人的郵件空間限制。</li>
+		<li>針對 file server，例如：每個人最大的可用網路硬碟空間 (教學環境中最常見！)</li>
+		</ul>
+
+		<p>上頭講的是針對網路服務的設計，如果是針對 Linux 系統主機上面的設定那麼使用的方向有底下這一些：</p>
+		<ul>
+		<li><span class="text_import2">限制某一群組所能使用的最大磁碟配額 (使用群組限制)</span>：<br />
+		你可以將你的主機上的使用者分門別類，有點像是目前很流行的付費與免付費會員制的情況，
+		你比較喜好的那一群的使用配額就可以給高一些！呵呵！ ^_^...<br /><br /></li>
+
+		<li><span class="text_import2">限制某一使用者的最大磁碟配額 (使用使用者限制)</span>：<br />
+		在限制了群組之後，你也可以再繼續針對個人來進行限制，使得同一群組之下還可以有更公平的分配！<br /><br /></li>
+
+		<li><span class="text_import2">以 Link 的方式，來使郵件可以作為限制的配額 (更改 /var/spool/mail 
+		這個路徑)</span>：<br />如果是分為付費與免付費會員的『郵件主機系統』，是否需要重新再規劃一個硬碟呢？
+		也不需要啦！直接使用 Link 的方式指向 /home (或者其他已經做好的 quota 磁碟) 就可以啦！
+		這通常是用在原本磁碟分割的規劃不好，但是卻又不想要更動原有主機架構的情況中啊！</li></ul>
+
+		<p>大概有這些實際的用途啦！<br /><br /></p>
+
+		<a name="the_quota_limit"></a>
+		<hr /><ul class="list1"><li class="text_import1">Quota 的使用限制</li></ul>
+
+		<p>雖然 quota 很好用，但是使用上還是有些限制要先瞭解的：</p>
+
+		<ul>
+		<li><span class="text_import2">僅能針對整個 filesystem：</span><br />
+		quota 實際在運作的時候，是針對『<span class="text_import2">整個 filesystem</span>』進行限制的，
+		例如：如果你的 /dev/sda5 是掛載在 /home 底下，那麼在 /home 底下的所有目錄都會受到限制！<br /><br /></li>
+
+		<li><span class="text_import2">核心必須支援 quota ：</span><br />
+		Linux 核心必須有支援 quota 這個功能才行：如果你是使用 CentOS 5.x 的預設核心，
+		嘿嘿！那恭喜你了，你的系統已經預設有支援 quota 這個功能囉！如果你是自行編譯核心的，
+		那麼請特別留意你是否已經『真的』開啟了 quota 這個功能？否則底下的功夫將全部都視為『白工』。<br /><br /></li>
+
+		<li><span class="text_import2">Quota 的記錄檔：</span><br />
+		目前新版的 Linux distributions 使用的是 Kernel 2.6.xx 的核心版本，這個核心版本支援新的 quota 
+		模組，使用的預設檔案 (aquota.user, aquota.group )將不同於舊版本的 quota.user, quota.group ！
+		(多了一個 a 呦！) 而由舊版本的 quota 可以藉由 convertquota 這個程式來轉換呢！<br /><br /></li>
+
+		<li><span class="text_import2">只對一般身份使用者有效：</span><br />
+		這就有趣了！並不是所有在 Linux 上面的帳號都可以設定 quota 呢，例如 root 就不能設定 quota ，
+		因為整個系統所有的資料幾乎都是他的啊！ ^_^</li>
+		</ul>
+
+		<p>所以囉，你不能針對『某個目錄』來進行 Quota 的設計，但你可以針對『某個檔案系統 (filesystem) 』來設定。
+		如果不明白目錄與掛載點還有檔案系統的關係，請回到<a href="/linux_basic/0230filesystem.php">第八章</a>去瞧瞧再回來！
+		<br /><br /></p>
+
+		<a name="the_quota_set"></a>
+		<hr /><ul class="list1"><li class="text_import1">Quota 的規範設定項目：</li></ul>
+
+		<p>quota 這玩意兒針對整個 filesystem 的限制項目主要分為底下幾個部分：</p>
+
+		<ul>
+		<li><span class="text_import2">容量限制或檔案數量限制 (block 或 inode)：</span><br /><br />
+		我們在<a href="/linux_basic/0230filesystem.php">第八章</a>談到檔案系統中，說到檔案系統主要規劃為存放屬性的 
+		inode 與實際檔案資料的 block 區塊，Quota 既然是管理檔案系統，所以當然也可以管理 inode 或 block 囉！
+		這兩個管理的功能為：<br /><br />
+		<ul class="text_import2"><li>限制 inode 用量：可以管理使用者可以建立的『檔案數量』；</li>
+		<li>限制 block 用量：管理使用者磁碟容量的限制，較常見為這種方式。</li></ul>
+		<br /></li>
+
+		<li><span class="text_import2">柔性勸導與硬性規定 (soft/hard)：</span><br /><br />
+		既然是規範，當然就有限制值。不管是 inode/block ，限制值都有兩個，分別是 soft 與 hard。
+		通常 hard 限制值要比 soft 還要高。舉例來說，若限制項目為 block ，可以限制 hard 為 500MBytes 而 soft
+		為 400MBytes。這兩個限值的意義為：<br /><br />
+		<ul>
+		<li>hard：表示使用者的用量絕對不會超過這個限制值，以上面的設定為例，
+		使用者所能使用的磁碟容量絕對不會超過 500Mbytes ，若超過這個值則系統會鎖住該用戶的磁碟使用權；<br /><br /></li>
+		<li>soft：表示使用者在低於 soft 限值時 (此例中為 400Mbytes)，可以正常使用磁碟，但若超過 soft 
+		且低於 hard 的限值 (介於 400~500Mbytes 之間時)，每次使用者登入系統時，系統會主動發出磁碟即將爆滿的警告訊息，
+		且會給予一個寬限時間 (grace time)。不過，若使用者在寬限時間倒數期間就將容量再次降低於 soft 限值之下，
+		則寬限時間會停止。</li>
+		</ul><br /></li>
+
+		<li><span class="text_import2">會倒數計時的寬限時間 (grace time)：</span><br /><br />
+		剛剛上面就談到寬限時間了！這個寬限時間只有在使用者的磁碟用量介於 soft 到 hard 之間時，才會出現且會倒數的一個咚咚！
+		由於達到 hard 限值時，使用者的磁碟使用權可能會被鎖住。為了擔心使用者沒有注意到這個磁碟配額的問題，
+		因此設計了 soft 。當你的磁碟用量即將到達 hard 且超過 soft  時，系統會給予警告，但也會給一段時間讓使用者自行管理磁碟。
+		一般預設的寬限時間為七天，如果七天內你都不進行任何磁碟管理，那麼<span class="text_import2"> soft 
+		限制值會即刻取代 hard 限值來作為 quota 的限制</span>。<br /><br />
+
+		以上面設定的例子來說，假設你的容量高達 450MBytes 了，那七天的寬限時間就會開始倒數，
+		若七天內你都不進行任何刪除檔案的動作來替你的磁碟用量瘦身，
+		那麼七天後你的磁碟最大用量將變成 400MBytes (那個 soft 
+		的限制值)，此時你的磁碟使用權就會被鎖住而無法新增檔案了。</li>
+		</ul>
+
+		<p>整個 soft, hard, grace time 的相關性我們可以用底下的圖示來說明：</p>
+
+		<center><img src="0420quota/soft_hard.gif" alt="soft, hard, grace time 的相關性" 
+		title="soft, hard, grace time 的相關性" border="0" /><br />
+		圖 1.1.1、soft, hard, grace time 的相關性<br /></center>
+
+		<p>圖中的長條圖為使用者的磁碟容量，soft/hard 分別是限制值。只要小於 400M 就一切 OK ，
+		若高於 soft 就出現 grace time 並倒數且等待使用者自行處理，若到達 hard 的限制值，
+		那我們就搬張小板凳等著看好戲啦！嘿嘿！^_^！這樣圖示有清楚一點了嗎？</p>
+	</div>
+
+	<hr /><a name="quota_flow"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">一個 Quota 實作範例</span><br />
+	<div class="block2">
+		<p>坐而言不如起而行啊，所以這裡我們使用一個範例來設計一下如何處理 Quota 的設定流程。</p>
+
+		<ul>
+		<li>目的與帳號：現在我想要讓我的專題生五個為一組，這五個人的帳號分別是 myquota1, myquota2, 
+		myquota3, myquota4, myquota5，這五個用戶的密碼都是 password ，且這五個用戶所屬的初始群組都是 myquotagrp 。
+		其他的帳號屬性則使用預設值。<br /><br /></li>
+		<li>帳號的磁碟容量限制值：我想讓這五個用戶都能夠取得 300MBytes 的磁碟使用量(hard)，檔案數量則不予限制。
+		此外，只要容量使用率超過 250MBytes ，就予以警告 (soft)。<br /><br /></li>
+
+		<li>群組的限額：由於我的系統裡面還有其他用戶存在，因此我僅承認 myquotagrp 這個群組最多僅能使用 1GBytes 的容量。
+		這也就是說，如果 myquota1, myquota2, myquota3 都用了 280MBytes 的容量了，那麼其他兩人最多只能使用
+		(1000MB - 280x3 = 160MB) 的磁碟容量囉！這就是使用者與群組同時設定時會產生的後果。<br /><br /></li>
+
+		<li>寬限時間的限制：最後，我希望每個使用者在超過 soft 限制值之後，都還能夠有 14 天的寬限時間。</li>
+		</ul>
+
+		<p>好了，那你怎麼規範帳號以及相關的 Quota 設定呢？首先，在這個小節我們先來將帳號相關的屬性與參數搞定再說吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 製作帳號環境時，由於有五個帳號，因此鳥哥使用 script 來建立環境！</span>
+[root@www ~]# <span class="term_command">vi addaccount.sh</span>
+<span class="term_write">#!/bin/bash
+# 使用 script 來建立實驗 quota 所需的環境
+groupadd myquotagrp
+for username in myquota1 myquota2 myquota3 myquota4 myquota5
+do
+	useradd -g myquotagrp $username
+	echo "password" | passwd --stdin $username
+done</span>
+
+[root@www ~]# <span class="term_command">sh addaccount.sh</span>
+</pre></td></tr></table>
+
+		<p>接下來，就讓我們來實作 Quota 的練習吧！</p>
+	</div>
+
+	<hr /><a name="quota_flow_1"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作 Quota 流程-1：檔案系統支援</span><br />
+	<div class="block2">
+		<p>前面我們就談到，要使用 Quota 必須要核心與檔案系統支援才行！假設你已經使用了預設支援 Quota 的核心，
+		那麼接下來就是要啟動檔案系統的支援啦！不過，由於 Quota 僅針對整個檔案系統來進行規劃，所以我們得先查一下，
+		/home 是否是個獨立的 filesystem 呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">df -h /home</span>
+Filesystem     Size  Used Avail Use% Mounted on
+/dev/hda3      4.8G  740M  3.8G  17% /home  <span class="term_note">&lt;==鳥哥主機的 /home 確實是獨立的！</span>
+
+[root@www ~]# <span class="term_command">mount | grep home</span>
+/dev/hda3 on /home type <span class="term_write">ext3</span> (rw)
+</pre></td></tr></table>
+
+		<p>從上面的資料來看，鳥哥這部主機的 /home 確實是獨立的 filesystem，因此可以直接限制 /dev/hda3 。
+		如果你的系統的 /home 並非獨立的檔案系統，那麼可能就得要針對根目錄 (/) 來規範了！不過，不太建議在根目錄設定 Quota。
+		此外，由於 VFAT 檔案系統並不支援 Linux Quota 功能，所以我們得要使用 mount 查詢一下 /home 的檔案系統為何？
+		看起來是 Linux 傳統的 ext2/ext3 ，這種檔案系統肯定有支援 Quota 啦！沒問題！</p>
+
+		<p>如果只是想要在這次開機中實驗 Quota ，那麼可以使用如下的方式來手動加入 quota 的支援：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mount -o remount,usrquota,grpquota /home</span>
+[root@www ~]# <span class="term_command">mount | grep home</span>
+/dev/hda3 on /home type ext3 (rw,<span class="term_write">usrquota,grpquota</span>)
+<span class="term_say"># 重點就在於 usrquota, grpquota ！注意寫法！</span>
+</pre></td></tr></table>
+
+		<p>事實上，<span class="text_import2">當你重新掛載時，系統會同步更新 /etc/mtab 這個檔案，
+		所以你必須要確定 /etc/mtab 已經加入 usrquota, grpquota 的支援到你所想要設定的檔案系統中。</span>
+		另外也要特別強調，使用者與群組的 quota 檔案系統支援參數分別是：<span class="text_import1">usrquota, grpquota</span>
+		！千萬不要寫錯了！這一點非常多初接觸 Quota 的朋友常常搞錯。</p>
+
+		<a name="fstab"></a>
+		<p>不過手動掛載的資料在下次重新掛載就會消失，因此最好寫入設定檔中啊！在鳥哥這部主機的案例中，
+		我可以直接修改 /etc/fstab 成為底下這個樣子：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/fstab</span>
+LABEL=/home   /home  ext3   defaults<span class="term_command">,usrquota,grpquota</span>  1 2
+<span class="term_say"># 其他項目鳥哥並沒有列出來！重點在於第四欄位！於 default 後面加上兩個參數！</span>
+
+[root@www ~]# <span class="term_command">umount /home</span>
+[root@www ~]# <span class="term_command">mount -a</span>
+[root@www ~]# <span class="term_command">mount | grep home</span>
+/dev/hda3 on /home type ext3 (rw<span class="term_write">,usrquota,grpquota</span>)
+</pre></td></tr></table>
+
+		<p>還是要再次的強調，修改完 /etc/fstab 後，務必要測試一下！若有發生錯誤得要趕緊處理！
+		因為這個檔案如果修改錯誤，是會造成無法開機完全的情況啊！切記切記！最好使用 vim 來修改啦！
+		因為會有語法的檢驗，就不會讓你寫錯字了！啟動檔案系統的支援後，接下來讓我們建立起 quota 的記錄檔吧！</p>
+	</div>
+
+	<hr /><a name="quota_flow_2"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作 Quota 流程-2：建立 quota 記錄檔</span><br />
+	<div class="block2">
+		<p>其實 <span class="text_import2">Quota 是透過分析整個檔案系統中，每個使用者(群組)擁有的檔案總數與總容量，
+		再將這些資料記錄在該檔案系統的最頂層目錄，然後在該記錄檔中再使用每個帳號(或群組)的限制值去規範磁碟使用量</span>的。
+		所以啦，建置這個 Quota 記錄檔就顯的非常的重要。掃瞄有支援 Quota 參數 (usrquota, grpquota) 的檔案系統，
+		就使用 quotacheck 這個指令！這個指令的語法如下：<br /><br /></p>
+
+		<a name="quotacheck"></a>
+		<hr /><ul class="list1"><li class="text_import1">quotacheck ：掃瞄檔案系統並建立 Quota 的記錄檔</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">quotacheck [-avugfM] [/mount_point]</span>
+<span class="term_say">選項與參數：
+-a  ：掃瞄所有在 /etc/mtab 內，含有 quota 支援的 filesystem，加上此參數後， 
+      /mount_point 可不必寫，因為掃瞄所有的 filesystem 了嘛！
+-u  ：針對使用者掃瞄檔案與目錄的使用情況，會建立 aquota.user
+-g  ：針對群組掃瞄檔案與目錄的使用情況，會建立 aquota.group
+-v  ：顯示掃瞄過程的資訊；
+-f  ：強制掃瞄檔案系統，並寫入新的 quota 設定檔 (危險)
+-M  ：強制以讀寫的方式掃瞄檔案系統，只有在特殊情況下才會使用。</span>
+</pre></td></tr></table>
+
+		<p>quotacheck 的選項你只要記得『 -avug 』一起下達即可！那個 -f 與 -M 是在檔案系統可能已經啟動 quota 了，
+		但是你還想要重新掃瞄檔案系統時，系統會要求你加入那兩個選項啦 (擔心有其他人已經使用 quota 
+		中)！平時沒必要不要加上那兩個項目。好了，那就讓我們來處理我們的任務吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 針對整個系統含有 usrquota, grpquota 參數的檔案系統進行 quotacheck 掃瞄</span>
+[root@www ~]# <span class="term_command">quotacheck -avug</span>
+quotacheck: <span class="term_write">Scanning /dev/hda3 [/home] quotacheck</span>: Cannot stat old user quota
+file: No such file or directory <span class="term_note">&lt;==有找到檔案系統，但尚未製作記錄檔！</span>
+quotacheck: Cannot stat old group quota file: No such file or directory
+quotacheck: Cannot stat old user quota file: No such file or directory
+quotacheck: Cannot stat old group quota file: No such file or directory
+done  <span class="term_note">&lt;==上面三個錯誤只是說明記錄檔尚未建立而已，可以忽略不理！</span>
+quotacheck: <u>Checked 130 directories and 107 files</u> <span class="term_note">&lt;==實際搜尋結果</span>
+quotacheck: Old file not found.
+quotacheck: Old file not found.
+<span class="term_say"># 若執行這個指令卻出現如下的錯誤訊息，表示你沒有任何檔案系統有啟動 quota 支援！
+# quotacheck: Can't find filesystem to check or filesystem not mounted with 
+# quota option.</span>
+
+[root@www ~]# <span class="term_command">ll -d /home/a*</span>
+-rw------- 1 root root 8192 Mar  6 11:58 /home/<span class="term_write">aquota.group</span>
+-rw------- 1 root root 9216 Mar  6 11:58 /home/<span class="term_write">aquota.user</span>
+<span class="term_say"># 在鳥哥的案例中，/home 獨立的檔案系統，因此搜尋結果會將兩個記錄檔放在 
+# /home 底下。這兩個檔案就是 Quota 最重要的資訊了！</span>
+</pre></td></tr></table>
+
+		<p>這個指令只要進行到這裡就夠了，不要反覆的進行！因為等一下我們會啟動 quota 功能，若啟動後你還要進行 quotacheck ，
+		系統會擔心破壞原有的記錄檔，所以會產生一些錯誤訊息警告你。如果你確定沒有任何人在使用 quota 時，
+		可以強制重新進行 quotacheck 的動作。強制執行的情況可以使用如下的選項功能：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 如果因為特殊需求需要強制掃瞄已掛載的檔案系統時</span>
+[root@www ~]# <span class="term_command">quotacheck -avug -mf</span>
+quotacheck: Scanning /dev/hda3 [/home] done
+quotacheck: Checked 130 directories and 109 files
+<span class="term_say"># 資料要簡潔很多！因為有記錄檔存在嘛！所以警告訊息不會出現！</span>
+</pre></td></tr></table>
+
+		<p>這樣記錄檔就建立起來了！你不用手動去編輯那兩個檔案～因為那兩個檔案是 quota 自己的資料檔，並不是純文字檔啦！
+		且該檔案會一直變動，這是因為當你對 /home 這個檔案系統進行操作時，你操作的結果會影響磁碟吧！
+		所以當然會同步記載到那兩個檔案中啦！所以要建立 aquota.user, aquota.group，記得使用的是 quotacheck 指令！
+		不是手動編輯的喔！</p>
+	</div>
+
+	<hr /><a name="quota_flow_3"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作 Quota 流程-3：Quota 啟動、
+	關閉與限制值設定</span><br />
+	<div class="block2">
+		<p>製作好 Quota 設定檔之後，接下來就是要啟動 quota 了！啟動的方式很簡單！使用 quotaon ，至於關閉就用 quotaoff
+		即可<br /><br /></p>
+
+		<a name="quotaon"></a>
+		<hr /><ul class="list1"><li class="text_import1">quotaon ：啟動 quota 的服務</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">quotaon [-avug]</span>
+[root@www ~]# <span class="term_command">quotaon [-vug] [/mount_point]</span>
+<span class="term_say">選項與參數：
+-u  ：針對使用者啟動 quota (aquota.user)
+-g  ：針對群組啟動 quota (aquota.group)
+-v  ：顯示啟動過程的相關訊息；
+-a  ：根據 /etc/mtab 內的 filesystem 設定啟動有關的 quota ，若不加 -a 的話，
+      則後面就需要加上特定的那個 filesystem 喔！</span>
+
+<span class="term_hd"># 由於我們要啟動 user/group 的 quota ，所以使用底下的語法即可</span>
+[root@www ~]# <span class="term_command">quotaon -auvg</span>
+/dev/hda3 [/home]: group quotas turned on
+/dev/hda3 [/home]: user quotas turned on
+
+<span class="term_hd"># 特殊用法，假如你的啟動 /var 的 quota 支援，那麼僅啟動 user quota 時</span>
+[root@www ~]# <span class="term_command">quotaon -uv /var</span>
+</pre></td></tr></table>
+
+		<p>這個『 quotaon -auvg 』的指令幾乎只在第一次啟動 quota 時才需要進行！因為下次等你重新啟動系統時，
+		系統的 /etc/rc.d/rc.sysinit 這個初始化腳本就會自動的下達這個指令了！因此你只要在這次實例中進行一次即可，
+		未來都不需要自行啟動 quota ，因為 CentOS 5.x 系統會自動幫你搞定他！<br /><br /></p>
+
+		<a name="quotaoff"></a>
+		<hr /><ul class="list1"><li class="text_import1">quotaoff ：關閉 quota 的服務</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">quotaoff [-a]</span>
+[root@www ~]# <span class="term_command">quotaoff [-ug] [/mount_point]</span>
+<span class="term_say">選項與參數：
+-a  ：全部的 filesystem 的 quota 都關閉 (根據 /etc/mtab)
+-u  ：僅針對後面接的那個 /mount_point 關閉 user quota
+-g  ：僅針對後面接的那個 /mount_point 關閉 group quota</span>
+</pre></td></tr></table>
+
+		<p>這個指令就是關閉了 quota 的支援！我們這裡需要練習 quota 實作，所以這裡請不要關閉他喔！
+		接下來讓我們開始來設定使用者與群組的 quota 限額吧！<br /><br /></p>
+
+		<a name="edquota"></a>
+		<hr /><ul class="list1"><li class="text_import1">edquota ：編輯帳號/群組的限值與寬限時間</li></ul>
+
+		<p>edquota 是 edit quota 的縮寫，所以就是用來編輯使用者或者是群組限額的指令囉。我們先來看看 edquota 的語法吧，
+		看完後再來實際操作一下。</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">edquota [-u username] [-g groupname]</span>
+[root@www ~]# <span class="term_command">edquota -t</span>  <span class="term_note">&lt;==修改寬限時間</span>
+[root@www ~]# <span class="term_command">edquota -p 範本帳號 -u 新帳號</span>
+<span class="term_say">選項與參數：
+-u  ：後面接帳號名稱。可以進入 quota 的編輯畫面 (vi) 去設定 username 的限制值；
+-g  ：後面接群組名稱。可以進入 quota 的編輯畫面 (vi) 去設定 groupname 的限制值；
+-t  ：可以修改寬限時間。
+-p  ：複製範本。那個 範本帳號 為已經存在並且已設定好 quota 的使用者，
+      意義為『將 範本帳號 這個人的 quota 限制值複製給 新帳號 』！</span>
+</pre></td></tr></table>
+
+		<p>好了，先讓我們來看看當進入 myquota1 的限額設定時，會出現什麼畫面：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">範例一：設定 dmtsai 這個使用者的 quota 限制值</span>
+[root@www ~]# <span class="term_command">edquota -u myquota1</span>
+Disk quotas for user myquota1 (uid 710):
+  Filesystem    blocks  soft   hard  inodes  soft  hard
+  /dev/hda3         80     0      0      10     0     0
+</pre></td></tr></table>
+
+		<p>上頭第一行在說明針對哪個帳號 (myquota1) 進行 quota 的限額設定，第二行則是標頭行，裡面共分為七個欄位，
+		七個欄位分別的意義為：</p>
+		<ol class="text_import2">
+		<li>檔案系統 (filesystem)：說明該限制值是針對哪個檔案系統 (或 partition)；</li>
+		<li>磁碟容量 (blocks)：這個數值是 quota 自己算出來的，單位為 Kbytes，請不要更動他；</li>
+		<li>soft：磁碟容量 (block) 的 soft 限制值，單位亦為 KB</li>
+		<li>hard：block 的 hard  限制值，單位 KB；</li>
+		<li>檔案數量 (inodes)：這是 quota 自己算出來的，單位為個數，請不要更動他；</li>
+		<li>soft：inode 的 soft 限制值；</li>
+		<li>hard：inode 的 hard 限制值；</li>
+		</ol>
+
+		<p>當 soft/hard 為 0 時，表示沒有限制的意思。好，依據我們的<a href="#quota_flow">範例說明</a>，我們需要設定的是 blocks 
+		的 soft/hard ，至於 inode 則不要去更動他！因此上述的畫面我們將他改成如下的模樣：</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在 edquota 的畫面中，每一行只要保持七個欄位就可以了，並不需要排列整齊的！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table class="term"><tr><td class="term"><pre>
+Disk quotas for user myquota1 (uid 710):
+  Filesystem    blocks    soft    hard  inodes  soft  hard
+  /dev/hda3         80  <span class="term_write">250000  300000</span>      10     0     0
+<span class="term_say"># 鳥哥使用 1000 去近似 1024 的倍數！比較好算啦！然後就可以儲存後離開囉！</span>
+</pre></td></tr></table>
+
+		<p>設定完成之後，我們還有其他 5 個用戶要設定，由於設定值都一樣，此時可以使用 quota 複製喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 將 myquota1 的限制值複製給其他四個帳號</span>
+[root@www ~]# <span class="term_command">edquota -p myquota1 -u myquota2</span>
+[root@www ~]# <span class="term_command">edquota -p myquota1 -u myquota3</span>
+[root@www ~]# <span class="term_command">edquota -p myquota1 -u myquota4</span>
+[root@www ~]# <span class="term_command">edquota -p myquota1 -u myquota5</span>
+</pre></td></tr></table>
+
+		<p>這樣就方便多了！然後，趕緊更改一下群組的 quota 限額吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">edquota -g myquotagrp</span>
+Disk quotas for group myquotagrp (gid 713):
+  Filesystem    blocks    soft     hard  inodes  soft  hard
+  /dev/hda3        400  <span class="term_write">900000  1000000</span>      50     0     0
+<span class="term_say"># 記得，單位為 KB 喔！</span>
+</pre></td></tr></table>
+
+		<p>最後，將寬限時間給他改成 14 天吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 寬限時間原本為 7 天，將他改成 14 天吧！</span>
+[root@www ~]# <span class="term_command">edquota -t</span>
+Grace period before enforcing soft limits for users:
+Time units may be: days, hours, minutes, or seconds
+  Filesystem         Block grace period     Inode grace period
+  /dev/hda3                <span class="term_write">14</span>days                  7days
+<span class="term_say"># 原本是 7days ，我們將他給改為 14days 喔！</span>
+</pre></td></tr></table>
+
+		<p>透過這個簡單的小步驟，我們已經將使用者/群組/寬限時間都設定妥當！接下來就是觀察到底設定有沒有生效啦！</p>
+	</div>
+
+	<hr /><a name="quota_flow_4"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作 Quota 流程-4：Quota 
+	限制值的報表</span><br />
+	<div class="block2">
+		<p>quota 的報表主要有兩種模式，一種是針對每個個人或群組的 quota 指令，一個是針對整個檔案系統的 repquota 指令。
+		我們先從較簡單的 quota 來介紹！你也可以順道看看你的設定值對不對啊！<br /><br /></p>
+
+		<a name="quota"></a>
+		<hr /><ul class="list1"><li class="text_import1">quota ：單一用戶的 quota 報表</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">quota [-uvs] [username]</span>
+[root@www ~]# <span class="term_command">quota [-gvs] [groupname]</span>
+<span class="term_say">選項與參數：
+-u  ：後面可以接 username ，表示顯示出該使用者的 quota 限制值。若不接 username 
+      ，表示顯示出執行者的 quota 限制值。
+-g  ：後面可接 groupname ，表示顯示出該群組的 quota 限制值。
+-v  ：顯示每個用戶在 filesystem 的 quota 值；
+-s  ：使用 1024 為倍數來指定單位，會顯示如 M 之類的單位！</span>
+
+<span class="term_hd"># 直接使用 quota 去顯示出 myquota1 與 myquota2 的限額</span>
+[root@www ~]# <span class="term_command">quota -uvs myquota1 myquota2</span>
+Disk quotas for user myquota1 (uid 710):
+   Filesystem  blocks  quota  limit   grace   files   quota   limit   grace
+    /dev/hda3      80   <span class="term_write">245M   293M</span>              10       0       0
+Disk quotas for user myquota2 (uid 711):
+   Filesystem  blocks  quota  limit   grace   files   quota   limit   grace
+    /dev/hda3      80   <span class="term_write">245M   293M</span>              10       0       0
+<span class="term_say"># 這個指令顯示出來的資料跟 <a href="#edquota">edquota</a> 幾乎是一模一樣的！只是多了個 grace 項目。
+# 你會發現 grace 底下沒有任何資料，這是因為我們的使用量 (80) 尚未超過 soft</span>
+
+<span class="term_hd"># 顯示出 myquotagrp 的群組限額</span>
+[root@www ~]# <span class="term_command">quota -gvs myquotagrp</span>
+Disk quotas for group myquotagrp (gid 713):
+   Filesystem  blocks  quota  limit   grace   files   quota   limit   grace
+    /dev/hda3     400   <span class="term_write">879M   977M</span>              50       0       0
+</pre></td></tr></table>
+
+		<p>由於使用常見的 K, M, G 等單位比較好算，因此上頭我們使用了『 -s 』的選項，就能夠以 M 為單位顯示了。
+		不過由於我們使用 <a href="#edquota">edquota</a> 設定限額時，使用的是近似值 (1000) 而不是實際的 1024 倍數，
+		所以看起來會有點不太一樣喔！由於 quota 僅能針對某些用戶顯示報表，如果要針對整個 filesystem 列出報表時，
+		那個可愛的 repquota 就派上用場啦！<br /><br /></p>
+
+		<a name="repquota"></a>
+		<hr /><ul class="list1"><li class="text_import1">repquota ：針對檔案系統的限額做報表</li></ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">repquota -a [-vugs]</span>
+<span class="term_say">選項與參數：
+-a  ：直接到 /etc/mtab 搜尋具有 quota 標誌的 filesystem ，並報告 quota 的結果；
+-v  ：輸出的資料將含有 filesystem 相關的細部資訊；
+-u  ：顯示出使用者的 quota 限值 (這是預設值)；
+-g  ：顯示出個別群組的 quota 限值。
+-s  ：使用 M, G 為單位顯示結果</span>
+
+<span class="term_hd"># 查詢本案例中所有使用者的 quota 限制情況：</span>
+[root@www ~]# <span class="term_command">repquota -auvs</span>
+*** Report for user quotas on device <span class="term_write">/dev/hda3</span>    <span class="term_note">&lt;==針對 /dev/hda3</span>
+Block grace time: <span class="term_write">14days</span>; Inode grace time: 7days <span class="term_note">&lt;==block 寬限時間為 14 天</span>
+                        Block limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+root      --    651M       0       0              5     0     0
+myquota1  --      80    245M    293M             10     0     0
+myquota2  --      80    245M    293M             10     0     0
+myquota3  --      80    245M    293M             10     0     0
+myquota4  --      80    245M    293M             10     0     0
+myquota5  --      80    245M    293M             10     0     0
+
+Statistics:  <span class="term_note">&lt;==這是所謂的系統相關資訊，用 -v 才會顯示</span>
+Total blocks: 9
+Data blocks: 2
+Entries: 22
+Used average: 11.000000
+</pre></td></tr></table>
+
+		<p>根據這些資訊，您就可以知道目前的限制情況囉！ ^_^！怎樣， Quota 
+		很簡單吧！你可以趕緊針對你的系統設定一下磁碟使用的規則，讓你的用戶不會抱怨磁碟怎麼老是被耗光！</p>
+	</div>
+
+	<hr /><a name="quota_flow_5"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">實作 Quota 流程-5：測試與管理</span><br />
+	<div class="block2">
+		<p>Quota 到底有沒有效果？測試看看不就知道了？讓我們使用 myquota1 去測試看看，如果建立一個大檔案時，
+		整個系統會便怎樣呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 測試一：利用 myquota1 的身份，建置一個 270MB 的大檔案，並觀察 quota 結果！</span>
+[myquota1@www ~]# <span class="term_command">dd if=/dev/zero of=bigfile bs=1M count=270</span>
+hda3: warning, user block quota exceeded.
+270+0 records in
+270+0 records out
+283115520 bytes (283 MB) copied, 3.20282 seconds, 88.4 MB/s
+<span class="term_say"># 注意看，我是使用 myquota1 的帳號去進行 dd 指令的喔！不要惡搞啊！
+# 然後你可以發現出現一個 warning 的訊息喔！接下來看看報表。</span>
+
+[root@www ~]# <span class="term_command">repquota -auv </span>
+*** Report for user quotas on device /dev/hda3
+Block grace time: 14days; Inode grace time: 7days
+                        Block limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+myquota1  +-  276840  250000  300000 <span class="term_write">13days</span>      11     0     0
+<span class="term_say"># 這個指令則是利用 root 去查閱的！
+# 你可以發現 myquota1 的 grace 出現！並且開始倒數了！</span>
+
+<span class="term_hd"># 測試二：再建立另外一個大檔案，讓總容量超過 300M ！</span>
+[myquota1@www ~]# <span class="term_command">dd if=/dev/zero of=bigfile2 bs=1M count=300</span>
+hda3: write failed, user block limit reached.
+dd: writing `bigfile2': Disk quota exceeded <span class="term_note">&lt;==看！錯誤訊息不一樣了！</span>
+23+0 records in  <span class="term_note">&lt;==沒辦法寫入了！所以只記錄 23 筆</span>
+22+0 records out
+23683072 bytes (24 MB) copied, 0.260081 seconds, 91.1 MB/s
+
+[myquota1@www ~]# <span class="term_command">du -sk</span>
+300000  .  <span class="term_note">&lt;==果然是到極限了！</span>
+</pre></td></tr></table>
+
+		<p>此時 myquota1 可以開始處理他的檔案系統了！如果不處理的話，最後寬限時間會歸零，然後出現如下的畫面：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">repquota -au</span>
+*** Report for user quotas on device /dev/hda3
+Block grace time: 00:01; Inode grace time: 7days
+                        Block limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+myquota1  +-  300000  250000  300000   <span class="term_write">none</span>      11     0     0
+<span class="term_say"># 倒數整個歸零，所以 grace 的部分就會變成 none 啦！不繼續倒數</span>
+</pre></td></tr></table>
+
+		<p>其實倒數歸零也不會有什麼特殊的意外啦！別擔心！只是如果你的磁碟使用量介於 soft/hard 之間時，
+		當倒數歸零那麼 soft 的值會變成嚴格限制，此時你就沒有多餘的容量可以使用了。如何解決？
+		就登入系統去刪除檔案即可啦！沒有想像中那麼可怕啦！問題是，使用者通常傻傻分不清楚到底系統出了什麼問題，
+		所以我們可能需要寄送一些警告信 (email) 給用戶比較妥當。那麼如何處理呢？透過 warnquota 來處置即可。<br /><br /></p>
+
+		<a name="warnquota"></a>
+		<hr /><ul class="list1"><li class="text_import1">warnquota ：對超過限額者發出警告信</li></ul>
+
+		<p>warnquota字面上的意義就是 quota 的警告 (warn) 嘛！那麼這東西有什麼用呢？他<span
+		class="text_import2">可以依據 /etc/warnquota.conf 的設定，然後找出目前系統上面 quota 用量超過 soft 
+		(就是有 grace time 出現的那些傢伙) 的帳號，透過 email 的功能將警告信件發送到使用者的電子郵件信箱。</span>
+		warnquota 並不會自動執行，所以我們需要手動去執行他。單純執行『 warnquota 』之後，他會發送兩封信出去，
+		一封給 myquota1 一封給 root ！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">warnquota</span>
+<span class="term_say"># 完全不會出現任何訊息！沒有訊息就是『好訊息』！ ^_^</span>
+
+[root@www ~]# <span class="term_command">mail</span>
+ N329 root@www.vbird.tsai   Fri Mar  6 16:10  27/1007  "<span class="term_write">NOTE: ....</span>
+&amp; <span class="term_command">329</span>   <span class="term_note">&lt;==因為新信件在第 329 封之故</span>
+From root@www.vbird.tsai  Fri Mar  6 16:10:18 2009
+Date: Fri, 6 Mar 2009 16:10:17 +0800
+From: root &lt;root@www.vbird.tsai&gt;
+Reply-To: root@myhost.com
+Subject: <span class="term_write">NOTE: You are exceeding your allocated disk space limits
+To: myquota1@www.vbird.tsai
+Cc: root@www.vbird.tsai</span>   <span class="term_note">&lt;==注意這三行，分別是標題、收件者與副本 (CC)。</span>
+
+Your disk usage has exceeded the agreed limits on this server <span class="term_note">&lt;==問題說明</span>
+Please delete any unnecessary files on following filesystems:
+
+/dev/hda3  <span class="term_note">&lt;==底下這幾行為發生磁碟『爆表』的資訊啦！</span>
+                        Block limits               File limits
+Filesystem           used    soft    hard  grace    used  soft  hard  grace
+/dev/hda3      +-  300000  250000  300000 13days      12     0     0
+
+root@localhost  <span class="term_note">&lt;==這個是警告訊息發送者的『簽名資料』啦！</span>
+
+&amp; <span class="term_command">exit</span>  <span class="term_note">&lt;==離開 mail 程式！</span>
+</pre></td></tr></table>
+
+		<p>執行 warnquota 可能也不會產生任何訊息以及信件，因為只有當使用者的 quota 有超過 soft 時，
+		warnquota 才會發送警告信啦！那麼上表的內容中，包括標題、資訊內容說明、簽名檔等資料放在哪裡呢？
+		剛剛不是講過嗎？ /etc/warnquota 啦！因為上述的資料是英文，不好理解嗎？沒關係，你可以自己轉成中文喔！
+		所以你可以這樣處理的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/warnquota.conf</span>
+<span class="term_say"># 先找到底下這幾行的設定值：</span>
+SUBJECT   = NOTE: You are exceeding your allocated disk space limits <span class="term_note">&lt;==第10行</span>
+CC_TO     = "root@localhost"                                         <span class="term_note">&lt;==第11行</span>
+MESSAGE   = Your disk usage has exceeded the agreed limits\          <span class="term_note">&lt;==第21行</span>
+ on this server|Please delete any unnecessary files on following filesystems:|
+SIGNATURE = root@localhost                                           <span class="term_note">&lt;==第25行</span>
+
+<span class="term_say"># 可以將他改成如下的模樣啊！</span>
+<span class="term_write">SUBJECT   = 注意：你在本系統上擁有的檔案容量已經超過最大容許限額
+CC_TO     = "root@localhost"  <span class="term_note">&lt;==除非你要寄給其他人，否則這個項目可以不改</span>
+MESSAGE   = 你的磁碟容量已經超過本機的容許限額，|\
+  請在如下的檔案系統中，刪除不必要的檔案：|
+SIGNATURE = 你的系統管理員 (root@localhost)</span>
+<span class="term_say"># 在 MESSAGE 內的 | 代表斷行的意思，反斜線則代表連接下一行；</span>
+</pre></td></tr></table>
+
+		<p>如果你重複執行 warnquota ，那麼 myquota1 就會收到類似如下的信件內容：</p>
+
+<table class="term"><tr><td class="term"><pre>
+Subject: 注意：你在本系統上擁有的檔案容量已經超過最大容許限額
+To: myquota1@www.vbird.tsai
+Cc: root@www.vbird.tsai
+
+你的磁碟容量已經超過本機的容許限額，
+  請在如下的檔案系統中，刪除不必要的檔案：
+
+/dev/hda3
+
+Filesystem           used    soft    hard  grace    used  soft  hard  grace
+/dev/hda3      +-  300000  250000  300000   none      11     0     0
+
+你的系統管理員 (root@localhost)
+</pre></td></tr></table>
+
+		<p>不過這個方法並不適用在 /var/spool/mail 也爆表的 quota 控管中，因為如果使用者在這個 filesystem 
+		的容量已經爆表，那麼新的信件當然就收不下來啦！此時就只能等待使用者自己發現並跑來這裡刪除資料，
+		或者是請求 root 幫忙處理囉！知道了這玩意兒這麼好用，那麼我們怎麼讓系統自動的執行 warnquota 呢？
+		你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/cron.daily/warnquota</span>
+<span class="term_write">/usr/sbin/warnquota</span>
+<span class="term_say"># 你沒有看錯！只要這一行，且將執行檔以絕對路徑的方式寫入即可！</span>
+
+[root@www ~]# <span class="term_command">chmod 755 /etc/cron.daily/warnquota</span>
+</pre></td></tr></table>
+
+		<p>那麼未來每天早上 4:02am 時，這個檔案就會主動被執行，那麼系統就能夠主動的通知磁碟配額爆表的用戶囉！
+		您瞧瞧！這玩意兒是否很好用啊！至於為何要寫入上述的檔案呢？留待下一章<a 
+		href="/linux_basic/0430cron.php">工作排程</a>時我們再來加強介紹囉！<br /><br /></p>
+
+		<a name="setquota"></a>
+		<hr /><ul class="list1"><li class="text_import1">setquota ：直接於指令中設定 quota 限額</li></ul>
+
+		<p>如果你想要使用 script 的方法來建立大量的帳號，並且所有的帳號都在建立時就給予 quota ，那該如何是好？
+		其實有兩個方法可以考慮：</p>
+		<ul>
+		<li>先建立一個原始 quota 帳號，再以『 <a href="#edquota">edquota</a> -p old -u new 』寫入 script 中；</li>
+		<li>直接以 setquota 建立用戶的 quota 設定值。</li>
+		</ul>
+		<p>不同於 <a href="#edquota">edquota</a> 是呼叫 vi 來進行設定，setquota 直接由指令輸入所必須要的各項限制值。
+		他的語法有點像這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">setquota [-u|-g] 名稱 block(soft) block(hard) \</span>
+&gt;  <span class="term_command">inode(soft) inode(hard) 檔案系統</span>
+
+<span class="term_hd"># 觀察原始的 myquota5 限值，並給予 soft/hard 分別為 100000/200000</span>
+[root@www ~]# <span class="term_command">quota -uv myquota5</span>
+Disk quotas for user myquota5 (uid 714): 
+   Filesystem blocks  quota  limit  grace files  quota  limit  grace
+    /dev/hda3     80 <span class="term_write">250000 300000</span>           10      0      0
+
+[root@www ~]# <span class="term_command">setquota -u myquota5 100000 200000 0 0 /home</span>
+
+[root@www ~]# <span class="term_command">quota -uv myquota5</span>
+Disk quotas for user myquota5 (uid 714): 
+   Filesystem blocks  quota  limit  grace files  quota  limit  grace
+    /dev/hda3     80 <span class="term_write">100000 200000</span>           10      0      0
+<span class="term_say"># 看吧！真的有改變過來！這就是 quota 的簡單腳本設定語法！</span>
+</pre></td></tr></table><br />
+	</div>
+
+	<hr /><a name="quota_nochange"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">不更動既有系統的 quota 實例</span><br />
+	<div class="block2">
+		<p>想一想，如果你的主機原先沒有想到要設定成為郵件主機，所以並沒有規劃將郵件信箱所在的 /var/spool/mail/
+		目錄獨立成為一個 partition ，然後目前你的主機已經沒有辦法新增或分割出任何新的分割槽了。那我們知道 quota 
+		是針對整個 filesystem 進行設計的，因此，你是否就無法針對 mail 的使用量給予 quota 的限制呢？</p>
+
+		<p>此外，如果你想要讓使用者的郵件信箱與家目錄的總體磁碟使用量為固定，那又該如何是好？
+		由於 /home 及 /var/spool/mail 根本不可能是同一個 filesystem (除非是都不分割，使用根目錄，才有可能整合在一起)，
+		所以，該如何進行這樣的 quota 限制呢？</p>
+
+		<p>其實沒有那麼難啦！既然 quota 是針對整個 filesystem 來進行限制，假設你又已經有 /home 這個獨立的分割槽了，
+		那麼你只要：</p>
+		<ol>
+		<li>將 /var/spool/mail 這個目錄完整的移動到 /home 底下；</li>
+		<li>利用 ln -s /home/mail /var/spool/mail 來建立連結資料；</li>
+		<li>將 /home 進行 quota 限額設定</li>
+		</ol>
+
+		<p>只要這樣的一個小步驟，嘿嘿！您家主機的郵件就有一定的限額囉！當然囉！您也可以依據不同的使用者與群組來設定
+		quota 然後同樣的以上面的方式來進行 link 的動作！嘿嘿嘿！就有不同的限額針對不同的使用者提出囉！很方便吧！
+		^_^</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		朋友們需要注意的是，由於目前新的 distributions 大多有使用 SELinux 的機制，
+		因此你要進行如同上面的目錄搬移時，在許多情況下可能會有使用上的限制喔！或許你得要先暫時關閉 SELinux 才能測試，
+		也或許你得要自行修改 SELinux 的規則才行喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+</div>
+
+
+<hr /><a name="raid"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">軟體磁碟陣列 (Software RAID)</span><br />
+<div class="block1">
+	<p>在過去鳥哥還年輕的時代，我們能使用的硬碟容量都不大，幾十 GB 的容量就是大硬碟了！但是某些情況下，我們需要很大容量的儲存空間，
+	例如鳥哥在跑的空氣品質模式所輸出的資料檔案一個案例通常需要好幾 GB ，連續跑個幾個案例，磁碟容量就不夠用了。
+	此時我該如何是好？其實可以透過一種儲存機制，稱為磁碟陣列
+	(RAID) 的就是了。這種機制的功能是什麼？他有哪些等級？什麼是硬體、軟體磁碟陣列？Linux 支援什麼樣的軟體磁碟陣列？
+	底下就讓我們來談談！<br /><br /></p>
+
+	<hr /><a name="raid_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 RAID</span><br />
+	<div class="block2">
+		<p>磁碟陣列全名是『 Redundant Arrays of Inexpensive Disks, RAID 』，英翻中的意思是：容錯式廉價磁碟陣列。
+		RAID 可以透過一個技術(軟體或硬體)，將多個較小的磁碟整合成為一個較大的磁碟裝置；
+		而這個較大的磁碟功能可不止是儲存而已，他還具有資料保護的功能呢。整個 RAID 由於選擇的等級 (level)
+		不同，而使得整合後的磁碟具有不同的功能， 基本常見的 level 有這幾種(<a href="#ps1">註1</a>)：</p>
+
+		<a name="raid0"></a>
+		<ul class="list1"><li class="text_import1">RAID-0 (等量模式, stripe)：效能最佳</li></ul>
+
+		<p>這種模式如果使用相同型號與容量的磁碟來組成時，效果較佳。這種模式的 RAID 會將磁碟先切出等量的區塊 (舉例來說， 4KB)，
+		然後當一個檔案要寫入 RAID 時，該檔案會依據區塊的大小切割好，之後再依序放到各個磁碟裡面去。由於每個磁碟會交錯的存放資料，
+		因此當你的資料要寫入 RAID 時，資料會被等量的放置在各個磁碟上面。舉例來說，你有兩顆磁碟組成 RAID-0 ，
+		當你有 100MB 的資料要寫入時，每個磁碟會各被分配到 50MB 的儲存量。RAID-0 的示意圖如下所示：</p>
+
+		<center><img src="0420quota/raid0.gif" alt=" RAID-0 的磁碟寫入示意圖" 
+		title=" RAID-0 的磁碟寫入示意圖" border="0" /><br />
+		圖 2.1.1、 RAID-0 的磁碟寫入示意圖<br /></center>
+
+		<p>上圖的意思是，在組成 RAID-0 時，每顆磁碟 (Disk A 與 Disk B) 都會先被區隔成為小區塊 (chunk)。
+		當有資料要寫入 RAID 時，資料會先被切割成符合小區塊的大小，然後再依序一個一個的放置到不同的磁碟去。
+		由於資料已經先被切割並且依序放置到不同的磁碟上面，因此每顆磁碟所負責的資料量都降低了！照這樣的情況來看，
+		<span class="text_import2">越多顆磁碟組成的 RAID-0 效能會越好，因為每顆負責的資料量就更低了</span>！
+		這表示我的資料可以分散讓多顆磁碟來儲存，當然效能會變的更好啊！此外，磁碟總容量也變大了！
+		因為每顆磁碟的容量最終會加總成為 RAID-0 的總容量喔！</p>
+
+		<p>只是使用此等級你必須要自行負擔資料損毀的風險，由上圖我們知道檔案是被切割成為適合每顆磁碟分割區塊的大小，
+		然後再依序放置到各個磁碟中。想一想，如果某一顆磁碟損毀了，那麼檔案資料將缺一塊，此時這個檔案就損毀了。
+		由於每個檔案都是這樣存放的，因此<span class="text_import2"> RAID-0 只要有任何一顆磁碟損毀，在 RAID 
+		上面的所有資料都會遺失而無法讀取</span>。</p>
+
+		<p>另外，如果使用不同容量的磁碟來組成 RAID-0 時，由於資料是一直等量的依序放置到不同磁碟中，當小容量磁碟的區塊被用完了，
+		那麼所有的資料都將被寫入到最大的那顆磁碟去。舉例來說，我用 200G 與 500G 組成 RAID-0 ，
+		那麼最初的 400GB 資料可同時寫入兩顆磁碟 (各消耗 200G 的容量)，後來再加入的資料就只能寫入 500G 的那顆磁碟中了。
+		此時的效能就變差了，因為只剩下一顆可以存放資料嘛！</p>
+
+		<a name="raid1"></a>
+		<ul class="list1"><li class="text_import1">RAID-1 (映射模式, mirror)：完整備份</li></ul>
+
+		<p>這種模式也是需要相同的磁碟容量的，最好是一模一樣的磁碟啦！如果是不同容量的磁碟組成 RAID-1 
+		時，那麼總容量將以最小的那一顆磁碟為主！這種模式主要是『<span 
+		class="text_import2">讓同一份資料，完整的保存在兩顆磁碟上頭</span>』。舉例來說，如果我有一個 100MB 
+		的檔案，且我僅有兩顆磁碟組成 RAID-1 時， 那麼這兩顆磁碟將會同步寫入 100MB 到他們的儲存空間去。
+		因此，<span class="text_import2">整體 RAID 的容量幾乎少了 50%</span>。由於兩顆硬碟內容一模一樣，好像鏡子映照出來一樣，
+		所以我們也稱他為 mirror 模式囉～</p>
+
+		<center><img src="0420quota/raid1.gif" alt=" RAID-1 的磁碟寫入示意圖" 
+		title=" RAID-1 的磁碟寫入示意圖" border="0" /><br />
+		圖 2.1.2、 RAID-1 的磁碟寫入示意圖<br /></center>
+
+		<p>如上圖所示，一份資料傳送到 RAID-1 之後會被分為兩股，並分別寫入到各個磁碟裡頭去。
+		由於同一份資料會被分別寫入到其他不同磁碟，因此如果要寫入 100MB 時，資料傳送到 I/O 匯流排後會被複製多份到各個磁碟，
+		結果就是資料量感覺變大了！因此在大量寫入 RAID-1 的情況下，寫入的效能可能會變的非常差 (因為我們只有一個南橋啊！)。
+		好在如果你使用的是硬體 RAID (磁碟陣列卡) 時，磁碟陣列卡會主動的複製一份而不使用系統的 I/O 匯流排，效能方面則還可以。
+		如果使用軟體磁碟陣列，可能效能就不好了。</p>
+
+		<p>由於兩顆磁碟內的資料一模一樣，所以任何一顆硬碟損毀時，你的資料還是可以完整的保留下來的！
+		所以我們可以說， <span class="text_import2">RAID-1 最大的優點大概就在於資料的備份吧！不過由於磁碟容量有一半用在備份，
+		因此總容量會是全部磁碟容量的一半而已</span>。雖然 RAID-1 
+		的寫入效能不佳，不過讀取的效能則還可以啦！這是因為資料有兩份在不同的磁碟上面，如果多個 processes 
+		在讀取同一筆資料時， RAID 會自行取得最佳的讀取平衡。</p>
+
+		<a name="raid0_1"></a>
+		<ul class="list1"><li class="text_import1">RAID 0+1，RAID 1+0</li></ul>
+
+		<p>RAID-0 的效能佳但是資料不安全，RAID-1 的資料安全但是效能不佳，那麼能不能將這兩者整合起來設定 RAID 呢？
+		可以啊！那就是 RAID 0+1 或 RAID 1+0。所謂的 RAID 0+1 就是： (1)先讓兩顆磁碟組成 RAID 0，並且這樣的設定共有兩組；
+		(2)將這兩組 RAID 0 再組成一組 RAID 1。這就是 RAID 0+1 囉！反過來說，RAID 1+0 就是先組成 RAID-1 再組成 RAID-0 的意思。</p>
+
+		<center><img src="0420quota/raid0+1.gif" alt=" RAID-0+1 的磁碟寫入示意圖" 
+		title=" RAID-0+1 的磁碟寫入示意圖" border="0" /><br />
+		圖 2.1.3、 RAID-0+1 的磁碟寫入示意圖<br /></center>
+
+		<p>如上圖所示，Disk A + Disk B 組成第一組 RAID 0，Disk C + Disk D 組成第二組 RAID 0，
+		然後這兩組再整合成為一組 RAID 1。如果我有 100MB 的資料要寫入，則由於 RAID 1 的關係，
+		兩組 RAID 0 都會寫入 100MB，但由於 RAID 0 的關係，因此每顆磁碟僅會寫入 50MB 而已。
+		如此一來不論哪一組 RAID 0 的磁碟損毀，只要另外一組 RAID 0 還存在，那麼就能夠透過 RAID 1 的機制來回復資料。</p>
+
+		<p>由於具有 RAID 0 的優點，所以效能得以提升，由於具有 RAID 1 的優點，所以資料得以備份。
+		但是也由於 RAID 1 的缺點，所以總容量會少一半用來做為備份喔！</p>
+
+		<a name="raid5"></a>
+		<ul class="list1"><li class="text_import1">RAID 5：效能與資料備份的均衡考量</li></ul>
+
+		<p>RAID-5 至少需要三顆以上的磁碟才能夠組成這種類型的磁碟陣列。這種磁碟陣列的資料寫入有點類似 RAID-0 ，
+		不過每個循環的寫入過程中，在每顆磁碟還加入一個同位檢查資料 (Parity) ，這個資料會記錄其他磁碟的備份資料，
+		用於當有磁碟損毀時的救援。RAID-5 讀寫的情況有點像底下這樣：</p>
+
+		<center><img src="0420quota/raid5.gif" alt=" RAID-5 的磁碟寫入示意圖" 
+		title=" RAID-5 的磁碟寫入示意圖" border="0" /><br />
+		圖 2.1.4、 RAID-5 的磁碟寫入示意圖<br /></center>
+
+		<p>如上圖所示，每個循環寫入時，都會有部分的同位檢查碼 (parity) 被記錄起來，並且記錄的同位檢查碼每次都記錄在不同的磁碟，
+		因此，任何一個磁碟損毀時都能夠藉由其他磁碟的檢查碼來重建原本磁碟內的資料喔！不過需要注意的是，
+		由於有同位檢查碼，因此<span class="text_import2"> RAID 5 的總容量會是整體磁碟數量減一顆。以上圖為例，
+		原本的 3 顆磁碟只會剩下 (3-1)=2 顆磁碟的容量。而且當損毀的磁碟數量大於等於兩顆時，這整組 RAID 5 的資料就損毀了。
+		因為 RAID 5 預設僅能支援一顆磁碟的損毀情況</span>。</p>
+
+		<p>在讀寫效能的比較上，讀取的效能還不賴！與 RAID-0 有的比！不過寫的效能就不見得能夠增加很多！
+		這是因為要寫入 RAID 5 的資料還得要經過計算同位檢查碼 (parity) 的關係。由於加上這個計算的動作，
+		所以寫入的效能與系統的硬體關係較大！尤其當使用軟體磁碟陣列時，同位檢查碼是透過 CPU 去計算而非專職的磁碟陣列卡，
+		因此效能方面還需要評估。</p>
+
+		<p>另外，由於 RAID 5 僅能支援一顆磁碟的損毀，因此近來還有發展出另外一種等級，就是 RAID 6 ，這個 RAID 6 
+		則使用兩顆磁碟的容量作為 parity 的儲存，因此整體的磁碟容量就會少兩顆，但是允許出錯的磁碟數量就可以達到兩顆了！
+		也就是在 RAID 6 的情況下，同時兩顆磁碟損毀時，資料還是可以救回來！</p>
+
+		<a name="spare"></a>
+		<ul class="list1"><li class="text_import1">Spare Disk：預備磁碟的功能：</li></ul>
+
+		<p>當磁碟陣列的磁碟損毀時，就得要將壞掉的磁碟拔除，然後換一顆新的磁碟。換成新磁碟並且順利啟動磁碟陣列後，
+		磁碟陣列就會開始主動的重建 (rebuild) 原本壞掉的那顆磁碟資料到新的磁碟上！然後你磁碟陣列上面的資料就復原了！
+		這就是磁碟陣列的優點。不過，我們還是得要動手拔插硬碟，此時通常得要關機才能這麼做。</p>
+
+		<p>為了讓系統可以即時的在壞掉硬碟時主動的重建，因此就需要預備磁碟 (spare disk) 的輔助。
+		所謂的 spare disk 就是一顆或多顆沒有包含在原本磁碟陣列等級中的磁碟，這顆磁碟平時並不會被磁碟陣列所使用，
+		當磁碟陣列有任何磁碟損毀時，則這顆 spare disk 會被主動的拉進磁碟陣列中，並將壞掉的那顆硬碟移出磁碟陣列！
+		然後立即重建資料系統。如此你的系統則可以永保安康啊！若你的磁碟陣列有支援熱拔插那就更完美了！
+		直接將壞掉的那顆磁碟拔除換一顆新的，再將那顆新的設定成為 spare disk ，就完成了！</p>
+
+		<p>舉例來說，鳥哥之前所待的研究室有一個磁碟陣列可允許 16 顆磁碟的數量，不過我們只安裝了 10 顆磁碟作為 RAID 5。
+		每顆磁碟的容量為 250GB，我們用了一顆磁碟作為 spare disk ，並將其他的 9 顆設定為一個 RAID 5，
+		因此這個磁碟陣列的總容量為： (9-1)*250G=2000G。運作了一兩年後真的有一顆磁碟壞掉了，我們後來看燈號才發現！
+		不過對系統沒有影響呢！因為 spare disk 主動的加入支援，壞掉的那顆拔掉換顆新的，並重新設定成為 spare 後，
+		系統內的資料還是完整無缺的！嘿嘿！真不錯！</p>
+
+		<ul class="list1"><li class="text_import1">磁碟陣列的優點</li></ul>
+
+		<p>說的口沫橫飛，重點在哪裡呢？其實你的系統如果需要磁碟陣列的話，其實重點在於：</p>
+
+		<ul class="text_import2">
+		<li>資料安全與可靠性：指的並非資訊安全，而是當硬體 (指磁碟) 損毀時，資料是否還能夠安全的救援或使用之意；</li>
+		<li>讀寫效能：例如 RAID 0 可以加強讀寫效能，讓你的系統 I/O 部分得以改善；</li>
+		<li>容量：可以讓多顆磁碟組合起來，故單一檔案系統可以有相當大的容量。</li>
+		</ul>
+
+		<p>尤其資料的可靠性與完整性更是使用 RAID 的考量重點！畢竟硬體壞掉換掉就好了，軟體資料損毀那可不是鬧著玩的！
+		所以企業界為何需要大量的 RAID 來做為檔案系統的硬體基準，現在您有點瞭解了吧？</p>
+	</div>
+
+	<hr /><a name="raid_so_ha"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">software, hardware RAID</span><br />
+	<div class="block2">
+		<p>為何磁碟陣列又分為硬體與軟體呢？所謂的硬體磁碟陣列 (hardware RAID) 是透過磁碟陣列卡來達成陣列的目的。
+		磁碟陣列卡上面有一塊專門的晶片在處理 RAID 的任務，因此在效能方面會比較好。在很多任務 (例如 RAID 5 的同位檢查碼計算)
+		磁碟陣列並不會重複消耗原本系統的 I/O 匯流排，理論上效能會較佳。此外目前一般的中高階磁碟陣列卡都支援熱拔插，
+		亦即在不關機的情況下抽換損壞的磁碟，對於系統的復原與資料的可靠性方面非常的好用。</p>
+
+		<p>不過一塊好的磁碟陣列卡動不動就上萬元台幣，便宜的在主機板上面『附贈』的磁碟陣列功能可能又不支援某些高階功能，
+		例如低階主機板若有磁碟陣列晶片，通常僅支援到 RAID0 與 RAID1 ，鳥哥喜歡的 RAID 5 並沒有支援。
+		此外，作業系統也必須要擁有磁碟陣列卡的驅動程式，才能夠正確的捉到磁碟陣列所產生的磁碟機！</p>
+
+		<p>由於磁碟陣列有很多優秀的功能，然而硬體磁碟陣列卡偏偏又貴的很～因此就有發展出利用軟體來模擬磁碟陣列的功能，
+		這就是所謂的軟體磁碟陣列 (software RAID)。軟體磁碟陣列主要是透過軟體來模擬陣列的任務，
+		因此會損耗較多的系統資源，比如說 CPU 的運算與 I/O 匯流排的資源等。不過目前我們的個人電腦實在已經非常快速了，
+		因此以前的速度限制現在已經不存在！所以我們可以來玩一玩軟體磁碟陣列！</p>
+
+		<p>我們的 CentOS 提供的軟體磁碟陣列為 mdadm 這套軟體，這套軟體會<span class="text_import2">以 partition
+		或 disk 為磁碟的單位</span>，也就是說，你不需要兩顆以上的磁碟，只要有兩個以上的分割槽 (partition)
+		就能夠設計你的磁碟陣列了。此外， mdadm 支援剛剛我們前面提到的 RAID0/RAID1/RAID5/spare disk 等！
+		而且提供的管理機制還可以達到類似熱拔插的功能，可以線上 (檔案系統正常使用) 進行分割槽的抽換！
+		使用上也非常的方便呢！</p>
+
+		<p>另外你必須要知道的是，硬體磁碟陣列在 Linux 底下看起來就是一顆實際的大磁碟，因此硬體磁碟陣列的裝置檔名為
+		/dev/sd[a-p] ，因為使用到 SCSI 的模組之故。至於<span 
+		class="text_import2">軟體磁碟陣列則是系統模擬的，因此使用的裝置檔名是系統的裝置檔，
+		檔名為 /dev/md0, /dev/md1...</span>，兩者的裝置檔名並不相同！不要搞混了喔！因為很多朋友常常覺得奇怪，
+		怎麼他的 RAID 檔名跟我們這裡測試的軟體 RAID 檔名不同，所以這裡特別強調說明喔！</p>
+	</div>
+
+	<hr /><a name="raid_setup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">軟體磁碟陣列的設定</span><br />
+	<div class="block2">
+		<p>軟體磁碟陣列的設定很簡單呢！簡單到讓你很想笑喔！因為你只要使用一個指令即可！那就是 mdadm 這個指令。
+		這個指令在建立 RAID 的語法有點像這樣：</p>
+<a name="mdadm_create"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0</span>
+[root@www ~]# <span class="term_command">mdadm --create --auto=yes /dev/md[0-9] --raid-devices=N \</span>
+&gt; <span class="term_command">--level=[015] --spare-devices=N /dev/sdx /dev/hdx...</span>
+<span class="term_say">選項與參數：
+--create ：為建立 RAID 的選項；
+--auto=yes ：決定建立後面接的軟體磁碟陣列裝置，亦即 /dev/md0, /dev/md1...
+--raid-devices=N ：使用幾個磁碟 (partition) 作為磁碟陣列的裝置
+--spare-devices=N ：使用幾個磁碟作為備用 (spare) 裝置
+--level=[015] ：設定這組磁碟陣列的等級。支援很多，不過建議只要用 0, 1, 5 即可
+--detail ：後面所接的那個磁碟陣列裝置的詳細資訊</span>
+</pre></td></tr></table>
+
+		<p>上面的語法中，最後面會接許多的裝置檔名，這些裝置檔名可以是整顆磁碟，例如 /dev/sdb ，
+		也可以是分割槽，例如 /dev/sdb1 之類。不過，這些裝置檔名的總數必須要等於 --raid-devices 
+		與 --spare-devices 的個數總和才行！鳥哥利用我的測試機來建置一個 RAID 5 的軟體磁碟陣列給您瞧瞧！
+		首先，將系統裡面過去練習過而目前用不到的分割槽通通刪除掉：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+Disk /dev/hda: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1          13      104391   83  Linux
+/dev/hda2              14        1288    10241437+  83  Linux
+/dev/hda3            1289        1925     5116702+  83  Linux
+/dev/hda4            1926        5005    24740100    5  Extended
+/dev/hda5            1926        2052     1020096   82  Linux swap / Solaris
+/dev/hda6            2053        2302     2008093+  83  Linux
+/dev/hda7            2303        2334      257008+  82  Linux swap / Solaris
+/dev/hda8            2335        2353      152586   83  Linux
+/dev/hda9            2354        2366      104391   83  Linux
+
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/hda2              9920624   3858800   5549756  42% /
+/dev/hda1               101086     21408     74459  23% /boot
+tmpfs                   371332         0    371332   0% /dev/shm
+/dev/hda3              4956316   1056996   3643488  23% /home
+<span class="term_say"># 從上面可以發現，我的 /dev/hda6~/dev/hda9 沒有用到！將他刪除看看！</span>
+
+[root@www ~]# <span class="term_command">fdisk /dev/hda</span>
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-9): <span class="term_command">9</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-8): <span class="term_command">8</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-7): <span class="term_command">7</span>
+
+Command (m for help): <span class="term_command">d</span>
+Partition number (1-6): <span class="term_command">6</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hda: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1          13      104391   83  Linux
+/dev/hda2              14        1288    10241437+  83  Linux
+/dev/hda3            1289        1925     5116702+  83  Linux
+/dev/hda4            1926        5005    24740100    5  Extended
+/dev/hda5            1926        2052     1020096   82  Linux swap / Solaris
+
+Command (m for help): <span class="term_command">w</span>
+
+[root@www ~]# <span class="term_command">partprobe</span>
+<span class="term_say"># 這個動作很重要！還記得吧！將核心的 partition table 更新！</span>
+</pre></td></tr></table>
+
+		<p>底下是鳥哥希望做成的 RAID 5 環境：</p>
+		<ul>
+		<li>利用 4 個 partition 組成 RAID 5；</li>
+		<li>每個 partition 約為 1GB 大小，需確定每個 partition 一樣大較佳；</li>
+		<li>利用 1 個 partition 設定為 spare disk</li>
+		<li>這個 spare disk 的大小與其他 RAID 所需 partition 一樣大！</li>
+		<li>將此 RAID 5 裝置掛載到 /mnt/raid 目錄下</li>
+		</ul>
+
+		<p>最終我需要 5 個 1GB 的 partition 。由於鳥哥的系統僅有一顆磁碟，這顆磁碟剩餘容量約 20GB 是夠用的，
+		分割槽代號僅使用到 5 號，所以要製作成 RAID 5 應該是不成問題！接下來就是連續的建置流程囉！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">建置所需的磁碟裝置</li></ul>
+
+		<p>如前所述，我需要 5 個 1GB 的分割槽，請利用 fdisk 來建置吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk /dev/hda</span>
+Command (m for help): <span class="term_command">n</span>
+First cylinder (2053-5005, default 2053): <span class="term_note">&lt;==直接按下 [enter]</span>
+Using default value 2053
+Last cylinder or +size or +sizeM or +sizeK (2053-5005, default 5005): <span class="term_command">+1000M</span>
+<span class="term_say"># 上述的動作請作五次！</span>
+
+Command (m for help): <span class="term_command">p</span>
+
+Disk /dev/hda: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1          13      104391   83  Linux
+/dev/hda2              14        1288    10241437+  83  Linux
+/dev/hda3            1289        1925     5116702+  83  Linux
+/dev/hda4            1926        5005    24740100    5  Extended
+/dev/hda5            1926        2052     1020096   82  Linux swap / Solaris
+<span class="term_write">/dev/hda6            2053        2175      987966   83  Linux
+/dev/hda7            2176        2298      987966   83  Linux
+/dev/hda8            2299        2421      987966   83  Linux
+/dev/hda9            2422        2544      987966   83  Linux
+/dev/hda10           2545        2667      987966   83  Linux</span>
+<span class="term_say"># 上面的 6~10 號，就是我們需要的 partition 囉！</span>
+
+Command (m for help): <span class="term_command">w</span>
+
+[root@www ~]# <span class="term_command">partprobe</span>
+</pre></td></tr></table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">以 mdadm 建置 RAID</li></ul>
+
+		<p>接下來就簡單啦！透過 mdadm 來建立磁碟陣列先！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mdadm --create --auto=yes /dev/md0 --level=5 \</span>
+&gt; <span class="term_command">--raid-devices=4 --spare-devices=1 /dev/hda{6,7,8,9,10}</span>
+<span class="term_say"># 詳細的參數說明請回去前面看看囉！這裡我透過 {} 將重複的項目簡化！</span>
+
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0</span>
+/dev/md0:                                        <span class="term_note">&lt;==RAID 裝置檔名</span>
+        Version : 00.90.03
+  Creation Time : Tue Mar 10 17:47:51 2009       <span class="term_note">&lt;==RAID 被建立的時間</span>
+     Raid Level : raid5                          <span class="term_note">&lt;==RAID 等級為 RAID 5</span>
+     Array Size : 2963520 (2.83 GiB 3.03 GB)     <span class="term_note">&lt;==此 RAID 的可用磁碟容量</span>
+  Used Dev Size : 987840 (964.85 MiB 1011.55 MB) <span class="term_note">&lt;==每個裝置的可用容量</span>
+   Raid Devices : 4                              <span class="term_note">&lt;==用作 RAID 的裝置數量</span>
+  Total Devices : 5                              <span class="term_note">&lt;==全部的裝置數量</span>
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Mar 10 17:52:23 2009
+          State : clean
+ Active Devices : 4                              <span class="term_note">&lt;==啟動的(active)裝置數量</span>
+Working Devices : 5                              <span class="term_note">&lt;==可動作的裝置數量</span>
+ Failed Devices : 0                              <span class="term_note">&lt;==出現錯誤的裝置數量</span>
+  Spare Devices : 1                              <span class="term_note">&lt;==預備磁碟的數量</span>
+
+         Layout : left-symmetric
+     Chunk Size : 64K      <span class="term_note">&lt;==就是<a href="#raid5">圖2.1.4</a>內的小區塊</span>
+
+           UUID : 7c60c049:57d60814:bd9a77f1:57e49c5b <span class="term_note">&lt;==此裝置(RAID)識別碼</span>
+         Events : 0.2
+
+    Number   Major   Minor   <span class="term_write">RaidDevice State</span>
+       0       3        6        0      active sync   /dev/hda6
+       1       3        7        1      active sync   /dev/hda7
+       2       3        8        2      active sync   /dev/hda8
+       3       3        9        3      active sync   /dev/hda9
+
+       4       3       10        -      spare   /dev/hda10
+<span class="term_say"># 最後五行就是這五個裝置目前的情況，包括四個 active sync 一個 spare ！
+# 至於 RaidDevice  指的則是此 RAID 內的磁碟順序</span>
+</pre></td></tr></table>
+
+		<p>由於磁碟陣列的建置需要一些時間，所以你最好等待數分鐘後再使用『 mdadm --detail /dev/md0 』去查閱你的磁碟陣列詳細資訊！
+		否則有可能看到某些磁碟正在『spare rebuilding』之類的建置字樣！透過上面的指令，
+		你就能夠建立一個 RAID5 且含有一顆 spare disk 的磁碟陣列囉！非常簡單吧！
+		除了指令之外，你也可以查閱如下的檔案來看看系統軟體磁碟陣列的情況：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cat /proc/mdstat</span>
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 hda9[3] hda10[4](S) hda8[2] hda7[1] hda6[0]    <span class="term_note">&lt;==第一行</span>
+      2963520 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU] <span class="term_note">&lt;==第二行</span>
+
+unused devices: &lt;none&gt;
+</pre></td></tr></table>
+
+		<p>上述的資料比較重要的在特別指出的第一行與第二行部分(<a href="#ps2">註2</a>)：</p>
+		<ul>
+		<li>第一行部分：指出 md0 為 raid5 ，且使用了 hda9, hda8, hda7, hda6 等四顆磁碟裝置。每個裝置後面的中括號 []
+			內的數字為此磁碟在 RAID 中的順序 (RaidDevice)；至於 hda10 後面的 [S] 則代表 hda10 
+			為 spare 之意。<br /><br /></li>
+		<li>第二行：此磁碟陣列擁有 2963520 個block(每個 block 單位為 1K)，所以總容量約為 3GB，
+			使用 RAID 5 等級，寫入磁碟的小區塊 (chunk) 大小為 64K，使用 algorithm 2 磁碟陣列演算法。 [m/n]
+			代表此陣列需要 m 個裝置，且 n 個裝置正常運作。因此本 md0 需要 4 個裝置且這 4 個裝置均正常運作。
+			後面的 [UUUU] 代表的是四個所需的裝置 (就是 [m/n] 裡面的 m) 的啟動情況，U 代表正常運作，若為 _ 則代表不正常。</li>
+		</ul>
+
+		<p>這兩種方法都可以知道目前的磁碟陣列狀態啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">格式化與掛載使用 RAID</li></ul>
+
+		<p>接下來就是開始使用格式化工具啦！這部分就簡單到爆！不多說了，直接進行吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /dev/md0</span>
+<span class="term_say"># 有趣吧！是 /dev/md0 做為裝置被格式化呢！</span>
+
+[root@www ~]# <span class="term_command">mkdir /mnt/raid</span>
+[root@www ~]# <span class="term_command">mount /dev/md0 /mnt/raid</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem     1K-blocks      Used Available Use% Mounted on
+/dev/hda2        9920624   3858820   5549736  42% /
+/dev/hda1         101086     21408     74459  23% /boot
+tmpfs             371332         0    371332   0% /dev/shm
+/dev/hda3        4956316   1056996   3643488  23% /home
+<span class="term_write">/dev/md0         2916920     69952   2698792   3% /mnt/raid</span>
+<span class="term_say"># 看吧！多了一個 /dev/md0 的裝置，而且真的可以讓你使用呢！還不賴！</span>
+</pre></td></tr></table><br />
+	</div>
+
+	<hr /><a name="raid_rescue"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">模擬 RAID 錯誤的救援模式</span><br />
+	<div class="block2">
+		<p>俗話說『天有不測風雲、人有旦夕禍福』，誰也不知道你的磁碟陣列內的裝置啥時會出差錯，因此，
+		瞭解一下軟體磁碟陣列的救援還是必須的！底下我們就來玩一玩救援的機制吧！首先來瞭解一下 mdadm 
+		這方面的語法：</p>
+
+<a name="mdadm_manage"></a>
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mdadm --manage /dev/md[0-9] [--add 裝置] [--remove 裝置] \</span>
+&gt; <span class="term_command">[--fail 裝置] </span>
+<span class="term_say">選項與參數：
+--add ：會將後面的裝置加入到這個 md 中！
+--remove ：會將後面的裝置由這個 md 中移除
+--fail ：會將後面的裝置設定成為出錯的狀態</span>
+</pre></td></tr></table><br />
+
+		<hr /><ul class="list1"><li class="text_import1">設定磁碟為錯誤 (fault)</li></ul>
+
+		<p>首先，我們來處理一下，該如何讓一個磁碟變成錯誤，然後讓 spare disk 自動的開始重建系統呢？</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 0. 先複製一些東西到 /mnt/raid 去，假設這個 RAID 已經在使用了</span>
+[root@www ~]# <span class="term_command">cp -a /etc /var/log /mnt/raid</span>
+[root@www ~]# <span class="term_command">df /mnt/raid ; du -sm /mnt/raid/*</span>
+Filesystem   1K-blocks      Used Available Use% Mounted on
+/dev/md0       2916920    188464   2580280   7% /mnt/raid
+118     /mnt/raid/etc <span class="term_note">&lt;==看吧！確實有資料在裡面喔！</span>
+8       /mnt/raid/log
+1       /mnt/raid/lost+found
+
+<span class="term_hd"># 1. 假設 /dev/hda8 這個裝置出錯了！實際模擬的方式：</span>
+[root@www ~]# <span class="term_command">mdadm --manage /dev/md0 --fail /dev/hda8</span>
+mdadm: set /dev/hda8 faulty in /dev/md0
+
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0</span>
+<span class="term_say">....(前面省略)....</span>
+          State : clean, degraded, recovering
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 1  <span class="term_note">&lt;==出錯的磁碟有一個！</span>
+  Spare Devices : 1
+<span class="term_say">....(中間省略)....</span>
+    Number   Major   Minor   RaidDevice State
+       0       3        6        0      active sync   /dev/hda6
+       1       3        7        1      active sync   /dev/hda7
+       4       3       10        2      <span class="term_write">spare rebuilding   /dev/hda10</span>
+       3       3        9        3      active sync   /dev/hda9
+
+       5       3        8        -      <span class="term_write">faulty spare   /dev/hda8</span>
+<span class="term_say"># 看到沒！這的動作要快做才會看到！ /dev/hda10 啟動了而 /dev/hda8 死掉了</span>
+
+[root@www ~]# <span class="term_command">cat /proc/mdstat</span>
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 hda9[3] hda10[4] <span class="term_write">hda8[5](F)</span> hda7[1] hda6[0]
+      2963520 blocks level 5, 64k chunk, algorithm 2 <span class="term_write">[4/3] [UU_U]</span>
+      [&gt;.......]  recovery =  0.8% (9088/987840) finish=14.3min speed=1136K/sec
+</pre></td></tr></table>
+
+		<p>上面的畫面你得要快速的連續輸入那些 mdadm 的指令才看的到！因為你的 RAID 5 正在重建系統！
+		若你等待一段時間再輸入後面的觀察指令，則會看到如下的畫面了：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 2. 已經藉由 spare disk 重建完畢的 RAID 5 情況</span>
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0</span>
+<span class="term_say">....(前面省略)....</span>
+    Number   Major   Minor   RaidDevice State
+       0       3        6        0      active sync   /dev/hda6
+       1       3        7        1      active sync   /dev/hda7
+       2       3       10        2      active sync   /dev/hda10
+       3       3        9        3      active sync   /dev/hda9
+
+       4       3        8        -      faulty spare   /dev/hda8
+
+[root@www ~]# <span class="term_command">cat /proc/mdstat</span>
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 hda9[3] hda10[2] hda8[4](F) hda7[1] hda6[0]
+      2963520 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+</pre></td></tr></table>
+
+		<p>看吧！又恢復正常了！真好！我們的 /mnt/raid 檔案系統是完整的！並不需要卸載！很棒吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">將出錯的磁碟移除並加入新磁碟</li></ul>
+
+		<p>首先，我們再建立一個新的分割槽，這個分割槽要與其他分割槽一樣大才好！然後再利用 mdadm
+		移除錯誤的並加入新的！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 3. 建立新的分割槽</span>
+[root@www ~]# <span class="term_command">fdisk /dev/hda</span>
+Command (m for help): <span class="term_command">n</span>
+First cylinder (2668-5005, default 2668): <span class="term_note">&lt;==這裡按 [enter]</span>
+Using default value 2668
+Last cylinder or +size or +sizeM or +sizeK (2668-5005, default 5005): <span class="term_command">+1000M</span>
+
+Command (m for help): <span class="term_command">w</span>
+
+[root@www ~]# <span class="term_command">partprobe</span>
+<span class="term_say"># 此時系統會多一個 /dev/hda11 的分割槽喔！</span>
+
+<span class="term_hd"># 4. 加入新的拔除有問題的磁碟</span>
+[root@www ~]# <span class="term_command">mdadm --manage /dev/md0 --add /dev/hda11 --remove /dev/hda8</span>
+mdadm: added /dev/hda11
+mdadm: hot removed /dev/hda8
+
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0</span>
+<span class="term_say">....(前面省略)....</span>
+       0       3        6        0      active sync   /dev/hda6
+       1       3        7        1      active sync   /dev/hda7
+       2       3       10        2      active sync   /dev/hda10
+       3       3        9        3      active sync   /dev/hda9
+
+<span class="term_write">       4       3       11        -      spare   /dev/hda11</span>
+</pre></td></tr></table>
+
+		<p>嘿嘿！你的磁碟陣列內的資料不但一直存在，而且你可以一直順利的運作 /mnt/raid 內的資料，即使 /dev/hda8 
+		損毀了！然後透過管理的功能就能夠加入新磁碟且拔除壞掉的磁碟！注意，這一切都是在上線 (on-line) 的情況下進行！
+		所以，您說這樣的咚咚好不好用啊！ ^_^</p>
+	</div>
+
+	<hr /><a name="raid_auto"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">開機自動啟動 RAID 並自動掛載</span><br />
+	<div class="block2">
+		<p>新的 distribution 大多會自己搜尋 /dev/md[0-9] 然後在開機的時候給予設定好所需要的功能。不過鳥哥還是建議你，
+		修改一下設定檔吧！ ^_^。software RAID 也是有設定檔的，這個設定檔在 /etc/mdadm.conf ！這個設定檔內容很簡單，
+		你只要知道 /dev/md0 的 UUID 就能夠設定這個檔案啦！這裡鳥哥僅介紹他最簡單的語法：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mdadm --detail /dev/md0 | grep -i uuid</span>
+        UUID : 7c60c049:57d60814:bd9a77f1:57e49c5b
+<span class="term_say"># 後面那一串資料，就是這個裝置向系統註冊的 UUID 識別碼！</span>
+
+<span class="term_hd"># 開始設定 mdadm.conf</span>
+[root@www ~]# <span class="term_command">vi /etc/mdadm.conf</span>
+<span class="term_write">ARRAY /dev/md0 UUID=7c60c049:57d60814:bd9a77f1:57e49c5b</span>
+<span class="term_say">#     RAID裝置      識別碼內容</span>
+
+<span class="term_hd"># 開始設定開機自動掛載並測試</span>
+[root@www ~]# <span class="term_command">vi /etc/fstab</span>
+<span class="term_write">/dev/md0    /mnt/raid    ext3    defaults     1 2</span>
+
+[root@www ~]# <span class="term_command">umount /dev/md0; mount -a</span>
+[root@www ~]# <span class="term_command">df /mnt/raid</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/md0               2916920    188464   2580280   7% /mnt/raid
+<span class="term_say"># 你得確定可以順利掛載，並且沒有發生任何錯誤！</span>
+</pre></td></tr></table>
+
+		<p>如果到這裡都沒有出現任何問題！接下來就請 reboot 你的系統並等待看看能否順利的啟動吧！ ^_^</p>
+	</div>
+
+	<hr /><a name="raid_stop"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">關閉軟體 RAID(重要！)</span><br />
+	<div class="block2">
+		<p>除非你未來就是要使用這顆 software RAID (/dev/md0)，否則你勢必要跟鳥哥一樣，將這個 /dev/md0 關閉！
+		因為他畢竟是我們在這個測試機上面的練習裝置啊！為什麼要關掉他呢？因為這個 /dev/md0 其實還是使用到我們系統的磁碟分割槽，
+		在鳥哥的例子裡面就是 /dev/hda{6,7,8,9,10,11}，如果你只是將 /dev/md0 卸載，然後忘記將 RAID 關閉，
+		結果就是....未來你在重新分割 /dev/hdaX 時可能會出現一些莫名的錯誤狀況啦！所以才需要關閉 software RAID 的步驟！
+		那如何關閉呢？也是簡單到爆炸！(請注意，確認你的 /dev/md0 確實不要用且要關閉了才進行底下的玩意兒)</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先卸載且刪除設定檔內與這個 /dev/md0 有關的設定：</span>
+[root@www ~]# <span class="term_command">umount /dev/md0</span>
+[root@www ~]# <span class="term_command">vi /etc/fstab</span>
+<span style="text-decoration: line-through">/dev/md0    /mnt/raid     ext3    defaults      1 2</span>
+<span class="term_say"># 將這一行刪除掉！或者是註解掉也可以！</span>
+
+<span class="term_hd"># 2. 直接關閉 /dev/md0 的方法！</span>
+[root@www ~]# <span class="term_command">mdadm --stop /dev/md0</span>
+mdadm: stopped /dev/md0  <span class="term_note">&lt;==不囉唆！這樣就關閉了！</span>
+
+[root@www ~]# <span class="term_command">cat /proc/mdstat</span>
+Personalities : [raid6] [raid5] [raid4]
+unused devices: &lt;none&gt;  <span class="term_note">&lt;==看吧！確實不存在任何陣列裝置！</span>
+
+[root@www ~]# <span class="term_command">vi /etc/mdadm.conf</span>
+<span style="text-decoration: line-through">ARRAY /dev/md0 UUID=7c60c049:57d60814:bd9a77f1:57e49c5b</span>
+<span class="term_say"># 一樣啦！刪除他或是註解他！</span>
+</pre></td></tr></table>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在這個練習中，鳥哥使用同一顆磁碟進行軟體 RAID 的實驗。不過朋友們要注意的是，如果真的要實作軟體磁碟陣列，
+		最好是由多顆不同的磁碟來組成較佳！因為這樣才能夠使用到不同磁碟的讀寫，效能才會好！
+		而資料分配在不同的磁碟，當某顆磁碟損毀時資料才能夠藉由其他磁碟挽救回來！這點得特別留意呢！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+</div>
+
+
+<hr /><a name="lvm"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">邏輯捲軸管理員 (Logical Volume Manager)</span><br />
+<div class="block1">
+	<p>想像一個情況，你在當初規劃主機的時候將 /home 只給他 50G ，等到使用者眾多之後導致這個 filesystem 不夠大，
+	此時你能怎麼作？多數的朋友都是這樣：再加一顆新硬碟，然後重新分割、格式化，將 /home 的資料完整的複製過來，
+	然後將原本的 partition 卸載重新掛載新的 partition 。啊！好忙碌啊！若是第二次分割卻給的容量太多！導致很多磁碟容量被浪費了！
+	你想要將這個 partition 縮小時，又該如何作？將上述的流程再搞一遍！唉～煩死了，尤其複製很花時間ㄟ～有沒有更簡單的方法呢？
+	有的！那就是我們這個小節要介紹的 LVM 這玩意兒！</p>
+
+	<p>LVM 的重點在於『<span class="text_import2">可以彈性的調整 filesystem 的容量！</span>』而並非在於效能與資料保全上面。
+	需要檔案的讀寫效能或者是資料的可靠性，請參考前面的 RAID 小節。
+	<span class="text_import2">LVM 可以整合多個實體 partition 在一起，
+	讓這些 partitions 看起來就像是一個磁碟一樣！而且，還可以在未來新增或移除其他的實體 partition
+	到這個 LVM 管理的磁碟當中。</span> 如此一來，整個磁碟空間的使用上，實在是相當的具有彈性啊！
+	既然 LVM 這麼好用，那就讓我們來瞧瞧這玩意吧！<br /><br /></p>
+
+	<hr /><a name="lvm_whatis"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是 LVM： PV, PE, VG, LV 的意義</span><br />
+	<div class="block2">
+		<p>LVM 的全名是 Logical Volume Manager，中文可以翻譯作邏輯捲軸管理員。之所以稱為『捲軸』可能是因為可以將 
+		filesystem 像捲軸一樣伸長或縮短之故吧！LVM 的作法是將幾個實體的 partitions (或 disk) 
+		透過軟體組合成為一塊看起來是獨立的大磁碟 (VG) ，然後將這塊大磁碟再經過分割成為可使用分割槽 (LV)，
+		最終就能夠掛載使用了。但是為什麼這樣的系統可以進行 filesystem 的擴充或縮小呢？其實與一個稱為 PE 的項目有關！
+		底下我們就得要針對這幾個項目來好好聊聊！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">Physical Volume, PV, 實體捲軸</li></ul>
+
+		<p>我們實際的 partition 需要調整系統識別碼 (system ID) 成為 8e (LVM 的識別碼)，然後再經過
+		pvcreate 的指令將他轉成 LVM 最底層的實體捲軸 (PV) ，之後才能夠將這些 PV 加以利用！
+		調整 system ID 的方是就是透過 <a href="/linux_basic/0230filesystem.php#fdisk">fdisk</a> 啦！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">Volume Group, VG, 捲軸群組</li></ul>
+
+		<p>所謂的 LVM 大磁碟就是將許多 PV 整合成這個 VG 的東西就是啦！所以 VG 就是 LVM 組合起來的大磁碟！這麼想就好了。
+		那麼這個大磁碟最大可以到多少容量呢？這與底下要說明的 PE 有關喔～因為每個 VG 最多僅能包含 65534 個 PE 而已。
+		如果使用 LVM 預設的參數，則一個 VG 最大可達 256GB 的容量啊！(參考底下的 PE 說明)<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">Physical Extend, PE, 實體延伸區塊</li></ul>
+
+		<p>LVM 預設使用 4MB 的 PE 區塊，而 LVM 的 VG 最多僅能含有 65534 個 PE ，因此預設的 LVM VG 會有 4M*65534/(1024M/G)=256G。
+		這個 PE 很有趣喔！他是整個 LVM 最小的儲存區塊，也就是說，其實我們的檔案資料都是藉由寫入 PE 來處理的。
+		簡單的說，<span class="text_import2">這個 PE 就有點像檔案系統裡面的 block 大小啦</span>。
+		這樣說應該就比較好理解了吧？所以調整 PE 會影響到 VG 的最大容量喔！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">Logical Volume, LV, 邏輯捲軸</li></ul>
+
+		<p>最終的 VG 還會被切成 LV，這個 LV 就是最後可以被格式化使用的類似分割槽的咚咚了！那麼 LV 是否可以隨意指定大小呢？
+		當然不可以！既然 PE 是整個 LVM 的最小儲存單位，那麼 LV 的大小就與在此 LV 內的 PE 總數有關。
+		為了方便使用者利用 LVM 來管理其系統，因此 LV 的裝置檔名通常指定為『<span class="text_import2">
+		/dev/vgname/lvname</span> 』的樣式！</p>
+
+		<p>此外，我們剛剛有談到 LVM 可彈性的變更 filesystem 的容量，那是如何辦到的？其實他就是透過『交換 PE 』來進行資料轉換，
+		將原本 LV 內的 PE 移轉到其他裝置中以降低 LV 容量，或將其他裝置的 PE 加到此 LV 中以加大容量！
+		VG、LV 與 PE 的關係有點像下圖：</p>
+
+		<center><img src="0420quota/pe_vg.gif" alt="PE 與 VG 的相關性圖示" 
+		title="PE 與 VG 的相關性圖示" border="0" /><br />
+		圖 3.1.1、PE 與 VG 的相關性圖示<br /></center>
+
+		<p>如上圖所示，VG 內的 PE 會分給虛線部分的 LV，如果未來這個 VG 要擴充的話，加上其他的 PV 即可。
+		而最重要的 LV 如果要擴充的話，也是透過加入 VG 內沒有使用到的 PE 來擴充的！<br /><br /></p>
+
+		<ul class="list1"><li class="text_import1">實作流程</li></ul>
+
+		<p>透過 PV, VG, LV 的規劃之後，再利用 <a href="/linux_basic/0230filesystem.php#mkfs">mkfs</a>
+		就可以將你的 LV 格式化成為可以利用的檔案系統了！而且這個檔案系統的容量在未來還能夠進行擴充或減少，
+		而且裡面的資料還不會被影響！實在是很『福氣啦！』那實作方面要如何進行呢？很簡單呢！
+		整個流程由基礎到最終的結果可以這樣看：</p>
+
+		<center><img src="0420quota/lvm.gif" alt="LVM 各元件的實現流程圖示" 
+		title="LVM 各元件的實現流程圖示" border="0" /><br />
+		圖 3.1.2、 LVM 各元件的實現流程圖示<br /></center>
+
+		<p>如此一來，我們就可以利用 LV 這個玩意兒來進行系統的掛載了。不過，你應該要覺得奇怪的是，
+		<span class="text_import2">那麼我的資料寫入這個 LV 時，到底他是怎麼寫入硬碟當中的？</span>
+		呵呵！好問題～其實，依據寫入機制的不同，而有兩種方式：</p>
+
+		<ul>
+		<li>線性模式 (linear)：假如我將 /dev/hda1, /dev/hdb1 這兩個 partition 加入到 VG 當中，並且整個 VG 
+			只有一個 LV 時，那麼所謂的線性模式就是：當 /dev/hda1 的容量用完之後，/dev/hdb1 的硬碟才會被使用到，
+			這也是我們所建議的模式。<br /><br /></li>
+
+		<li>交錯模式 (triped)：那什麼是交錯模式？很簡單啊，就是我將一筆資料拆成兩部分，分別寫入 /dev/hda1 與 /dev/hdb1 
+		的意思，感覺上有點像 RAID 0 啦！如此一來，一份資料用兩顆硬碟來寫入，理論上，讀寫的效能會比較好。</li>
+		</ul>
+
+		<p>基本上，<span class="text_import2">LVM 最主要的用處是在實現一個可以彈性調整容量的檔案系統上，
+		而不是在建立一個效能為主的磁碟上</span>，所以，我們應該利用的是 LVM 可以彈性管理整個 partition 
+		大小的用途上，而不是著眼在效能上的。因此， LVM 預設的讀寫模式是線性模式啦！
+		如果你使用 triped 模式，要注意，當任何一個 partition 『歸天』時，所有的資料都會『損毀』的！
+		所以啦，不是很適合使用這種模式啦！如果要強調效能與備份，那麼就直接使用 RAID 即可，
+		不需要用到 LVM 啊！</p>
+	</div>
+
+	<hr /><a name="lvm_flow"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">LVM 實作流程</span><br />
+	<div class="block2">
+		<p>LVM 必需要核心有支援且需要安裝 lvm2 這個軟體，好佳在的是， CentOS 與其他較新的 distributions 
+		已經預設將 lvm 的支援與軟體都安裝妥當了！所以你不需要擔心這方面的問題！用就對了！</p>
+
+		<p>鳥哥使用的測試機又要出動了喔！剛剛我們才練習過 RAID，必須要將一堆目前沒有用到的分割槽先殺掉，
+		然後再重建新的分割槽。並且由於鳥哥僅有一個 40GB 的磁碟，所以底下的練習都僅針對同一顆磁碟來作的。
+		我的要求有點像這樣：</p>
+
+		<ul>
+		<li>先分割出 4 個 partition ，每個 partition 的容量均為 1.5GB 左右，且 system ID 需要為 8e；</li>
+		<li>全部的 partition 整合成為一個 VG，VG 名稱設定為 vbirdvg；且 PE 的大小為 16MB；</li>
+		<li>全部的 VG 容量都丟給 LV ，LV 的名稱設定為 vbirdlv；</li>
+		<li>最終這個 LV 格式化為 ext3 的檔案系統，且掛載在 /mnt/lvm 中</li>
+		</ul>
+
+		<p>鳥哥就不仔細的介紹實體分割了，請您自行參考<a href="/linux_basic/0230filesystem.php#fdisk">第八章的 fdisk</a>
+		來達成底下的範例：(注意：修改系統識別碼請使用 t 這個 fdisk 內的指令來處理即可)</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk /dev/hda</span>  <span class="term_note">&lt;==其他流程請自行參考第八章處理</span>
+[root@www ~]# <span class="term_command">partprobe     </span>  <span class="term_note">&lt;==別忘記這個動作了！粉重要！</span>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+Disk /dev/hda: 41.1 GB, 41174138880 bytes
+255 heads, 63 sectors/track, 5005 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1          13      104391   83  Linux
+/dev/hda2              14        1288    10241437+  83  Linux
+/dev/hda3            1289        1925     5116702+  83  Linux
+/dev/hda4            1926        5005    24740100    5  Extended
+/dev/hda5            1926        2052     1020096   82  Linux swap / Solaris
+<span class="term_write">/dev/hda6            2053        2235     1469916   8e  Linux LVM
+/dev/hda7            2236        2418     1469916   8e  Linux LVM
+/dev/hda8            2419        2601     1469916   8e  Linux LVM
+/dev/hda9            2602        2784     1469916   8e  Linux LVM</span>
+</pre></td></tr></table>
+
+		<p>上面的 /dev/hda{6,7,8,9} 這四個分割槽就是我們的實體分割槽！也就是底下會實際用到的資訊！
+		注意看，那個 8e 的出現會導致 system 變成『 Linux LVM 』哩！其實沒有設定成為 8e 也沒關係，
+		不過某些 LVM 的偵測指令可能會偵測不到該 partition 就是了！接下來，就一個一個的處理各流程吧！<br /><br /></p>
+
+		<a name="the_pv"></a>
+		<hr /><ul class="list1"><li class="text_import1">PV 階段</li></ul>
+
+		<p>要建立 PV 其實很簡單，只要直接使用 pvcreate 即可！我們來談一談與 PV 有關的指令吧！</p>
+		<ul>
+		<li>pvcreate ：將實體 partition 建立成為 PV ；</li>
+		<li>pvscan ：搜尋目前系統裡面任何具有 PV 的磁碟；</li>
+		<li>pvdisplay ：顯示出目前系統上面的 PV 狀態；</li>
+		<li>pvremove ：將 PV 屬性移除，讓該 partition 不具有 PV 屬性。</li>
+		</ul>
+		<p>那就直接來瞧一瞧吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 檢查有無 PV 在系統上，然後將 /dev/hda6~/dev/hda9 建立成為 PV 格式</span>
+[root@www ~]# <span class="term_command">pvscan</span>
+  No matching physical volumes found <span class="term_note">&lt;==找不到任何的 PV 存在喔！</span>
+
+[root@www ~]# <span class="term_command">pvcreate /dev/hda{6,7,8,9}</span>
+  Physical volume "/dev/hda6" successfully created
+  Physical volume "/dev/hda7" successfully created
+  Physical volume "/dev/hda8" successfully created
+  Physical volume "/dev/hda9" successfully created
+<span class="term_say"># 這個指令可以一口氣建立這四個 partition 成為 PV 啦！注意大括號的用途</span>
+
+[root@www ~]# <span class="term_command">pvscan</span>
+  PV /dev/hda6         lvm2 [1.40 GB]
+  PV /dev/hda7         lvm2 [1.40 GB]
+  PV /dev/hda8         lvm2 [1.40 GB]
+  PV /dev/hda9         lvm2 [1.40 GB]
+  Total: 4 [5.61 GB] / in use: 0 [0   ] / in no VG: 4 [5.61 GB]
+<span class="term_say"># 這就分別顯示每個 PV 的資訊與系統所有 PV 的資訊。尤其最後一行，顯示的是：
+# 整體 PV 的量 / 已經被使用到 VG 的 PV 量 / 剩餘的 PV 量</span>
+
+<span class="term_hd"># 2. 更詳細的列示出系統上面每個 PV 的個別資訊：</span>
+[root@www ~]# <span class="term_command">pvdisplay</span>
+  "/dev/hda6" is a new physical volume of "1.40 GB"
+  --- NEW Physical volume ---
+  PV Name               /dev/hda6  <span class="term_note">&lt;==實際的 partition 裝置名稱</span>
+  VG Name                          <span class="term_note">&lt;==因為尚未分配出去，所以空白！</span>
+  PV Size               1.40 GB    <span class="term_note">&lt;==就是容量說明</span>
+  Allocatable           NO         <span class="term_note">&lt;==是否已被分配，結果是 NO</span>
+  PE Size (KByte)       0          <span class="term_note">&lt;==在此 PV 內的 PE 大小</span>
+  Total PE              0          <span class="term_note">&lt;==共分割出幾個 PE</span>
+  Free PE               0          <span class="term_note">&lt;==沒被 LV 用掉的 PE</span>
+  Allocated PE          0          <span class="term_note">&lt;==尚可分配出去的 PE 數量</span>
+  PV UUID               Z13Jk5-RCls-UJ8B-HzDa-Gesn-atku-rf2biN
+<span class="term_say">....(底下省略)....</span>
+<span class="term_say"># 由於 PE 是在建立 VG 時才給予的參數，因此在這裡看到的 PV 裡頭的 PE 都會是 0
+# 而且也沒有多餘的 PE 可供分配 (allocatable)。</span>
+</pre></td></tr></table>
+
+		<p>講是很難，作是很簡單！這樣就將 PV 建立了兩個囉！簡單到不行吧！ ^_^！繼續來玩 VG 去！<br /><br /></p>
+
+		<a name="the_vg"></a>
+		<hr /><ul class="list1"><li class="text_import1">VG 階段</li></ul>
+
+		<p>建立 VG 及 VG 相關的指令也不少，我們來看看：</p>
+
+		<ul>
+		<li>vgcreate ：就是主要建立 VG 的指令啦！他的參數比較多，等一下介紹。</li>
+		<li>vgscan ：搜尋系統上面是否有 VG 存在？</li>
+		<li>vgdisplay ：顯示目前系統上面的 VG 狀態；</li>
+		<li>vgextend ：在 VG 內增加額外的 PV ；</li>
+		<li>vgreduce ：在 VG 內移除 PV；</li>
+		<li>vgchange ：設定 VG 是否啟動 (active)；</li>
+		<li>vgremove ：刪除一個 VG 啊！</li>
+		</ul>
+
+		<p>與 PV 不同的是， VG 的名稱是自訂的！我們知道 PV 的名稱其實就是 partition 的裝置代號，
+		但是這個 VG 名稱則可以隨便你自己取啊！在底下的例子當中，我將 VG 名稱取名為 vbirdvg 。建立這個 
+		VG 的流程是這樣的：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vgcreate [-s N[mgt]] VG名稱 PV名稱</span>
+<span class="term_say">選項與參數：
+-s ：後面接 PE 的大小 (size) ，單位可以是 m, g, t (大小寫均可)</span>
+
+<span class="term_hd"># 1. 將 /dev/hda6-8 建立成為一個 VG，且指定 PE 為 16MB 喔！</span>
+[root@www ~]# <span class="term_command">vgcreate -s 16M vbirdvg /dev/hda{6,7,8}</span>
+  Volume group "vbirdvg" successfully created
+
+[root@www ~]# <span class="term_command">vgscan</span>
+  Reading all physical volumes.  This may take a while...
+  Found volume group "vbirdvg" using metadata type lvm2
+<span class="term_say"># 確實存在這個 vbirdvg 的 VG 啦！</span>
+
+[root@www ~]# <span class="term_command">pvscan</span>
+<span class="term_write">  PV /dev/hda6   VG vbirdvg   lvm2 [1.39 GB / 1.39 GB free]
+  PV /dev/hda7   VG vbirdvg   lvm2 [1.39 GB / 1.39 GB free]
+  PV /dev/hda8   VG vbirdvg   lvm2 [1.39 GB / 1.39 GB free]</span>
+  PV /dev/hda9                lvm2 [1.40 GB]
+  Total: 4 [5.57 GB] / in use: 3 [4.17 GB] / in no VG: 1 [1.40 GB]
+<span class="term_say"># 嘿嘿！發現沒！有三個 PV 被用去，剩下一個 /dev/hda9 的 PV 沒被用掉！</span>
+
+[root@www ~]# <span class="term_command">vgdisplay</span>
+  --- Volume group ---
+  VG Name               vbirdvg
+  System ID
+  Format                lvm2
+  Metadata Areas        3
+  Metadata Sequence No  1
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                0
+  Open LV               0
+  Max PV                0
+  Cur PV                3
+  Act PV                3
+  VG Size               4.17 GB   <span class="term_note">&lt;==整體的 VG 容量有這麼大</span>
+  PE Size               16.00 MB  <span class="term_note">&lt;==內部每個 PE 的大小</span>
+<span class="term_write">  Total PE              267       <span class="term_note">&lt;==總共的 PE 數量共有這麼多！</span>
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       267 / 4.17 GB</span>
+  VG UUID               4VU5Jr-gwOq-jkga-sUPx-vWPu-PmYm-dZH9EO
+<span class="term_say"># 最後那三行指的就是 PE 能夠使用的情況！由於尚未切出 LV，因此所有的 PE 
+# 均可自由使用。</span>
+</pre></td></tr></table>
+
+		<p>這樣就建立一個 VG 了！假設我們要增加這個 VG 的容量，因為我們還有 /dev/hda9 嘛！此時你可以這樣做：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 2. 將剩餘的 PV (/dev/hda9) 丟給 vbirdvg 吧！</span>
+[root@www ~]# <span class="term_command">vgextend vbirdvg /dev/hda9</span>
+  Volume group "vbirdvg" successfully extended
+
+[root@www ~]# <span class="term_command">vgdisplay</span>
+<span class="term_say">....(前面省略)....</span>
+  VG Size               5.56 GB
+  PE Size               16.00 MB
+<span class="term_write">  Total PE              356</span>
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       356 / 5.56 GB
+  VG UUID               4VU5Jr-gwOq-jkga-sUPx-vWPu-PmYm-dZH9EO
+<span class="term_say"># 基本上，不難吧！這樣就可以抽換整個 VG 的大小啊！</span>
+</pre></td></tr></table>
+
+		<p>我們多了一個裝置喔！接下來為這個 vbirdvg 進行分割吧！透過 LV 功能來處理！<br /><br /></p>
+
+		<a name="the_lv"></a>
+		<hr /><ul class="list1"><li class="text_import1">LV 階段</li></ul>
+
+		<p>創造出 VG 這個大磁碟之後，再來就是要建立分割區啦！這個分割區就是所謂的 LV 囉！假設我要將剛剛那個 
+		vbirdvg 磁碟，分割成為 vbirdlv ，整個 VG 的容量都被分配到 vbirdlv 裡面去！先來看看能使用的指令後，就直接工作了先！</p>
+		<ul>
+		<li>lvcreate ：建立 LV 啦！</li>
+		<li>lvscan ：查詢系統上面的 LV ；</li>
+		<li>lvdisplay ：顯示系統上面的 LV 狀態啊！</li>
+		<li>lvextend ：在 LV 裡面增加容量！</li>
+		<li>lvreduce ：在 LV 裡面減少容量；</li>
+		<li>lvremove ：刪除一個 LV ！</li>
+		<li>lvresize ：對 LV 進行容量大小的調整！</li>
+		</ul>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">lvcreate [-L N[mgt]] [-n LV名稱] VG名稱</span>
+[root@www ~]# <span class="term_command">lvcreate [-l N] [-n LV名稱] VG名稱</span>
+<span class="term_say">選項與參數：
+-L  ：後面接容量，容量的單位可以是 M,G,T 等，要注意的是，最小單位為 PE，
+      因此這個數量必須要是 PE 的倍數，若不相符，系統會自行計算最相近的容量。
+-l  ：後面可以接 PE 的『個數』，而不是數量。若要這麼做，得要自行計算 PE 數。
+-n  ：後面接的就是 LV 的名稱啦！
+更多的說明應該可以自行查閱吧！ man lvcreate </span>
+
+<span class="term_hd"># 1. 將整個 vbirdvg 通通分配給 vbirdlv 啊，要注意， PE 共有 356 個。</span>
+[root@www ~]# <span class="term_command">lvcreate -l 356 -n vbirdlv vbirdvg</span>
+  Logical volume "vbirdlv" created
+<span class="term_say"># 由於本案例中每個 PE 為 16M ，因此上述的指令也可以使用如下的方式來建立：
+# lvcreate -L 5.56G -n vbirdlv vbirdvg</span>
+
+[root@www ~]# <span class="term_command">ll /dev/vbirdvg/vbirdlv</span>
+lrwxrwxrwx 1 root root 27 Mar 11 16:49 /dev/vbirdvg/vbirdlv -&gt;
+/dev/mapper/vbirdvg-vbirdlv
+<span class="term_say"># 看見了沒有啊！這就是我們最重要的一個玩意兒了！</span>
+
+[root@www ~]# <span class="term_command">lvdisplay</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdlv  <span class="term_note">&lt;==這個才是 LV 的全名！</span>
+  VG Name                vbirdvg
+  LV UUID                8vFOPG-Jrw0-Runh-ug24-t2j7-i3nA-rPEyq0
+  LV Write Access        read/write
+  LV Status              available
+  # open                 0
+  LV Size                5.56 GB               <span class="term_note">&lt;==這個 LV 的容量這麼大！</span>
+  Current LE             356
+  Segments               4
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+</pre></td></tr></table>
+
+		<p>如此一來，整個 partition 也準備好啦！接下來，就是針對這個 LV 來處理啦！要特別注意的是， VG 的名稱為 vbirdvg ，
+		但是 LV 的名稱<span class="text_import2">必須使用全名！亦即是 /dev/vbirdvg/vbirdlv</span> 才對喔！
+		後續的處理都是這樣的！這點初次接觸 LVM 的朋友很容易搞錯！<br /><br /></p>
+
+		<a name="the_file"></a>
+		<hr /><ul class="list1"><li class="text_import1">檔案系統階段</li></ul>
+
+		<p>這個部分鳥哥我就不再多加解釋了！直接來進行吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 格式化、掛載與觀察我們的 LV 吧！</span>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /dev/vbirdvg/vbirdlv</span> <span class="term_note">&lt;==注意 LV 全名！</span>
+[root@www ~]# <span class="term_command">mkdir /mnt/lvm</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdlv /mnt/lvm</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/hda2              9920624   3858984   5549572  42% /
+/dev/hda3              4956316   1056996   3643488  23% /home
+/dev/hda1               101086     21408     74459  23% /boot
+tmpfs                   371332         0    371332   0% /dev/shm
+<span class="term_write">/dev/mapper/vbirdvg-vbirdlv
+                       5741020    142592   5306796   3% /mnt/lvm</span>
+[root@www ~]# <span class="term_command">cp -a /etc /var/log /mnt/lvm</span>
+</pre></td></tr></table>
+
+		<p>其實 LV 的名稱建置成為 /dev/vbirdvg/vbirdlv 是為了讓使用者直覺式的找到我們所需要的資料，
+		實際上 LVM 使用的裝置是放置到 /dev/mapper/ 目錄下的！所以你才會看到上表當中的特殊字體部分。
+		透過這樣的功能，我們現在已經建置好一個 LV 了！你可以自由的應用 /mnt/lvm 內的所有資源！</p>
+	</div>
+
+	<hr /><a name="lvm_large"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">放大 LV 容量</span><br />
+	<div class="block2">
+		<p>我們不是說 LVM 最大的特色就是彈性調整磁碟容量嗎？好！那我們就來處理一下，如果要放大 LV 的容量時，
+		該如何進行完整的步驟呢？其實一點都不難喔！你只要這樣做即可：</p>
+		<ol class="text_import2">
+		<li>用 fdisk 設定新的具有 8e system ID 的 partition</li>
+		<li>利用 pvcreate 建置 PV</li>
+		<li>利用 vgextend 將 PV 加入我們的 vbirdvg</li>
+		<li>利用 lvresize 將新加入的 PV 內的 PE 加入 vbirdlv 中</li>
+		<li>透過 resize2fs 將檔案系統的容量確實增加！</li>
+		</ol>
+
+		<p>其中最後一個步驟最重要！我們在<a href="/linux_basic/0230filesystem.php">第八章</a>當中知道，
+		整個檔案系統在最初格式化的時候就建立了 inode/block/superblock 等資訊，要改變這些資訊是很難的！
+		不過因為檔案系統格式化的時候建置的是多個 block group ，因此我們可以透過在檔案系統當中增加 block group 
+		的方式來增減檔案系統的量！而增減 block group 就是利用 resize2fs 啦！所以最後一步是針對檔案系統來處理的，
+		前面幾步則是針對 LVM 的實際容量大小！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 處理出一個 3GB 的新的 partition ，在鳥哥的系統中應該是 /dev/hda10</span>
+[root@www ~]# <span class="term_command">fdisk /dev/hda</span> <span class="term_note">&lt;==其他的動作請自行處理</span>
+[root@www ~]# <span class="term_command">partprobe</span>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+   Device Boot      Start         End      Blocks   Id  System
+<span class="term_say">....(中間省略)....</span>
+/dev/hda10           2785        3150     2939863+  8e  Linux LVM
+<span class="term_say"># 這個就是我們要的新的 partition 囉！</span>
+
+<span class="term_hd"># 2. 建立新的 PV：</span>
+[root@www ~]# <span class="term_command">pvcreate /dev/hda10</span>
+  Physical volume "/dev/hda10" successfully created
+[root@www ~]# <span class="term_command">pvscan</span>
+  PV /dev/hda6    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda7    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda8    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda9    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+<span class="term_write">  PV /dev/hda10                lvm2 [2.80 GB]</span>
+  Total: 5 [8.37 GB] / in use: 4 [5.56 GB] / in no VG: 1 [2.80 GB]
+<span class="term_say"># 可以看到 /dev/hda10 是新加入並且尚未被使用的喔！</span>
+
+<span class="term_hd"># 3. 加大 VG ，利用 vgextend 功能！</span>
+[root@www ~]# <span class="term_command">vgextend vbirdvg /dev/hda10</span>
+  Volume group "vbirdvg" successfully extended
+[root@www ~]# <span class="term_command">vgdisplay</span>
+  --- Volume group ---
+  VG Name               vbirdvg
+  System ID
+  Format                lvm2
+  Metadata Areas        5
+  Metadata Sequence No  4
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               1
+  Max PV                0
+  Cur PV                5
+  Act PV                5
+<span class="term_write">  VG Size               8.36 GB</span>
+  PE Size               16.00 MB
+  Total PE              535
+  Alloc PE / Size       356 / 5.56 GB
+<span class="term_write">  Free  PE / Size       179 / 2.80 GB</span>
+  VG UUID               4VU5Jr-gwOq-jkga-sUPx-vWPu-PmYm-dZH9EO
+<span class="term_say"># 不但整體 VG 變大了！而且剩餘的 PE 共有 179 個，容量則為 2.80G</span>
+
+<span class="term_hd"># 4. 放大 LV 吧！利用 lvresize 的功能來增加！</span>
+[root@www ~]# <span class="term_command">lvresize -l +179 /dev/vbirdvg/vbirdlv</span>
+  Extending logical volume vbirdlv to 8.36 GB
+  Logical volume vbirdlv successfully resized
+<span class="term_say"># 這樣就增加了 LV 了喔！lvresize 的語法很簡單，基本上同樣透過 -l 或 -L 來增加！
+# 若要增加則使用 + ，若要減少則使用 - ！詳細的選項請參考 man lvresize 囉！</span>
+
+[root@www ~]# <span class="term_command">lvdisplay</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdlv
+  VG Name                vbirdvg
+  LV UUID                8vFOPG-Jrw0-Runh-ug24-t2j7-i3nA-rPEyq0
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+<span class="term_write">  LV Size                8.36 GB</span>
+  Current LE             535
+  Segments               5
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+
+[root@www ~]# <span class="term_command">df /mnt/lvm</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdlv
+                       <span class="term_write">5741020</span>    261212   5188176   5% /mnt/lvm
+</pre></td></tr></table>
+
+		<p>看到了吧？最終的結果中 LV 真的有放大到 8.36GB 喔！但是檔案系統卻沒有相對增加！
+		而且，我們的 LVM 可以線上直接處理，並不需要特別給他 umount 哩！真是人性化！
+		但是還是得要處理一下檔案系統的容量啦！開始觀察一下檔案系統，然後使用 resize2fs 來處理一下吧！</p>
+
+<a name="resize2fs"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 5.1 先看一下原本的檔案系統內的 superblock 記錄情況吧！</span>
+[root@www ~]# <span class="term_command">dumpe2fs /dev/vbirdvg/vbirdlv</span>
+dumpe2fs 1.39 (29-May-2006)
+<span class="term_say">....(中間省略)....</span>
+Block count:              1458176    <span class="term_note">&lt;==這個filesystem的 block 總數</span>
+<span class="term_say">....(中間省略)....</span>
+Blocks per group:         32768      <span class="term_note">&lt;==多少個 block 設定成為一個 block group</span>
+Group 0: (Blocks 0-32767)            <span class="term_note">&lt;==括號內為 block 的號碼</span>
+<span class="term_say">....(中間省略)....</span>
+Group 44: (Blocks 1441792-1458175)   <span class="term_note">&lt;==這是本系統中最後一個 group</span>
+<span class="term_say">....(後面省略)....</span>
+
+<span class="term_hd"># 5.2 resize2fs 的語法</span>
+[root@www ~]# <span class="term_command">resize2fs [-f] [device] [size]</span>
+<span class="term_say">選項與參數：
+-f      ：強制進行 resize 的動作！
+[device]：裝置的檔案名稱；
+[size]  ：可以加也可以不加。如果加上 size 的話，那麼就必須要給予一個單位，
+          譬如 M, G 等等。如果沒有 size 的話，那麼預設使用『整個 partition』
+          的容量來處理！</span>
+
+<span class="term_hd"># 5.3 完整的將 LV 的容量擴充到整個 filesystem 吧！</span>
+[root@www ~]# <span class="term_command">resize2fs /dev/vbirdvg/vbirdlv</span>
+resize2fs 1.39 (29-May-2006)
+Filesystem at /dev/vbirdvg/vbirdlv is mounted on /mnt/lvm; on-line resizing 
+Performing an on-line resize of /dev/vbirdvg/vbirdlv to 2191360 (4k) blocks.
+The filesystem on /dev/vbirdvg/vbirdlv is now 2191360 blocks long.
+<span class="term_say"># 可怕吧！這一版的 lvm 竟然還可以線上進行 resize 的功能哩！真好！</span>
+
+[root@www ~]# <span class="term_command">df /mnt/lvm</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdlv
+                       <span class="term_write">8628956</span>    262632   7931368   4% /mnt/lvm
+[root@www ~]# <span class="term_command">ll /mnt/lvm</span>
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  17 root root  4096 Mar 11 14:17 log
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+<span class="term_say"># 剛剛複製進去的資料可還是存在的喔！並沒有消失不見！</span>
+</pre></td></tr></table>
+
+		<p>嘿嘿！真的放大了吧！而且如果你已經有填資料在 LVM 磁區當中的話！這個資料是不會死掉的喔！還是繼續存在原本的磁區當中啦！
+		整個動作竟然這麼簡單就完成了！原本的資料還是一直存在而不會消失～您說， LVM 好不好用啊！ </p>
+
+		<p>此外，如果你再以 dumpe2fs 來檢查 /dev/vbirdvg/vbirdlv 時，就會發現後續的 Group 增加了！
+		如果還是搞不清楚什麼是 block group 時，請回到第八章看一下該章內<a 
+		href="/linux_basic/0230filesystem.php#fig1.3.1">圖1.3.1</a>的介紹吧！</p>
+	</div>
+
+	<hr /><a name="lvm_small"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">縮小 LV 容量</span><br />
+	<div class="block2">
+		<p>上一小節我們談到的是放大容量，現在來談到的是縮小容量喔！假設我們想將 /dev/hda6 抽離出來！
+		那該如何處理啊？就讓上一小節的流程倒轉過來即可啊！我們就直接來玩吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先找出 /dev/hda6 的容量大小，並嘗試計算檔案系統需縮小到多少</span>
+[root@www ~]# <span class="term_command">pvdisplay</span>
+  --- Physical volume ---
+  PV Name               /dev/hda6
+  VG Name               vbirdvg
+<span class="term_write">  PV Size               1.40 GB / not usable 11.46 MB</span>
+  Allocatable           yes (but full)
+  PE Size (KByte)       16384
+<span class="term_write">  Total PE              89</span>
+  Free PE               0
+  Allocated PE          89
+  PV UUID               Z13Jk5-RCls-UJ8B-HzDa-Gesn-atku-rf2biN
+<span class="term_say"># 從這裡可以看出 /dev/hda6 有多大，而且含有 89 個 PE 的量喔！
+# 那如果要使用 resize2fs 時，則總量減去 1.40GB 就對了！</span>
+
+[root@www ~]# <span class="term_command">pvscan</span>
+  PV /dev/hda6    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda7    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda8    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda9    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda10   VG vbirdvg   lvm2 [2.80 GB / 0    free]
+  Total: 5 [8.36 GB] / in use: 5 [8.36 GB] / in no VG: 0 [0   ]
+<span class="term_say"># 從上面可以發現如果扣除 /dev/hda6 則剩餘容量有：1.39*3+2.8=6.97</span>
+
+<span class="term_hd"># 2. 就直接降低檔案系統的容量吧！</span>
+[root@www ~]# <span class="term_command">resize2fs /dev/vbirdvg/vbirdlv 6900M</span>
+resize2fs 1.39 (29-May-2006)
+Filesystem at /dev/vbirdvg/vbirdlv is mounted on /mnt/lvm; on-line resizing
+On-line shrinking from 2191360 to 1766400 <span class="term_write">not supported.</span>
+<span class="term_say"># 容量好像不能夠寫小數點位數，因此 6.9G 是錯誤的，鳥哥就使用 6900M 了。
+# 此外，放大可以線上直接進行，縮小檔案系統似乎無法支援！所以要這樣做：</span>
+
+[root@www ~]# <span class="term_command">umount /mnt/lvm</span>
+[root@www ~]# <span class="term_command">resize2fs /dev/vbirdvg/vbirdlv 6900M</span>
+resize2fs 1.39 (29-May-2006)
+Please run '<span class="term_write">e2fsck -f /dev/vbirdvg/vbirdlv</span>' first.
+<span class="term_say"># 他要我們先進行磁碟檢查！不囉唆！那就直接進行吧！</span>
+
+[root@www ~]# <span class="term_command">e2fsck -f /dev/vbirdvg/vbirdlv</span>
+e2fsck 1.39 (29-May-2006)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/vbirdvg/vbirdlv: 2438/1087008 files (0.1% non-contiguous), 
+
+[root@www ~]# <span class="term_command">resize2fs /dev/vbirdvg/vbirdlv 6900M</span>
+resize2fs 1.39 (29-May-2006)
+Resizing the filesystem on /dev/vbirdvg/vbirdlv to 1766400 (4k) blocks.
+The filesystem on /dev/vbirdvg/vbirdlv is now 1766400 blocks long.
+<span class="term_say"># 再來 resize2fs 一次就能夠成功了！如上所示啊！</span>
+
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdlv /mnt/lvm</span>
+[root@www ~]# <span class="term_command">df /mnt/lvm</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdlv
+                       <span class="term_write">6955584</span>    262632   6410328   4% /mnt/lvm
+</pre></td></tr></table>
+
+		<p>然後再來就是將 LV 的容量降低！要注意的是，我們想要抽離的是 /dev/hda6，這個 PV 有 89 個 PE (上面的 pvdisplay 
+		查詢到的結果)。所以要這樣進行：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 3. 降低 LV 的容量，同時我們知道 /dev/hda6 有 89 個 PE</span>
+[root@www ~]# <span class="term_command">lvresize -l -89 /dev/vbirdvg/vbirdlv</span>
+  WARNING: Reducing active and open logical volume to 6.97 GB
+  THIS MAY DESTROY YOUR DATA (filesystem etc.)
+Do you really want to reduce vbirdlv? [y/n]: <span class="term_command">y</span>
+  Reducing logical volume vbirdlv to 6.97 GB
+  Logical volume vbirdlv successfully resized
+<span class="term_say"># 會有警告訊息！但是我們的實際資料量還是比 6.97G 小，所以就 y 下去吧！</span>
+
+[root@www ~]# <span class="term_command">lvdisplay</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdlv
+  VG Name                vbirdvg
+  LV UUID                8vFOPG-Jrw0-Runh-ug24-t2j7-i3nA-rPEyq0
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+<span class="term_write">  LV Size                6.97 GB</span>
+  Current LE             446
+  Segments               5
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+</pre></td></tr></table>
+
+		<p>很簡單吧！這樣就將 LV 縮小了！接下來就要將 /dev/hda6 移出 vbirdvg 這個 VG 之外囉！
+		我們得要先確定 /dev/hda6 裡面的 PE 完全不被使用後，才能夠將 /dev/hda6 抽離！
+		所以得要這樣進行：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 4.1 先確認 /dev/hda6 是否將 PE 都移除了！</span>
+[root@www ~]# <span class="term_command">pvdisplay</span>
+  --- Physical volume ---
+  PV Name               /dev/hda6
+  VG Name               vbirdvg
+  PV Size               1.40 GB / not usable 11.46 MB
+  Allocatable           yes (but full)
+  PE Size (KByte)       16384
+  Total PE              89
+<span class="term_write">  Free PE               0</span>
+  Allocated PE          89
+  PV UUID               Z13Jk5-RCls-UJ8B-HzDa-Gesn-atku-rf2biN
+<span class="term_say">....(中間省略)....</span>
+
+  --- Physical volume ---
+  PV Name               /dev/hda10
+  VG Name               vbirdvg
+  PV Size               2.80 GB / not usable 6.96 MB
+  Allocatable           yes
+  PE Size (KByte)       16384
+  Total PE              179
+<span class="term_write">  Free PE               89</span>
+  Allocated PE          90
+  PV UUID               7MfcG7-y9or-0Jmb-H7RO-5Pa5-D3qB-G426Vq
+<span class="term_say"># 搞了老半天，沒有被使用的 PE 竟然在 /dev/hda10 ！此時得要搬移 PE 囉！</span>
+
+[root@www ~]# <span class="term_command">pvmove /dev/hda6 /dev/hda10</span>
+<span class="term_say"># pvmove 來源PV 目標PV ，可以將 /dev/hda6 內的 PE 通通移動到 /dev/hda10
+# 尚未被使用的 PE 去 (Free PE)。</span>
+
+<span class="term_hd"># 4.2 將 /dev/hda6 移出 vbirdvg 中！</span>
+[root@www ~]# <span class="term_command">vgreduce vbirdvg /dev/hda6</span>
+  Removed "/dev/hda6" from volume group "vbirdvg"
+
+[root@www ~]# <span class="term_command">pvscan</span>
+  PV /dev/hda7    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda8    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda9    VG vbirdvg   lvm2 [1.39 GB / 0    free]
+  PV /dev/hda10   VG vbirdvg   lvm2 [2.80 GB / 0    free]
+<span class="term_write">  PV /dev/hda6                 lvm2 [1.40 GB]</span>
+  Total: 5 [8.37 GB] / in use: 4 [6.97 GB] / in no VG: 1 [1.40 GB]
+
+[root@www ~]# <span class="term_command">pvremove /dev/hda6</span>
+  Labels on physical volume "/dev/hda6" successfully wiped
+</pre></td></tr></table>
+
+		<p>很有趣吧！這樣你的檔案系統以及實際的 LV 與 VG 通通變小了，而且那個 /dev/hda6 還真的可以拿出來！
+		可以進行其他的用途啦！非常簡單吧！</p>
+	</div>
+
+	<hr /><a name="lvm_snapshot"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">LVM 的系統快照</span><br />
+	<div class="block2">
+		<p>現在你知道 LVM 的好處咯，未來如果你有想要增加某個 LVM 的容量時，就可以透過這個放大、縮小的功能來處理。
+		那麼 LVM 除了這些功能之外，還有什麼能力呢？其實他還有一個重要的能力，那就是系統快照 (snapshot)。
+		什麼是系統快照啊？<span class="text_import2">快照就是將當時的系統資訊記錄下來，就好像照相記錄一般！
+		未來若有任何資料更動了，則原始資料會被搬移到快照區，沒有被更動的區域則由快照區與檔案系統共享。</span>
+		用講的好像很難懂，我們用圖解說明一下好了：</p>
+
+		<center><img src="0420quota/snapshot.gif" alt="LVM 系統快照區域的備份示意圖" 
+		title="LVM 系統快照區域的備份示意圖" border="0" /><br />
+		圖 3.5.1、LVM 系統快照區域的備份示意圖(虛線為檔案系統，長虛線為快照區)<br /></center>
+
+		<p>左圖為最初建置系統快照區的狀況，LVM 會預留一個區域 (左圖的左側三個 PE 區塊) 作為資料存放處。
+		此時快照區內並沒有任何資料，而<span class="text_import2">快照區與系統區共享所有的 PE 資料，
+		因此你會看到快照區的內容與檔案系統是一模一樣的</span>。
+		等到系統運作一陣子後，假設 A 區域的資料被更動了 (上面右圖所示)，<span 
+		class="text_import2">則更動前系統會將該區域的資料移動到快照區</span>，
+		所以在右圖的快照區被佔用了一塊 PE 成為 A，而其他 B 到 I 的區塊則還是與檔案系統共用！</p>
+
+		<p>照這樣的情況來看，LVM 的系統快照是非常棒的『備份工具』，因為他只有備份有被更動到的資料，
+		檔案系統內沒有被變更的資料依舊保持在原本的區塊內，但是 LVM 快照功能會知道那些資料放置在哪裡，
+		因此『快照』當時的檔案系統就得以『備份』下來，且快照所佔用的容量又非常小！所以您說，這不是很棒的工具又是什麼？</p>
+
+		<p>那麼快照區要如何建立與使用呢？首先，由於快照區與原本的 LV 共用很多 PE 區塊，因此<span
+		class="text_import2">快照區與被快照的 LV 必須要在同一個 VG 上頭。</span>但是我們剛剛將 /dev/hda6 移除 vbirdvg
+		了，目前 vbirdvg 剩下的容量為 0 ！因此，在這個小節裡面我們得要再加入 /dev/hda6 到我們的 VG 後，
+		才能繼續建立快照區囉！底下的動作趕緊再來玩玩看！<br /><br /></p>
+
+		<a name="snapshot_create"></a>
+		<hr /><ul class="list1"><li class="text_import1">快照區的建立</li></ul>
+
+		<p>底下的動作主要再增加需要的 VG 容量，然後再透過 lvcreate -s 的功能建立快照區</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先觀察 VG 還剩下多少剩餘容量</span>
+[root@www ~]# <span class="term_command">vgdisplay</span>
+  --- Volume group ---
+  VG Name               vbirdvg
+<span class="term_say">....(其他省略)....</span>
+  VG Size               6.97 GB
+  PE Size               16.00 MB
+  Total PE              446
+  Alloc PE / Size       446 / 6.97 GB
+<span class="term_write">  Free  PE / Size       0 / 0</span>  <span class="term_note">&lt;==沒有多餘的 PE 可用！</span>
+
+<span class="term_hd"># 2. 將剛剛移除的 /dev/hda6 加入這個 VG 吧！</span>
+[root@www ~]# <span class="term_command">pvcreate /dev/hda6</span>
+  Physical volume "/dev/hda6" successfully created
+[root@www ~]# <span class="term_command">vgextend vbirdvg /dev/hda6</span>
+  Volume group "vbirdvg" successfully extended
+[root@www ~]# <span class="term_command">vgdisplay</span>
+  --- Volume group ---
+  VG Name               vbirdvg
+<span class="term_say">....(其他省略)....</span>
+  VG Size               8.36 GB
+  PE Size               16.00 MB
+  Total PE              535
+  Alloc PE / Size       446 / 6.97 GB
+<span class="term_write">  Free  PE / Size       89 / 1.39 GB</span>  <span class="term_note">&lt;==多出了 89 個 PE 可用囉！</span>
+
+<span class="term_hd"># 3. 利用 lvcreate 建立系統快照區，我們取名為 vbirdss，且給予 60 個 PE</span>
+[root@www ~]# <span class="term_command">lvcreate -l 60 -s -n vbirdss /dev/vbirdvg/vbirdlv</span>
+  Logical volume "vbirdss" created
+<span class="term_say"># 上述的指令中最重要的是那個 -s 的選項！代表是 snapshot 快照功能之意！
+# -n 後面接快照區的裝置名稱， /dev/.... 則是要被快照的 LV 完整檔名。
+# -l 後面則是接使用多少個 PE 來作為這個快照區使用。</span>
+
+[root@www ~]# <span class="term_command">lvdisplay</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdss
+  VG Name                vbirdvg
+  LV UUID                K2tJ5E-e9mI-89Gw-hKFd-4tRU-tRKF-oeB03a
+  LV Write Access        read/write
+  LV snapshot status     active destination for /dev/vbirdvg/vbirdlv
+  LV Status              available
+  # open                 0
+<span class="term_write">  LV Size                6.97 GB</span>    <span class="term_note">&lt;==被快照的原 LV 磁碟容量</span>
+  Current LE             446
+<span class="term_write">  COW-table size         960.00 MB  <span class="term_note">&lt;==快照區的實際容量</span>
+  COW-table LE           60         <span class="term_note">&lt;==快照區佔用的 PE 數量</span>
+  Allocated to snapshot  0.00%</span>
+  Snapshot chunk size    4.00 KB
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:1
+</pre></td></tr></table>
+
+		<p>您看看！這個 /dev/vbirdvg/vbirdss 快照區就被建立起來了！而且他的 VG 量竟然與原本的 /dev/vbirdvg/vbirdlv 
+		相同！也就是說，如果你真的掛載這個裝置時，看到的資料會跟原本的 vbirdlv 相同喔！我們就來測試看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkdir /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdss /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/hda2              9920624   3859032   5549524  42% /
+/dev/hda3              4956316   1056996   3643488  23% /home
+/dev/hda1               101086     21408     74459  23% /boot
+tmpfs                   371332         0    371332   0% /dev/shm
+<span class="term_write">/dev/mapper/vbirdvg-vbirdlv
+                       6955584    262632   6410328   4% /mnt/lvm
+/dev/mapper/vbirdvg-vbirdss
+                       6955584    262632   6410328   4% /mnt/snapshot</span>
+<span class="term_say"># 有沒有看到！這兩個咚咚竟然是一模一樣喔！我們根本沒有動過
+# /dev/vbirdvg/vbirdss 對吧！不過這裡面會主動記錄原 vbirdlv 的內容！</span>
+
+[root@www ~]# <span class="term_command">umount /mnt/snapshot</span>
+<span class="term_say"># 最後將他卸載！我們準備來玩玩有趣的東西！</span>
+</pre></td></tr></table><br />
+
+		<a name="snapshot_rescue"></a>
+		<hr /><ul class="list1"><li class="text_import1">利用快照區復原系統</li></ul>
+
+		<p>首先，我們來玩一下，如何利用快照區復原系統吧！不過你要注意的是，<span 
+		class="text_import2">你要復原的資料量不能夠高於快照區所能負載的實際容量。</span>由於原始資料會被搬移到快照區，
+		如果你的快照區不夠大，若原始資料被更動的實際資料量比快照區大，那麼快照區當然容納不了，這時候快照功能會失效喔！
+		所以上面的案例中鳥哥才給予 60 個 PE (共 900MB) 作為快照區存放資料用。</p>
+
+		<p>我們的 /mnt/lvm 已經有 /mnt/lvm/etc, /mnt/lvm/log 等目錄了，接下來我們將這個檔案系統的內容作個變更，
+		然後再以快照區資料還原看看：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先將原本的 /dev/vbirdvg/vbirdlv 內容作些變更，增增減減一些目錄吧！</span>
+[root@www ~]# <span class="term_command">df /mnt/lvm</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdlv
+                       6955584    262632   6410328   4% /mnt/lvm
+
+[root@www ~]# <span class="term_command">ll /mnt/lvm</span>
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  17 root root  4096 Mar 11 14:17 log
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+
+[root@www ~]# <span class="term_command">rm -r /mnt/lvm/log</span>
+[root@www ~]# <span class="term_command">cp -a /boot /lib /sbin /mnt/lvm</span>
+[root@www ~]# <span class="term_command">ll /mnt/lvm</span>
+drwxr-xr-x   4 root root  4096 Dec 15 16:28 boot
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  14 root root  4096 Sep  5  2008 lib
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+drwxr-xr-x   2 root root 12288 Sep  5  2008 sbin
+<span class="term_say"># 看起來資料已經不一樣了！</span>
+
+[root@www ~]# <span class="term_command">lvdisplay /dev/vbirdvg/vbirdss</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdss
+  VG Name                vbirdvg
+<span class="term_say">....(中間省略)....</span>
+<span class="term_write">  Allocated to snapshot  12.22%</span>
+<span class="term_say">....(底下省略)....</span>
+<span class="term_say"># 從這裡也看得出來，快照區已經被使用了 12.22% ！因為原始的檔案系統有異動過！</span>
+
+<span class="term_hd"># 2. 利用快照區將原本的 filesystem 備份</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdss /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">df</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdlv
+                       6955584    370472   6302488   6% /mnt/lvm
+/dev/mapper/vbirdvg-vbirdss
+                       6955584    262632   6410328   4% /mnt/snapshot
+<span class="term_say"># 看吧！兩者確實不一樣了！開始將快照區內容複製出來吧！</span>
+
+[root@www ~]# <span class="term_command">mkdir -p /backups</span> <span class="term_note">&lt;==確認真的有這個目錄！</span>
+[root@www ~]# <span class="term_command">cd /mnt/snapshot</span>
+[root@www snapshot]# <span class="term_command">tar -jcv -f /backups/lvm.tar.bz2 *</span>
+<span class="term_say"># 此時你就會有一個備份資料，亦即是 /backups/lvm.tar.bz2 了！</span>
+</pre></td></tr></table>
+
+		<p>為什麼要備份呢？為什麼不可以直接格式化 /dev/vbirdvg/vbirdlv 然後將 /dev/vbirdvg/vbirdss 直接複製給 vbirdlv  呢？
+		要知道 vbirdss 其實是 vbirdlv 的快照，因此如果你格式化整個 vbirdlv 時，原本的檔案系統所有資料都會被搬移到 vbirdss。
+		那如果 vbirdss 的容量不夠大 (通常也真的不夠大)，那麼部分資料將無法複製到 vbirdss  內，資料當然無法全部還原啊！
+		所以才要在上面表格中製作出一個備份檔案的！瞭解乎？</p>
+
+		<p>而快照還有另外一個功能，就是你可以比對 /mnt/lvm 與 /mnt/snapshot 的內容，就能夠發現到最近你到底改了啥咚咚！
+		這樣也是很不賴啊！您說是吧！ ^_^！接下來讓我們準備還原 vbirdlv 的內容吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 3. 將 vbirdss 卸載並移除 (因為裡面的內容已經備份起來了)</span>
+[root@www ~]# <span class="term_command">umount /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">lvremove /dev/vbirdvg/vbirdss</span>
+Do you really want to remove active logical volume "vbirdss"? [y/n]: <span class="term_command">y</span>
+  Logical volume "vbirdss" successfully removed
+
+[root@www ~]# <span class="term_command">umount /mnt/lvm</span>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /dev/vbirdvg/vbirdlv</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdlv /mnt/lvm</span>
+[root@www ~]# <span class="term_command">tar -jxv -f /backups/lvm.tar.bz2 -C /mnt/lvm</span>
+[root@www ~]# <span class="term_command">ll /mnt/lvm</span>
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  17 root root  4096 Mar 11 14:17 log
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+<span class="term_say"># 是否與最初的內容相同啊！這就是透過快照來還原的一個簡單的方法囉！</span>
+</pre></td></tr></table><br />
+
+		<a name="snapshot_test"></a>
+		<hr /><ul class="list1"><li class="text_import1">利用快照區進行各項練習與測試的任務，再以原系統還原快照</li></ul>
+
+		<p>換個角度來想想，<span class="text_import2">我們將原本的 vbirdlv 當作備份資料，然後將 vbirdss 當作實際在運作中的資料，
+		任何測試的動作都在 vbirdss 這個快照區當中測試，那麼當測試完畢要將測試的資料刪除時，只要將快照區刪去即可！
+		而要複製一個 vbirdlv 的系統，再作另外一個快照區即可</span>！這樣是否非常方便啊？
+		這對於教學環境中每年都要幫學生製作一個練習環境主機的測試，非常有幫助呢！</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		以前鳥哥老是覺得使用 LVM 的快照來進行備份不太合理，因為還要製作一個備份檔！後來仔細研究並參考徐秉義老師的教材(<a
+		href="#ps3">註3</a>)後，才發現 LVM 的快照實在是一個棒到不行的工具！尤其是在虛擬機器當中建置多份給同學使用的測試環境，
+		你只要有一個基礎的環境保持住，其他的環境使用快照來提供即可。即時同學將系統搞爛了，你只要將快照區刪除，
+		再重建一個快照區！這樣環境就恢復了！天吶！實在是太棒了！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 建立一個大一些的快照區，讓我們將 /dev/hda6 的 PE 全部給快照區！</span>
+[root@www ~]# <span class="term_command">lvcreate -s -l 89 -n vbirdss /dev/vbirdvg/vbirdlv</span>
+  Logical volume "vbirdss" created
+
+[root@www ~]# <span class="term_command">lvdisplay /dev/vbirdvg/vbirdss</span>
+  --- Logical volume ---
+  LV Name                /dev/vbirdvg/vbirdss
+  VG Name                vbirdvg
+  LV UUID                as0ocQ-KjRS-Bu7y-fYoD-1CHC-0V3Y-JYsjj1
+  LV Write Access        read/write
+  LV snapshot status     active destination for /dev/vbirdvg/vbirdlv
+  LV Status              available
+  # open                 0
+  LV Size                6.97 GB
+  Current LE             446
+<span class="term_write">  COW-table size         1.39 GB
+  COW-table LE           89
+  Allocated to snapshot  0.00%</span>
+  Snapshot chunk size    4.00 KB
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:1
+<span class="term_say"># 如何！這個快照區不小吧！</span>
+
+<span class="term_hd"># 2. 隱藏 vbirdlv 掛載 vbirdss</span>
+[root@www ~]# <span class="term_command">umount /mnt/lvm</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdss /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">df /mnt/snapshot</span>
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vbirdvg-vbirdss
+                       7192504    265804   6561340   4% /mnt/snapshot
+
+<span class="term_hd"># 3. 開始惡搞！</span>
+[root@www ~]# <span class="term_command">rm -r /mnt/snapshot/etc /mnt/snapshot/log</span>
+[root@www ~]# <span class="term_command">cp -a /boot /lib /sbin /mnt/snapshot/</span>
+[root@www ~]# <span class="term_command">ll /mnt/snapshot</span>
+drwxr-xr-x  4 root root  4096 Dec 15 16:28 boot
+drwxr-xr-x 14 root root  4096 Sep  5  2008 lib
+drwx------  2 root root 16384 Mar 11 16:59 lost+found
+drwxr-xr-x  2 root root 12288 Sep  5  2008 sbin  <span class="term_note">&lt;==與原本資料有差異了</span>
+
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdlv /mnt/lvm</span>
+[root@www ~]# <span class="term_command">ll /mnt/lvm</span>
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  17 root root  4096 Mar 11 14:17 log
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+<span class="term_say"># 不論你在快照區惡搞啥咚咚，原本的 vbirdlv 裡面的資料安好如初啊！
+# 假設你將 vbirdss 搞爛了！裡面的資料不再需要！那該如何是好？</span>
+
+<span class="term_hd"># 4. 還原原本快照區的資料，回到與原檔案系統相同的資訊</span>
+[root@www ~]# <span class="term_command">umount /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">lvremove /dev/vbirdvg/vbirdss</span>
+Do you really want to remove active logical volume "vbirdss"? [y/n]: <span class="term_command">y</span>
+  Logical volume "vbirdss" successfully removed
+
+[root@www ~]# <span class="term_command">lvcreate -s -l 89 -n vbirdss /dev/vbirdvg/vbirdlv</span>
+[root@www ~]# <span class="term_command">mount /dev/vbirdvg/vbirdss /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">ll /mnt/snapshot</span>
+drwxr-xr-x 105 root root 12288 Mar 11 16:59 etc
+drwxr-xr-x  17 root root  4096 Mar 11 14:17 log
+drwx------   2 root root 16384 Mar 11 16:59 lost+found
+<span class="term_say"># 資料這樣就復原了！</span>
+</pre></td></tr></table>
+
+		<p>老實說，上面的測試有點無厘頭～因為快照區損毀了就刪除再建一個就好啦！何必還要測試呢？
+		不過，為了讓您瞭解到快照區也能夠這樣使用，上面的測試還是需要存在的啦！未來如果你有接觸到虛擬機器，
+		再回到這裡來溫習一下肯定會有收穫的！</p>
+	</div>
+
+
+	<hr /><a name="lvm_hint"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">LVM 相關指令彙整與 LVM 的關閉</span><br />
+	<div class="block2">
+		<p>好了，我們將上述用過的一些指令給他彙整一下，提供給您參考參考：</p>
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td width="23%">任務</td><td width="23%%">PV 階段</td><td width="23%">VG 
+	階段</td><td width="26%">LV 階段</td></tr>
+<tr><td bgcolor="lightblue">搜尋(scan)</td><td>pvscan</td><td>vgscan</td><td>lvscan</td></tr>
+<tr><td bgcolor="lightblue">建立(create)</td><td>pvcreate</td><td>vgcreate</td><td>lvcreate</td></tr>
+<tr><td bgcolor="lightblue">列出(display)</td><td>pvdisplay</td><td>vgdisplay</td><td>lvdisplay</td></tr>
+<tr><td bgcolor="lightblue">增加(extend)</td><td>　</td><td>vgextend</td><td>lvextend (lvresize)</td></tr>
+<tr><td bgcolor="lightblue">減少(reduce)</td><td>　</td><td>vgreduce</td><td>lvreduce (lvresize)</td></tr>
+<tr><td bgcolor="lightblue">刪除(remove)</td><td>pvremove</td><td>vgremove</td><td>lvremove</td></tr>
+<tr><td bgcolor="lightblue">改變容量(resize)</td><td>　</td><td>　</td><td>lvresize</td></tr>
+<tr><td bgcolor="lightblue">改變屬性(attribute)</td><td>pvchange</td><td>vgchange</td><td>lvchange</td></tr>
+</table>
+
+		<p>至於檔案系統階段 (filesystem  的格式化處理) 部分，還需要以 resize2fs 來修訂檔案系統實際的大小才行啊！ ^_^
+		。至於雖然 LVM 可以彈性的管理你的磁碟容量，但是要注意，如果你想要使用 LVM 
+		管理您的硬碟時，那麼在安裝的時候就得要做好 LVM 的規劃了，
+		否則未來還是需要先以傳統的磁碟增加方式來增加後，移動資料後，才能夠進行 LVM 的使用啊！</p>
+
+		<p>會玩 LVM 還不行！你必須要會移除系統內的 LVM 喔！因為你的實體 partition 已經被使用到 LVM 去，
+		如果你還沒有將 LVM 關閉就直接將那些 partition 刪除或轉為其他用途的話，系統是會發生很大的問題的！
+		所以囉，你必須要知道如何將 LVM 的裝置關閉並移除才行！會不會很難呢？其實不會啦！
+		依據以下的流程來處理即可：</p>
+
+		<ol class="text_import2">
+		<li>先卸載系統上面的 LVM 檔案系統 (包括快照與所有 LV)；</li>
+		<li>使用 lvremove 移除 LV ；</li>
+		<li>使用 vgchange -a n VGname 讓 VGname 這個 VG 不具有 Active 的標誌；</li>
+		<li>使用 vgremove 移除 VG：</li>
+		<li>使用 pvremove 移除 PV；</li>
+		<li>最後，使用 fdisk 修改 ID 回來啊！</li>
+		</ol>
+
+		<p>好吧！那就實際的將我們之前建立的所有 LVM 資料給刪除吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">umount /mnt/lvm</span>
+[root@www ~]# <span class="term_command">umount /mnt/snapshot</span>
+[root@www ~]# <span class="term_command">lvremove /dev/vbirdvg/vbirdss</span>  <span class="term_note">&lt;==先處理快照</span>
+Do you really want to remove active logical volume "vbirdss"? [y/n]: <span class="term_command">y</span>
+  Logical volume "vbirdss" successfully removed
+[root@www ~]# <span class="term_command">lvremove /dev/vbirdvg/vbirdlv</span>  <span class="term_note">&lt;==再處理原系統</span>
+Do you really want to remove active logical volume "vbirdlv"? [y/n]: <span class="term_command">y</span>
+  Logical volume "vbirdlv" successfully removed
+
+[root@www ~]# <span class="term_command">vgchange -a n vbirdvg</span>
+  0 logical volume(s) in volume group "vbirdvg" now active
+
+[root@www ~]# <span class="term_command">vgremove vbirdvg</span>
+  Volume group "vbirdvg" successfully removed
+
+[root@www ~]# <span class="term_command">pvremove /dev/hda{6,7,8,9,10}</span>
+  Labels on physical volume "/dev/hda6" successfully wiped
+  Labels on physical volume "/dev/hda7" successfully wiped
+  Labels on physical volume "/dev/hda8" successfully wiped
+  Labels on physical volume "/dev/hda9" successfully wiped
+  Labels on physical volume "/dev/hda10" successfully wiped
+</pre></td></tr></table>
+
+		<p>最後再用 <a href="/linux_basic/0230filesystem.php#fdisk">fdisk</a> 將磁碟的 ID 給他改回來 82 
+		就好啦！整個過程就這樣的啦！ ^_^</p>
+	</div>
+</div>
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>Quota 可公平的分配系統上面的磁碟容量給使用者；分配的資源可以是磁碟容量(block)或可建立檔案數量(inode)；</li>
+	<li>Quota 的限制可以有 soft/hard/grace time 等重要項目；</li>
+	<li>Quota 僅能針對整個 filesystem 進行限制，不是針對目錄喔！</li>
+	<li>Quota 的使用必須要核心與檔案系統均支援。檔案系統的參數必須含有 usrquota, grpquota</li>
+	<li>Quota 實作的指令有 quotacheck, quotaon, edquota, repquota 等指令；</li>
+	<li>磁碟陣列 (RAID) 有硬體與軟體之分，Linux 作業系統可支援軟體磁碟陣列，透過 mdadm 套件來達成；</li>
+	<li>磁碟陣列建置的考量依據為『容量』、『效能』、『資料可靠性』等；</li>
+	<li>磁碟陣列所建置的等級常見有的 raid0, raid1, raid0+1, raid5 及 raid6</li>
+	<li>硬體磁碟陣列的裝置檔名與 SCSI 相同，至於 software RAID 則為 /dev/md[0-9]</li>
+	<li>軟體磁碟陣列的狀態可藉由 /proc/mdstat 檔案來瞭解；</li>
+	<li>LVM 強調的是『彈性的變化檔案系統的容量』；</li>
+	<li>與 LVM 有關的元件有： PV/VG/PE/LV 等元件，可以被格式化者為 LV</li>
+	<li>LVM 擁有快照功能，快照可以記錄 LV 的資料內容，並與原有的 LV 共享未更動的資料，備份與還原就變的很簡單；</li>
+	<li>Ext3 透過 resize2fs 指令，可以彈性的調整檔案系統的大小</li>
+</ul>
+</div>
+
+
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+	<li>情境模擬題一：由於 LVM 可以彈性調整 filesystem 的大小，但是缺點是可能沒有加速與硬體備份(與快照不同)的功能。
+	而磁碟陣列則具有效能與備份的功能，但是無法提供類似 LVM 的優點。在此情境中，我們想利用『<span 
+	class="text_import2">在 RAID 上面建置 LVM</span>』的功能，以達到兩者兼顧的能力。<br /><br />
+
+	<ul>
+		<li>目標：測試在 RAID 磁碟上面架構 LVM 系統；</li>
+		<li>需求：需要具有磁碟管理的能力，包括 RAID 與 LVM；</li>
+		<li>前提：將本章與之前章節練習所製作的分割槽全部刪除，剩下預設的分割槽即可。</li>
+	</ul><br />
+
+	那要如何處理呢？如下的流程一個步驟一個步驟的實施看看吧：<br /><br />
+
+	<ol>
+	<li>復原系統時，你必須要：<br /><br />
+		<ul>
+		<li>利用 umount 先卸載之前掛載的檔案系統；</li>
+		<li>修改 /etc/fstab 裡面的資料，讓開機不會自動掛載；</li>
+		<li>利用 fdisk 將該分割槽刪除。</li>
+		</ul><br />
+		最終你的系統應該會只剩下如下的模樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1          13      104391   83  Linux
+/dev/hda2              14        1288    10241437+  83  Linux
+/dev/hda3            1289        1925     5116702+  83  Linux
+/dev/hda4            1926        9382    59898352+   5  Extended
+/dev/hda5            1926        2052     1020096   82  Linux swap / Solaris
+</pre></td></tr></table><br /></li>
+
+		<li>建立 RAID ，假設我們利用五個 1GB 的分割槽建立 RAID-5 ，且具有一個 spare disk ，
+		那麼你應該要如何進行？首先，請自行使用 fdisk 建置好如下的分割槽狀態：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">fdisk -l</span>
+<span class="term_say">....(前面省略)....</span>
+/dev/hda6            2053        2175      987966   83  Linux
+/dev/hda7            2176        2298      987966   83  Linux
+/dev/hda8            2299        2421      987966   83  Linux
+/dev/hda9            2422        2544      987966   83  Linux
+/dev/hda10           2545        2667      987966   83  Linux
+</pre></td></tr></table>
+
+		接下來開始建立 RAID 吧！建立的方法可以如下簡單處理即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mdadm --create --auto=yes /dev/md0 --level=5  \</span>
+&gt; <span class="term_command">--raid-devices=4 --spare-devices=1 /dev/hda{6,7,8,9,10}</span>
+</pre></td></tr></table>
+
+		若無出現任何錯誤訊息，此時你已經具有 /dev/md0 這個磁碟陣列裝置了！接下來讓我們處理 LVM 吧！<br /><br /></li>
+
+		<li>開始處理 LVM ，現在我們假設所有的參數都使用預設值，包括 PE ，然後 VG 名為 raidvg ，LV 名為
+		raidlv ，底下為基本的流程：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">pvcreate /dev/md0                 </span> <span class="term_note">&lt;==建立 PV</span>
+[root@www ~]# <span class="term_command">vgcreate raidvg /dev/md0          </span> <span class="term_note">&lt;==建立 VG</span>
+[root@www ~]# <span class="term_command">lvcreate -L 2.82G -n raidlv raidvg</span> <span class="term_note">&lt;==建立 LM</span>
+[root@www ~]# <span class="term_command">lvdisplay</span>
+  --- Logical volume ---
+  LV Name                /dev/raidvg/raidlv
+  VG Name                raidvg
+  LV UUID                zQsKqW-8Bt2-kpJF-8rCI-Cql1-XQYT-jw1mfH
+  LV Write Access        read/write
+  LV Status              available
+  # open                 0
+  LV Size                2.82 GB
+  Current LE             722
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+</pre></td></tr></table>
+
+		這樣就搞定了 LVM 了！而且這個 LVM 是架構在 /dev/md0 上面的喔！然後就是檔案系統的建立與掛載了！<br /><br /></li>
+
+		<li>嘗試建立成為 Ext3 檔案系統，且掛載到 /mnt/raidlvm 目錄下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">mkfs -t ext3 /dev/raidvg/raidlv</span>
+[root@www ~]# <span class="term_command">mkdir /mnt/raidlvm</span>
+[root@www ~]# <span class="term_command">mount /dev/raidvg/raidlv /mnt/raidlvm</span>
+</pre></td></tr></table><br /></li>
+
+		<li>上述就是 LVM 架構在 RAID 上面的技巧，之後的動作都能夠使用本章的其他管理方式來管理，
+		包括 RAID 熱拔插機制、LVM 放大縮小機制等等。測試完畢之後請務必要關閉本題所建立的各項資訊。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">umount /mnt/raidlvm        </span> <span class="term_note">&lt;==卸載檔案系統</span>
+[root@www ~]# <span class="term_command">lvremove /dev/raidvg/raidlv</span> <span class="term_note">&lt;==移除 LV</span>
+[root@www ~]# <span class="term_command">vgchange -a n raidvg       </span> <span class="term_note">&lt;==讓 VG 不活動</span>
+[root@www ~]# <span class="term_command">vgremove raidvg            </span> <span class="term_note">&lt;==移除 VG</span>
+[root@www ~]# <span class="term_command">pvremove /dev/md0          </span> <span class="term_note">&lt;==移除 PV</span>
+[root@www ~]# <span class="term_command">mdadm --stop /dev/md0      </span> <span class="term_note">&lt;==關閉 /dev/md0 RAID</span>
+[root@www ~]# <span class="term_command">fdisk /dev/hda             </span> <span class="term_note">&lt;==還原原本的分割槽</span>
+</pre></td></tr></table></li>
+
+	</ol></li>
+</ul>
+
+<hr />簡答題部分：
+<ul>
+	<li>在前一章的<a href="/linux_basic/0410accountmanager.php#manual_account_1">第一個大量新增帳號範例</a>中，
+	如果我想要讓每個用戶均具有 soft/hard 各為 40MB/50MB 的容量時，應該如何修改這個 script ？
+	<div class="blockex">
+		你得先要依據本章的作法，先將 /home 製作好 quota 的環境然後，
+		你可以在 do...done 內的最後一行，新增一行內容為：<br />
+		setquota -u $username 40000 50000 0 0 /home<br />
+		這樣就可以在製作用戶時，指定更新密碼且給予 quota 的限制！
+	</div></li>
+
+	<li>如果我想要讓 RAID 具有保護資料的功能，防止因為硬體損毀而導致資料的遺失，那我應該要選擇的 RAID 等級可能有哪些？
+	(請以本章談到的等級來思考即可)
+	<div class="blockex">
+		具有備份資料的有： RAID-1, RAID-5, RAID-6 
+	</div></li>
+
+	<li>在預設的 LVM 設定中，請問 LVM 能否具有『備份』的功能？
+	<div class="blockex">
+		是有的，就是那個快照 (snopshot) 的功能，此功能即可進行資料的備份！
+	</div></li>
+
+	<li>LVM 內的 LV 據說僅能達到 256 GB 的容量，請問如何克服此一容量問題？
+	<div class="blockex">
+		LV 的容量與 PE 這個資料有關，由於預設 PE 為 4MB ，所以才會有此限制。
+		若要修改這個限制值，則需要在建置 VG 時就給予 -s 的選項來進行 PE 數值的設定。
+		若給到 PE = 16MB 時，則 LV 的最大總量就能夠達到 1TB 的容量了。
+	</div></li>
+
+	<li>如果你的電腦主機有提供 RAID 0 的功能，你將你的三顆硬碟全部在 BIOS 階段使用 RAID 晶片整合成為一顆大磁碟，
+	則此磁碟在 Linux 系統當中的檔名為何？
+	<div class="blockex">
+		由於硬體磁碟陣列是在 BIOS 階段完成的，因此 Linux 系統會捉到一個完整的大的 RAID 磁碟，
+		此磁碟的檔名就會是『 /dev/sda 』！
+	</div></li>
+
+
+
+</ul>
+</div>
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+<ul>
+	<li><a name="ps1"></a>註1：若想對 RAID 有更深入的認識，可以參考底下的連結與書目：<br />
+		<a href="http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html"
+		target="_blank">http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html</a><br />
+		楊振和、『作業系統導論：第十一章』、學貫出版社，2006<br /></li>
+	<li><a name="ps2"></a>註2：詳細的 mdstat 說明也可以參考如下網頁：<br />
+		<a href="http://linux-raid.osdl.org/index.php/Mdstat"
+		target="_blank">http://linux-raid.osdl.org/index.php/Mdstat</a></li>
+	<li><a name="ps3"></a>註3：徐秉義老師在網管人雜誌 (<a href="http://www.babyface.idv.tw/NetAdmin/"
+		target="_blank">http://www.babyface.idv.tw/NetAdmin/</a>) 的投稿文章：<br />
+		磁碟管理：SoftRAID 與 LVM 綜合實做應用 (上)<br />
+		<a href="http://www.babyface.idv.tw/NetAdmin/16200705SoftRAIDLVM01/"
+		target="_blank">http://www.babyface.idv.tw/NetAdmin/16200705SoftRAIDLVM01/</a><br />
+		磁碟管理：SoftRAID 與 LVM 綜合實做應用 (下)<br />
+		<a href="http://www.babyface.idv.tw/NetAdmin/18200707SoftRAIDLVM02/"
+		target="_blank">http://www.babyface.idv.tw/NetAdmin/18200707SoftRAIDLVM02/</a></li>
+</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2002/07/14：第一次完成<br />
+2003/02/10：重新編排與加入 FAQ<br />
+2003/09/02：加入 <a href="#quotacheck">quotacheck</a> 發生錯誤時的解決方法。<br />
+2005/09/06：將舊的文章移動到 <a href="0420quota/0420quota.php">此處</a> 。<br />
+2005/09/06：進行版面風格的轉換，並且進行資料的查詢，加入 repquota 的簡單說明而已！<br />
+2009/03/04：將原本舊的基於 FC4 的文件移動到 <a href="0420quota/0420quota-fc4.php">此處</a> 。<br />
+2009/03/06：加入 <a href="#warnquota">warnquota</a> 這玩意兒！挺有趣的哩！<br />
+2009/03/12：加入了 software RAID 與 LVM 的加強說明，尤其是 LVM 的快照 (snapshot) 的說明！<br />
+2009/09/10：修改一些字樣之外，增加情境模擬，以及後續的簡答題部分題目。<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

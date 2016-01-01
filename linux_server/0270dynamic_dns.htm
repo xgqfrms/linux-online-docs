@@ -1,0 +1,489 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 申請合法的主機名稱</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="0270dynamic_dns.htm">
+    <span class="text_head0">申請合法的主機名稱</span></a><br />
+</div>
+    <div style="text-align:left">
+        <a href="0270dynamic_dns.htm?thisscreen=800x600">切換解析度為 800x600</a>
+    </div>
+    <div style="text-align:right">
+        <span class="text_history">最近更新日期：2006/09/16</span>
+    </div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	呵呵！在您讀完了網路基礎，設定好了防火牆，解決了認識埠口的問題，並且架設了個人簡易的防火牆之後，
+	總算是準備要開始來給他進入 Server 的架設了！伺服器架設的步驟裡面，很重要的一點是『<b>您的主機名稱必須要在
+	Internet 上面可以被查詢</b>』才好！由網路基礎我們知道網路上的設備(主機或其他網路媒體)僅認識
+	IP ，但人類對於 IP 記憶力又不佳，所以才會以主機名稱來取代 IP。不過，
+	您的主機名稱要能夠被查詢到才有用啊！這個時候，一個『合法』的主機名稱就很重要了！那要合法的主機，就得要讓
+	DNS 系統能夠找的到您的主機啊！不過，如果我們的主機是使用撥接得到的不固定
+	IP 呢？又該如何申請 DNS 主機名稱？那就得要使用動態 DNS 的系統囉！在這個章節中，我們主要在介紹
+	Client 端的設定，而不是在設定 DNS 主機喔！ ^_^
+</td></tr></table><br />
+
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#before">本章的行前準備工作</a><br />
+2. <a href="#hostname">為何需要主機名稱</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#hostname_why">主機名稱的由來</a><br />
+	　　2.2 <a href="#hostname_avalible">重點在合法授權</a><br />
+	　　2.2 <a href="#hostname_what">申請靜態還是動態 DNS 主機名稱 </a><br />
+	</span>
+3. <a href="#need">註冊一個合法的主機名稱</a><br />
+	<span class=text_h2>
+	　　3.1 <a href="#need_static">靜態 DNS 註冊：以 Hinet 為例</a><br />
+	　　3.2 <a href="#need_dynamic_noip">動態 DNS 註冊：以 no-ip 為例</a><br />
+	</span>
+4. <a href="#ex">課後練習</a><br />
+5. <a href="#reference">參考資料</a><br />
+<span class=text_h2>
+5. <a href="http://phorum.vbird.org/viewtopic.htm?t=26634"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?t=26634</a><br />
+</span>
+
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a NAME="before"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章的行前準備工作</span><br />
+<div class=block1>
+	在這個章節當中，我們將會介紹如何申請一個合法的主機名稱。目前 Internet 上面使用的主機名稱都是透過所謂的
+	DNS 系統，而你想要取得一個 DNS 的主機名稱，就必須要『註冊』，所謂的『註冊』就是要錢去申請啦！
+	當然也有免費提供主機名稱的服務啦！在這個章節當中鳥哥不會介紹如何架設一部 DNS 主機，
+	而是介紹如何利用註冊或免費申請的方式來達成主機名稱的取得。在這一章開始前，您最好先複習一下：<br />
+	<ul>
+	<li>因為需要安裝軟體，你需要知道<a href="../linux_basic/0520source_code_and_tarball.htm"
+		target="_blank">原始碼、tarball 及安裝的流程</a>；
+	<li>取得主機名稱你需要知道<a href="0110network_basic.htm#prepare_dns"
+		target="_blank">網路基礎章節內的 DNS 簡介</a>；
+	<li>由於談到很多 IP 的觀念，你必須要知道<a href="0110network_basic.htm#ipandmac_type"
+		target="_blank">網路基礎章節內的自動取得 IP 與固定 IP 的意義</a>；
+	</ul>
+	如果沒問題的話，那就趕緊來玩玩！<br /><br />
+</div>
+
+
+<hr /><a NAME="hostname"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">為何需要主機名稱</span><br />
+<div class=block1>
+	如果你已經將網路基礎那一章看完的話，應該會知道其實我們的 TCP/IP 環境只要有 IP 與正確的路由即可連線了。
+	那麼你申請主機名稱要幹嘛？因為『<span class=text_import2>沒辦法啊！人腦太不中用了！</span>』
+	舉例來說，你可以背出來我們常上去查資料的 www.google.com 的 IP 嗎？報告！鳥哥沒辦法背出來～<br /><br />
+
+	因為 IP 是那麼難背的東西，而且，如果您的 IP 又是類似撥接的不固定的 IP 時，那還更傷腦筋呢！
+	因此我們才會習慣以熟悉的英文字串來做為主機名稱，
+	然後讓『這個主機名稱與 IP 達成對應』，那直接記憶主機名稱就行了，反正 IP 的查詢就交給電腦主機來做即可！
+	在這樣的想法下，我們當然就需要有主機名稱啦！底下咱們就來談一談先！<br /><br />
+
+	<hr /><a NAME="hostname_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主機名稱的由來</span><br />
+	<div class=block2>
+		從上面的說明我們知道因為 IP 不好記，所以人類習慣使用主機名稱來記憶與連上某部主機。
+		好在早期連上網路的電腦數量不多，所以在網路上的人們就想出一個簡單的辦法來進行主機名稱與 IP 
+		的對應，那就是『<span class=text_import2>在每部電腦的 /etc/hosts 裡面設定好主機名稱與 IP 
+		的對應表</span>』。那麼未來人們就可以直接藉由主機名稱來連接上某些網路上的主機囉！<br /><br />
+
+		然而因為科技的發達，連上 Internet 的人們越來越多，使用 /etc/hosts 
+		的方法已經搞不定了(只要一部電腦上線，全部的 Internet 上面的所有電腦都要重新改寫 /etc/hosts！不太好吧！)
+		，這個時候領域名稱系統 ( Domain Name System, DNS ) 就適時的出現了！<br /><br />
+
+		DNS 利用類似樹狀目錄的型態，<span class=text_import2>將主機名稱的管理分配在不同層級的 DNS 
+		主機當中，經由分層管理，所以每一部主機的記憶的資訊就不會很多，而且異動上面也相當的容易修改</span>！
+		那麼這個 DNS 的功能您知道了嗎？對啦！就是『<span class=text_import2>將電腦主機的名稱轉譯成 
+		IP</span> 』就是了！當然囉，他的額外功能還很多，關於 DNS 的詳細的解析部分我們將在後續的 
+		<a href="0350dns.htm">DNS 主機架設</a>章節當中在持續的加強內容，總之，
+		他的最大功能就是『<span class=text_import2>讓有意義的，人類較容易記憶的主機名稱(英文字母)
+		，轉譯成為電腦所熟悉的 IP 位址！</span>』<br /><br />
+	</div>
+
+	<hr /><a NAME="hostname_avalible"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">重點在合法授權</span><br />
+	<div class=block2>
+		很多朋友都認為：『<span class=text_import2>因為我想要架站，所以主機需要有個主機名稱，
+		因此我就得要架設 DNS？</span>』是這樣嗎？當然不是囉！DNS 是個很龐大的架構，
+		而且是串連在全球的網路當中，除非你經由『註冊』的手續來讓 DNS 系統承認你的主機名稱的存在，
+		否則你架設的 DNS 只能說是一個『地下練習的測試站』而已啦！並沒有用途的。<br /><br />
+
+		那我要如何加入 DNS 系統呢？很簡單啦！首先你必須要選擇一個註冊單位，
+		並且檢查出你想要註冊的主機名稱是否存在？主機名稱是有意義的，並不是你可以隨便註冊的喔！
+		舉例來說，在台灣常見的個人網站註冊主機名稱為： *.idv.tw ，而公司行號則可能註冊為
+		*.com.tw 了！這個得要特別留意。至於台灣地區的註冊單位很多，你可以選擇例如 Hinet 或 Seednet 
+		之類的 ISP 來註冊。當然，你也可以選擇免費的 no-ip.org 來註冊的。<br /><br />
+
+		但要請您特別注意的是，並不是所有的註冊單位都提供單純主機名稱的對應功能，
+		所以要註冊前，請『貨比三家』啊！鳥哥所申請的單位分別是國外的 .org 及台灣的 Hinet 兩家，
+		Hinet 有提供 .idv.tw 的主機名稱對應，還不錯。
+		當然你也可以使用免費的 no-ip.org 來進行主機名稱的註冊！<br /><br />
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		在這個章節當中，鳥哥的講解比較少，因為很多資料都與 <a href="0350dns.htm">DNS 伺服器篇</a>
+		有重複，在這個章節當中鳥哥主要在介紹動態 IP 架站的一個簡單主機名稱申請方式啦！ ^_^
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a NAME="hostname_what"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">申請靜態還是動態 
+	DNS 主機名稱</span><br />
+	<div class=block2>
+		由上面的說明當中，我們可以很清楚的知道 DNS 系統最大的功能就是在主機名稱對應 IP 
+		的轉譯上面。當然啦，預設的 DNS 轉譯是用在『<span class=text_import2>固定 IP 對應主機名稱</span>』
+		的方法上面的！夭壽喔！我們的小站很多都是以非固定 IP (很多人也稱為浮動式 IP 、動態 IP 等等的名稱) 
+		來上網的，更有甚者， Hinet 的 ADSL 撥接都是 24 小時強制斷線一次的，所以我們都得需要重新撥接上網，
+		而每次撥接成功後取得的 IP 可不見得相同啊，如此一來 IP 不是一直在變嗎？
+		那麼我不就需要一直跟我上層 DNS 主機的管理員申請『變更 IP 』嗎？會不會太麻煩了點？ <br /><br />
+
+		是很麻煩啊！所以現在為了解決這個問題，很多 ISP 提供了所謂的 <span class=text_import2>動態 DNS 
+		主機服務</span> 的功能，他是這樣做的：
+		<ol><span class=text_import2>
+		<li>Client 端(就是您啦)每次開機或者是重新撥接，並取得一個新的 IP 之後，會向 DNS Server 
+		端提出要求，希望 Server 端變更主機名稱與 IP 的對應 (這個步驟在每個主要的 ISP 都有提供適當的 
+		program 來提供給 client 使用)；<br /><br />
+		<li>Server 端接受 Client 端的要求之後，會先去查詢 Client 提供的帳號密碼是否正確，
+		正確之後就會立即修改 Server 本身對於您的主機名稱的設定值。
+		</span></ol>
+
+		所以囉，每次我們取得了新的 IP 之後，我們的主機名稱對應的 IP 也會跟著在 DNS 系統上面更新，
+		如此一來，只要別人知道您的主機名稱，不論您的 IP 為何，他一定可以連上您的主機 (因為 IP 跟著您的主機而變！) 
+		這對於我們這種使用動態 IP 的人是很有幫助的！ (阿！真是造福我們這些窮苦人家的孩子呀！) <br /><br />
+
+		不過，還是需要注意的是，目前的主機名稱申請很多是『需要錢的』！如果您需要比較穩定的主機名稱對應 
+		IP 的服務，那麼花點錢來註冊還是必須的，不過，如果是實驗性質的網站，那麼也是可以申請免費的動態 
+		DNS 系統喔！<br />
+	</div>
+</div>
+
+
+<hr /><a NAME="need"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">註冊一個合法的主機名稱</span><br />
+<div class=block1>
+	<span class=text_import1>靜態 DNS 主機註冊：</span><br />
+	好了，既然知道了 DNS 的用途，那麼自然我們就需要來申請 DNS 啦！不然怎麼架設網站呢？目前的靜態 IP 
+	對應主機名稱的註冊網站實在太多了，我們僅提出幾個出來分享就是了！<br />
+	<ul>
+	<li>台灣網路資訊中心：<a href="http://www.twnic.net" target="_blank">http://www.twnic.net</a>
+	<li>國外的領域名稱系統：<a href="http://www.netsol.com/" target="_blank">http://www.netsol.com/</a>
+	<li>國外的領域名稱系統：<a href="http://www.dotster.com/" target="_blank">http://www.dotster.com/</a>
+	</ul>
+
+	<span class=text_import1>動態 DNS 主機註冊：</span><br />
+	那麼有沒有免費的 DNS 系統呀！呵呵！當然有囉！我們要感謝造福我們這些窮苦人家的孩子的大好人～
+	您可以在底下找到相關的資訊：<br />
+	<ul>
+	<li>國外的免費 DNS 系統：<a href="http://www.no-ip.com" target="_blank">http://www.no-ip.com</a>
+	</ul><br />
+
+	<hr /><a NAME="need_static"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">靜態 DNS 註冊：以 
+	Hinet 為例</span><br />
+	<div class=block2>
+		靜態 DNS 的申請方式其實都差不多，都是需要：<br />
+		<ol><span class=text_import2>
+		<li>先查詢所想要註冊的網域是否存在；
+		<li>進入 ISP 去申請註冊您所想要的主機名稱；
+		<li>繳費，並等待主機名稱被啟用。
+		</span></ol>
+
+		我們以台灣蠻常見的 Hinet 這個 ISP 提供的『個人網域, .idv.tw』註冊方式來說明：<br /><br />
+
+		<ol>
+		<hr /><li><span class=text_import1>登入主畫面，並查詢欲註冊網域是否存在</span><br /><br />
+		直接連結到底下的網頁去：<a href="http://nweb.hinet.net" target="_blank">http://nweb.hinet.net/</a>
+		，並在 whois 的畫面當中(右上角)選擇您想要註冊的主機名稱，按下『Go』開始搜尋。<br /><br />
+
+		<center><img src="0270dynamic_dns/static_dns_01.png" border=1
+		title="利用 whois 查詢欲註冊網域是否存在" alt="利用 whois 查詢欲註冊網域是否存在"><br />
+		圖一、利用 whois 查詢欲註冊網域是否存在</center><br />
+
+		<hr /><li><span class=text_import1>逐步進行註冊</span><br /><br />
+		如果確認您的主機名稱沒有被註冊掉，那麼您就可以開始註冊了！同樣的在上面的網站連結當中，
+		選擇『個人網域名稱』就可以開始申請了！請依序一步一步辦理！這裡不再說明了，反正都是中文，
+		看的懂得啦！ ^_^<br /><br />
+
+		<center><img src="0270dynamic_dns/static_dns_02.png" border=1
+		title="個人網域逐步註冊的流程示意圖" alt="個人網域逐步註冊的流程示意圖"><br />
+		圖二、個人網域逐步註冊的流程示意圖</center><br />
+
+		<hr /><li><span class=text_import1>填寫主機名稱對應的 IP</span><br /><br />
+		繳費完畢之後，我們就可以開始進行主機名稱的填寫了！在圖二的圖示中按下『DNS 指定/異動』的項目，
+		並填入您的主機名稱與密碼，然後就會出現如下的畫面了：<br /><br />
+
+		<center><img src="0270dynamic_dns/static_dns_03.png" border=1
+		title="主機名稱與 IP 對應的填寫範例" alt="主機名稱與 IP 對應的填寫範例"><br />
+		圖三、主機名稱與 IP 對應的填寫範例</center><br />
+
+		特別的給他留意，因為我們沒有要架設 DNS 主機，所以當然最上方要選擇『主機』的項目，
+		然後您可以填入三部主機名稱喔！當然，這三部主機名稱可以通通指向同一個 IP ，也可以不同！
+		隨您的便吶！需要注意到的是，您的主機名稱應該是『othername.yourhost.idv.tw』後面的 
+		yourhost.idv.tw 是不變的，前面的 othername 則可以自由選取呢！例如鳥哥上面的設定，後面均是 
+		vbird.idv.tw ，而前面的名稱就可以讓我自由選擇啦！<br /><br />
+
+		<hr /><li><span class=text_import1>等待 DNS 啟用</span><br /><br />
+		在上圖三當中按下『填寫完請按這裡』後，就等著啟用吧！不過設定成功到可以使用，
+		其實需要一定的時間的，以鳥哥為例，第一次申請之後，大約過了 20 
+		小時該設定才正確的啟動呢！請以請耐心等候啊！不要太著急囉！ ^_^<br /><br />
+		</ol>
+
+		各家的領域名稱註冊流程都差不多，不過，金額是有點差異的，當然，服務也就有不同啊！鳥哥的
+		vbird.org 領域名稱則是在 <a href="http://www.godaddy.com/" 
+		target="_blank">http://www.godaddy.com</a> 註冊的喔！如果您不想要使用 
+		.idv.tw 來註冊的話，那麼國外的 ISP 提供的 DNS 也可以考慮看看說！<br /><br />
+	</div>
+
+	<hr /><a NAME="need_dynamic_noip"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">動態 DNS 註冊：以
+	no-ip 為例</span><br />
+	<div class=block2>
+		如果你跟鳥哥一樣使用 ADSL 撥接的方式來上網，這表示你的 IP 應該是不固定的！果真如此的話，
+		那想要架站就比較麻煩一點！因為上面利用 Hinet 註冊的方式通常是給固定 IP 使用的，
+		你應該不會想要天天上去更新你的 IP 吧？此時這個 no-ip.com 所提供的免費動態 IP 
+		對應主機名稱的服務就很重要啦！我們先來申請一個主機名稱來玩玩吧！ ^_^<br /><br />
+		<ol>
+		<hr /><li><span class=text_import1>登入主網頁，並且註冊一個新帳號</span><br /><br />
+		你必須要連上 <a href="http://www.no-ip.com" target="_blank">http://www.no-ip.com</a> 這個網站，
+		然後在出現的畫面當中選擇『 Sign-up Now 』那個項目：<br /><br />
+
+		<a name="fig_04"></a><center><img src="0270dynamic_dns/no-ip_01.png" border=1
+		title="no-ip 網站的註冊流程之一" alt="no-ip 網站的註冊流程之一"><br />
+		圖四、 no-ip 網站的註冊流程之一</center><br />
+
+		<hr /><li><span class=text_import1>開始填寫識別資料</span><br /><br />
+		因為 no-ip 會發給您一份密碼，所以在出現的如下畫面中，您必須要填寫『
+		<span class=text_import2>一個可以收到郵件的合法 Email</span> 』，以及您的身份確認資料，
+		這很重要，因為後續的資料都是使用您註冊時的這個咚咚吶！然後再按下最底下的『SIGN UP NOW』即可！
+		如果沒有 Email 怎麼辦？現在免費的 email 這麼多，隨便申請一個吧！ ^_^<br /><br />
+
+		<center><img src="0270dynamic_dns/no-ip_02.png" border=1
+		title="no-ip 網站的註冊流程之二" alt="no-ip 網站的註冊流程之二"><br />
+		圖五、 no-ip 網站的註冊流程之二</center><br />
+
+		<hr /><li><span class=text_import1>啟用帳號</span><br /><br />
+		在你申請註冊一個新帳號後， no-ip 會發一封信給你，信件的內容有點像底下那樣：<br /><br />
+
+		<a name="fig_06"></a><center><img src="0270dynamic_dns/no-ip_03.png" border=1
+		title="no-ip 網站的註冊流程之三" alt="no-ip 網站的註冊流程之三"><br />
+		圖六、 no-ip 網站的註冊流程之三</center><br />
+
+		你必須要按下上圖第一個箭頭所指的連結後，你的帳號才會正式的被啟用的！
+		而上圖第二個連結則是在告知你可以到哪裡去下載動態 DNS 的用戶端軟體喔！
+		也就是說， no-ip 也有提供一個好用的軟體給 client 端，讓使用者可以『自動更新主機名稱與 IP 的對應』，
+		呵呵！很棒吧！<br /><br />
+
+		<hr /><li><span class=text_import1>登入 no-ip 且設定主機名稱與 IP 的對應</span><br /><br />
+		讓我們回到<a href="#fig_04">圖四</a>的地方察看一下，不是有可以輸入帳號與密碼的地方嗎？
+		請你填入你剛剛註冊時所填寫的 email 位址以及密碼後，就能夠登入你的 no-ip 帳號了。
+		在登入後的第一個畫面左手邊有點類似底下的圖示：<br /><br />
+
+		<a name="fig_07"></a><center><img src="0270dynamic_dns/no-ip_04.png" border=1
+		title="no-ip 網站的註冊流程之四" alt="no-ip 網站的註冊流程之四"><br />
+		圖七、 no-ip 網站的註冊流程之四</center><br />
+
+		在你按下那個『add』後，畫面就會產生如下的變化：<br /><br />
+
+		<center><img src="0270dynamic_dns/no-ip_05.png" border=1
+		title="no-ip 網站的註冊流程之五" alt="no-ip 網站的註冊流程之五"><br />
+		圖八、 no-ip 網站的註冊流程之五</center><br />
+
+		請依序填寫你想要的主機名稱、網域名稱 (通常鳥哥都建議使用 no-ip.org 這一個領域名稱！)，
+		還有你的 IP 後，咦！往下一看，竟然還有 MX 的紀錄！這東西很重要！
+		是用在做 mail server 時所需要的一項參數！你可以直接填寫與你的完整主機名稱相同的名字即可！
+		填寫完畢後，就按下『Create Host』吧！如果該主機名稱有被使用掉的話，
+		螢幕會出現警告訊息，此時請再選填另外的主機名稱吧！ ^_^<br /><br />
+
+		如果未來你想要修改或者是刪除該主機名稱時，可以按下<a href="#fig_07">圖七</a>內的 Manage 項目，
+		就能夠進行刪除與修訂的工作囉！就這麼簡單吶！<br /><br />
+
+		<hr /><li><span class=text_import1>設定自動更新主機名稱與 IP 的對應</span><br /><br />
+		如果系統重新開機，或者是重新撥接取得一個新的 IP 後，我們都要登入 no-ip 來修改的話，
+		那就太沒有效率了！所以 no-ip 提供一個好用的用戶端程式給使用者使用，就是在
+		<a href="#fig_06">圖六</a> email 內的那個下載連結！你可以點選該下載連結，
+		在出現的視窗當中會有三種程式，包括『 Windows, Mac, Linux/BSD/Unix 』，
+		我們當然是選擇 Linux 那個項目啊！請自行下載並且將該程式移動到 Linux 主機上吧！<br /><br />
+
+		整個安裝與啟用的流程式這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 編譯與安裝：</span>
+[root@linux ~]# <span class=term_command>cd /usr/local/src</span>
+[root@linux src]# <span class=term_command>tar -zxvf /root/noip-duc-linux.tar.gz</span>
+<span class=term_say># 假設你將程式放置到 /root 底下時</span>
+
+[root@linux src]# <span class=term_command>cd noip-2.1.3</span>
+<span class=term_say># 注意一下，這個目錄裡面有個檔名為 README.FIRST 的檔案，務必察看一下內容！</span>
+[root@linux noip-2.1.3]# <span class=term_command>make</span>
+[root@linux noip-2.1.3]# <span class=term_command>make install</span>
+<span class=term_say># 這樣會將主程式安裝在 /usr/local/bin/noip2 而主參數檔放在
+# /usr/local/etc/no-ip2.conf 當中！然後你必須要開始回答一些問題：</span>
+
+Please select the Internet interface from this list.
+
+By typing the number associated with it.
+0       eth0
+1       eth1
+<span class=term_command>1</span>      <span class=term_say>&lt;==因為鳥哥的主機對外使用 eth1 介面</span>
+
+Please enter the login/email string for no-ip.com  <span class=term_command>kiki@gmail.com</span>
+Please enter the password for user 'kiki@gmail.com' <span class=term_command>***</span>
+<span class=term_say># 上面這兩個是你剛剛註冊時所填寫的 email 與密碼喔！</span>
+
+Only one host [tsai.no-ip.org] is registered to this account.
+It will be used.
+Do you wish to run something at successful update?[N] (y/N) <span class=term_command>n</span>
+
+mv /tmp/no-ip2.conf /usr/local/etc/no-ip2.conf
+<span class=term_say># 重點在此！剛剛你做的設定檔被放到上面這個檔案中了！</span>
+</pre></td></tr></table>
+
+		這樣就將你的 no-ip 製作完畢，而且也可以開始來執行囉！執行的方法也是很簡單啦！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>2. noip2 的程式使用：</span>
+[root@linux ~]# <span class=term_command>/usr/local/bin/noip2</span>
+<span class=term_say># 不要懷疑！這樣輸入後，你在 no-ip 上面註冊的主機名稱，
+# 就開始可以自動的產生對應了！就這麼簡單！</span>
+
+[root@linux ~]# <span class=term_command>noip2 [-CS]</span>
+<span class=term_say>參數：
+-C ：重新設定參數，亦即設定剛剛我們上面輸入粗體字的咚咚！
+     如果您有兩個以上的 no-ip 主機名稱時，就一定需要使用 noip2 -C 
+     來重新設定參數檔案！
+-S ：將目前的 noip2 的狀況顯示出來！</span>
+
+[root@linux ~]# <span class=term_command>noip2 -S</span>
+1 noip2 process active.
+
+Process 4998, started as /usr/local/src/noip-2.1.3/noip2
+Using configuration from /usr/local/etc/no-ip2.conf
+Last IP Address set 61.xxx.111.ddd
+Account kiki@gmail.com
+configured for:
+        host  tsai.no-ip.org
+Address check every 1 minute, directly connected via /dev/eth1.
+</pre></td></tr></table>
+
+		嘿嘿！這樣就成功了！而且每分鐘 noip2 可以自動的去主網站上面進行更新呢！
+		真是很不錯！那如果想要一開機就啟動 noip2 呢？這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>3. 設定開機啟動：</span>
+[root@linux ~]# <span class=term_command>vi /etc/rc.d/rc.local</span>
+<span class=term_say># 加入底下這一行：</span>
+<span class=term_write>/usr/local/bin/noip2</span>
+</pre></td></tr></table>
+		</ol>
+	</div>
+</div>
+
+
+<hr /><a NAME="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">課後練習</span><br />
+<div class=block1>
+<ul>
+	<li>請簡易說明 /etc/hosts 的用途；</li>
+	<div class=block2><font color=white size=-1>
+	這個檔案是早期用在進行主機名稱與 IP 的解析的，目前比較常用在內部網域的名稱解析上，可以加快內部網域的反查喔！
+	</font></div>
+
+	<li>請說明『合法授權』的主機名稱需要做什麼？</li>
+	<div class=block2><font color=white size=-1>
+	如果想要合法授權，就需要向上層 DNS 主機『註冊』才行！而且還要上層 DNS 主機管理員願意將領域名稱的解析權限授權給您啊！
+	</font></div>
+
+	<li>什麼是動態 DNS 系統？(僅說明 client 端)</li>
+	<div class=block2><font color=white size=-1>
+	因為我們的 Client 撥接時，得到的 IP 都不是固定的，所以無法以 DNS 系統進行固定 IP 對應主機名稱的工作！
+	此時就需要動態 DNS 系統了！以 DNS 主機提供的動態更新主機名稱對應 IP 的機制，可以讓我們的不同 IP 
+	對應到同一個主機名稱吶！ 
+	</font></div>
+
+	<li>如果您使用 adsl 撥接來上網設定伺服器，那麼該申請哪一類型的主機名稱？為什麼？</li>
+	<div class=block2><font color=white size=-1>
+	因為我是以 ADSL 上網撥接，所以 IP 是不固定的，此時需要申請動態 DNS 主機的主機名稱，例如 no-ip.org 等等！
+	</font></div>
+</ul>
+</div>
+
+
+<hr /><a NAME="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li>台灣網路資訊中心：<a href="http://www.twnic.net/" target="_blank">http://www.twnic.net/</a></li>
+	<li>國外的領域名稱系統：<a href="http://www.netsol.com/" target="_blank">http://www.netsol.com/</a></li>
+	<li>國外的領域名稱系統：<a href="http://www.dotster.com/home/" target="_blank">http://www.dotster.com/</a></li>
+	<li>國外的免費 DNS 系統：<a href="http://www.no-ip.com" target="_blank">http://www.no-ip.com</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2002/08/05：第一次完成日期！<br />
+2003/08/26：修改篇名、增加一 <a href="#need_dynamic_noip">no-ip 的設定方式</a>！<br />
+2006/09/15：將舊的文章移動到 <a href="0270dynamic_dns/0270dynamic_dns.htm">此處</a>。<br />
+</span>
+<hr><span class="text_date">2002/08/05以來統計人數</span><br>
+<img SRC="http://linux.vbird.org/cgi-bin/Count.cgi?dd=A&ft=0&sh=T&pad=Y&df=vbird_linux_server_0270dynamic_dns.dat" 
+	NOSAVE height=15 width=60 align=ABSCENTER><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

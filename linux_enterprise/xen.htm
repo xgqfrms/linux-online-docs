@@ -1,0 +1,1699 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 利用 Xen 進行虛擬機器的製作</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <a href="xen.htm">
+    <span class="text_head0">利用<span class="text_head_en"> Xen </span>設計虛擬機器</span></a><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2008/09/09</span>
+</div>
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	我們常常講，最好將不同的伺服器架設在不同的主機硬體上面，也就是說，每部主機所負責的任務越簡單越好，
+	如此一來不但可以減少主機 debug 的時程，也能夠簡化安裝與設計主機的架構。但是，
+	每個服務一部主機對於小企業或者是個體戶來說，光是放置主機的空間、電源、以及後續的管理問題，
+	就會導致一堆困擾的產生。這個時候，虛擬機器就非常有用啦。<br /><br />
+
+	所謂的『虛擬機器』就是在一部實體主機上面虛擬出多部實體主機的環境，且每部實體主機都是獨立的，
+	除了原本的那部原主機外，其他的主機都可以獨立開、關機，由於個人電腦的能力在近年來突飛猛進，
+	速度與效能都非常棒，所以用一部實體主機來進行虛擬機器的架設，並適當的分配不同的服務在上頭，
+	將有助於能源的節約、管理的簡化以及服務追蹤的簡化哩！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class=block1>
+<span class="text_h1">
+1. <a href="#intro">前言</a><br />
+	<span class=text_h2>
+	　　1.1 <a href="#intro_whatisvm">什麼是虛擬機器</a><br />
+	　　1.2 <a href="#intro_howmanyvm">有哪些常見的虛擬機器軟體</a><br />
+	</span>
+2. <a href="#xen">初探 Xen</a><br />
+	<span class=text_h2>
+	　　2.1 <a href="#xen_type">Xen 的虛擬類型與特色</a><br />
+	　　2.2 <a href="#xen_work">Xen 的運作環境解釋</a><br />
+	　　2.3 <a href="#xen_hw">確定你的硬體是否支援 Xen 的運作</a><br />
+	　　2.4 <a href="#xen_package">所需要的 Xen 套件與核心</a>, <a href="#xen_package_1">xen 的套件結構</a><br />
+	　　2.5 <a href="#xen_example">第一個泛用實例</a><br />
+	　　　　2.5.0 <a href="#xen_example_0">硬體支援性</a><br />
+	　　　　2.5.1 <a href="#xen_example_1">根目錄所需磁碟槽</a><br />
+	　　　　2.5.2 <a href="#xen_example_2">複製或安裝根目錄</a><br />
+	　　　　2.5.3 <a href="#xen_example_3">設定虛擬磁碟映象檔以及終端機介面</a><br />
+	　　　　2.5.4 <a href="#xen_example_4">編輯 xen 虛擬資料的設定檔</a><br />
+	　　　　2.5.5 <a href="#xen_example_5">利用 xm 指令啟動與管理 domain-1</a><br />
+	　　　　2.5.6 <a href="#xen_example_6">常見錯誤分析</a><br />
+3. <a href="#other_inst">其他半虛擬化的安裝方式</a><br />
+	　　3.1 <a href="#other_inst_inst">製作安裝伺服器</a><br />
+	　　3.2 <a href="#other_inst_virt">利用 virt-install 指令安裝乾淨的 CentOS</a><br />
+	　　3.3 <a href="#other_inst_centos5">CentOS5 所提供的一個實例</a><br />
+	</span>
+4. <a href="#step">Xen 的進階認識(這個章節還沒有動工，構思中)</a><br />
+	<span class=text_h2>
+	　　4.1 <a href="#step_">Xen 的網路介面</a><br />
+	　　4.2 <a href="#step_">Xen 網路安全</a><br />
+	　　4.3 <a href="#step_">全虛擬化：一個安裝 Windows 系統的實例(hvm 模式)</a><br />
+	　　4.4 <a href="#step_">教學實例：30個 domainU 的案例</a><br />
+	</span>
+<span class=text_h2>
+5. <a href="http://phorum.vbird.org/viewtopic.htm?p=128769"
+        target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.htm?p=128769</a><br />
+</span>
+</span>
+</div>
+
+<!-- 本文的正式部分 -->
+<hr /><a name="intro"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">前言</span><br />
+<div class=block1>
+	這個章節主要是在介紹 Xen 這個虛擬機器，那，什麼是虛擬機器？他有什麼用途？
+	目前有哪些常見的虛擬機器軟體 (Virtual Machine) ？底下我們先來說一說。<br /><br />
+
+	<hr /><a name="intro_whatisvm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">什麼是虛擬機器</span><br />
+	<div class=block2>
+		虛擬機器 (Virtual Machine) 與 
+		<a href="..0360apache.htm#www_adv_virtual">Apache 的虛擬主機 (Virtual host)</a>
+		(<a href="#ps1">註1</a>) 不一樣，
+		<span class=text_import2>虛擬機器的目的是希望能夠在一部實體主機上面『同時運作多個作業系統』</span>的一項功能。
+		為什麼我們需要在一部主機上面同時運作多個作業系統呢？可能原因有幾個：<br /><br />
+
+		<li><span class=text_import1>讓一部強效型主機負責多種業務時：</span>
+		<div class=block2>
+		由於電腦工業技術的發達，近年來的個人電腦不但越來越便宜，而且功能還越來越強大！
+		就在前幾個禮拜 (2007/09/xx) ，鳥哥也才收到兩部『四核心的、配備 2GB 主記憶體』的個人電腦！
+		這在台灣政府的中信標案裡面也已經有提供了，可見個人電腦實在是便宜又好用。<br /><br />
+
+		那麼好用的一部電腦如果拿來當網路伺服器，妳會覺得很浪費！怎麼說呢？
+		以鳥哥的鳥站 (<a href="http://linux.vbird.org" target="_blank">http://linux.vbird.org/</a>) 
+		來說，一部 AMD AthlonXP 2000+ (1.6GHz 的 CPU 速度) 就跑得非常的順暢，
+		運作至今應該也沒有發生突發性大流量導致服務中斷的情況，觀察這部主機的平均運作情況，
+		使用 sar 這個指令來察看一下，唔！每日平均 CPU 負載都在 10% 以下而已。
+		所以說，這部四核心的電腦拿來當鳥站的主機，根本就是浪費了他的才能。<br /><br />
+
+		如果能夠將多種服務集中在這部主機上面來跑，豈不甚好！才不好哩！
+		如果妳看過<a href="../linux_basic">基礎篇</a> (<a href="#ps2">註2</a>) 與<a href="../linux_server">伺服器篇</a>
+		(<a href="#ps3">註3</a>) 的介紹後，
+		肯定會認為主機的服務越單純越好，這樣在服務軟體除錯以及主機環境的單純化上面比較好。
+		所以說，一部好的主機如果僅用於一個特定的用途，實在很浪費。但如果每個服務都需要一部主機，
+		又覺得很討厭，因為包括主機的硬體維護、電費、軟體安裝、網路設定等等，都很麻煩，尤其又貴！<br /><br />
+
+		因為上述的問題，所以目前有很多專案都在開發『在一部實體主機上面模擬出另一部機器』的功能，
+		也就是說：『<span class=text_import2>我們希望能夠在一部主機上面 "<b>同時</b>" 
+		跑多個作業系統</span>』的意思。如果能達到這樣的功能，實際的硬體可以省略掉很多問題，
+		同時又可以充分的應用實體主機的資源，實在很不錯啊！<br /><br />
+		</div>
+
+		<li><span class=text_import1>同時豁弄多種不同的作業系統：</span>
+		<div class=block2>
+		時間拉回到四、五年前，當時的主機能力僅是還可以，還不算很夠力，而且價格不斐。
+		但是當時多種作業系統都很吸引人，包括 Windows/Linux/Mac/DOS... ，大家都希望能夠嘗試一下這些作業系統，
+		然而又不想花錢去購買一部新的主機來玩，這個時候<a 
+		href="../linux_basic/0156installfc4.htm#moreOS">多重開機</a> (<a href="#ps4">註4</a>) 就成了很重要的一環，
+		因為他可以讓我們在開機的過程當中選擇所想要執行的作業系統來操作說。<br /><br />
+
+		不過多重開機有個討厭的缺點，那就是『<span class=text_import2>我每次開機只能夠單玩一種作業系統</span>』，
+		所以如果妳想要在多個作業系統之間切換時，光是開、關機就會讓妳火氣大起來。
+		這個時候就有些公司開始開發能夠在一個作業系統上面『<span 
+		class=text_import2>模擬出另外一個可執行的作業系統</span>』環境，
+		所以此時就能夠在同時間操作兩種作業系統了。當時最流行的是 VMWare 這一套軟體啦！<br /><br />
+		</div>
+
+		雖然早期就已經有數種虛擬機器的軟體可以玩，不過當時畢竟是使用軟體來模擬的，
+		硬體並不直接支援這種虛擬機器的環境，所以效能上面非常的糟糕！不過拜 Intel/AMD 大力開發強效型 CPU 之功，
+		目前的主機硬體大部分都有支援虛擬機器的能力，如此一來我們就能夠使用快速的虛擬機器的環境囉！<br /><br />
+	</div>
+
+	<hr /><a name="intro_howmanyvm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">有哪些常見的虛擬機器軟體</span><br />
+	<div class=block2>
+		那麼目前有哪些常見的虛擬機器軟體呢？他們又各有何特色？底下就來說一說：<br /><br />
+
+		<li><span class=text_import1>老牌子的 VMWare (<a href="http://www.vmware.com/"
+			target="_blank">http://www.vmware.com/</a>)</span></li>
+		<div class=block2>
+		早期的玩家大概都有玩過這一套虛擬機器的軟體，這套軟體早期僅在 Windows 上面執行，
+		最大的優點就是可以讓使用者在 Windows 環境下同時模擬出一套 Linux 的環境，同時執行兩個作業系統。
+		鳥哥之前使用這套軟體的目的是用來捉 Linux 的安裝畫面！在這個功能上面 VMWare 實在很不錯。<br /><br />
+		不過早期的 VMWare 效能不太好，加上當時的主機效能也不佳，而且 VMWare 模擬的硬體不會與原本的主機相同，
+		因此鳥哥很不建議大家使用 VMWare 來學習 Linux 。然而隨著時代的進步，目前 VMWare 已經發展的相當不錯，
+		同時也提供 Open source 的版本給 Unix-Like 平台的 OS 使用，算是很不錯的。他也是目前虛擬機器市場的龍頭老大！<br /><br />
+		</div>
+
+		<li><span class=text_import1>已漸趨成熟的 Xen (<a href="http://www.xensource.com/"
+			target="_blank">http://www.xensource.com/</a>)</span></li>
+		<div class=block2>
+		Xen 是以 GNU 的 GPL 授權發佈的自由軟體，目的在於提供效能佳、可支援不同作業系統的同時運作、
+		且讓同時運作的作業系統彼此互相獨立的系統環境。Xen 是基於 X86 硬體所開發出來的虛擬機器監督器
+		(Virtual Machine Hypervisor) ，鳥哥覺得他最大的優點就是效能佳！鳥哥曾在一部 Celoron 366 MHz, 記憶體 192MB
+		的筆記型電腦上面模擬出一個 Xen 機器給上課的同學們豁弄，同時連線 50 個同學到該部模擬的 Xen 
+		機器上還不會覺得有延遲的問題，效能真的是很不錯。我們在下一節會詳細的介紹 Xen 這個好東西。<br /><br />
+		</div>
+
+		<li><span class=text_import1>後起之秀 KVM (Kernel based Virtual Machine,
+		<a href="http://kvm.qumranet.com/kvmwiki" target="_blank">http://kvm.qumranet.com/kvmwiki</a>)</span></li>
+		<div class=block2>
+		讓 Linux 發明者 Linus Torvarlds 喜好並且將之加入核心功能的虛擬機器就是這個 KVM 的技術！
+		KVM 已經於 Linux 2.6.20 版的核心中加入此項功能，KVM 不但提供完整的 Intel/AMD CPU 的虛擬技術支援，
+		而且提供完整的虛擬環境。雖然目前這個技術還不算很成熟，不過未來應該也可以發展的很不錯呢！
+		因為 Linux 核心本身就有支援啊！ ^_^！更多的 KVM 可以參考：
+		<a href="http://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine"
+		target="_blank">http://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine</a><br /><br />
+		</div>
+
+		<li><span class=text_import1>酷！炫！有勁的 VirtualBox (<a href="http://www.virtualbox.org/"
+			target="_blank">http://www.virtualbox.org/</a>)</span></li>
+		<div class=block2>
+		還有一套自由軟體的虛擬機器可以用，那就是同樣架構在 x86 上面的 VirtualBox 這套軟體啦！
+		這套軟體提供完整的虛擬環境，且可支援目前市面上的主流作業系統。
+		鳥哥曾經看過網中人前輩在他的筆記型電腦上面玩過這套東西，非常的炫麗，而且提供圖形化介面，
+		效能方面看起來也相當的優秀。不過，好像整合度方面的問題，偶而模擬的作業環境會當掉，
+		但是不會影響到原作業系統就是了。想要在 Linux 桌上型電腦上玩玩虛擬環境的朋友，鳥哥覺得這套東西最適合您！<br /><br />
+		</div>
+
+		其實每套虛擬機器的軟體都有其存在的價值，因為他們的功能與目的都不一樣。舉例來說，鳥哥認為 VirtualBox
+		很適合於想在 Linux 桌上型電腦上面玩 Windows 的朋友，雖然他不夠穩定。至於 Xen 
+		則很適合在一部高效能主機上面同時運作多個同版本的 Linux 系統，因為穩定度相當高，且性能優秀，
+		可讓使用者輕鬆的在一部機器上面運作多個獨立的作業系統來分別處理不同的網路服務呢！<br /><br />
+	</div>
+	<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		這一章底下的資料牽涉到很多硬體的觀念以及 Linux 作業系統最底層核心的架構說明，
+		如果您不想要瞭解這些基礎概念，可以直接看 CentOS 5.x 的實例說明即可。
+	</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div></div>
+
+
+<hr /><a name="xen"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">初探 Xen</span><br />
+<div class=block1>
+	Xen 的效能為什麼能夠這麼好？ Xen 在使用上面有什麼樣的限制？我的一部主機最多可以支援幾個 Xen 的模擬環境？
+	Xen 的模擬環境有幾種類型？ 這些疑問我們都得要先知道一下才好！
+	當然，最好能夠有個簡單的小例子來處理 Xen 的模擬環境囉。<br /><br />
+
+	<hr /><a name="xen_type"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Xen 的虛擬類型與特色</span><br />
+	<div class=block2>
+		Xen 這套自由軟體在虛擬機器的模擬類型方面主要分為<span class=text_import2>半虛擬化 
+		(Para-virtualization) 及全虛擬化 (Full
+		virtualization) 兩種，其中半虛擬化主要是透過修改 Linux 核心來達成的虛擬技術</span>。
+		半虛擬化技術所產生的虛擬機器需要與原本的作業系統相同較佳。使用半虛擬化的環境所具備的特色有：
+		(<a href="#ps5">註5</a>)<br />
+		<ul><span class=text_import2>
+		<li>虛擬機器的運作效率與實體機器的效能相當；
+		<li>最多可支援到具有 32 顆以上 CPU 的主機環境；
+		<li>支援 x86/32, x86/32 含 PAE 技術, 及 x86/64 的硬體平台環境；
+		<li>良好的硬體驅動程式支援，幾乎支援所有的 Linux 裝置之驅動程式；
+		</span></ul>
+
+		Xen 的半虛擬化技術主要是用在相同版本的 Linux 上面，也就是說，如果妳想要使用半虛擬化的方式啟動多個虛擬機器，
+		那麼那些虛擬機器全部都必須是相同的作業系統，甚至要求相同版本與相同核心的 Linux distribution 喔。<br /><br />
+
+		如果妳想要安裝不同版本的 Linux 或者是其他的 OS (例如 Windows XP) 時，就得要使用全虛擬化技術了。
+		但是全虛擬化技術是有其限制的，當你的硬體滿足下列需求時，全虛擬化技術才能夠動作：<br />
+
+		<ul><span class=text_import2>
+		<li>你的硬體支援 Intel 的 VT 技術 (Virtualization Technology, Intel-VT)；
+		<li>你的硬體支援 AMD 的 SVM 技術 (Secure Virtual Machine, AMD-SVM or, AMD-V)。
+		</span></ul>
+
+		此外，上面提到的 PAE 指的是 Intel 的實體位址延伸技術 (Physical Addressing Extensions, PAE)，
+		這項技術可讓原本僅支援到 4GB 實體記憶體的 32 位元硬體平台，可支援到最大 64GB 的記憶體喔！
+		而且， Xen 幾乎可以在所有的 P-II 以上等級的硬體平台上面跑半虛擬化任務，如果不跑全虛擬化的話，其實效能確實是 
+		OK 的啦！<br /><br />
+
+		近來由於虛擬機器軟體的流行，加上 x86 電腦效能與 CPU 運算核心單元的增加，兩大 x86 CPU 製造商 Intel/AMD 
+		都發表了新的整合到 CPU 的虛擬技術，分別是 Intel 的 Vanderpool 虛擬技術以及 AMD 的 Pacifica 技術。
+		這些技術有的也支援 Xen  ，這讓 Xen 的效能增進不少呢！ ^_^<br /><br />
+	</div>
+
+	<hr /><a name="xen_work"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Xen 的運作環境解釋</span><br />
+	<div class=block2>
+		在<a href="../linux_basic">基礎學習篇</a>裡面我們曾經談過硬體、核心與應用程式的關係，
+		所有的應用程式都是在核心層之上來完成的 (<a href="#ps6">註6</a>)。
+		然後<span class=text_import2>透過核心功能去呼叫與使用硬體元件的命令</span>。好了，
+		現在來仔細想一想，既然我有多個虛擬機器，每個虛擬機器的環境各別有自己的作業系統核心，
+		也就是有多個作業系統同時存在。<span class=text_import2>如果所有的作業系統都能夠完整的控制硬體的話，
+		那麼硬體到底該接受誰的指令來運作</span>？那個系統的指令會先被執行？這是很重要的問題，
+		因為如果這邊搞不定，那麼妳的硬體系統就只有當機一途。<br /><br />
+
+		為了解決這個問題，Xen 也分成多個層級 (layer) 來執行。他將 Linux 的核心修改過後，
+		再使用這個修改過後的核心開機，而開機後先載入 Xen 的監督器 (Hypervisor) ，
+		並且啟動第一個在上頭的作業系統，我們稱他為 domain-0。
+		(<span class=text_vbird>在 Xen 上面所謂的一個 domain 就是一個虛擬機器囉！</span>)<br /><br />
+
+		Domain-0 之所以要先被載入是因為 Domain-0 含有其他虛擬機器啟動所必須的控制指令，
+		並且 domain-0 也是控制虛擬裝置的重要主控系統。
+		<span class=text_import2>在 domain-0 上頭最重要的就是一個 xend 的常駐程式，其他的 domain 都是由這個 xend 來管理的。
+		</span>至於命名方面，除了 domain-0 之外的其他虛擬機器就依序被稱為 domain-1, domain-2 等等，
+		我們通稱為 domain-U 囉。這些咚咚的相關性有點像這樣：<br /><br />
+
+		<a name="fig2-1"></a><center><img src="xen/hypervisor_01.png" border=0
+		title="Xen Hypersvisor 的功能示意圖" alt="Xen Hypersvisor 的功能示意圖"><br />
+		圖 2-1、Xen Hypersvisor 的功能示意圖(<a href="#ps7">註7</a>)<br /><br /></center>
+
+		由上圖我們知道 domain-0 真的是很重要的，因為他直接控制 Xen 的監督器 (Hypervisor)，而且掌握了實際的
+		Linux 驅動程式 (drivers)。而其他的虛擬機器 (domain-U) 則是透過 Xen 監督器來與實際的硬體以及 domain-0 
+		達成溝通。而為了讓 domain-0 能夠與 Xen 結合，我們<span class=text_import2>必須要修改 domain-0 
+		的核心才能夠順利運作</span>。並且需要使用 domain-0 的核心來開機才可以。
+		domain-0 是所有虛擬機器的來源，所以他可以盡量簡單一點，其他的個別服務則可以放置到不同的 domain 當中了。<br /><br />
+
+		那個 xend 也是很重要的咚咚，他可以管理 domain-0 與其他 domain 之間的啟動與溝通，
+		可以提供一個終端機 (console) 介面來讓 domain-0 登入其他的 domain ，所以我們也必須要啟動這玩意兒才行。<br /><br />
+
+		早期 Xen 尚未被各 distribution 整合到各自的版本中時，使用者必須要由 Xen 的官方網站下載原始碼，
+		然後自行重新編譯核心以及編譯 Xen 軟體才行。說實在的，玩個 Xen 這麼麻煩，倒不如不要玩！^_^。
+		然而在 RHEL 5 (CentOS 5) 以後， Xen 已經包含在原始釋出的套件中了，所以我們直接用 yum 就能夠安裝妥當！
+		所以要搞定一部 Xen 的 domain-0 已經不再是不可能的任務囉！^_^<br /><br />
+
+		對於 Xen 的基本原理有一些認識之後，接下來就讓我們開始在 CentOS 5 上面進行一個小小的實驗吧！<br /><br />
+	</div>
+
+	<hr /><a name="xen_hw"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">確定你的硬體是否支援 Xen 的運作</span><br />
+	<div class=block2>
+		雖然說目前的硬體都很新了，不過有的朋友使用的是舊的主機來安裝 Linux ，所以我們必須要留意你的硬體是否支援 
+		xen 的運作。而我們知道 Xen 支援半虛擬化與全虛擬化兩種模式，兩種模式的需求為：<br /><br />
+
+		<li><span class=text_import1>半虛擬化 (Para-virtualization) 硬體需求：</span></li>
+		<div class=block2>
+		只要是 64 位元的 x86 主機 (x86_64) 都能夠支援半虛擬化的環境。如果是 32 位元的主機 (x86) 時，
+		該主機必須要支援的實體位址延伸技術 (PAE) 才能夠使用 xen 喔！那如何確認呢？很簡單，檢查 CPU 的參數即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /proc/cpuinfo | grep flags</span>
+flags  : fpu tsc msr <span class=term_write>pae</span> mce cx8 mtrr mca cmov pat pse36 mmx fxsr sse up
+</pre></td></tr></table>
+
+		嘿嘿！這一部主機是鳥哥的 P-III 800 主機，看吧！確實有支援 PAE 喔！所以當然可以玩 Xen 囉。<br /><br />
+		</div>
+
+		<li><span class=text_import1>全虛擬化 (Fully-virtualization) 硬體需求：</span></li>
+		<div class=block2>
+		如果妳需要全虛擬化的技術支援時，此時需要硬體有支援虛擬化技術才行。
+		目前在 x86 的主機當中， Intel 提供 VT 技術， AMD 則提供 SVM 技術。
+		這兩種技術在 CPU 的旗標分別是： <span class=text_import2>Intel (vmx) 與 AMD (svm)</span> 。
+		鳥哥在 Core Duo 主機上面的測試可以發現：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>在 Intel Core 2 Duo 的 CPU 主機上面測試 CPU 旗標：</span>
+[root@linux ~]# <span class=term_command>cat /proc/cpuinfo | grep flags</span>
+flags   : fpu tsc msr <span class=term_write>pae</span> mce cx8 apic mtrr mca cmov pat pse36 clflush dts 
+          acpi mmx fxsr sse sse2 ss ht tm pbe nx lm constant_tsc up pni 
+          monitor ds_cpl <span class=term_write>vmx</span> est tm2 cx16 xtpr lahf_lm
+<span class=term_say># 瞧！是有那個 vmx 的支援啦！</span>
+</pre></td></tr></table>
+
+		<a name="20080909"></a>
+		至於 AMD 的主機旗標則是：(下表感謝<a target="_blank"
+		href="http://phorum.vbird.org/profile.htm?mode=viewprofile&u=14101">donyingle</a>兄的提供！)<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>在 AMD Athlon(tm) 64 X2 的 CPU 主機上面測試 CPU 旗標：</span>
+[root@linux ~]# <span class=term_command>cat /proc/cpuinfo | grep flags</span>
+flags   : fpu vme de pse tsc msr <span class=term_write>pae</span> mce cx8 apic sep mtrr pge mca cmov 
+          pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt 
+          rdtscp lm 3dnowext 3dnow pni cx16 lahf_lm cmp_legacy <span class=term_write>svm</span> extapic 
+          cr8legacy 3dnowprefetch ts fid vid ttp tm stc 100mhzsteps 
+<span class=term_say># 瞧！是有那個 svm 的支援啦！</span>
+</pre></td></tr></table>
+		</div>
+
+		如果確定你的 CPU 有支援上述的條件後，嘿嘿！那我們就可以開始底下的遊戲啦！如果沒有支援呢？
+		那很抱歉，底下的資料看看就好！<br /><br />
+	</div>
+
+	<hr /><a name="xen_package"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">所需要的 Xen 套件與核心</span><br />
+	<div class=block2>
+		<span class=text_import1>注意：</span>
+		在開始安裝之前，請先參考<a href="#xen_hw">前一小節</a>以確定你的硬體已經支援 Xen 的半虛擬化功能了！<br /><br />
+
+		約略談了一下 Xen 的原理、特色之後，在開始玩弄 Xen 之前，我們得瞭解運作 Xen 
+		所需要的各項套件，並且順利安裝後，才能夠使用的啊！ ^_^。如同前一小節提到的，
+		要使用 Xen 半虛擬化 (Para-virtualization) 必須要修改核心才能夠順利的運作。
+		在以前的版本妳需要重新編譯核心，不過，在新的版本，例如 CentOS 5.x 底下，就已經將
+		Xen 的核心幫妳編譯好了！妳可以直接安裝即可。所以，妳需要安裝的套件主要有：<br />
+		<ul><span class=text_import2>
+		<li>kernel-xen：修改的 Linux 核心，使可以跑 Xen 的環境；
+		<li>xen：主要的 xen 套件，包括設定檔、啟動腳本、所需的基本函式庫等；
+		<li>xen-libs：Xen 所需要的函式庫等；
+		<li>python-virtinst：提供終端機安裝的軟體；
+		<li>virt-manager：為一個圖形使用者介面軟體，可在圖形介面管理 xen 喔！
+		</span></ul>
+		在 CentOS 5.x 的環境下，妳可以使用 yum 直接來安裝這幾個套件。安裝完畢後請務必使用新的核心開機！
+		以鳥哥的例子來說，我安裝了數個核心，包括 kernel-2.6.18-8.1.14.el5 及 kernel-xen-2.6.18-8.14.el5 ，
+		所以在 grub 的設定檔當中會像這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /boot/grub/menu.lst</span>
+<span class=term_write>default=0</span>
+timeout=5
+splashimage=(hd0,0)/boot/grub/splash.xpm.gz
+hiddenmenu
+<span class=term_write>title CentOS (2.6.18-8.1.14.el5xen)
+        root (hd0,0)
+        kernel /boot/xen.gz-2.6.18-8.1.14.el5
+        module /boot/vmlinuz-2.6.18-8.1.14.el5xen ro root=/dev/hda1 rhgb quiet
+        module /boot/initrd-2.6.18-8.1.14.el5xen.img</span>
+title CentOS (2.6.18-8.1.14.el5)
+        root (hd0,0)
+        kernel /boot/vmlinuz-2.6.18-8.1.14.el5 ro root=/dev/hda1 rhgb quiet
+        initrd /boot/initrd-2.6.18-8.1.14.el5.img
+</pre></td></tr></table>
+
+		妳必須要注意到，鳥哥使用的開機選單為第0個，亦即是 2.6.18-8.1.14.el5xen 那一個！
+		然後重新啟動這部 Linux 主機喔！啟動完成後，應該再次的確認一下是否為 xen 的核心才行！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>uname -r</span>
+2.6.18-8.1.14.el5<span class=term_write>xen</span>
+<span class=term_say># 仔細看，鳥哥的核心為新的 xen 的核心喔！</span>
+
+[root@linux ~]# <span class=term_command>chkconfig --list | grep xen</span>
+xend        0:off  1:off  2:on   <span class=term_write>3:on</span>  4:on  <span class=term_write>5:on</span>  6:off
+xendomains  0:off  1:off  2:off  <span class=term_write>3:on</span>  4:on  <span class=term_write>5:on</span>  6:off
+<span class=term_say># Runlevel 3/5 的 xen 相關服務是有啟動的才行！</span>
+
+[root@linux ~]# <span class=term_command>pstree -p | grep xen</span>
+        |            |-xenbus(10)
+        |            `-xenwatch(9)
+        |-xenconsoled(2348)---{xenconsoled}(2349)
+        |-xenstored(2340)
+<span class=term_say># 這樣看來，應該確實是有啟動的樣子喔！繼續最後一個確認！</span>
+
+[root@linux ~]# <span class=term_command>xm list</span>
+Name                  ID Mem(MiB) VCPUs State   Time(s)
+<span class=term_write>Domain-0</span>               0      462     1 r-----     49.2
+<span class=term_say># xm 為 Xen 的重要指令，list 為列出已經在跑的 xen 系統，預設有 domain-0 存在！</span>
+</pre></td></tr></table>
+
+		透過上面的測試，我們會知道 xen 確實已經順利的啟動，而且也啟動前面談到的那個重要的 domain-0 囉！
+		接下來我們再來聊一聊那 xen 的設定檔在哪裡？<br /><br />
+
+		<a name="xen_package_1"></a><hr><li><span class=text_import1>xen 的套件結構</span>
+		<div class=block2>
+		我們前面談到過， Xen 在 domain-0 是由一個 xend 的服務所管理的，他可以用來啟動、關閉與連結到其他的
+		domain-U 當中。此外， Xen 亦提供許多的指令來讓系統管理員管理他們的 domain-U 啊！這些重要的啟動執行檔為：<br />
+		<ul>
+		<li><span class=text_import2>/usr/sbin/xend</span>：就是 xend 的啟動腳本，使用 python 程式語言寫成的；
+		<li><span class=text_import2>/usr/sbin/xm</span>：重要的管理 xen 的指令，可輸入 xm help 查詢用法。
+		</ul>
+		至於與 xen 有關的設定檔，包括一些模擬元件的啟動腳本都在 /etc/xen 底下，在這個目錄下的許多資料為：<br />
+		<ul>
+		<li><span class=text_import2>/etc/xen/xend-config.sxp</span>：這個重要！是 xend 
+			的設定檔！內容包括 domain-0 的類型、網路的連結方式、
+			domain-0 的記憶體與CPU等資源配置、是否使用 vnc 作為 domain-U 的連線方式等等。
+			不過，鳥哥覺得，這個檔案不太需要更動，使用預設值就很夠用了。<br /><br />
+		<li><span class=text_import2>/etc/xen/</span>：裡面含有數個 domain-U 的設定檔範本，包括：xmexample1, xmexample.hvm。
+			其中，那個 xmexample.hvm 可作為完整模擬的參考範本喔！<br /><br />
+		<li><span class=text_import2>/etc/xen/auto</span>：如果妳想要在系統開機時就自動啟動某個 
+			domain-U 的話，可以將該設定檔指定連結到這個目錄中。
+			舉例來說，如果妳要在開機後立即使用 /etc/xen/xmexample.hvm 設定檔來啟動某個 domain-U ，
+			那可以這樣做：<br />
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /etc/xen/auto</span>
+[root@linux auto]# <span class=term_command>ln -s ../xmexample.hvm .</span>
+<span class=term_say># 這只是個範例，妳可不要跟著做！因為 xmexample.hvm 還需要修改才能運作！</span>
+</pre></td></tr></table>
+
+		<li><span class=text_import2>/etc/xen/scripts</span>：這目錄有趣了！包括虛擬設備的啟動、虛擬網路的啟動、
+			虛擬橋接器的啟動等等，都是透過這目錄底下的所有檔案來達成的！
+		</ul>
+		</div>
+		在妳安裝完畢，並且使用新核心啟動後，接下來讓我們開始來處理一個小案例吧！<br /><br />
+	</div>
+
+	<hr /><a name="xen_example"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">第一個泛用實例</span><br />
+	<div class=block2>
+		就如同<a href="#fig2-1">圖 2-1</a> 的樣子，在主機上的所有 Linux OS 都需要自己能夠開機，
+		而開機流程通常是這樣的：(<a href="#ps8">註8</a>)<br />
+		<ul>
+		<li>step 1: 按下電源，主機開始讀取 BIOS 資料；
+		<li>step 2: 取得開機的裝置順序，並由 MBR 取得開機選單與開機管理程式；
+		<li>step 3: 由開機管理程式載入 Linux kernel 及虛擬磁碟 (initrd)；
+		<li>step 4: Kernel 偵測硬體載入適當的驅動程式，並掛載根目錄以讀取核心模組；
+		<li>step 5: 開始由 /sbin/init 程式設定主機的環境。
+		</ul>
+		由上述的動作，我們可以知道 Linux 開機的重點在於 <span class=text_import2>1. 
+		核心 2. 虛擬磁碟 (initrd) 及 3. 根目錄 (/) 了。</span>
+		雖然核心與虛擬磁碟我們的 CentOS 5 已經提供了，但是預設的虛擬磁碟好像並未主動的加入 Xen 的某些驅動程式，
+		因此我們得需要針對虛擬磁碟進行設定才好。此外，每個 Xen domain 
+		的根目錄也很傷腦筋的！因為根目錄需要很多資料，而且還需要掛載類似 /sys, /proc, /dev, /selinux 等特殊的檔案系統哩！
+		那該如何處理根目錄呢？底下就讓我們來處理處理：<br /><br />
+
+		<a name="xen_example_0"></a><hr /><li><span class=text_import1>硬體支援性</span></li>
+		<div class=block2>
+		就如同前面幾個小節談到的，如果我們的硬體並不支援 xen 所必須要的功能，那麼妳是無法建立好你的 domain-U 的！
+		在這個泛用案例當中我們的重點是測試半虛擬化，因此妳只要具有 PAE 的支援即可。
+		鳥哥以較低階的 P-III 800 來進行測試，硬體檢查的結果是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /proc/cpuinfo | grep flags</span>
+flags  : fpu tsc msr <span class=term_write>pae</span> mce cx8 mtrr mca cmov pat pse36 mmx fxsr sse up
+</pre></td></tr></table>
+
+		妳可以發現確實存在那個 pae 的關鍵字，因此我們這個系統是可以玩 Xen 的半虛擬化技術的！
+		所以讓我們繼續進行工作吧！<br /><br />
+		</div>
+
+		<a name="xen_example_1"></a><hr /><li><span class=text_import1>根目錄所需磁碟槽</span></li>
+		<div class=block2>
+		根目錄所需磁碟槽的來源可以有兩個，一個是實體硬碟，一個是利用 dd 建立一個大檔案來使用。
+		鳥哥比較傾向利用 dd 來處理你的根目錄喔！妳可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例：建立一個 5GB 的大檔案</span>
+[root@linux ~]# <span class=term_command>mkdir -p /disk2/xen</span>
+<span class=term_say># 因為鳥哥的 /disk2 為一顆額外的硬碟，所以容量比較大啦！</span>
+
+[root@linux ~]# <span class=term_command>cd /disk2/xen</span>
+[root@linux xen]# <span class=term_command>dd if=/dev/zero of=xen.img bs=1M count=5000</span>
+5000+0 records in
+5000+0 records out
+5242880000 bytes (5.2 GB) copied，178.482 秒，29.4 MB/s
+<span class=term_say># 這個時候會開始創造一個 5GB 左右的檔案，由於硬碟速度快慢的關係，
+# 這個動作可能會消耗數分鐘到數十分鐘不等。</span>
+
+[root@linux xen]# <span class=term_command>ll /disk2/xen</span>
+-rw-r--r-- 1 root root 5242880000 Oct 10 00:30 xen.img
+</pre></td></tr></table>
+
+		檔案是建立起來了，不過如果你的 Linux 有啟動 SELinux 的話，還需要一些類型的改變才可以！
+		其實動作也不難，這樣做就對了！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux xen]# <span class=term_command>chcon -t xen_image_t -R /disk2/xen</span>
+[root@linux xen]# <span class=term_command>ll -aZ /disk2</span>
+drwxr-xr-x  root root user_u:object_r:<span class=term_write>xen_image_t</span>      .
+drwxr-xr-x  root root system_u:object_r:file_t         ..
+-rw-r--r--  root root user_u:object_r:<span class=term_write>xen_image_t</span>      xen.img
+<span class=term_say># 如果妳有啟動 SELinux 才需要這麼做，否則就略過。
+# 反正你要記得 Xen 的檔案必須要是 xen_image_t 的安全內容類型。</span>
+</pre></td></tr></table>
+
+		檔案建立起來後，就需要進行格式化囉～格式化的方法為：<br />
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>範例：將剛剛建立的大檔案格式化為 ext3 的檔案格式</span>
+[root@linux xen]# <span class=term_command>mke2fs -j /disk2/xen/xen.img</span>
+mke2fs 1.39 (29-May-2006)
+<span class=term_write>/disk2/xen/xen.img is not a block special device.</span>
+Proceed anyway? (y,n) <span class=term_command>y</span>
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+<span class=term_say>....底下省略....</span>
+</pre></td></tr></table>
+
+		由於這是檔案不是磁碟分割槽，所以會有上述的警告訊息，妳按下『y』就對啦！<br /><br />
+		</div>
+
+		<a name="xen_example_2"></a><hr /><li><span class=text_import1>複製或安裝根目錄</span></li>
+		<div class=block2>
+		由於 domain-U 與 domain-0 其實是一樣的系統，因為是半虛擬化嘛！所以，<span class=text_import2>最簡單的根目錄製作方法，
+		就是將原本的 domain-0 的根目錄複製到新的分割槽內就對了！</span>
+		以鳥哥的例子來說，妳可以簡單的這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mount -o loop /disk2/xen/xen.img /mnt</span>
+<span class=term_say># 先將剛剛製作出來的資料給他掛載起來，這是特殊掛載法喔！</span>
+
+[root@linux ~]# <span class=term_command>cp -ax /{root,dev,var,etc,usr,bin,sbin,lib} /mnt</span>
+<span class=term_say># 這幾個目錄的資料是一定需要複製的！粉重要！。</span>
+
+[root@linux ~]# <span class=term_command>mkdir /mnt/{proc,sys,home,tmp,selinux}</span>
+<span class=term_say># 這幾個目錄與虛擬檔案系統有關，包括程序、核心資料等目錄，所以要先建立</span>
+
+[root@linux ~]# <span class=term_command>vi /mnt/etc/fstab</span>
+<span class=term_write>/dev/sda1</span>  /         ext3    defaults        1 1
+devpts     /dev/pts  devpts  gid=5,mode=620  0 0
+tmpfs      /dev/shm  tmpfs   defaults        0 0
+proc       /proc     proc    defaults        0 0
+sysfs      /sys      sysfs   defaults        0 0
+<span class=term_say># 我這裡假設我的根目錄所在磁碟槽為 SATA 硬碟的第一個分割槽，
+# 所以是 /dev/sda1 。此外，其他的檔案系統如 proc, sysfs 都必須要寫入！
+# 至於原本在 domain-0 的其他裝置，就給他拿掉吧！</span>
+
+[root@linux ~]# <span class=term_command>vi /mnt/etc/sysconfig/network</span>
+NETWORKING=yes
+NETWORKING_IPV6=no
+<span class=term_write>HOSTNAME=xen.test.hostname</span>
+<span class=term_say># 這裡設定一下妳的主機名稱啦！</span>
+
+[root@linux ~]# <span class=term_command>vi /mnt/etc/sysconfig/network-scripts/ifcfg-eth0</span>
+<span class=term_write>DEVICE=eth0
+BOOTPROTO=none
+IPADDR=192.168.0.123
+NETMASK=255.255.255.0
+ONBOOT=yes</span>
+<span class=term_say># 建議將 IP 也設好。但是要注意那個 HWADDR 最好能夠拿掉不設定！</span>
+
+[root@linux ~]# <span class=term_command>umount /mnt</span>
+<span class=term_say># 記得將掛載的資料給他卸載掉</span>
+</pre></td></tr></table>
+
+		基本上，根目錄的設定到這裡就算結束了！不過，妳會發現由於 domain-U 的資料都是由 domain-0 來的，
+		而不同的主機其實設定不會相同，所以使用上述的作法妳會發現有幾個小問題：<br />
+		<ul><span class=text_import2>
+		<li>妳必須要手動處理一些小設定，包括主機名稱, /etc/fstab, IP 參數等等；
+		<li>即使手動處理過上述的資料，還是很可能會無法成功的啟動 domain-U ；
+		<li>由於 domain-0 可能會安裝比較多的套件，這些資料又在 domain-U 當中用不著，徒然造成硬碟容量的浪費。
+		</span></ul>
+		所以，雖然這個方法最簡單，不過通常鳥哥不是很建議您使用啦！ ^_^<br /><br />
+		</div>
+
+		<a name="xen_example_3"></a><hr /><li><span class=text_import1>設定虛擬磁碟映象檔以及終端機介面</span></li>
+		<div class=block2>
+		由於預設的 CentOS 虛擬磁碟 (Initial Ram Disk) 並不包含一些 Xen 的相關驅動程式，
+		因此搞了老半天也是無法驅動 Xen 的 domain-U ，給他氣死！
+		所以，我們得先就 initrd 來進行一些額外的設定才行。
+		這個地方非常的重要！因為鳥哥卡在這裡好幾天～最後才發現原來是 initrd 的問題啊～<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mount -o loop /disk2/xen/xen.img /mnt</span>
+[root@linux ~]# <span class=term_command>cd /boot</span>
+[root@linux boot]# <span class=term_command> mkinitrd -v -f --fstab /mnt/etc/fstab --with xenblk \</span>
+> <span class=term_command>--with xennet --preload xenblk --preload xennet \</span>
+> <span class=term_command>initrd-2.6.18-8.1.14.el5xen.vbird.img `uname -r`</span>
+[root@linux boot]# <span class=term_command>umount /mnt</span>
+<span class=term_say># 詳細的各項參數請 man mkinitrd ，上述的範例僅是利用 /etc/fstab 的裝置來設定，
+# 並且加上一些 xen 相關的驅動程式而已。這個過程非常的重要！
+# 最終會製作出一個 initrd-2.6.18-8.1.14.el5xen.vbird.img 檔案</span>
+</pre></td></tr></table>
+
+		除了這個虛擬磁碟之外，為了要方便我們登入 domain-U 的環境，我們需要產生一個終端機介面才行。
+		因為每個 domain-U 會使用到終端介面，然而我們知道 tty1 ~ tty7 預設給 domain-0 使用掉了。
+		為此，我們必須得要製作出一個虛擬的終端介面，那就是 xvc0 這個終端介面囉。如何產生呢？
+		簡單的流程是這樣：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/inittab</span>
+<span class=term_say># 大約在第 51 行的地方加入底下特殊字體的部分：</span>
+5:2345:respawn:/sbin/mingetty tty5
+6:2345:respawn:/sbin/mingetty tty6
+<span class=term_write>co:2345:respawn:/sbin/agetty xvc0 9600 vt100-nav</span>
+<span class=term_say># 意思是使用 agetty 建立 xvc0</span>
+
+[root@linux ~]# <span class=term_command>init q</span>
+<span class=term_say># init q 這個指令可以讓 /etc/inittab  的設定立刻生效而不需要重新開機！</span>
+
+[root@linux ~]# <span class=term_command>ln -s /dev/console /dev/xvc0</span>
+<span class=term_say># 如果 xvc0 沒有主動建立的話，我們需要手動來建立連結才可以喔！</span>
+</pre></td></tr></table>
+
+		做完這一步之後，接下來就是可怕的設定檔囉～<br /><br />
+		</div>
+
+		<a name="xen_example_4"></a><hr /><li><span class=text_import1>編輯 xen 虛擬資料的設定檔</span></li>
+		<div class=block2>
+		接下來就是重頭戲啦！因為我們必須要指定 domain-U 的相關虛擬設定值，包括使用幾顆 CPU 、使用多少記憶體容量，
+		以及所使用的核心與根目錄的所在等等。如前所述，這些設定檔主要都在 /etc/xen 底下，
+		尤其裡面的 xmexample1, xmexample2 等檔案就是很好的說明文件檔，很有參考價值。
+		鳥哥先說一下我的設定是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/xen/centos5</span>
+<span class=term_say># 這個檔案的檔名可以隨便你取，不過設定檔最好是在 /etc/xen 這個目錄下才好！</span>
+<span class=term_write>name    = "centos5"
+kernel  = "/boot/vmlinuz-2.6.18-8.1.14.el5xen"
+ramdisk = "/boot/initrd-2.6.18-8.1.14.el5xen.vbird.img"
+memory  = "128"
+vcpus   = 1
+vif     = [ '' ]
+disk    = [ 'tap:aio:/disk2/xen/xen.img,sda1,w' ]
+root    = "/dev/sda1 ro "</span>
+<span class=term_say># name:		只是一個顯示的名稱，一般建議與檔名相同即可；
+# kernel:	在 domain-0 上面的檔案，用來進行 domain-U 的開機！非常重要！
+# ramdisk:	就是 initrd 那個檔案囉～剛剛我們才做出來的檔名
+# memory:	分配給這個 domain-U 的記憶體有多少？如果沒有圖形，96 MB 也可以！
+# vcpus:	使用多少顆 CPU 的意思；
+# vif:		是否需要網路卡，如果需要網路卡，至少要有設定！但內容可用預設！
+# disk:		用來作為根目錄的是那個磁碟，這個最重要啦！語法為：
+#	tap:aio:/完整/路徑/檔名,設計為domain-U的磁碟代號,可否寫入
+#		以我們這個例子來說，我將之前建立的大檔案模擬成為 domain-U 的
+#		/dev/sda1 ，並且該 partition 為可寫入 (w)。</span>
+</pre></td></tr></table>
+
+		特別特別留意的是，上面的設定檔當中的 kernel, ramdisk 以及 disk 都是以原本的主機 (domain-0) 的角度來思考的，
+		也就是說，實際上我們是<span class=text_import2>以 domain-0 的核心檔案來進行 
+		domain-U 的開機</span>，因此妳會發現在 domain-U
+		當中並不存在 /boot 這個目錄喔！因為實際上用來開機的是 domain-0 的檔案嘛！<br /><br />
+
+		至於另一個重點就是那個 disk 參數。我們可以使用模擬的方式也可以使用實際的 partition 來給予設定。
+		如果是『用檔案來模擬成為 partition』時，使用兩個逗號 (,) 隔開成為三個欄位，分別為：<br /><br />
+		<span class=text_import1>tap:aio:/完整路徑/檔案的名稱,裝置代號名稱,寫入與否</span>
+		<ul><span class=text_import2>
+		<li><b>[tap:aio:]</b>：為較新的檔案處理模式，舊的方式為使用：[file:]</li>
+		<li><b>[裝置代號名稱]</b>：就是模擬的裝置，請與 domain-U 內的 fstab 對應起來喔！
+		<li><b>[w]</b>：就是設定可否寫入，若唯讀則為[r]
+		</span></ul>
+
+		如果使用實體 partition 來模擬的話，那麼開頭的部分會以『phy:』來取代。舉例來說，如果我們以 /dev/hda5 
+		來作為 domain-U 的 /dev/sda1 的話，那就會變成：<br />
+		<ul><span class=text_import1>disk = [ 'phy:/dev/hda5,sda1,w' ]</span></ul>
+		如果一切都搞定之後，接下來讓我們來啟動 Xen 的 domain-U 吧！<br /><br />
+		</div>
+
+		<a name="xen_example_5"></a><hr /><li><span class=text_import1>利用 xm 指令啟動與管理 domain-1</span></li>
+		<div class=block2>
+		在 domain-0 可以使用 xm 這個指令來啟動、關閉、刪除某個 domain-U ， xm 的指令用法是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>xm [動作] [設定檔名] [-c]</span>
+<span class=term_say>參數：
+[動作]：要某個設定檔內的 domain-U 作何動作之意，常見的動作有：
+   create   ：啟動這個 domain-U 的意思，例如啟動 centos5 這個設定檔時，使用：
+              xm create centos5
+   destroy  ：立即由記憶體中，將這個 domain-U 給刪除，常用於 domain-U 出問題時
+   list     ：將目前已經啟動的 domain 都列出來之意；
+   console  ：若有已建立的 domain-U 時，可用 console 來取得 domain-U 的終端介面
+   shutdown ：關閉某個已啟動的 domain。如果想要關閉全部的 domain-U ，可用
+              xm shutdown -a
+[設定檔名]：亦即在 /etc/xen/ 目錄下的檔名囉；
+-c ：同時建立到該設定檔的終端介面 (console)</span>
+</pre></td></tr></table>
+
+		如果想要啟動我們剛剛建立的 centos5 這個設定檔內的 domain 時，妳可以使用『xm create -c centos5 』即可。
+		那個 -c 的作用是可以讓妳直接取得 domain-U 的終端機介面。鳥哥在 pietty 上面連線到 domain-0 ，
+		然後啟動 centos5 這個 domain 的情況如下所示：<br /><br />
+
+		<a name="fig2-2"></a><center><img src="xen/ex_first_01.png" border=0
+		title="啟動 xen domain-U 的示意圖" alt="啟動 xen domain-U 的示意圖"><br />
+		圖 2-2、啟動 xen domain-U 的示意圖<br /><br /></center>
+
+		在圖 2-2 當中，輸入指令後 domain-U 的開機流程就會依序的顯示在妳的終端機上，
+		感覺上就好像坐在電腦前面看 Linux 主機開機一樣！實在是很不賴！最後如果開機順利成功的話，
+		結果會像下圖所示這樣：<br /><br />
+
+		<a name="fig2-3"></a><center><img src="xen/ex_first_02.png" border=0
+		title="啟動 xen domain-U 的示意圖" alt="啟動 xen domain-U 的示意圖"><br />
+		圖 2-3、啟動 xen domain-U 的示意圖<br /><br /></center>
+
+		在圖 2-3 當中，最上方圈起來的開機訊息是錯誤訊息。由於我們是複製 domain-0 的所有資料，
+		因此連同原本寫在 /etc/rc.d/rc.local 檔案內的執行過程也會被執行。但是 domain-U 的狀況與
+		domain-0 並非完全相同，所以就會如上所述出現一些錯誤訊息啦！這也是我們需要額外處理的部分喔。<br /><br />
+
+		當你以 root 的身份登入後 (這個真的是終端機，並非是 ssh 的畫面喔！)，會發現多了一個 xvc0 的終端介面，
+		這個介面得先在 /etc/inittab 裡面設定好才行！如果一切都 OK 了！恭喜您，你已經登入 domain-U 囉！
+		接下來請妳自行根據妳的需要來設定好妳的 domain-U 吧！讓這兩個 domain 並行呢！<br /><br />
+
+		<a name="20071024"></a>好了，現在我如何登出 centos5 這個 domain-U 呢？妳可以這樣做的：<br />
+		<ul><span class=text_import2>
+		<li>直接在 domain-U 的環境中按下 [ctrl]-] 這個組合鍵來回到 domain-0 的環境；
+		<li>直接關閉 pietty 等連線的軟體；
+		<li>利用其他 bash 來結束 (kill) 掉使用 xm 所建立的連線程序
+		</span></ul>
+
+		有趣的是，即使妳使用上述的方法來離開 domain-U 時，
+		也不會影響到 domain-U 的繼續運作！而且 root 也不會登出，等到妳下次再以『 xm console centos5 』時，
+		會繼續取得 root 的動作繼續處理剛剛未完成的工作呢！很神奇吧～<br /><br />
+
+		現在，請跳回 domain-0 的地方，或者是利用另外一條 pietty 的連線連入 domain-0 ，我們使用 xm list 
+		來察看一下各個 domain 的狀況吧！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>xm list</span>
+Name             ID Mem(MiB) VCPUs State   Time(s)
+Domain-0          0      366     1 r-----    735.2
+centos5          42      127     1 ------     52.4
+<span class=term_say># 妳會發現多了一個 domain 出現！名稱為 centos5 啦！
+# 妳也會發現有個 State 吧！那個 State 的意義是這樣的：
+# r ：該 domain 正在使用 CPU 資源在運作中；
+# b ：這個 domain 目前被懸置(blockded)，很可能由於這個 domain 在等待較長時間
+#     的輸入輸出 (I/O) 之故。
+# p ：該 domain 處於暫停的狀態，通常由於管理員使用 xm pause 之故。
+#     當 domain 在此狀態時， Xen 的監督器將不會處理該 domain 的動作；
+# s ：這個 domain 正在關機當中
+# c ：這個 domain 已經 crash 了，但是卻沒有自動的關掉。通常是因為沒有設定
+#     on_crash 的相關動作所致。
+# d ：該 domain 正在死亡中...因為該 domain 無法正確的 shutdown/crashed 之故。 </span>
+</pre></td></tr></table>
+
+		很簡單吧！這樣就完成你的 Xen domain 囉～開始將妳所想要的網路服務分門別類的放到不同的 domain-U 中吧！
+		加油！<br /><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：關於如何登入 domain-U<ul>我在啟動 domain-U 的時候，使用指令為『 xm create domain-U 』導致我使用 xm list
+可以看到新的 domain-U 在運作，但我還是在 domain-0 。請問此時我該如何登入 domain-U 呢？</ul>
+答：<ul>
+有兩種方式，如果想要取得 domain-U 的終端機模式，請使用：<ul><br /><span class=text_import2>xm console domain-U</span></ul><br />
+如果妳知道 domain-U 的 IP，並且 domain-U 有啟動類似 ssh/telnet 的服務時，可使用網路服務登入。舉例來說
+domain-U 的 IP 為 192.168.100.100，且有啟動 ssh ，則妳可以使用：
+<ul><br /><span class=text_import2>ssh username@192.168.100.100</span></ul>
+</ul>
+</td></tr></table><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：關於如何關閉 domain-U<ul>
+我使用 xm list 時，發現 domain-U 已經啟動了，我該如何關閉這個 domain 呢？
+</ul>
+答：<ul>
+如果妳在 domain-0  上頭的話，可以使用：<ul><br /><span class=text_import2>xm shutdown domain-U</span></ul><br />來關閉這個 domain-U ，
+如果極端一點，妳想要關閉所有的 domain-U (除了 domain-0 之外)，則可以下達：<ul><span class=text_import2><br />xm shutdown 
+-a</span></ul><br />那如果妳是在 domain-U  裡面呢？想關閉該 domain 就直接給他：
+<ul><span class=text_import2><br />shutdowm -h now</span></ul><br />即可，就好像一般正常程序關機一樣喔！
+那如果萬一 domain-U 無法順利關機，則妳可以在 domain-0 上面直接下達刪除的指令：
+<ul><span class=text_import2><br />xm destroy domain-U</span></ul>
+</ul>
+</td></tr></table><br />
+
+<table border=1 width=90% cellspacing=0 cellpadding=5><tr><td>
+例題：關於重複登入的問題<ul>
+我利用 xm create -c domain-U 的方式取得終端機來登入 domain-U 了，結果另外一個使用者使用『xm console domain-U』也來登入該
+domain，此時會發生什麼問題？該如何解決？
+</ul>
+答：<ul>
+由於預設情況下，一個 domain-U 僅有一個終端機，因此第二個登入者將不會詢問帳號密碼，
+而是直接以第一個登入者的身份取得該終端介面，亦即兩者將具有相同的終端介面與所有資源。
+但如此一來會導致控制權的爭奪效應，最終結果兩者都無法控制該終端介面。此時建議兩者均離開該終端介面，
+然後讓單一使用者以 xm console 登入，另一使用者則使用類似 ssh 的方式網路登入即可。
+</ul>
+</td></tr></table><br />
+		</div>
+
+		<a name="xen_example_6"></a><hr /><li><span class=text_import1>常見錯誤分析</span></li>
+		<div class=block2>
+		Xen 的啟動其實是頗不容易的，常常會有一些錯誤情況發生。底下我們來看看一些常見的錯誤情況，
+		讓您瞭解到，您無法啟動 Xen 的可能原因為何？<br /><br />
+		<hr /><li><span class=text_import1>沒有啟動 Xen 的 xend daemon</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>xm create -c centos5</span>
+Using config file "./centos5".
+Error: Unable to connect to xend: Connection refused. Is xend running?
+</pre></td></tr></table>
+
+		如上所述，肯定你沒有啟動 xend 這個 daemon 的啦！直接啟動他即可：『/etc/init.d/xend start』<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>使用到錯誤的核心或者 domain-0 未以新 xen 核心開機</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>xm create -c centos5</span>
+Using config file "./centos5".
+Error: (22, 'Invalid argument')
+</pre></td></tr></table>
+
+		然後請到登錄檔內看看，亦即是 /var/log/xen/xend.log 檔內，如果出現如下的錯誤：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /var/log/xen/xend.log</span>
+[2007-10-17 13:18:48 xend.XendDomainInfo 31254] ERROR 
+(XendDomainInfo:203) <span class=term_write>Domain construction failed</span>
+</pre></td></tr></table>
+
+		很有可能就是你的核心檔案用錯。此時請檢查一下你的設定檔，看看『kernel』的項目是否設定正確？
+		我們務必要使用 xen 相關的核心來開機才行啊！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>SELinux 或者是檔案權限的問題</span></li>
+		<div class=block2>
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>xm create -c centos5</span>
+Using config file "/etc/xen/centos5".
+Error: Kernel image does not exist: /boot/vmlinuz-2.6.18-8.1.14.el5xen
+</pre></td></tr></table>
+
+		但我看過 /boot/vmlinuz-2.6.18-8.1.14.el5xen 確實是存在的，可能原因為何？一般來說，這種問題應該是
+		SELinux 的影響所致。確定方法可以用『setenforce 0』然後再重新『xm create -c centos5』測試看看，
+		如果確定可以登入，那表示您的 /boot/vmlinuz-2.6.18-8.1.14.el5xen SELinux 安全格式內容不對。
+		正確的核心開機類型應該是：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>ll -Z /boot</span><font size=-2>
+-rw-r--r--  root root system_u:object_r:boot_t         config-2.6.18-8.1.14.el5xen
+-rw-------  root root user_u:object_r:boot_t           initrd-2.6.18-8.1.14.el5xen.vbird.img
+-rw-r--r--  root root system_u:object_r:boot_t         symvers-2.6.18-8.1.14.el5xen.gz
+-rw-r--r--  root root system_u:object_r:system_map_t   System.map-2.6.18-8.1.14.el5xen
+-rw-r--r--  root root system_u:object_r:boot_t         vmlinuz-2.6.18-8.1.14.el5xen </font>
+</pre></td></tr></table>
+
+		請自行使用 chcon 指令來處理 SELinux 的錯誤吧！<br />
+		</div>
+
+		<hr /><li><span class=text_import1>Kernel panic 的問題</span></li>
+		<div class=block2>
+		如果出現如下的可怕畫面時：<br />
+<table class="term"><tr><td class="term"><pre>
+<span class=term_say>....前面省略....</span>
+Loading ext3.ko module
+Creating root device.
+Mounting root filesystem.
+mount: could not find filesystem '/dev/root'
+Setting up other filesystems.
+Setting up new root fs
+setuproot: moving /dev failed: No such file or directory
+no fstab.sys, mounting internal defaults
+setuproot: error mounting /proc: No such file or directory
+setuproot: error mounting /sys: No such file or directory
+Switching to new root and running init.
+unmounting old /dev
+unmounting old /proc
+unmounting old /sys
+switchroot: mount failed: No such file or directory
+<span class=term_write>Kernel panic - not syncing: Attempted to kill init!</span>
+</pre></td></tr></table>
+
+		出現這個『Kernel panic』的問題非常的多且複雜，其實主要的原因就是<span class=text_import1>無法掛載根目錄</span>。
+		因為你核心檔案已經進行偵測，並且虛擬磁碟檔案 (initrd) 也已經載入囉！
+		那什麼情況下會無法掛載根目錄呢？妳應該要這樣查閱：<br /><br />
+		<li><span class=text_import2>1. 用來作為根目錄的檔案 SELinux 類型不對：</span><br /><br />
+		首先，請先到 /var/log/messages  裡面察看一下，如果出現如下畫面：<br />
+
+<table class="term"><tr><td class="term"><pre>
+Oct 17 12:04:17 xen-test kernel: audit(1192593857.395:259): avc:  
+<span class=term_write>denied</span>  { search } for  pid=29687 comm="tapdisk" name="/" dev=hdc1 
+ino=2 scontext=system_u:system_r:xend_t:s0 
+<span class=term_write>tcontext=system_u:object_r:default_t:s0</span> tclass=dir
+<span class=term_say># 上面是同一行，意思是說，該檔案讀取被拒絕了，因為程序的格式為：
+# scontext=system_u:system_r:xend_t:s0 ，但是你的檔案格式為特殊字體部分，亦即：
+# tcontext=system_u:object_r:default_t:s0
+# 所以這個檔案的讀取就被『deny』了！</span>
+</pre></td></tr></table>
+
+		這表示妳用來作為根目錄的檔案 SELinux 類型不對，正確的檔案類型是這樣的：<br />
+
+<table class="term"><tr><td class="term"><pre>
+-rw-r--r--  root root user_u:object_r:xen_image_t      xen.img
+</pre></td></tr></table>
+
+		所以妳可以使用類似底下的方式來處理：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>chcon -t xen_image_t -R /disk2</span>
+</pre></td></tr></table>
+
+		似乎連同最頂層的 /disk2 都需要修改 SELinux 安全內容才行！所以妳可以加 -R 來讓子目錄生效！<br /><br />
+
+		<li><span class=text_import2>2. initrd 虛擬磁碟沒有載入正確的模組</span><br /><br />
+		另一個可能原因就是虛擬磁碟並沒有載入 domain-U 需要的模組，所以妳必須要仔細看上面的輸出訊息有沒有這個項目：<br />
+
+<table class="term"><tr><td class="term"><pre>
+Creating block device nodes.
+<span class=term_write>Loading xenblk.ko module</span>
+XENBUS: Timeout connecting to device: device/vbd/2049 (state 3)
+<span class=term_write>Loading xennet.ko module</span>
+netfront: Initialising virtual ethernet driver.
+netfront: device eth0 has flipping receive path.
+Loading uhci-hcd.ko module
+</pre></td></tr></table>
+
+		這表示已經載入了 xen 的相關模組，如果你的畫面沒有這個訊息時，請參考<a 
+		href="#xen_example_3">前一小節關於虛擬磁碟</a>的說明。並且更新你的 domain-U 設定檔吧！<br /><br />
+
+		<li><span class=text_import2>3. 設定檔內容寫錯</span><br /><br />
+		很多時候我們都會打錯字～實在很麻煩～所以如果上述兩點妳都確認過了，接下來請檢查一下你的打字有沒有問題。
+		假設我的 xen 檔案是放置到 /disk2/xen/xen.img 裡頭，那麼兩個地方要注意：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/xen/centos5</span>
+name    = "centos5"
+kernel  = "/boot/vmlinuz-2.6.18-8.1.14.el5xen"
+ramdisk = "/boot/initrd-2.6.18-8.1.14.el5xen.vbird.img"
+memory  = "128"
+vcpus   = 1
+vif     = [ '' ]
+disk    = [ 'tap:aio:<span class=term_write>/disk2/xen/xen.img,sda1</span>,w' ]
+root    = "<span class=term_write>/dev/sda1</span> ro"
+</pre></td></tr></table>
+
+		模擬的裝置 (disk 項目內) 以及根目錄的所在裝置 (root 的項目) 需要配合成功，否則就會失敗了！
+		當然啦，模擬的裝置也必須要跟實際的檔案相同才行喔！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>domain-U 本身的問題</span></li>
+		<div class=block2>
+		如果開機已經到達下面的狀況時：<br />
+
+<table class="term"><tr><td class="term"><pre>
+unmounting old /sys
+<span class=term_write>INIT: version 2.86 booting</span>
+                Welcome to  CentOS release 5 (Final)
+                Press 'I' to enter interactive startup.
+正在設定時鐘  (localtime): 三 10月 17 13:24:28 CST 2007 [  確定  ]
+正在啟動 udev: [  確定  ]
+<span class=term_say>....中間省略....</span>
+正在檢查檔案系統
+Checking all file systems.
+[/sbin/fsck.ext3 (1) -- /] fsck.ext3 -a /dev/hda1
+fsck.ext3: No such file or directory while trying to open /dev/hda1
+/dev/hda1:
+The superblock could not be read or does not describe a correct ext2
+filesystem.  If the device is valid and it really contains an ext2
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblock:
+    e2fsck -b 8193 <device>
+
+[失敗]
+
+*** 檢查檔案系統時發生錯誤。
+*** 系統將帶您進入 shell 模式; 然後重新開機
+*** 當您離開 shell 時。
+Give root password for maintenance
+(or type Control-D to continue):
+</pre></td></tr></table>
+
+		注意到上面特殊字體的部分，既然已經出現了 INIT 的字樣，這表示 domain-U 已經通過了核心偵測、
+		根目錄掛載等動作，且已經順利的在執行 /sbin/init 這個指令了，因此我們可以確信所有的 Xen 設定都是正確的，
+		可能發生的錯誤就在 /disk2/xen/xen.img 這個檔案內的配置了。妳可能需要依據開機流程一個一個的去處理相關的錯誤喔！
+		最可能發生的就是在 domain-U 的 /etc/fstab 囉～<br />
+		</div>
+		</div>
+	</div>
+</div>
+
+<hr /><a name="other_inst"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">其他半虛擬化的安裝方式</span><br />
+<div class=block1>
+	由前一小節的泛用實例我們可以瞭解，如果 domain-U 的根目錄來源為複製自 domain-0 的話，
+	那麼我們必須要手動修改很多設定檔，非常的麻煩～
+	既然如此，有沒有可能我們可以自行將安裝程式放入根目錄的建置呢？也就是說，
+	<span class=text_import2>那個 /disk2/xen/xen.img 的內容其實就是經過安裝程序而來的，而不是經由複製的。</span>
+	如此一來不就所有問題都解決了，而且新安裝的系統還是很乾淨的系統呢！
+	確實如此！目前 CentOS 5 提供一個好用的軟體，那就是 virt-install，
+	妳可以使用 virt-install -h 來察看可以使用的指令哩。<br /><br />
+
+	但是在開始底下的實例之前，妳必須要知道幾點限制才行：<br />
+	<ul><span class=text_import2>
+	<li>最簡單的安裝方式為複製 domain-0 的根目錄來給 domain-U 使用(就是前面的範例)；
+	<li>半虛擬化的安裝方式『並不支援使用光碟或 DVD 的安裝模式』；
+	<li>半虛擬化僅可透過 http, ftp, nfs 等方式來安裝乾淨的 Linux 系統；
+	</span></ul>
+
+	看到上頭的限制您應該會嚇一跳吧！怎麼不能用原版光碟安裝喔？沒錯～是這樣！
+	使用原版光碟或者是原版光碟的 iso 檔案安裝時，僅有全虛擬化環境可以達到而已。
+	那妳應該會問，我如何製作或者是取得安裝用的伺服器呢？其實我們可以利用各大專院校的 FTP 網站即可啊！
+	不需要自行設定安裝伺服器的。不過，如果你的環境並非學術網路的話，最好還是自行設定一下安裝伺服器比較妥當。
+	為了每位不同所在處的朋友，所以底下我們先快速的講一講如何製作一部安裝伺服器，然後再處理其他工作吧！ ^_^<br /><br />
+
+	<hr /><a name="other_inst_inst"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">製作安裝伺服器
+	(Installation Server)</span><br />
+	<div class=block2>
+		如前所述，半虛擬化的 Xen  僅支援 NFS, HTTP, FTP 等網路方式安裝，並不支援原版光碟安裝的模式，
+		因此我們得要找到可提供安裝的主機才行。如果您在台灣的學術網路中，
+		那麼可以選擇國家高速網路中心或者是義守大學的 FTP 網站做為來源，舉例來說，如下網址就是一個案例：<br />
+		<ul><a href="http://ftp.isu.edu.tw/pub/Linux/CentOS/5.0/os/i386/"
+		target="_blank">http://ftp.isu.edu.tw/pub/Linux/CentOS/5.0/os/i386/</a></ul>
+		萬一妳是一家企業呢？那最好使用內部的主機架設成為安裝伺服器來安裝你的 domain-U 比較妥當。
+		以下鳥哥以 NFS 的方式來簡單說明一下建置 CentOS5 的安裝伺服器囉。<br />
+
+		<ol>
+		<hr /><li><span class=text_import1>選擇容量大於 5GB 以上的磁碟分割槽：</span><br /><br />
+		由於完整的 CentOS5 原版光碟含有好多的套件，至少也需要 3500MB 以上的容量來容納 DVD 碟內的所有資料。
+		但是鳥哥的主機當初沒有額外規劃擴充性的問題，因此就得要加掛硬碟啦！
+		鳥哥是將我的 CentOS5 原版光碟放置到俺的 /disk1/yum/centos5 目錄下的，
+		這個目錄為另外一個獨立的 partition ，關於 partition 的處理方法請自行參考基礎篇的說明，這裡不贅述了。<br /><br />
+
+		<hr /><li><span class=text_import1>複製所有需要的套件：</span><br /><br />
+		先掛載 CentOS5 的光碟或 DVD 碟，然後直接複製即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>mount /dev/cdrom /mnt</span>
+[root@linux ~]# <span class=term_command>mkdir -p /disk1/yum/centos5</span>
+[root@linux ~]# <span class=term_command>cp -a /mnt/* /disk1/yum/centos5</span>
+[root@linux ~]# <span class=term_command>umount /mnt</span>
+</pre></td></tr></table>
+
+		如果妳是使用光碟的話，那麼上述的動作就得要進行六次，因為 CentOS5  共有六片光碟。
+		而且每片光碟內會有一些重複的檔案，因此系統會警告妳『是否要覆蓋？』此時按下『y』去覆蓋即可。<br /><br />
+
+		<hr /><li><span class=text_import1>建立安裝所需要的檔案關連性資料</span><br /><br />
+		一般來說，使用 yum 的系統在他 RPM 檔案所在的目錄下都會有一個名為 repodata 的目錄，
+		該目錄記錄著檔案的相關性以及一些基本的安裝資訊。但因為我們將資料複製到自己的主機上，
+		因此一些基本資料可能就不會吻合，所以我們需要重新製作出這個目錄才行。
+		製作這個目錄必須要安裝 createrepo 套件，預設的情況下是不會安裝該套件的，
+		因此我們可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>yum install createrepo</span>
+<span class=term_say># 就是安裝某個套件而已，這個套件就是用在製作 repodata 目錄的。</span>
+
+[root@linux ~]# <span class=term_command>cd /disk1/yum/centos5</span>
+[root@linux centos5]# <span class=term_command>cp repodata/comps.xml /tmp</span>
+<span class=term_say># 先將某些安裝資訊給他複製出來，準備利用。</span>
+
+[root@linux centos5]# <span class=term_command>rm -r repodata</span>
+<span class=term_say># 原本的資料不需要了，將他刪除掉再說。</span>
+
+[root@linux centos5]# <span class=term_command>createrepo -g /tmp/comps.xml .</span>
+<span class=term_say># 重新建立好 repodata 目錄囉！</span>
+</pre></td></tr></table><br />
+
+		<hr /><li><span class=text_import1>啟動與設定 NFS 檔案系統</span><br /><br />
+		接下來就是設定 NFS 啦！為什麼要選擇 NFS 呢？因為他夠簡單！哈哈！<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/exports</span>
+<span class=term_write>/disk1/yum/centos5      *(ro)</span>
+<span class=term_say># 先設定好 NFS 所要分享的目錄所在</span>
+
+[root@linux ~]# <span class=term_command>chcon -t public_content_t -R /disk1/yum/centos5/</span>
+<span class=term_say># 確定一下你的這個目錄是可以透過 SELinux 來管理分享的！</span>
+
+[root@linux ~]# <span class=term_command>/etc/init.d/portmap start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/nfs start</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/nfslock start</span>
+<span class=term_say># 將服務給他啟動吧！</span>
+
+[root@linux ~]# <span class=term_command>showmount -e localhost</span>
+Export list for localhost:
+/disk1/yum/centos5 *
+</pre></td></tr></table>
+
+		如果可以看到最終的結果，那就表示你的 NFS 製作妥當了！<br />
+		</ol>
+		最終可以知道我們是：<br />
+		<ul><span class=text_import2>
+		<li>安裝協定使用 NFS
+		<li>主機名稱為妳這部主機的 IP， 注意，不要使用 127.0.0.1 來安裝！
+		<li>NFS 的路徑為  /disk1/yum/centos5
+		</span></ul>
+		好了，開始來安裝乾淨的 Linux 系統在 domain-U 上面吧！<br /><br />
+	</div>
+
+	<hr /><a name="other_inst_virt"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">利用 virt-install 
+	指令安裝乾淨的 CentOS</span><br />
+	<div class=block2>
+		有了 NFS 安裝伺服器後，再來我們使用 virt-install 來安裝囉～
+		安裝的方式非常的簡單，妳可以這樣做即可：<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先建立我們所需要的大檔案來作為 domain-U 的磁碟：</span>
+[root@linux ~]# <span class=term_command>dd if=/dev/zero of=/disk2/xen/centos5.virt.img \</span>
+> <span class=term_command>bs=1M count=4096</span>
+[root@linux ~]# <span class=term_command>chcon -t xen_image_t /disk2/xen/centos5.virt.img</span>
+<span class=term_say># 我建立了一個 4GB 大小的檔案來作為安裝之用！這個容量應該是夠用的！ ^_^
+# 比較需要注意的是，如果妳有啟動 SELinux 時，請注意修改檔案的安全內容。</span>
+
+<span class=term_hd>2. 開始使用 virt-install 來安裝吧！</span>
+[root@linux ~]# <span class=term_command>virt-install -n centos5_virt -r 256  \</span>
+> <span class=term_command>-f /disk2/xen/centos5.virt.img --nographics \</span>
+> <span class=term_command>-l nfs:192.168.1.254:/disk1/yum/centos5</span>
+<span class=term_say># -n ：後面接你的 domain-U 的名稱，這個名稱的設定檔會被主動建立在 /etc/xen 底下
+# -r ：後面接妳要給這個 domain-U 的記憶體，目前至少需要 256MB 才能夠執行
+# -f ：後面接的就是那個要給 domain-U 的大檔案囉！
+# --nographics ：不使用圖形介面來安裝的意思；
+# -l ：後面接安裝伺服器的來源。安裝伺服器的寫法為：
+#   NFS 時：   nfs:主機的IP:可以安裝的目錄
+#   WWW 時：   http://主機的IP/實際的/完整目錄
+#   FTP 時：   ftp://主機的IP/實際的完整目錄</span>
+</pre></td></tr></table>
+
+		如果一切順利的話，現在就能夠進入安裝畫面了！不過請注意，您的 domain-0 需要開放防火牆讓人家使用 NFS 喔！
+		否則妳是無法順利安裝的啦！ ^_^<br /><br />
+
+		接下來的畫面鳥哥是以 pietty 連上 domain-0 之後進行畫面擷取的，因為 Xen 的終端機介面顯示本來就怪怪的，
+		加上鳥哥所使用的畫面較小，所以您會發現怎麼字體都會跑掉～真是不好意思～
+		總之，跟一般文字介面的安裝方式是一模一樣啦！讓我們開始來看看圖示吧！<br /><br />
+
+		<hr /><li><span class=text_import1>1. 語系的選擇：</span><br /><br />
+		如下圖所示，由於終端機模式僅有英文顯示字元，因此我們直接選擇『English』吧。
+		請注意使用 [Tab] 按鍵在各個元件之間跳動喔！<br /><br />
+
+		<a name="fig3-1"></a><center><img src="xen/virt_01.png" border=0
+		title="先選擇語系資料" alt="先選擇語系資料"><br />
+		圖 3-1、先選擇語系資料<br /><br /></center>
+
+		<hr /><li><span class=text_import1>2. 關於 domain-U 安裝時的 IP 設定：</span><br /><br />
+		一般 IP 設定有 DHCP 與手動設定，如果妳的主機所在環境具有 DHCP 伺服器，且妳的安裝伺服器有針對內部網域開放防火牆時，
+		那為了方便，妳可以直接使用 DHCP 協定即可，如下圖所示：(一般來說，鳥哥都會建議先取消 IPv6 的支援)<br /><br />
+		<a name="fig3-2"></a><center><img src="xen/virt_02.png" border=0
+		title="設定 IP 取得為 DHCP 或者是手動直接給予 (Manual)" alt="設定 IP 取得為 DHCP 或者是手動直接給予 (Manual)"><br />
+		圖 3-2、設定 IP 取得為 DHCP 或者是手動直接給予 (Manual)<br /><br /></center>
+
+		萬一妳的主機所在環境沒有提供 DHCP 的服務時，那妳的 IP 就得要手動給予了。在上圖當中請選擇『
+		Manual configuration 』項目，則會出現如下圖所示的情況，請填入區域網路的 IP 參數吧。
+		在本例中鳥哥的 domain-U IP 設定為 192.168.1.31/255.255.255.0 囉～<br /><br />
+
+		<a name="fig3-2-1"></a><center><img src="xen/virt_02-1.png" border=0
+		title="手動設定 IP 的示意圖" alt="手動設定 IP 的示意圖"><br />
+		圖 3-2-1、手動設定 IP 的示意圖<br /><br /></center>
+
+		<hr /><li><span class=text_import1>3. 歡迎畫面與分割槽警告訊息：</span><br /><br />
+
+		接下來僅是說明歡迎的畫面，還有，因為我們使用的檔案會被視為『一顆硬碟』而不是一個 partition ，
+		所以會有警告訊息說明要注意的地方而已。請留意，在預設的情況下，
+		<span class=text_import2>模擬的硬碟代號為 /dev/xvda</span> 喔！<br /><br />
+
+		<a name="fig3-3"></a><center><img src="xen/virt_03.png" border=0
+		title="只是歡迎畫面！" alt="只是歡迎畫面！"><br />
+		圖 3-3、只是歡迎畫面！<br /><br /></center>
+
+		<a name="fig3-4"></a><center><img src="xen/virt_04.png" border=0
+		title="只是一個警告訊息，直接 OK 過去！" alt="只是一個警告訊息，直接 OK 過去！"><br />
+		圖 3-4、只是一個警告訊息，直接 OK 過去！<br /><br /></center>
+
+		<hr /><li><span class=text_import1>4. 開始進行磁碟分割的動作：</span><br /><br />
+		進入安裝模式後，這個地方最重要！我們剛剛建立了一個 4GB 的檔案作為硬碟之用，而這顆模擬硬碟的磁碟為 /dev/xvda，
+		我們知道在安裝的時候最重要的兩個 partition 為 / 與 swap ，所以就得要進行底下的分割咯！
+		如下所示，首先我們必須要建立一個客戶自訂的分割情況 (Create custom layout)，
+		請使用 [Tab] 按鍵選擇如同下圖的說明：<br /><br />
+
+		<a name="fig3-5"></a><center><img src="xen/virt_05.png" border=0
+		title="決定分割的模式，請使用 Custom layout" alt="決定分割的模式，請使用 Custom layout"><br />
+		圖 3-5、決定分割的模式，請使用 Custom layout<br /><br /></center>
+
+		接下來進入到下圖之後，我們必須要建立根目錄 (/) 與虛擬記憶體 (swap)，在這裡我設定根目錄為 3200MB，
+		至於 swap 則設定 256MB。建立的方法依序如下：<br /><br />
+
+		<a name="fig3-6"></a><center><img src="xen/virt_06.png" border=0
+		title="進入分割畫面的情況" alt="進入分割畫面的情況"><br />
+		圖 3-6、進入分割畫面的情況<br /><br /></center>
+
+		<a name="fig3-7"></a><center><img src="xen/virt_07.png" border=0
+		title="依照圖中的說明，分別選擇各項參數" alt="依照圖中的說明，分別選擇各項參數"><br />
+		圖 3-7、依照圖中的說明，分別選擇各項參數<br /><br /></center>
+
+		<a name="fig3-8"></a><center><img src="xen/virt_08.png" border=0
+		title="另外一個 Swap 的設定方法" alt="另外一個 Swap 的設定方法"><br />
+		圖 3-8、另外一個 Swap 的設定方法<br /><br /></center>
+
+		若前兩個畫面設定妥當後，最後妳會看到如下的圖示，檢查看看是否一個根目錄與一個 swap 呢？
+		若沒問題的話，就按下 [OK] 吧！<br /><br />
+		<a name="fig3-9"></a><center><img src="xen/virt_09.png" border=0
+		title="最終的分割表狀態" alt="最終的分割表狀態"><br />
+		圖 3-9、最終的分割表狀態<br /><br /></center>
+
+		<a name="fig3-10"></a><center><img src="xen/virt_10.png" border=0
+		title="只是警告虛擬記憶體比實體記憶體少，不用理會他！" alt="只是警告虛擬記憶體比實體記憶體少，不用理會他！"><br />
+		圖 3-10、只是警告虛擬記憶體比實體記憶體少，不用理會他！<br /><br /></center>
+
+		<hr /><li><span class=text_import1>5. boot loader 以及開機選項</span><br /><br />
+		設定到此，我們可以開始來決定開機管理程式的相關動作了。首先，當然一定需要 boot loader 啊！
+		所以如同下圖，我們要使用 Grub 囉！<br /><br />
+		<a name="fig3-11"></a><center><img src="xen/virt_11.png" border=0
+		title="使用 grub 作為開機選單" alt="使用 grub 作為開機選單"><br />
+		圖 3-11、使用 grub 作為開機選單<br /><br /></center>
+
+		在預設的情況中，domain-U 所使用的終端介面 (console) 為利用 xvc0 這個裝置來處理的，
+		這個部分預設會出現，所以不必理會他！<br /><br />
+		<a name="fig3-12"></a><center><img src="xen/virt_12.png" border=0
+		title="domain-U 所使用的終端介面裝置" alt="domain-U 所使用的終端介面裝置"><br />
+		圖 3-12、domain-U 所使用的終端介面裝置<br /><br /></center>
+
+		<a name="fig3-13"></a><center><img src="xen/virt_13.png" border=0
+		title="是否需要開機選單密碼？不需要吧？" alt="是否需要開機選單密碼？不需要吧？"><br />
+		圖 3-13、是否需要開機選單密碼？不需要吧？<br /><br /></center>
+
+		<a name="fig3-14"></a><center><img src="xen/virt_14.png" border=0
+		title="選單只有一個，所以就不用改了。" alt="選單只有一個，所以就不用改了。"><br />
+		圖 3-14、選單只有一個，所以就不用改了。<br /><br /></center>
+
+		<a name="fig3-15"></a><center><img src="xen/virt_15.png" border=0
+		title="當然是安裝在 /dev/xvda 的 MBR 中！" alt="當然是安裝在 /dev/xvda 的 MBR 中！"><br />
+		圖 3-15、當然是安裝在 /dev/xvda 的 MBR 中！<br /><br /></center>
+
+		<hr /><li><span class=text_import1>6. 網路設定參數：</span><br /><br />
+		再來就是網路參數的設定部分，鳥哥建議您可以先隨便設定，未來要使用這個 domain-U 時，
+		再詳細的設定即可。在這裡鳥哥都使用預設值來指定而已。<br /><br />
+
+		<a name="fig3-16"></a><center><img src="xen/virt_16.png" border=0
+		title="使用預設的 DHCP 與 IPv4 即可" alt="使用預設的 DHCP 與 IPv4 即可"><br />
+		圖 3-16、使用預設的 DHCP 與 IPv4 即可<br /><br /></center>
+
+		<a name="fig3-17"></a><center><img src="xen/virt_17.png" border=0
+		title="主機名稱也先不要設定，使用 DHCP 預設值" alt="主機名稱也先不要設定，使用 DHCP 預設值"><br />
+		圖 3-17、主機名稱也先不要設定，使用 DHCP 預設值<br /><br /></center>
+
+		<hr /><li><span class=text_import1>7. 時區與 root 密碼：</span><br /><br />
+		因為我們使用台灣時區，所以這裡要仔細的選擇喔！<br /><br />
+		<a name="fig3-18"></a><center><img src="xen/virt_18.png" border=0
+		title="時區請務必選擇台灣啊！" alt="時區請務必選擇台灣啊！"><br />
+		圖 3-18、時區請務必選擇台灣啊！<br /><br /></center>
+
+		<a name="fig3-19"></a><center><img src="xen/virt_19.png" border=0
+		title="root 密碼要設定，不要隨便啊！" alt="root 密碼要設定，不要隨便啊！"><br />
+		圖 3-19、root 密碼要設定，不要隨便啊！<br /><br /></center>
+
+		<hr /><li><span class=text_import1>8. 套件安裝的選擇以及實際開始安裝：</span><br /><br />
+		由於我們希望的 domain-U 是用來進行伺服器架設的，所以這裡鳥哥選擇 Server 而已，
+		如下圖所示。整體安裝起來差不多是 1.x GB 的容量而已喔！<br /><br />
+
+		<a name="fig3-20"></a><center><img src="xen/virt_20.png" border=0
+		title="僅選擇 Server 的安裝設定" alt="僅選擇 Server 的安裝設定"><br />
+		圖 3-20、僅選擇 Server 的安裝設定<br /><br /></center>
+
+		<a name="fig3-21"></a><center><img src="xen/virt_21.png" border=0
+		title="僅是分析套件的相依性畫面而已" alt="僅是分析套件的相依性畫面而已"><br />
+		圖 3-21、僅是分析套件的相依性畫面而已，請等待！<br /><br /></center>
+
+		<a name="fig3-22"></a><center><img src="xen/virt_22.png" border=0
+		title="這個是通知訊息，告知你的選擇將會被記錄到該處" alt="這個是通知訊息，告知你的選擇將會被記錄到該處"><br />
+		圖 3-22、這個是通知訊息，告知你的選擇將會被記錄到該處<br /><br /></center>
+
+		<a name="fig3-23"></a><center><img src="xen/virt_23.png" border=0
+		title="看到否，開始安裝的整個過程" alt="看到否，開始安裝的整個過程"><br />
+		圖 3-23、看到否，開始安裝的整個過程<br /><br /></center>
+
+		<a name="fig3-24"></a><center><img src="xen/virt_24.png" border=0
+		title="安裝完畢，請重新開機吧！" alt="安裝完畢，請重新開機吧！"><br />
+		圖 3-24、安裝完畢，請重新開機吧！<br /><br /></center>
+
+		<a name="fig3-25"></a><center><img src="xen/virt_25.png" border=0
+		title="重新開機完畢後，出現等待登入的畫面示意" alt="重新開機完畢後，出現等待登入的畫面示意"><br />
+		圖 3-25、重新開機完畢後，出現等待登入的畫面示意<br /><br /></center>
+
+		整個過程非常的簡單，就如同妳在安裝一部文字介面的 Linux 主機一般。
+		從開始安裝到結束的整個過程中，花費比較多時間在設定項目，完整安裝差不多 10 分鐘就搞定了。
+		這還是因為鳥哥使用舊型主機來安裝的，鳥哥曾以新 P4 主機來安裝過這一整個流程，
+		開始安裝到結束不到 3 分鐘，實在是非常的快速啊！<br /><br />
+
+		接下來妳可以查閱一下 /etc/xen/centos5_virt 顯示的內容，
+		該檔案是由 virt-install 主動幫我們建立的，我的資料如下所示：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cat /etc/xen/centos5_virt</span>
+# Automatically generated xen config file
+<span class=term_write>name = "centos5_virt"
+memory = "256"
+disk = [ 'tap:aio:/disk2/xen/centos5.virt.img,xvda,w', ]
+<span class=term_say># 仔細瞧，發現 xvda 了嗎？就是這裡決定的啦！</span>
+
+vif = [ 'mac=00:16:3e:2f:4a:ef, bridge=xenbr0', ]
+<span class=term_say># 可以直接指定模擬網卡的實體卡號以及使用的橋接器</span>
+
+uuid = "9a968f71-c36b-d48a-5a03-304bb41a639f"
+<span class=term_say># 甚至可以直接定義裝置的 uuid 號碼呢！</span>
+
+bootloader="/usr/bin/pygrub"
+<span class=term_say># 沒有核心了！而是利用 domain-U 自己的核心來開機的！
+# 要使用 domain-U 的核心來開機，就得用這個設定項目才行！</span>
+
+vcpus=1
+on_reboot   = 'restart'
+on_crash    = 'restart'</span>
+</pre></td></tr></table>
+
+		接下來請開始使用 xm create -c centos5_virt 來啟動這個乾淨無暇的 domain-U 囉！<br /><br />
+	</div>
+
+	<hr /><a name="other_inst_centos5"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">CentOS5 所提供的一個實例</span><br />
+	<div class=block2>
+		雖然 virt-install 已經有夠好用了，不過在某些情況下還是無法執行的。首先， virt-install 要求 domain-U 
+		在安裝時一定要給予 256MB 的記憶體，如果妳的記憶體少於 256MB 時，肯定無法執行 virt-install ～
+		再者在 SELinux 啟動的情況下，可能還會有無法執行 virt-install 的情況發生。
+		還好， CentOS5 提供了一個可以驅動安裝程式的核心給我們來進行安裝過程！
+		接下來我們將以 CentOS5 官網所提供的 kernel file 來進行安裝的實作喔！<br /><br />
+
+		其實整個過程挺簡單的，最重要的就是必須要使用 CentOS5 官網所提供的核心與虛擬磁碟映像檔，
+		有這兩個東西就能夠處理安裝的程序了。底下我們就一步一步來處理這個設定吧！<br /><br />
+
+		<hr /><li><span class=text_import1>0. 建立網路連線所需的 DHCP 伺服器</span><br />
+		<div class=block2>
+		在預設的情況下 Xen 使用的網路環境為利用橋接方式 (bridge) 來連結實際的網路環境。
+		但在這種模式底下 domain-U 在安裝時，取得 IP 的方式主要為利用 dhcp 協定，
+		使用手動的方式來設定 IP 卻是不可行的方案！除非要轉成利用 NAT 的模式來處理。
+		假設我們都先不更改 Xen 的預設環境，那麼我們就得要針對 Xen 的網路模式來建立一部 dhcp 伺服器了。<br /><br />
+
+		詳細的 dhcp 伺服器建置方法請參考<a href="..">伺服器架設篇</a>的介紹，
+		鳥哥在這裡僅利用一些時間很快的將整個流程處理一下吧！
+		需要注意的是，如果妳的網域內已經有一個 public 的 dhcp 了，那麼您在建置這個給 domain-U 用的 DHCP 時，
+		特別留意不要影響到其他的 dhcp 主機喔！鳥哥這裡假設我的 domain-U 的 MAC 為 00:16:3E:00:00:11 ，
+		所以有針對這個 MAC 來處理喔！<br />
+
+<table class="term"><tr><td class="term"><pre>
+<span class=term_hd>1. 先檢查妳的 domain-0 是否有安裝 dhcp 呢？</span>
+[root@linux ~]# <span class=term_command>rpm -qa | grep dhcp</span>
+dhcp-3.0.5-5.el5
+<span class=term_say># 如果沒有出現上述的套件時，請自行使用 yum install dhcp 吧！</span>
+
+<span class=term_hd>2. 修改 DHCP 的設定檔</span>
+[root@linux ~]# <span class=term_command>vi /etc/dhcpd.conf</span>
+<span class=term_write>ddns-update-style none;
+subnet 192.168.1.0 netmask 255.255.255.0 {
+     option routers                  192.168.1.254;
+     option subnet-mask              255.255.255.0;
+     option domain-name              "xen.test";
+     option domain-name-servers      168.95.1.1;
+     range 192.168.1.20 192.168.1.25;
+     default-lease-time 21600;
+     max-lease-time 43200;
+     host dic1 {
+          hardware ethernet 00:16:3E:00:00:11;
+          fixed-address 192.168.1.31;
+     }
+}</span>
+<span class=term_say># 鳥哥就是利用那個 hardware ethernet 來控制某個網卡來源的要求的啦！</span>
+
+<span class=term_hd>3. 啟動與觀察</span>
+[root@linux ~]# <span class=term_command>/etc/init.d/dhcpd start</span>
+[root@linux ~]# <span class=term_command>netstat -tlunp</span>
+Proto Recv-Q Send-Q Local Address  Foreign Address State  PID/Program name
+udp        0      0 0.0.0.0:67     0.0.0.0:*              22285/dhcpd
+<span class=term_say># 重點在那個 port 67 囉～</span>
+
+<span class=term_hd>4. 防火牆的處理！</span>
+[root@linux ~]# <span class=term_command>iptables -I INPUT -p udp --dport 67 -j ACCEPT</span>
+[root@linux ~]# <span class=term_command>iptables -A INPUT -s 192.168.1.0/24 -j ACCEPT</span>
+<span class=term_say># 重點在開放用戶端對於主機的連線囉！這個要設定好！</span>
+</pre></td></tr></table>
+
+		如此一來 DHCP 主機就設定好了，簡單吧！再來開始其他的處理吧！<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>1. 建立 domain-U 所需要的虛擬磁碟</span><br />
+		<div class=block2>
+		同樣的，利用 dd 這個指令來建立他吧！鳥哥依舊將我的映像檔放置到 /disk2/xen 底下去。<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>dd if=/dev/zero of=/disk2/xen/centos5.office.img  \</span>
+> <span class=term_command>bs=1M count=3072 oflag=direct</span>
+[root@linux ~]# <span class=term_command>chcon -t xen_image_t /disk2/xen/centos5.office.img</span>
+[root@linux ~]# <span class=term_command>ll -Z /disk2/xen/centos5.office.img</span>
+-rw-r--r--  root root user_u:object_r:<span class=term_write>xen_image_t</span>    centos5.office.img
+</pre></td></tr></table>
+
+		除了要建立這個大檔案之外，不要忘記那個可愛又可怕的 SELinux 類型也需要同時變更！
+		這點大家都很容易忘記！包括鳥哥在內～ @_@<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>2. 設定終端機介面</span><br />
+		<div class=block2>
+		這個動作在前面的小節中已經講過了，這裡特別再列出來，因為如果妳沒有作這個動作，
+		很可能在 domain-U 的地方會讓您無法使用 console 的方式登入 domain-U 
+		，屆時您可能需要使用類似 ssh 的網路連線方式才能夠登入 domain-U 哩！
+		而且，如果沒有作這個動作，你的 domain-0 則會一直在 /var/log/messages 出現一些錯誤～實在討厭～
+		實作的方法很簡單：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/inittab</span>
+<span class=term_say># 大約在第 51 行的地方加入底下特殊字體的部分：</span>
+5:2345:respawn:/sbin/mingetty tty5
+6:2345:respawn:/sbin/mingetty tty6
+<span class=term_write>co:2345:respawn:/sbin/agetty xvc0 9600 vt100-nav</span>
+<span class=term_say># 意思是使用 agetty 建立 xvc0</span>
+
+[root@linux ~]# <span class=term_command>init q</span>
+<span class=term_say># init q 這個指令可以讓 /etc/inittab  的設定立刻生效而不需要重新開機！</span>
+
+[root@linux ~]# <span class=term_command>ln -s /dev/console /dev/xvc0</span>
+</pre></td></tr></table>
+		</div>
+
+		<hr /><li><span class=text_import1>3. 下載 CentOS5 用來安裝 Xen 的核心與映像檔</span><br />
+		<div class=block2>
+		CentOS5 官網提供的可安裝 Xen 核心在底下的連結，分為 i386 與 x86_64 版本：<br />
+		<ul>
+		<li>i386: <a href="http://mirror.centos.org/centos/5/os/i386/images/xen/"
+			target="_blank">http://mirror.centos.org/centos/5/os/i386/images/xen/</a>
+		<li>x86_64: <a href="http://mirror.centos.org/centos/5/os/x86_64/images/xen/"
+			target="_blank">http://mirror.centos.org/centos/5/os/x86_64/images/xen/</a>
+		</ul>
+		鳥哥使用的是 i386 的版本。下載與處理的方式可以這樣做：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>cd /boot</span>
+[root@linux boot]# <span class=term_command>wget  \</span>
+> <span class=term_command>http://mirror.centos.org/centos/5/os/i386/images/xen/vmlinuz</span>
+[root@linux boot]# <span class=term_command>wget  \</span>
+> <span class=term_command>http://mirror.centos.org/centos/5/os/i386/images/xen/initrd.img</span>
+<span class=term_say># 先下載這兩個檔案下來，為了方便記憶，所以鳥哥習慣將檔名修改一下：</span>
+
+[root@linux boot]# <span class=term_command>mv vmlinuz centos5_xen_vmlinuz</span>
+[root@linux boot]# <span class=term_command>mv initrd.img centos5_xen_initrd.img</span>
+[root@linux boot]# <span class=term_command>restorecon /boot/*</span>
+<span class=term_say># 最後一個動作 (restorecon) 在處理 SELinux 的問題啦！</span>
+</pre></td></tr></table>
+
+		所以我們已經取得 CentOS5 官網所提供的核心與映像檔了！準備處理設定檔囉～<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>4. 撰寫『安裝用』設定檔</span><br />
+		<div class=block2>
+		接下來我們得先就可安裝的核心來進行設定檔的編寫。我這裡比較有趣的地方在於幾個部分：<br />
+		<ul>
+		<li>我具有 NFS 安裝伺服器，該伺服器 IP 為 192.168.1.254，路徑為 /disk1/yum/centos5
+		<li>domain-U 在安裝時的 MAC 假設為 00:16:3e:00:00:11，且透過 DHCP 取得 IP；
+		<li>使用 kickstart 方式來安裝，而 kickstart 的設定檔放置到安裝伺服器的 /disk1/yum/centos5/ks.xen.centos5.txt 內
+		</ul>
+		什麼是 kick start 呢？我們剛剛在前一小節使用 virt-install 安裝時，不是有很多的選擇畫面嗎？
+		所謂的 kick start 就是將所有的選擇項目都寫入某一個設定檔，如此一來，就可以免除手動去挑選的困擾了。
+		因此，我們會有兩個檔案需要建立。首先，我們建立 Xen 的設定檔，檔案如下：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /etc/xen/centos5_xen_install</span>
+<span class=term_write>kernel  = "/boot/centos5_xen_vmlinuz"
+ramdisk = "/boot/centos5_xen_initrd.img"
+extra   = "text ks=nfs:192.168.1.254:/disk1/yum/centos5/ks.xen.centos5.txt"
+name    = "centos5_xen_install"
+memory  = "128"
+disk    = [ 'file:/disk2/xen/centos5.office.img,xvda,w', ]
+vif     = [ 'mac=00:16:3e:00:00:11, bridge=xenbr0', ]
+vcpus   = 1
+on_reboot = 'destroy'
+on_crash  = 'destroy'</span>
+<span class=term_say># 上面比較特別的只有那個 extra 而已，那個是核心的額外參數說明！</span>
+</pre></td></tr></table>
+
+		我們還得建立 kick start 的設定檔內容。其實你的 CentOS 本來就有 kickstart 的設定檔了，
+		詳情請參考你自己的 /root/anaconda-ks.cfg 檔案，您就曉得囉！更詳細的 kickstart 請先參考如下網頁：<br />
+		<ul><a href="http://freesf.tnc.edu.tw/docs/rh/rhl-cg-zh_TW-9/ch-kickstart2.html"
+			target="_blank">http://freesf.tnc.edu.tw/docs/rh/rhl-cg-zh_TW-9/ch-kickstart2.html</a></ul>
+		鳥哥這裡僅作個簡單的設定而已：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi /disk1/yum/centos5/ks.xen.centos5.txt</span>
+<span class=term_write><span class=term_say># 1. 與安裝有關的設定，尤其是 NFS 的設定最要緊！</span>
+install
+nfs --server=192.168.1.254 --dir=/disk1/yum/centos5
+
+<span class=term_say># 2. 語系的支援以及鍵盤對應表</span>
+lang en_US.UTF-8
+langsupport --default en_US.UTF-8 zh_TW.BIG5 zh_TW.UTF-8 zh_HK.UTF-8 \
+zh_CN.GB18030 en_US.UTF-8
+keyboard us
+
+<span class=term_say># 3. 網路設定，記住，要與 NFS 安裝伺服器同網域才行！</span>
+network --device eth0 --bootproto dhcp
+
+<span class=term_say># 4. 密碼與防火牆還有 SELinux 與時區的相關設定</span>
+rootpw --iscrypted $1$NGE.r9ik$D9iqc2bfdpi1DYvqC2CwP.
+firewall --enabled --port=
+authconfig --enableshadow --enablemd5
+selinux --enforcing
+timezone Asia/Taipei
+
+<span class=term_say># 5. 開機管理程式，注意那個 driveorder 項目，我們的硬碟是虛擬的喔！</span>
+bootloader --location=mbr --driveorder=xvda --append="console=xvc0"
+reboot
+
+<span class=term_say># 6. 磁碟分割表的操作以及安裝的套件資料</span>
+clearpart --all --initlabel --drives=xvda
+part /boot --fstype ext3 --size=100 --ondisk=xvda
+part / --fstype ext3 --size=2048 --ondisk=xvda --asprimary
+part swap --size=512 --ondisk=xvda
+%packages
+@core</span>
+<span class=term_say># 如果妳曾經安裝過 Linux ，那麼上面的選項對妳來說，應該不難瞭解。
+# 比較特殊的是 rootpw 那個項目，鳥哥是由 /etc/shadow 複製加密的密碼來的，
+# 如此則 root 的密碼也設定妥當，而且是加密過的資料。
+# 在本案例中的 root 密碼為 123456789 喔！</span>
+
+[root@linux ~]# <span class=term_command>chcon -t public_content_t \</span>
+> <span class=term_command>/disk1/yum/centos5/ks.xen.centos5.txt</span>
+</pre></td></tr></table>
+
+		如此則將兩個設定資料給他設定好了。接下來就是進行安裝的流程喔～<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>5. 實際安裝過程</span><br />
+		<div class=block2>
+		實際安裝真是太簡單了！直接啟動 Xen 即可啊！請下達：『xm create -c centos5_xen_install』吧！
+		然後在出現一小段時間的 IP 偵測、硬體偵測、套件資料分析等畫面後，就會主動的進入實際安裝套件的畫面！
+		接下來我們啥事都不需要擔心，所有的安裝過程 kickstart 系統都會幫我們搞定的。
+		實際上，妳要做的就只是...喝茶看報紙吧！不過如果妳的 domain-0 系統非常的高效能，
+		老實說，喝茶的時間實在是不夠用～ @_@，因為可能 3 分鐘就安裝完畢了～ ^_^<br /><br />
+
+		kickstart 就是這麼好用！妳可以將這一組設定放在妳的安裝伺服器上面，未來想要安裝一模一樣的環境時，
+		直接在安裝的過程載入這個檔案即可，我們不需要還手動挑選有的沒有的啦！ ^_^<br /><br />
+		</div>
+
+		<hr /><li><span class=text_import1>6. 修改成為可以正常開機的設定檔</span><br />
+		<div class=block2>
+		在上述第四個步驟時，我們所建立的 /etc/xen/centos5_xen_install 是專門用來安裝用的設定檔。
+		既然已經安裝妥當了，這個檔案就不能繼續的使用，否則每次都會重複的進入安裝的畫面，
+		會一直不斷的重新安裝....<br /><br />
+
+		所以接下來我們得要修改一下設定檔才行。設定檔可以改成底下的模樣喔：<br />
+
+<table class="term"><tr><td class="term"><pre>
+[root@linux ~]# <span class=term_command>vi centos5_xen_run</span>
+<span class=term_write>name    = "centos5_xen_run"
+memory  = "128"
+disk    = [ 'file:/disk2/xen/centos5.office.img,xvda,w', ]
+vif     = [ 'mac=00:16:3e:00:00:11, bridge=xenbr0', ]
+vcpus   = 1
+on_reboot = 'restart'
+on_crash  = 'restart'
+bootloader = "/usr/bin/pygrub"</span>
+<span class=term_say># 其實就是加入那個 pygrub 的執行檔而已。該檔案的作用就是
+# 作為一個開機載入器來載入 domain-U 開機所需使用的核心與虛擬磁碟。</span>
+</pre></td></tr></table>
+
+		接下來如果想要使用剛剛完成的 domain-U 來登入時，請使用：『 xm create -c centos5_xen_run 』來啟動吧！
+		啟動的畫面如下所示，妳會發現，怎麼透過終端機可以跟在螢幕前面一個模樣！還能看到 grub 哩！
+		真是有夠棒的！<br /><br />
+
+		<a name="fig3-26"></a><center><img src="xen/centos5_01.png" border=0
+		title="啟動 domain-U 的畫面" alt="啟動 domain-U 的畫面"><br />
+		圖 3-26、啟動 domain-U 的畫面<br /><br /></center>
+
+		選擇好妳所需要的開機選項後，嘿嘿！就能夠在 pietty 之類的環境完整的操作你的 domain-U 了！
+		說實在的，用在教學上，實在是很棒的一個好主意！<br />
+		</div>
+	</div>
+</div>
+
+
+<hr /><a name=""></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1"></span><br />
+<div class=block1>
+
+	<hr /><a name=""></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2"></span><br />
+	<div class=block2>
+
+	</div>
+
+</div>
+
+<!
+Xen 的網路有三種基本的模式，分別是 bridge, router, nat 三種模式，其中 bridge 為預設的模式。這種模式有個好處，
+就是 domain-U 與 domain-0 會被主機認為是並列的關係，亦即兩者都可以直接與外界環境接觸喔！
+至於 iptables 方面， Xen 的防火牆要透過 domain-0 時，必須要在 forward 的介面增加一個 physdev 的模組，
+因為 domain-U 透過 domain-0 並非經由 NAT ，所以有關係的鏈是  forward 這一條喔！至於更詳細的作法，可以參考
+iptables -m physdev -h 囉！
+>
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料</span><br />
+<div class=block1>
+<ul>
+	<li><a name="ps1"></a>註1：Apache 是一種 WWW 伺服器軟體，虛擬主機 (virtual host) 的概念可以參考底下連結：<br />
+		<a href="..0360apache.htm#www_adv_virtual"
+		target="_blank">http://linux.vbird.org0360apache.htm#www_adv_virtual</a></li>
+	<li><a name="ps2"></a>註2：鳥哥的著作之一，Linux 基礎篇，網路文件請參考：<br />
+		<a href="../linux_basic" target="_blank">http://linux.vbird.org/linux_basic</a></li>
+	<li><a name="ps3"></a>註3：鳥哥的著作之一，Linux 伺服器架設篇，網路文件請參考：<br />
+		<a href="../linux_server" target="_blank">http://linux.vbird.org/linux_server</a></li>
+	<li><a name="ps4"></a>註4：多重開機，一部主機內有多種作業系統，可在開機的時候選擇想要執行的 OS。請參考：<br />
+		<a href="../linux_basic/0156installfc4.htm#moreOS"
+		target="_blank">http://linux.vbird.org/linux_basic/0156installfc4.htm#moreOS</a></li>
+	<li><a name="ps5"></a>註5：請參考 Xen 的 Users' Manual version 3.0：<br />
+		<a href="http://www.cl.cam.ac.uk/research/srg/netos/xen/readmes/user/user.html"
+		target="_blank">http://www.cl.cam.ac.uk/research/srg/netos/xen/readmes/user/user.html</a><br />
+		鳥哥這裡的備份：<a href="xen/user.pdf" 
+		target="_blank">http://linux.vbird.org/linux_security/xen/user.pdf</a></li>
+		也有簡體中文版：<a href="http://www.linuxsir.org/main/?q=node/188"
+		target="_blank">http://www.linuxsir.org/main/?q=node/188</a></li>
+	<li><a name="ps6"></a>註6：關於硬體、核心與應用程式的相關性請參考：<br />
+		<a href="../linux_basic/0110whatislinux.htm#whatislinux_os"
+		target="_blank">http://linux.vbird.org/linux_basic/0110whatislinux.htm#whatislinux_os</a><br />
+		<a href="../linux_basic/0320bash.htm#bash_what"
+		target="_blank">http://linux.vbird.org/linux_basic/0320bash.htm#bash_what</a></li>
+	<li><a name="ps7"></a>註7：關於圖示的說明可以參考彥明兄的一篇文章：<br />
+		<a href="http://linux.vbird.org/somepaper/20070214-xen_on_sles_10.pdf"
+		target="_blank">http://linux.vbird.org/somepaper/20070214-xen_on_sles_10.pdf</a></li>
+	<li><a name="ps8"></a>註8：關於更多的開機流程與相關資訊，可以參考底下網頁：<br />
+		<a href="../linux_basic/0510osloader.htm"
+		target="_blank">http://linux.vbird.org/linux_basic/0510osloader.htm</a><br />
+	<li><a name="ps"></a>註
+		<a href=""
+		target="_blank"></a><br />
+
+	<br />其他參考資料：
+	<li>axa 網友在酷學園的一篇 Xen 說明，雖然是針對 Gentoo 版本，不過很值得一看：<br />
+		<a href="http://phorum.study-area.net/printview.htm?t=35725"
+		target="_blank">http://phorum.study-area.net/printview.htm?t=35725</a></li>
+	<li>The Xen virtual machine monitor：<a href="http://www.cl.cam.ac.uk/research/srg/netos/xen/index.html"
+		target="_blank">http://www.cl.cam.ac.uk/research/srg/netos/xen/index.html</a></li>
+	<li>Xen Clustering with CentOS 5：<a href="http://meshier.com/2007/06/13/xen-clustering-with-centos-5/"
+		target="_blank">http://meshier.com/2007/06/13/xen-clustering-with-centos-5/</a></li>
+
+
+
+	<li>Xen 的網路模擬情況：<a href="http://wiki.xensource.com/xenwiki/XenNetworking"
+		target="_blank">http://wiki.xensource.com/xenwiki/XenNetworking</a></li>
+	<li>CentOS 5 的 Xen 範例：<a href="http://wiki.centos.org/HowTos/Xen/InstallingCentOSDomU"
+		target="_blank">http://wiki.centos.org/HowTos/Xen/InstallingCentOSDomU</a></li>
+	<li>YHTSAI的部落格：<a href="http://www.yhtsai.idv.tw/blogs/index.htm?blog=4&title=running_windowsxp_as_a_xen_guest_on_fedo_6&more=1&c=1&tb=1&pb=1" target="_blank">http://www.yhtsai.idv.tw/blogs/index.htm?blog=4</a></li>
+	<li>Fedora Xen Quick Start：<a href="http://fedoraproject.org/wiki/FedoraXenQuickstartFC6"
+		target="_blank">http://fedoraproject.org/wiki/FedoraXenQuickstartFC6</a></li>
+	<li>安裝 Windows 在 Linux 下：<a href="xen/xen_install_windows.pdf"
+		target="_blank">http://linux.vbird.org/linux_security/xen/xen_install_windows.pdf</a></li>
+	<li>Xen 的其他詳細解說：<a href="http://www.lslnet.com/linux/f/docs/linux-5520.htm"
+		target="_blank">http://www.lslnet.com/linux/f/docs/linux-5520.htm</a></li>
+	<li>一些關於網路的設定方式：<a href="http://linux.chinaunix.net/bbs/redirect.htm?tid=910815&goto=lastpost"
+		target="_blank">http://linux.chinaunix.net/bbs/redirect.htm?tid=910815&goto=lastpost</a></li>
+	<li>http://www.debian-administration.org/articles/360
+	<li><a href="http://phorum.study-area.org/index.htm/topic,52293.msg266975.html"
+		target="_blank">http://phorum.study-area.org/index.htm/topic,52293.msg266975.html</a></li>
+</ul>
+</div>
+
+
+<hr><span class="text_history">
+2007/10/20：經過多日的奮戰，終於將 Xen 的半虛擬化安裝與操作的方法寫出來！全虛擬化的部分還在構思中～<br />
+2007/10/24：透過網友 lvan 的回報，發現沒有建置 /dev/xvc0 會有終端介面的問題，所以補上；<br />
+2007/10/24：同樣透過 lvan 兄的回報，<a href="#20071024">可以使用 [ctrl]-] 來離開 domain-U 的終端介面</a>！謝謝 lvan 兄！<br />
+2008/09/09：感謝討論區網友<a href="http://phorum.vbird.org/profile.htm?mode=viewprofile&u=14101"
+	    target="_blank">donyingle</a>提供的<a href="#20080909">AMD的64位元CPU</a>的相關資訊，終於有CPU的flags了！<br />
+</span>
+<hr>
+<br><br>
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,1324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="X Window 的簡易設定與相關知識介紹" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- X Window 簡易設定檔設定</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  	
+
+<!-- 本文的檔頭部分 -->
+<div style="text-align:center">
+    <span class="text_head0">第二十四章、<span class="text_head_en"> X Window </span>設定介紹</span><br />
+</div>
+<div style="text-align:right">
+  <span class="text_history">最近更新日期：2009/08/07</span>
+</div>
+
+
+<!-- 本文的檔頭部分 -->
+<table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
+	在 Linux 上頭的圖形介面我們稱之為 X Window System，簡稱為 X 或 X11 囉！
+	為何稱之為系統呢？這是因為 X 視窗系統又分為 X server 與 X client ，既然是 Server/Client (主從架構)
+	這就表示其實 X 視窗系統是可以跨網路且跨平台的！X 視窗系統對於 Linux 來說僅是一個軟體，
+	只是這個軟體日趨重要喔！因為 Linux 是否能夠在桌上型電腦上面流行，與這個 X 視窗系統有關啦！
+	好在，目前的 X 視窗系統整合到 Linux 已經非常優秀了，而且也能夠具有 3D 加速的功能，
+	只是，我們還是得要瞭解一下 X 視窗系統才好，這樣如果出問題，我們才有辦法處理啊！
+</td></tr></table><br />
+
+<!-- 本文的連結區部分 -->
+<div class="block1">
+<span class="text_h1">
+1. <a href="#xwin">什麼是 X Window System</a><br />
+	<span class="text_h2">
+	　　1.1 <a href="#xwin_history">X Window 的發展簡史</a><br />
+	　　1.2 <a href="#xwin_s_c_wm">主要元件： X Server/X Client/Window Manager/Display Manager</a><br />
+	　　1.3 <a href="#xwin_startup">X Window 的啟動流程</a>：<a href="#startx">startx</a>, <a href="#xinit">xinit</a><br />
+	　　1.4 <a href="#xwin_test">X 啟動流程測試</a><br />
+	　　1.5 <a href="#xwin_why">我是否需要啟用 X Window System</a><br />
+	</span>
+2. <a href="#xserver">X Server 設定檔解析與設定</a><br />
+	<span class="text_h2">
+	　　2.1 <a href="#xserver_xorg">解析 xorg.conf 設定</a><br />
+	　　2.2 <a href="#xserver_xfs">X Font Server (XFS) 與加入額外中文字形</a>：<a href="#chkfontpath">chkfontpath</a>,
+		<a href="#fc-cache">fc-cache</a><br />
+	　　2.3 <a href="#xserver_gen">設定檔重建與顯示器參數微調</a>：<a href="#gtf">透過 gtf 調整解析度</a><br />
+	</span>
+3. <a href="#driver">顯示卡驅動程式安裝範例</a><br />
+	<span class="text_h2">
+	　　3.1 <a href="#nvidia">NVidia</a><br />
+	　　3.2 <a href="#ati">ATI (AMd)</a><br />
+	　　3.3 <a href="#intel">Intel</a><br />
+	</span>
+4. <a href="#hint">重點回顧</a><br />
+5. <a href="#ex">本章習題</a><br />
+6. <a href="#reference">參考資料與延伸閱讀</a><br />
+<span class="text_h2">
+7. <a href="http://phorum.vbird.org/viewtopic.php?t=23897"
+    target="_blank">針對本文的建議：http://phorum.vbird.org/viewtopic.php?t=23897</a><br />
+</span>
+</span>
+</div>
+
+
+<!-- 本文的正式部分 -->
+<hr /><a name="xwin"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">什麼是 X Window System</span><br />
+<div class="block1">
+	<p>Unix Like 作業系統不是只能進行伺服器的架設而已，在美編、排版、製圖、多媒體應用上也是有其需要的。
+	這些需求都需要用到<span class="text_import2">圖形介面 (Graphical User Interface, GUI)</span> 的操作的，
+	所以後來才有所謂的 X Window System 這玩意兒。那麼為啥圖形視窗介面要稱為 X 呢？因為就英文字母來看 X 是在 W(indow) 
+	後面，因此，人們就戲稱這一版的視窗介面為 X 囉 (有下一版的新視窗之意)！</p>
+
+	<p>事實上， X Window System 是個非常大的架構，他還用到網路功能呢！也就是說，其實 X 視窗系統是能夠跨網路與跨作業系統平台的！
+	而鳥哥這個基礎篇是還沒有談到伺服器與網路主從式架構，因此 X 在這裡並不容易理解的。不過，沒關係！
+	我們還是談談 X 怎麼來的，然後再來談談這 X 視窗系統的元件有哪些，慢慢來，應該還是能夠理解 X 的啦！<br /><br /></p>
+
+	<hr /><a name="xwin_history"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X Window 的發展簡史</span><br />
+	<div class="block2">
+		<p>X Window 系統最早是由 MIT (Massachusetts Institute of Technology, 麻省理工學院) 在 1984 年發展出來的，
+		當初 X 就是在 Unix 的 System V 這個作業系統版本上面開發出來的。在開發 X 
+		時，開發者就希望這個視窗介面不要與硬體有強烈的相關性，這是因為如果與硬體的相關性高，那就等於是一個作業系統了，
+		如此一來的應用性會比較侷限。因此 X 在當初就是以應用程式的概念來開發的，而非以作業系統來開發。</p>
+
+		<p>由於這個 X 希望能夠透過網路進行圖形介面的存取，因此發展出許多的 X 通訊協定，這些網路架構非常的有趣，
+		所以吸引了很多廠商加入研發，因此 X 的功能一直持續在加強！一直到 1987 年更改 X 版本到 X11 ，這一版 X 取得了明顯的進步，
+		後來的視窗介面改良都是架構於此一版本，因此後來 <span class="text_import2">X 視窗也被稱為 
+		X11</span> 。這個版本持續在進步當中，到了 1994 年發佈了新版的 <span class="text_import2">X11R6</span>
+		，後來的架構都是沿用此一釋出版本，所以後來的版本定義就變成了類似 1995 年的 X11R6.3 之類的樣式。
+		(<a href="#ps1">註1</a>)</p>
+
+		<p>1992 年 XFree86 (<a href="http://www.xfree86.org" target="_blank">http://www.xfree86.org/</a>) 計畫順利展開，
+		該計畫持續在維護 X11R6 的功能性，包括對新硬體的支援以及更多新增的功能等等。當初定名為 XFree86 
+		其實是根據『  <span class="text_import2">X + Free software + x86 硬體</span> 』而來的呢。早期 Linux 
+		所使用的 X Window 的主要核心都是由 XFree86 這個計畫所提供的，因此，我們常常將 X 系統與 XFree86 掛上等號的說。</p>
+
+		<p>不過由於一些授權的問題導致 XFree86 無法繼續提供類似 GPL 的自由軟體，後來 Xorg 基金會就接手 X11R6 的維護！
+		Xorg (<a href="http://www.x.org/" target="_blank">http://www.x.org/</a>) 利用當初 MIT 發佈的類似自由軟體的授權，
+		將 X11R6 拿來進行維護，並且在 2004 年發佈了 X11R6.8 版本，更在 2005 年後發表了 X11R7.x 版。
+		現在我們 CentOS 5.x 使用的 X 就是 Xorg 提供的 X11R7 喔！
+		而這個 X11R6/X11R7 的版本是自由軟體，因此很多組織都利用這個架構去設計他們的圖形介面喔！包括 Mac OS X v10.3 
+		也曾利用過這個架構來設計他們的視窗呢！我們的 CentOS 也是利用 Xorg 提供的 X11 啦！</p>
+
+		<p>從上面的說明，我們可以知道的是：</p>
+
+		<ul class="text_import2">
+		<li>在 Unix Like 上面的圖形使用者介面 (GUI) 被稱為 X 或 X11；</li>
+		<li>X11 是一個『軟體』而不是一個作業系統；</li>
+		<li>X11 是利用網路架構來進行圖形介面的執行與繪製；</li>
+		<li>較著名的 X 版本為 X11R6 這一版，目前大部分的 X 都是這一版演化出來的 (包括 X11R7)；</li>
+		<li>現在大部分的 distribution 使用的 X 都是由 Xorg 基金會所提供的 X11 軟體；</li>
+		<li>X11 使用的是 MIT 授權，為類似 GPL 的自由軟體授權方式。</li>
+		</ul>
+	</div>
+
+	<hr /><a name="xwin_s_c_wm"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">主要元件： X Server/X Client/Window 
+	Manager/Display Manager</span><br />
+	<div class="block2">
+		<p>如同前面談到的，X Window system 是個利用網路架構的圖形使用者介面軟體，那到底這個架構可以分成多少個元件呢？
+		基本上是分成 X Server 與 X Client 兩個元件而已喔！其中 X Server 在管理硬體，而 X Client 則是應用程式。
+		在運作上，X Client 應用程式會將所想要呈現的畫面告知 X Server ，最終由 X server 來將結果透過他所管理的硬體繪製出來！
+		整體的架構我們大約可以使用如下的圖示來作個介紹：(<a href="#ps2">註2</a>)</p>
+
+		<center><img src="0590xwindow/x_ser_cli.gif" alt="X Window System 的架構" 
+		title="X Window System 的架構" border="0" /><br />
+		圖 1.2.1、 X Window System 的架構 (<a href="#ps2">註2</a>)<br /></center>
+
+		<p>上面的圖示非常有趣喔！我們在用戶端想要取得來自伺服器的圖形資料時，我們用戶端使用的當然是用戶端的硬體設備啊，
+		所以，<span class="text_import2">X Server 的重點就是在管理用戶端的硬體，包括接受鍵盤/滑鼠等設備的輸入資訊，
+		並且將圖形繪製到螢幕上 (請注意上圖的所有元件之間的箭頭指示)</span>。但是到底要繪製個啥東西呢？
+		繪圖總是需要一些數據才能繪製吧？此時 X Client (就是 X 應用程式) 就很重要啦！他主要提供的就是告知 X Server 
+		要繪製啥東西。那照這樣的想法來思考，我們是想要取得遠端伺服器的繪圖數據來我們的電腦上面顯示嘛！
+		所以囉，遠端伺服器提供的是 X client 軟體啊！</p>
+
+		<p>底下就讓我們來更深入的聊一聊這兩個元件吧！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">X Server：硬體管理、螢幕繪製與提供字型功能：</li></ul>
+
+		<p>既然 X Window System 是要顯示圖形介面，因此理所當然的需要一個元件來管理我主機上面的所有硬體設備才行！
+		這個任務就是 X Server 所負責的。而我們在 X 發展簡史當中提到的 XFree86 計畫及 Xorg 基金會，主要提供的就是這個
+		X Server 啦！那麼 X Server 管理的設備主要有哪些呢？其實與輸入/輸出有關喔！包括<span 
+		class="text_import2">鍵盤、滑鼠、手寫板、顯示器 (monitor) 、螢幕解析度與色彩深度、顯示卡 (包含驅動程式) 
+		與顯示的字型</span>等等，都是 X Server 管理的。</p>
+
+		<p>咦！顯示卡、螢幕以及鍵盤滑鼠的設定，不是在開機的時候 Linux 系統以 /etc/sysconfig 目錄下的 keyboard/mouse 
+		等設定檔就設好了嗎？為何 X Server 還要重新設定啊？這是因為 X Window 在 Linux 裡面僅能算是『一套很棒的軟體』，
+		所以 X Window 有自己的設定檔，你必須要針對他的設定檔設定妥當才行。也就是說， Linux 的設定與 X Server 
+		的設定不一定要相同的！因此，你在 Linux 的 run level 3 想要玩圖形介面時，就得要載入 X Window 
+		需要的驅動程式才行～總之， X Server 的主要功能就是在管理『主機』上面的顯示硬體與驅動程式。</p>
+
+		<p>既然 X Window System 是以透過網路取得圖形介面的一個架構，那麼用戶端是如何取得伺服器端提供的圖形畫面呢？
+		由於伺服器與用戶端的硬體不可能完全相同，因此我們用戶端當然不可能使用到伺服器端的硬體顯示功能！
+		舉例來說，你的用戶端電腦並沒有 3D 影像加速功能，那麼你的畫面可能呈現出伺服器端提供的 3D 加速嗎？
+		當然不可能吧！所以囉 X Server 的目的在管理用戶端的硬體設備！也就是說：『<span 
+		class="text_import2">每部用戶端主機都需要安裝 X Server，而伺服器端則是提供 X Client 軟體，
+		以提供用戶端繪圖所需要的數據資料</span>』。</p>
+
+		<p>X Server / X Client 的互動並非僅有 client --&gt; server，兩者其實有互動的！從上圖 1.2.1 我們也可以發現，
+		X Server 還有一個重要的工作，那就是將來自輸入裝置 (如鍵盤、滑鼠等) 的動作告知 X Client，
+		你曉得， X Server 既然是管理這些周邊硬體，所以，周邊硬體的動作當然是由 X Server 來管理的，
+		但是 X Server 本身並不知道周邊設備這些動作會造成什麼顯示上的效果，
+		因此 X Server 會將周邊設備的這些動作行為告知 X Client ，讓 X Client 去傷腦筋。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">X Client：負責 X Server 要求的『事件』之處理：</li></ul>
+
+		<p>前面提到的 X Server 主要是管理顯示介面與在螢幕上繪圖，同時將輸入裝置的行為告知 X Client，
+		此時 X Client 就會依據這個輸入裝置的行為來開始處理，最後 X Client 會得到『
+		嗯！這個輸入裝置的行為會產生某個圖示』，然後將這個圖示的顯示資料回傳給 X Server ，
+		X server 再根據 X Client 傳來的繪圖資料將他描圖在自己的螢幕上，來得到顯示的結果。</p>
+
+		<p>也就是說， X Client 最重要的工作就是處理來自 X Server 的動作，將該動作處理成為繪圖資料，
+		再將這些繪圖資料傳回給 X Server 囉！由於 X Client 的目的在產生繪圖的數據，因此我們也稱呼 X Client 為 X
+		Application (X 應用程式)。而且，<span class="text_import2">每個 X Client 並不知道其他 X Client 的存在</span>，
+		意思是說，如果有兩個以上的 X client 同時存在時，兩者並不知道對方到底傳了什麼數據給 X Server ，
+		因此 X Client 的繪圖常常會互相重疊而產生困擾喔！</p>
+
+		<p>舉個例子來說，當我們在 X Window 的畫面中，將滑鼠向右移動，那他是怎麼告知 X Server 與 X Client 的呢？
+		首先， X server 會偵測到滑鼠的移動，但是他不知道應該怎麼繪圖啊！此時，他將滑鼠的這個動作告知 X Client，
+		X Client 就會去運算，結果得到，嘿嘿！其實要將滑鼠指標向右移動幾個位素，然後將這個結果告知 X server ，
+		接下來，您就會看到 X Server 將滑鼠指標向右移動囉～</p>
+
+		<p>這樣做有什麼好處啊？最大的好處是，<span class="text_import2"> X Client 不需要知道 X Server 
+		的硬體配備與作業系統！</span>因為 X Client 單純就是在處理繪圖的資料而已，本身是不繪圖的。所以，在用戶端的 
+		X Server 用的是什麼硬體？用的是哪套作業系統？伺服器端的 X Client 根本不需要知道～相當的先進與優秀～對吧！ ^_^
+		整個運作流程可以參考下圖：用戶端用的是什麼作業系統在 Linux 主機端是不在乎的！</p>
+
+		<center><img src="0590xwindow/x_client_os.gif" alt="X Server 用戶端的作業系統與 X client 的溝通示意" 
+		title="X Server 用戶端的作業系統與 X client 的溝通示意" border="0" /><br />
+		圖 1.2.2、 X Server 用戶端的作業系統與 X client 的溝通示意<br /></center><br />
+
+		<hr /><ul class="list1"><li class="text_import1">X Window Manager：特殊的 X Client ，負責管理所有的 X client
+		軟體</li></ul>
+
+		<p>剛剛前面提到，X Client 的主要工作是將來自 X Server 的資料處理成為繪圖數據，再回傳給 X server 而已，
+		所以 X client 本身是不知道他在 X Server 當中的位置、大小以及其他相關資訊的。這也是上面我們談到的，
+		X client 彼此不知道對方在螢幕的哪個位置啊！為了克服這個問題，因此就有 Window Manager (WM, 視窗管理員) 的產生了。
+		視窗管理員也是 X client ，只是他主要在負責全部 X client 的控管，還包括提供某些特殊的功能，例如：</p>
+
+		<ul class="text_import2">
+		<li>提供許多的控制元素，包括工作列、背景桌面的設定等等；</li>
+		<li>管理虛擬桌面 (virtual desktop)；</li>
+		<li>提供視窗控制參數，這包括視窗的大小、視窗的重疊顯示、視窗的移動、視窗的最小化等等。</li>
+		</ul>
+
+		<p>我們常常聽到的 KDE, GNOME, XFCE 還有陽春到爆的 twm 等等，都是一些視窗管理員的專案計畫啦！
+		這些專案計畫中，每種視窗管理員所用以開發的顯示引擎都不太相同，所著重的方向也不一樣，
+		因此我們才會說，在 Linux 底下，每套 Window Manager 都是獨特存在的，不是換了桌面與顯示效果而已，
+		而是連顯示的引擎都不會一樣喔！底下是這些常見的視窗管理員全名與連結：</p>
+
+		<ul>
+		<li>GNOME (GNU Network Object Model Environment)：<a href="http://www.gnome.org/" 
+			target="_blank">http://www.gnome.org/</a></li>
+		<li>KDE (K Desktop Enviroment)：<a href="http://kde.org/" target="_blank">http://kde.org/</a></li>
+		<li>twm (Tab Window Manager)：<a href="http://xwinman.org/vtwm.php"
+			target="_blank">http://xwinman.org/vtwm.php</a></li>
+		<li>XFCE (XForms Common Environment)：<a href="http://www.xfce.org/" target="_blank">http://www.xfce.org/</a></li>
+		</ul>
+
+		<p>由於 Linux 越來越朝向 Desktop 桌上型電腦使用方向走，因此視窗管理員的角色會越來越重要！
+		目前我們 CentOS 預設提供的有 GNOME 與 KDE ，這兩個視窗管理員上面還有提供非常多的 X client 軟體，
+		包括辦公室生產力軟體 (Open Office) 以及常用的網路功能 (firefox 瀏覽器、 Thunderbird 收發信件軟體) 等。
+		現在使用者想要接觸 Linux 其實真的越來越簡單了，如果不要架設伺服器，那麼 Linux 桌面的使用與 Windows 
+		系統可以說是一模一樣的！不需要學習也能夠入門哩！ ^_^</p>
+
+		<p>那麼你知道 X Server / X client / window manager 的關係了嗎？我們舉 CentOS 預設的 GNOME 為例好了，
+		由於我們要在本機端啟動 X Window system ，因此，在我們的 CentOS 主機上面必須要有 Xorg 的 X server 核心，
+		這樣才能夠提供螢幕的繪製啊～然後為了讓視窗管理更方便，於是就加裝了 GNOME 這個計畫的 window manager ，
+		然後為了讓自己的使用更方便，於是就在 GNOME 上面加上更多的視窗應用軟體，包括輸入法等等的，
+		最後就建構出我們的 X Window System 囉～ ^_^！所以你也會知道，X server/X client/Window Manager
+		是同時存在於我們一部 Linux 主機上頭的啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">Display Manager：提供登入需求</li></ul>
+
+		<p>談完了上述的資料後，我們得要瞭解一下，那麼我如何取得 X Window 的控制？在本機的文字介面底下你可以輸入 startx 
+		來啟動 X 系統，此時由於你已經登入系統了，因此不需要重新登入即可取得 X 環境。但如果是 runlevel 5
+		的環境呢？你會發現在 tty7 的地方有個可以讓你使用圖形介面登入 (輸入帳號密碼) 的咚咚，那個是啥？
+		是 X Server/X client 還是什麼的？其實那是個 Display Manager 啦！這個 display manager 最大的任務就是提供登入的環境，
+		並且載入使用者選擇的 Window Manager 與語系等資料喔！</p>
+
+		<p>幾乎所有的大型視窗管理員專案計畫都會提供 display manager 的，在 CentOS 上面我們主要利用的是 GNOME
+		的 GNOME Display Manager (gdm) 這支程式來提供 tty7 的圖形介面登入喔！至於登入後取得的視窗管理員，
+		則可以在 gdm 上面進行選擇的！我們在<a href="/linux_basic/0160startlinux.php#start_startx">第五章</a>介紹的登入環境，
+		那個環境其實就是 gdm 提供的啦！再回去參考看看圖示吧！ ^_^！所以說，並非 gdm 只能提供 GNOME 的登入而已喔！</p>
+	</div>
+
+	<hr /><a name="xwin_startup"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X Window 的啟動流程</span><br />
+	<div class="block2">
+		<p>現在我們知道要啟動 X Window System 時，必須要先啟動管理硬體與繪圖的 X Server ，然後才載入 X Client 。
+		基本上，目前都是使用 Window Manager 來管理視窗介面風格的。那麼如何取得這樣的視窗系統呢？
+		你可以透過登入本機的文字介面後，輸入 startx 來啟動 X 視窗；也能夠透過 display manager (如果有啟動 runlevel 5) 
+		提供的登入畫面，輸入你的帳號密碼來登入與取得 X 視窗的！</p>
+
+		<p>問題是，你的 X server 設定檔為何？如何修改解析度與顯示器？你能不能自己設定預設啟動的視窗管理員？
+		如何設定預設的使用者環境 (與 X client 有關) 等等的，這些資料都需要透過瞭解 X 的啟動流程才能得知！
+		所以，底下我們就來談談如何啟動 X 的流程吧！ ^_^<br /><br /></p>
+
+		<a name="startx"></a>
+		<hr /><ul class="list1"><li class="text_import1">在文字介面啟動 X ：透過 startx 指令</li></ul>
+
+		<p>我們都知道 Linux 是個多人多工的作業系統，所以啦，X 視窗也是可以根據不同的使用者而有不同的設定！
+		這也就是說，每個用戶啟動 X 時， X server 的解析度、啟動 X client 的相關軟體及 Window Manager 的選擇可能都不一樣！
+		但是，如果你是首次登入 X 呢？也就是說，你自己還沒有建立自己的專屬 X 畫面時，系統又是從哪裡給你這個 X 
+		預設畫面呢？而如果你已經設定好相關的資訊，這些資訊又是存放於何處呢？</p>
+
+		<p>事實上，當你在純文字介面且並沒有啟動 X 視窗的情況下來輸入 startx 時，這個 startx 
+		的作用就是在幫你設定好上頭提到的這些動作囉！ startx 其實是一個 shell script 
+		，他是一個比較親和的程式，會主動的幫忙使用者建立起他們的 X 所需要引用的設定檔而已。你可以自行研究一下 
+		startx 這個 script 的內容，鳥哥在這裡僅就 startx 的作用作個介紹。</p>
+
+		<p>startx 最重要的任務就是找出使用者或者是系統預設的 X server 與 X client 的設定檔，而使用者也能夠使用 startx
+		外接參數來取代設定檔的內容。這個意思是說：startx 可以直接啟動，也能夠外接參數，例如底下格式的啟動方式：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">startx [X client 參數] -- [X server 參數]</span>
+
+<span class="term_hd"># 範例：以色彩深度為 16 bit 啟動 X</span>
+[root@www ~]# <span class="term_command">startx  --  -depth 16</span>
+</pre></td></tr></table>
+
+		<p>startx 後面接的參數以兩個減號『--』隔開，前面的是 X Client 的設定，後面的是 X Server 的設定。
+		上面的範例是讓 X server 以色彩深度 16 bit 色 (亦即每一像素佔用 16 bit ，也就是 65536 色) 顯示，
+		因為色彩深度是與 X Server 有關的，所以參數當然是寫在 -- 後面囉，於是就成了上面的模樣！</p>
+
+		<p>你會發現，鳥哥上面談到的 startx 都是提到如何找出 X server / X client 的設定值而已！
+		沒錯，事實上啟動 X 的是 xinit 這支程式， startx 僅是在幫忙找出設定值而已！那麼 startx
+		找到的設定值可用順序為何呢？基本上是這樣的：</p>
+
+		<ul class="text_import2">
+		<li>X server 的參數方面：
+		<ol>
+		<li>使用 startx 後面接的參數；</li>
+		<li>若無參數，則找尋使用者家目錄的檔案，亦即 ~/.xserverrc</li>
+		<li>若無上述兩者，則以 /etc/X11/xinit/xserverrc</li>
+		<li>若無上述三者，則單純執行 /usr/bin/X (此即 X server 執行檔)</li>
+		</ol><br /></li>
+
+		<li>X client 的參數方面：
+		<ol>
+		<li>使用 startx 後面接的參數；</li>
+		<li>若無參數，則找尋使用者家目錄的檔案，亦即 ~/.xinitrc</li>
+		<li>若無上述兩者，則以 /etc/X11/xinit/xinitrc</li>
+		<li>若無上述三者，則單純執行 xterm (此為 X 底下的終端機軟體)</li>
+		</ol></li>
+		</ul>
+
+		<p>根據上述的流程找到啟動 X 時所需要的 X server / X client 的參數，接下來 startx 會去呼叫 xinit
+		這支程式來啟動我們所需要的 X 視窗系統整體喔！接下來當然就是要談談 xinit 囉～<br /><br /></p>
+
+		<a name="xinit"></a>
+		<hr /><ul class="list1"><li class="text_import1">由 startx 呼叫執行的 xinit</li></ul>
+
+		<p>事實上，當 startx 找到需要的設定值後，就呼叫 xinit 實際啟動 X 的。他的語法是：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">xinit [client option] -- [server or display option]</span>
+</pre></td></tr></table>
+
+		<p>那個 client option 與 server option 如何下達呢？其實那兩個咚咚就是由剛剛 startx 去找出來的啦！
+		在我們透過 startx 找到適當的 xinitrc 與 xserverrc 後，就交給 xinit 來執行。
+		在預設的情況下 (使用者尚未有 ~/.xinitrc 等檔案時)，你輸入 startx ，
+		就等於進行 <span class="text_import2">xinit /etc/X11/xinit/xinitrc -- 
+		/etc/X11/xinit/xserverrc</span> 這個指令一般！但由於 xserverrc 也不存在，參考上一小節的參數搜尋順序，
+		因此實際上的指令是：<span class="text_import2">xinit /etc/X11/xinit/xinitrc -- 
+		/usr/bin/X</span>，這樣瞭了嗎？</p>
+
+		<p>那為什麼不要直接執行 xinit 而是使用 startx 來呼叫 xinit 呢？這是因為我們必須要取得一些參數嘛！
+		startx 可以幫我們快速的找到這些參數而不必手動輸入的。因為單純只是執行 xinit 的時候，系統的預設 
+		X Client 與 X Server 的內容是這樣的：(<a href="#ps3">註3</a>)</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_command">xinit xterm  -geometry  +1+1  -n  login  -display  :0 --  X  :0</span>
+</pre></td></tr></table>
+
+		<p>在 X client 方面：那個 xterm 是 X 視窗底下的虛擬終端機，後面接的參數則是這個終端機的位置與登入與否。
+		最後面會接一個『 -display :0 』表示這個虛擬終端機是啟動在『第 :0 號的 X 顯示介面』的意思。至於 X Server 方面，
+		而我們啟動的 X server 程式就是 X 啦！其實 X 就是 Xorg 的連結檔，亦即是 X Server 的主程式囉！
+		所以我們啟動 X 還挺簡單的～直接執行 X 而已，同時還指定 X 啟動在第 :0 個 X 顯示介面。
+		如果單純以上面的內容來啟動你的 X 系統時，你就會發現 tty7 有畫面了！只是.....很醜～因為我們還沒有啟動 
+		window manager 啊！</p>
+
+		<p>從上面的說明我們可以知道， xinit 主要在啟動 X server 與載入 X client ，但這個 xinit 所需要的參數則是由
+		startx 去幫忙找尋的。因此，最重要的當然就是 startx 找到的那些參數啦！
+		所以呢，重點當然就是 /etc/X11/xinit/ 目錄下的 xinitrc 與 xserverrc 這兩個檔案的內容是啥囉～
+		雖然 xserverrc 預設是不存在的。底下我們就分別來談一談這兩個檔案的主要內容與啟動的方式～<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">啟動 X server 的檔案： xserverrc </li></ul>
+
+		<p>X 視窗最先需要啟動的就是 X server 啊，那 X server 啟動的腳本與參數是透過 /etc/X11/xinit/ 
+		裡面的 xserverrc 。不過我們的 CentOS 5.x 根本就沒有 xserverrc 這個檔案啊！
+		那使用者家目錄目前也沒有 ~/.xserverrc ，這個時候系統會怎麼做呢？其實就是執行 /usr/bin/X 這個指令啊！
+		這個指令也是系統最原始的 X server 執行檔囉。</p>
+
+		<p>在啟動 X Server 時，Xorg 會去讀取 /etc/X11/xorg.conf 這個設定檔。針對這個設定檔的內容，
+		我們會在下個小節介紹。如果一切順利，那麼 X 就會順利的在 tty7 的環境中啟動了 X 。
+		單純的 X 啟動時，你只會看到畫面一片漆黑，然後中心有個滑鼠的游標而已～</p>
+
+		<p>由前一小節的說明中，你可以發現到其實 X 啟動的時候還可以指定啟動的介面喔！那就是 :0 這個參數，這是啥？
+		事實上<span class="text_import2">我們的 Linux 可以『同時啟動多個 X』喔！第一個 X 的畫面會在 :0 亦即是 
+		tty7 ，第二個 X 則是 :1 亦即是 tty8</span> 。
+		後續還可以有其他的 X 存在的。因此，上一小節我們也有發現， xterm 在載入時，也必須要使用 -display 來說明，
+		這個 X 應用程式是需要在哪個 X 載入的才行呢！其中比較有趣的是， X server 未註明載入的介面時，預設是使用 :0 ～
+		但是 X client 未註明時，則無法執行喔！</p>
+
+		<p>啟動了 X server 後，接下來就是載入 X client 到這個 X server 上面啦！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">啟動 X Client 的檔案： xinitrc </li></ul>
+
+		<p>假設你的家目錄並沒有 ~/.xinitrc ，則此時 X Client 會以 /etc/X11/xinit/xinitrc 
+		來作為啟動 X Client 的預設腳本。xinitrc 這個檔案會將很多其他的檔案參數引進來，
+		包括 /etc/X11/xinit/xinitrc-common 與 /etc/X11/xinit/Xclients 還有
+		/etc/sysconfig/desktop 。你可以參考 xinitrc 後去搜尋各個檔案來瞭解彼此的關係。</p>
+
+		<p>不過分析到最後，其實最終就是載入 KDE 或者是 GNOME 而已。你也可以發現最終在 XClient 檔案當中會有兩個指令的搜尋，
+		包括 startkde 與 gnome-session 這兩個，這也是 CentOS 預設會提供的兩個主要的 Window Manager 囉。
+		而你也可以透過修改 /etc/sysconfig/desktop 內的 DESKTOP=GNOME 或 DESKTOP=KDE 來決定預設使用哪個視窗管理員的。
+		如果你並沒有安裝這兩個大傢伙，那麼 X 就會去使用陽春的 twm 這個視窗管理員來管理你的環境囉。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		不論怎麼說，鳥哥還是希望大家可以透過解析 startx 這個 script 的內容去找到每個檔案，
+		再根據分析每個檔案來找到您 distributions 上面的 X 相關檔案～
+		畢竟每個版本的 Linux 還是有所差異的～
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<p>另外，如果有特殊需求，你當然可以自訂 X client 的參數！這就得要修改你家目錄下的 ~/.xinitrc 這個檔案囉。
+		不過要注意的是，如果你的 .xinitrc 設定檔裡面有啟動的 x client 很多的時候，千萬注意將除了最後一個 
+		window manager 或 X Client 之外，都放到背景裡面去執行啊！舉例來說，像底下這樣：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_write">       xclock -geometry 100x100-5+5 &amp;
+       xterm -geometry 80x50-50+150 &amp;
+       exec /usr/bin/twm</span>
+</pre></td></tr></table>
+
+		<p>意思就是說，我啟動了 X ，並且同時啟動 xclock / xterm / twm 這三個 X clients 喔！
+		如此一來，你的 X 就有這三個咚咚可以使用了！如果忘記加上 &amp; 的符號，那就.....
+		會讓系統等待啊，而無法一次就登入 X 呢！<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">X 啟動的埠口</li></ul>
+
+		<p>好了，根據上面的說明，我們知道要在文字介面底下啟動 X 時，直接使用 startx 來找到 X server 與 X client 的參數或設定檔，
+		然後再呼叫 xinit 來啟動 X 視窗系統。xinit 先載入 X server 到預設的 :0 這個顯示介面 (預設在 tty7)，然後再載入
+		X client 到這個 X 顯示介面上。而 X client 通常就是 GNOME 或 KDE ，這兩個設定也能夠在 /etc/sysconfig/desktop 
+		裡面作好設定。最後我們想要瞭解的是，既然 X 是可以跨網路的，那 X 啟動的埠口是幾號？</p>
+
+		<p>其實，CentOS 由於考慮 X 視窗是在本機上面運作，因此將埠口改為插槽檔 (socket) 了，因此你無法觀察到 X
+		啟動的埠口的。事實上， X server 應該是要啟動一個 port 6000 來與 X client 進行溝通的！
+		由於系統上面也可能有多個 X 存在，因此我們就會有 port 6001, port 6002... 等等。這也就是說：</p>
+
+
+<table width="95%" border="1" cellspacing="0" cellpadding="3" bgcolor="lightyellow">
+<tr bgcolor="lightblue" align="center"><td>X 視窗系統</td><td>顯示介面號碼</td><td>預設終端機</td><td>網路監聽埠口</td></tr>
+<tr align="center"><td>第一個 X</td><td>hostname:0</td><td>tty7</td><td>port 6000</td></tr>
+<tr align="center"><td>第二個 X</td><td>hostname:1</td><td>tty8</td><td>port 6001</td></tr>
+</table>
+		<p>在 X Window System 的環境下，我們稱 port 6000 為第 0 個顯示介面，亦即為 hostname:0 ，
+		那個主機名稱通常可以不寫，所以就成了 :0 即可。在預設的情況下，第一個啟動的 X
+		(不論是啟動在第幾個 port number) 是在 tty7 ，亦即按下 [ctrl]+[Alt]+[F7] 那個畫面。
+		而起動的第二個 X (注意到了吧！可以有多個 X 同時啟動在您的系統上呢) 則預設在 tty8 亦即 
+		[ctrl]+[Alt]+[F8] 那個畫面呢！很神奇吧！ ^_^</p>
+
+		<p>如前所述，因為主機上的 X 可能有多個同時存在，因此，當我們在啟動 X Server / Client 時，
+		應該都要註明該 X Server / Client 主要是提供或接受來自哪個 display 的 port number 才行。</p>
+	</div>
+
+	<hr /><a name="xwin_test"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X 啟動流程測試</span><br />
+	<div class="block2">
+		<p>好了，我們可以針對 X Server 與 X client 的架構來做個簡單的測試喔！
+		由於鳥哥不知道你到底有沒有啟動過 X ，因此底下鳥哥將這個練習指定於第二個 X ，亦即是 :1 這個顯示位置來顯示喔！
+		而且，<span class="text_import2">底下的指令都是在 tty1 的地方執行的，至於底下的畫面則是在 tty8 的地方展現</span>。
+		因此，請自行切換 tty1 下達指令與 tty8 查閱結果囉！(如果是 CentOS 之類的 Red Hat 系統，請務必要啟動 xfs 這個服務喔！)</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">1. 先來啟動第一個 X 在 :1 畫面中：</span>
+[root@www ~]# <span class="term_command">X :1 &amp;</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/xwin_test_1.gif" alt="單純啟動 X server的情況" 
+		title="單純啟動 X server的情況" border="1" /><br />
+		圖 1.4.1 、 單純啟動 X server的情況<br /></center>
+
+		<p>上述的 X 是大寫，那個 :1 是寫在一起的，至於 &amp; 則是放到背景去執行。此時系統會主動的跳到第二個圖形介面終端機，亦即 
+		tty8 上喔！所以如果一切順利的話，你應該可以看到一個 X 的滑鼠游標可以讓你移動了(如上圖所示)。
+		該畫面就是 X Server 啟動的畫面囉！醜醜的，而且沒有什麼 client 可以用啊！
+		接下來，請按下 [ctrl]+[alt]+[F1] 回到剛剛下達指令的終端機：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">2. 輸入數個可以在 X 當中執行的虛擬終端機</span>
+[root@www ~]# <span class="term_command">xterm -display :1  &amp;</span>
+[root@www ~]# <span class="term_command">xterm -display :1  &amp;</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/xwin_test_2.gif" alt="在 X 上面啟動 xterm 終端機顯示的結果" 
+		title="在 X 上面啟動 xterm 終端機顯示的結果" border="1" /><br />
+		圖 1.4.2 、 在 X 上面啟動 xterm 終端機顯示的結果<br /></center>
+
+		<p>那個 xterm 是必須要在 X 底下才能夠執行的終端機介面。加入的參數 -display 則是指出這個 xterm 要在那個 display 
+		使用的。這兩個指令請不要一次下完！先執行一次，然後按下 [ctrl]+[alt]+[F8] 去到 X 畫面中，你會發現多了一個終端機囉～
+		不過，可惜的是，你無法看到終端機的標題、也無法移動終端機，當然也無法調整終端機的大小啊！我們回到剛剛的 tty1 
+		然後再次下達 xterm 指令，理論上應該多一個終端機，去到 tty8 查閱一下。唉～沒有多出一個終端機啊？
+		這是<span class="text_import2">因為兩個終端機重疊了～我們又無法移動終端機，所以只看到一個。</span>
+		接下來，請再次回到 tty1 去下達指令吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">3. 在輸入不同的 X client 觀察觀察，分別去到 tty8 觀察喔！</span>
+[root@www ~]# <span class="term_command">xclock -display :1  &amp;</span>
+[root@www ~]# <span class="term_command">xeyes -display :1  &amp;</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/xwin_test_3.gif" alt="分別啟動 xclock 時鐘與 xeyes 眼睛的結果" 
+		title="分別啟動 xclock 時鐘與 xeyes 眼睛的結果" border="1" /><br />
+		圖 1.4.3 、 分別啟動 xclock 時鐘與 xeyes 眼睛的結果<br /></center>
+
+		<p>跟前面一樣的，我們又多執行了兩個 X client ，其中 xclock 會顯示時鐘，而 xeyes 則是會出現一雙大眼睛來盯著游標！
+		你可以移動一下游標就可以發現眼睛的焦聚會跑啊 ^_^！不過，目前的四個 X client 通通不能夠移動與放大縮小！
+		如此一來，你怎麼在 xterm 底下下達指令啊？當然就很困擾～所以讓我們來載入最陽春的視窗管理員吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">4. 輸入可以管理的 window manager</span>
+[root@www ~]# <span class="term_command">twm -display :1  &amp;</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/xwin_test_4.gif" alt="視窗管理員 twm 的功能顯示" 
+		title="視窗管理員 twm 的功能顯示" border="1" /><br />
+		圖 1.4.4 、 視窗管理員 twm 的功能顯示<br /></center>
+
+		<p>回到 tty1 後，用最簡單的 twm 這個視窗管理員來管理我們的 X 吧！輸入之後，去到 tty8
+		看看，用滑鼠移動一下終端機看看？可以移動了吧？也可以縮小放大視窗囉～同時也出現了標題提示囉～也看到兩個終端機啦！
+		現在終於知道視窗管理員的重要性了吧？ ^_^！在黑螢幕地方按下滑鼠右鍵，就會出現類似上面畫面最右邊的選單，
+		你就可以進行額外的管理囉～玩玩看先！</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd">5. 將所有剛剛建立的 X 相關工作全部殺掉！</span>
+[root@www ~]# <span class="term_command">kill %6</span>
+[root@www ~]# <span class="term_command">kill %5</span>
+[root@www ~]# <span class="term_command">kill %4</span>
+[root@www ~]# <span class="term_command">kill %3</span>
+[root@www ~]# <span class="term_command">kill %2</span>
+[root@www ~]# <span class="term_command">kill %1</span>
+</pre></td></tr></table>
+
+		<p>很有趣的一個小實驗吧～透過這個實驗，你應該會對 X server 與 Window manager 及 tty7 
+		以後的終端介面使用方式有比較清楚的瞭解～加油！</p>
+	</div>
+
+	<hr /><a name="xwin_why"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">我是否需要啟用 X Window System</span><br />
+	<div class="block2">
+		<p>談了這麼多 X 視窗系統方面的資訊後，再來聊聊，那麼你的 Linux 主機是否需要預設就啟動 X 視窗呢？
+		一般來說，如果你的 Linux 主機定位為網路伺服器的話，那麼由於 Linux 裡面的主要服務的設定檔都是純文字的格式檔案，
+		相當的容易設定的，所以啊，根本就是不需要 X Window 存在呢！因為 X Window 僅是 Linux 系統內的一個軟體而已啊！</p>
+
+		<p>但是萬一你的 Linux 主機是用來作為你的桌上電腦用的，那麼 X Window 
+		對你而言，就是相當重要的一個咚咚了！因為我們日常使用的辦公室軟體，都需要使用到 X Window 
+		圖形的功能呢！此外，以鳥哥的例子來說，俺之前接觸到的數值分析模式，需要利用圖形處理軟體來將資料讀取出來，
+		所以在那部 Linux 主機上面，我一定需要 X Window 的。</p>
+
+		<p>回歸到主題上面，除了主機的用途決定你是否需要啟用 X Window 之外，
+		主機的『配備』也是你必須要考慮的一項決定性因素。因為 X Window 如果要美觀，可能需要功能較為強大的 KDE 或 
+		GNOME 等視窗管理員的協助，但是這兩個龐然大物對於系統的要求又很高，除了 CPU 等級要夠，RAM 
+		要足之外，顯示卡的等級也不能太差～所以，早期的主機可能對於 X Window 就沒有辦法具有很好的執行效率了。</p>
+
+		<p>也就是說，你如果想要玩 X Window 的話，特別需要考慮到這兩點：</p>
+
+		<ul>
+		<li><span class="text_import2">穩定性</span>：<br /><br />
+		X Window 僅是 Linux 上面的一個軟體，雖然目前的 X window 已經整合得相當好了，但任何程式的設計都或多或少會有些臭蟲，
+		X 當然也不例外。此外，在你的 Linux 伺服器上面啟用 X 系統的話，自然多一組程序的啟用
+		(X Window 會啟動多個程序來執行各項任務) ，系統的不確定性當然可能會增加一些。
+		因此，<span class="text_import2">鳥哥不是很建議對 Internet 開放的伺服器啟動 X Window 的啦！</span><br /><br /></li>
+
+		<li><span class="text_import2">效能</span>：<br /><br />
+		無論怎麼說，程式在跑總是需要系統資源的，所以，多啟用了 X 就會造成一些系統資源的損耗。
+		此外，上面也稍稍提到，某些 X 的軟體是相當耗費系統資源的呢！所以，啟動 X 可能會讓你的可用系統資源 
+		(尤其是記憶體) 降低很多，可能會造成系統效能較低落的問題。</li>
+		</ul>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		鳥哥剛開始接觸 Linux (大約是在 1999 年左右)時，由於不熟，通常都是預設給他啟用 X Window 在我的主機上面的。
+		不過，那個時候的圖形介面與 Linux kernel 的整合度比較差，
+		老是掛點去，是常常造成主機上面的網路服務無法順暢的原因之一呢！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>
+		<a name="20090728"></a>
+		<p>就鳥哥的使用經驗來看， GNOME 速度稍微快一點， KDE 的介面感覺比較具有親和力！不過，總體而言，
+		這個 X Window System 的速度其實並不是那麼棒！如果你有其他圖形介面的需求時，可以使用 yum
+		去安裝一下 XFCE 這一套，XFCE 是比較輕量級的視窗管理員，據說使用上速度比 GNOME 還快些。
+		最近很火紅的 Ubuntu 的分支之一 Xubuntu 據說就是使用這套視窗管理員喔！試看看吧！ ^_^</p>
+	</div>
+</div>
+
+<hr /><a name="xserver"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">X Server 設定檔解析與設定</span><br />
+<div class="block1">
+	<p>從前面的說明來看，我們知道一個 X 視窗系統能不能成功啟動，其實與 X Server 有很大的關係的。因為 X Server 
+	負責的是整個畫面的描繪，所以沒有成功啟動 X Server 的話，即使有啟動 X Client 也無法將圖樣顯示出來啊。所以，底下我們就針對 
+	X Server 的設定檔來做個簡單的說明，好讓大家可以成功的啟動 X Window System 啊。</p>
+
+	<p>基本上， X Server 管理的是顯示卡、螢幕解析度、滑鼠按鍵對應等等，尤其是顯示卡晶片的認識，真是重要啊。
+	此外，還有顯示的字體也是 X Server 管理的一環。基本上，<span class="text_import2">X server 的設定檔都是預設放置在 
+	/etc/X11 目錄下，而相關的顯示模組或上面提到的總總模組，則主要放置在 /usr/lib/xorg/modules</span>
+	底下。比較重要的是字型檔與晶片組，她們主要放置在:</p>
+
+	<ul class="text_import2" style="font-family: '細明體'">
+	<li>提供的螢幕字型: /usr/share/X11/fonts/</li>
+	<li>顯示卡的晶片組: /usr/lib/xorg/modules/drivers/</li>
+	</ul>
+
+	<p>在 CentOS 底下，我們可以透過 chkfontpath 這個指令來取得目前系統有的字型檔案目錄。
+	這些都要透過一個統一的設定檔來規範，那就是 X server 的設定檔啦。這個設定檔的檔名就是 /etc/X11/xorg.conf 喔！<br /><br /></p>
+
+	<hr /><a name="xserver_xorg"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">解析 xorg.conf 設定</span><br />
+	<div class="block2">
+		<p>如同前幾個小節談到的，在 Xorg 基金會裡面的 X11 版本為 X11R7.xx ，那如果你想要知道到底你用的 X
+		Server 版本是第幾版，可以使用 X 指令來檢查喔！(你必須以 root 的身分執行下列指令)</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">X -version</span>
+X Window System Version <span class="term_write">7.1.1</span>
+Release Date: 12 May 2006
+<span class="term_write">X Protocol Version 11, Revision 0, Release 7.1.1</span>
+Build Operating System: Linux 2.6.18-53.1.14.el5PAE i686 Red Hat, Inc.
+Current Operating System: Linux localhost.localdomain 2.6.18-128.1.14.el5 #1 
+SMP Wed Jun 17 06:40:54 EDT 2009 i686
+Build Date: 21 January 2009
+Build ID: xorg-x11-server 1.1.1-48.52.el5
+        Before reporting problems, check <span class="term_write">http://wiki.x.org</span>
+        to make sure that you have the latest version.
+Module Loader present
+</pre></td></tr></table>
+
+		<p>由上面的幾個關鍵字我們可以知道，目前鳥哥的這部測試機使用的 X server 是 Xorg 計畫所提供的 X11R7 版，
+		若有問題則可以到 http://wiki.x.org 去查詢～因為是 Xorg 這個 X server ，因此我們的設定檔檔名為 /etc/X11/xorg.conf
+		這一個哩。所以，理解這個檔案的內容對於 X server 的功能來說，是很重要的。</p>
+
+		<p>注意一下，在修改這個檔案之前，務必將這個檔案給她備份下來，免的改錯了甚麼東西導致連 X server 
+		都無法啟動的問題啊。這個檔案的內容是分成數個段落的，每個段落以 Section 開始，以 EndSection 結束，
+		裡面含有該 Section (段落) 的相關設定值，例如:</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_write">Section  "section name"
+…… <span class="term_note">&lt;== 與這個 section name 有關的設定項目</span>
+……
+EndSection</span>
+</pre></td></tr></table>
+
+		<p>至於常見的 section name 主要有:</p>
+
+		<ol>
+		<li><span class="text_import2" style="font-family: '細明體'">Module</span>: 被載入到 X Server 當中的模組 
+		(某些功能的驅動程式)；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">InputDevice</span>: 包括輸入的 1. 
+		鍵盤的格式 2. 滑鼠的格式，以及其他相關輸入設備；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">Files</span>: 設定字型所在的目錄位置等；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">Monitor</span>: 監視器的格式，
+		主要是設定水平、垂直的更新頻率，與硬體有關；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">Device</span>: 這個重要，就是顯示卡晶片組的相關設定了；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">Screen</span>:
+		這個是在螢幕上顯示的相關解析度與色彩深度的設定項目，與顯示的行為有關；</li>
+		<li><span class="text_import2" style="font-family: '細明體'">ServerLayout</span>:
+		上述的每個項目都可以重覆設定，這裡則是此一 X server 要取用的哪個項目值的設定囉。</li></ol>
+
+		<p>好了，直接來看看這個檔案的內容吧！這個檔案預設的情況是取消很多設定值的，所以你的設定檔可能不會看到這麼多的設定項目。
+		不要緊的，後續的章節會交代如何設定這些項目的喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">cd /etc/X11</span>
+[root@www X11]# <span class="term_command">cp -a xorg.conf xorg.conf.20090713</span>  <span class="term_note">&lt;== 有備份有保佑</span>
+[root@www X11]# <span class="term_command">vim xorg.conf</span>
+Section "Module"
+        Load  "dbe"
+        Load  "extmod"
+        Load  "record"
+        Load  "dri"
+        Load  "xtrap"
+        Load  "glx"
+        Load  "vnc"
+EndSection
+<span class="term_say"># 上面這些模組是 X Server 啟動時，希望能夠額外獲得的相關支援的模組。
+# 關於更多模組可以搜尋一下 /usr/lib/xorg/modules/extensions/ 這個目錄</span>
+
+Section "InputDevice"
+        Identifier  "Keyboard0"
+        Driver      "kbd"
+        Option      "XkbModel" "pc105"
+        Option      <u>"XkbLayout" "us"</u>  <span class="term_note">&lt;==注意，是 us 美式鍵盤對應</span>
+EndSection
+<span class="term_say"># 這個玩意兒是鍵盤的對應設定資料，重點在於 XkbLayout 那一項，
+# 如果沒有問題的話，我們台灣地區應該都是使用美式鍵盤對應按鈕的。
+# 特別注意到 Identifier (定義) 那一項，那個是在說明，我這個鍵盤的設定檔，
+# 被定義為名稱是 Keyboard0 的意思，這個名稱最後會被用於 ServerLayout 中</span>
+
+Section "InputDevice"
+        Identifier  "Mouse0"
+        Driver      "mouse"
+        Option      <u>"Protocol" "auto"</u>
+        Option      "Device" "/dev/input/mice"
+        Option      <u>"ZAxisMapping" "4 5 6 7"</u> <span class="term_note">&lt;==滾輪支援</span>
+EndSection
+<span class="term_say"># 這個則主要在設定滑鼠功能，重點在那個 Protocol 項目，
+# 那個是可以指定滑鼠介面的設定值，我這裡使用的是自動偵測！不論是 USB/PS2。</span>
+
+<u>Section "Files"</u>
+        RgbPath      "/usr/share/X11/rgb"
+        ModulePath   "/usr/lib/xorg/modules"
+        <u>FontPath     "unix/:7100"</u>  <span class="term_note">&lt;==使用另外的服務來提供字型定義</span>
+        FontPath     "built-ins"
+EndSection
+<span class="term_say"># 我們的 X Server 很重要的一點就是必須要提供字型，這個 Files 
+# 的項目就是在設定字型，當然啦，你的主機必須要有字型檔才行。一般字型檔案在：
+# /usr/share/X11/fonts/ 目錄中。至於那個 Rgb 是與色彩有關的項目。
+# 相關的字型說明我們會在下一小節的 xfs 在跟大家報告。</span>
+
+Section "Monitor"
+        Identifier   "Monitor0"
+        VendorName   "Monitor Vendor"
+        ModelName    "Monitor Model"
+        <u>HorizSync</u>    30.0 - 80.0
+        <u>VertRefresh</u>  50.0 - 100.0
+EndSection
+<span class="term_say"># 螢幕監視器的設定僅有一個地方要注意，那就是垂直與水平的更新頻率。
+# 在上面的 HorizSync 與 VerRefresh 的設定上，要注意，不要設定太高，
+# 這個玩意兒與實際的監視器功能有關，請查詢你的監視器手冊說明來設定吧！
+# 傳統 CRT 螢幕設定太高的話，據說會讓 monitor 燒毀呢，要很注意啊。</span>
+
+<u>Section "Device"</u>   <span class="term_note">&lt;==顯示卡的驅動程式項目</span>
+        Identifier  "Card0"
+        <u>Driver      "vesa"</u>  <span class="term_note">&lt;==實際的驅動程式喔！</span>
+        VendorName  "Unknown Vendor"
+        BoardName   "Unknown Board"
+        BusID       "PCI:0:2:0"
+EndSection
+<span class="term_say"># 這地方重要了，這就是顯示卡的晶片模組載入的設定區域。由於鳥哥使用 Virtualbox
+# 模擬器模擬這個測試機，因此這個地方顯示的驅動程式為通用的 vesa 模組。
+# 更多的顯示晶片模組可以參考 /usr/lib/xorg/modules/drivers/</span>
+
+Section "Screen"    <span class="term_note">&lt;==與顯示的畫面有關，解析度與色彩深度</span>
+        Identifier "Screen0"
+        Device     "Card0"     <span class="term_note">&lt;==使用哪個顯示卡來提供顯示</span>
+        Monitor    "Monitor0"  <span class="term_note">&lt;==使用哪個監視器</span>
+        SubSection "Display"   <span class="term_note">&lt;==此階段的附屬設定項目</span>
+                Viewport   0 0
+                Depth     16   <span class="term_note">&lt;==就是色彩深度</span>
+		Modes    "1024x768" "800x600" "640x480" <span class="term_note">&lt;==解析度</span>
+        EndSubSection
+        SubSection "Display"
+                Viewport   0 0
+                Depth     24
+		Modes    "1024x768" "800x600"
+        EndSubSection
+EndSection
+<span class="term_say"># Monitor 與實際的顯示器有關，而 Screen 則是與顯示的畫面解析度、色彩深度有關。
+# 我們可以設定多個解析度，實際應用時可以讓使用者自行選擇想要的解析度來呈現。
+# 不過，為了避免困擾，鳥哥通常只指定一到兩個解析度而已。</span>
+
+Section "ServerLayout"   <span class="term_note">&lt;==實際選用的設定值</span>
+        Identifier     "X.org Configured"
+        Screen      0  "Screen0" 0 0              <span class="term_note">&lt;==解析度等</span>
+        InputDevice    "Mouse0" "CorePointer"     <span class="term_note">&lt;==滑鼠</span>
+        InputDevice    "Keyboard0" "CoreKeyboard" <span class="term_note">&lt;==鍵盤</span>
+EndSection
+<span class="term_say"># 我們上面設定了這麼多的項目之後，最後整個 X Server 要用的項目，
+# 就通通一骨腦的給他寫入這裡就是了，包括鍵盤、滑鼠以及顯示介面啊。
+# 其中 screen 的部分還牽涉到顯示卡、監視器螢幕等設定值呢！</span>
+</pre></td></tr></table>
+
+		<p>上面設定完畢之後，就等於將整個 X Server 設定妥當了，很簡單吧。
+		如果你想要更新其他的例如顯示晶片的模組的話，就得要去硬體開發商的網站下載原始檔來編譯才行。
+		設定完畢之後，你就可以啟動 X Server 試看看囉。基本上，如果你的 Files 那個項目用的是直接寫入字型的路徑，
+		那就不需要啟動 XFS (X Font Server)，如果是使用 font server 時，就要先啟動 xfs ：</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 啟動 xfs 服務：</span>
+[root@www ~]# <span class="term_command">/etc/init.d/xfs start</span>
+
+<span class="term_hd"># 2. 測試 X server 的設定檔是否正常：</span>
+[root@www ~]# <span class="term_command">startx</span>  <span class="term_note">&lt;==直接在 runlevel 3 啟動 X 看看</span>
+[root@www ~]# <span class="term_command">X :1  </span>  <span class="term_note">&lt;==在 tty8 單獨啟動 X server 看看</span>
+</pre></td></tr></table>
+
+		<p>當然，你也可以利用 init 5 這個指令直接切換到圖形介面的登入來試看看囉。</p>
+
+		<div style="padding: 10pt 0pt 10pt 0pt ;" align="right"><table width="90%"><tr><td><b>Tips:</b><br /><span style="color : #009000"><font size="-1">		經由討論區網友的說明，如果你發現明明有捉到顯示卡驅動程式卻老是無法順利啟動 X 的話，可以嘗試去官網取得驅動程式來安裝，
+		也能夠將『Device』階段的『Driver』修改成預設的『Driver  "vesa"』，使用該驅動程式來暫時啟動 X 內的顯示卡喔！
+		</font></span></td><td><img src="/images/vbird_face.gif" alt="鳥哥的圖示" title="鳥哥的圖示" /></td></tr></table></div>	</div>
+
+	<hr /><a name="xserver_xfs"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">X Font Server (XFS)
+	與加入額外中文字形</span><br />
+	<div class="block2">
+		<p>與 X 有關的設定檔主要是 /etc/X11/xorg.conf 這個主設定檔，但是剛剛上頭解析這個檔案時，在 Files 的部分我們還提到了
+		X Font Server (XFS) 這個服務喔！這個是啥咚咚？這個服務的目的在提供 X server 字型庫啦！
+		也就是說， X server 所使用的字型其實是 XFS 這個服務所提供的，因此沒有啟動 XFS 服務時，你的 X server 
+		是無法順利啟動的喔！所以，我們當然就來瞧瞧這玩意兒的功能囉！</p>
+
+		<p><span class="text_import2">這個 XFS 的主設定檔在 /etc/X11/fs/config ，而字型檔則在 
+		/usr/share/X11/fonts/</span> ，這裡再次給他強調一下。
+		至於啟動的腳本則在 /etc/init.d/xfs 囉！好，那我們就先來瞧瞧主設定檔的內容是怎樣的設定吧！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/X11/fs/config</span>
+client-limit = 10  <span class="term_note">&lt;==最多允許幾個 X server 向我要求字型(因為跨網路)</span>
+clone-self = on    <span class="term_note">&lt;==與效能有關，若 xfs 達到限制值，啟動新的 xfs</span>
+<span class="term_write">catalogue = /usr/share/X11/fonts/misc:unscaled,
+        /usr/share/X11/fonts/75dpi:unscaled,
+        /usr/share/X11/fonts/100dpi:unscaled,
+        /usr/share/X11/fonts/Type1,
+        /usr/share/X11/fonts/TTF,
+        /usr/share/fonts/default/Type1,</span>
+<span class="term_say"># 上面這些咚咚，就是字型檔案的所在！如果你有新字型，可以放置在該目錄。</span>
+
+default-point-size = 120            <span class="term_note">&lt;==預設字型大小，單位為 1/10 點字 (point)</span>
+default-resolutions = 75,75,100,100 <span class="term_note">&lt;==這個則是顯示的字型像素 (pixel)</span>
+deferglyphs = 16                    <span class="term_note">&lt;==延遲顯示的字型，此為 16 bits 字型</span>
+use-syslog = on                     <span class="term_note">&lt;==啟動支援錯誤登錄</span>
+no-listen = tcp                     <span class="term_note">&lt;==啟動 xfs 於 socket 而非 TCP</span>
+</pre></td></tr></table>
+
+		<p>上面這個檔案的設定重點在 catalogue 那個設定項目當中。你可以使用 chkfontpath 
+		這個指令來列出目前支援的字型檔案，也可以直接修改呢！</p>
+
+		<p>另外，雖然目前的 CentOS 已經是支援多國語系了，因此你可以直接在安裝完畢後就看到中文，
+		不過預設的中文字形可能讓你不太滿意～此時，你可以選擇額外的中文字形顯示喔。比較有名的中文字形除了預設提供的文鼎字型外，
+		還有一種台北字型 (taipeifonts)，不過這種字形是 Big5 編碼的，因此預設並沒有在你的字型支援之中 
+		(因為目前大多使用萬國碼來顯示中文了)。如果你想要測試一下這種字形，除了自行下載字型檔之外，
+		我們可以使用 CentOS 提供的軟體來處理喔！看看底下的作法吧：</p>
+
+<a name="chkfontpath"></a>
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 先安裝中文字形軟體，亦即 fonts-chinese 這個軟體名</span>
+[root@www ~]# <span class="term_command">yum install fonts-chinese</span>
+
+<span class="term_hd"># 2. 查閱 taipei 字型的所在目錄位置：</span>
+[root@www ~]# <span class="term_command">rpm -ql fonts-chinese | grep taipei</span>
+/usr/share/fonts/chinese/misc/taipei16.pcf.gz  <span class="term_note">&lt;==重點在目錄！</span>
+/usr/share/fonts/chinese/misc/taipei20.pcf.gz
+/usr/share/fonts/chinese/misc/taipei24.pcf.gz
+
+<span class="term_hd"># 3. 建立字型檔的目錄架構</span>
+[root@www ~]# <span class="term_command">cd /usr/share/fonts/chinese/misc</span>
+[root@www ~]# <span class="term_command">mkfontdir</span>
+<span class="term_say"># 這個指令在建置 fonts.dir 這個檔案，提供字型檔案目錄的說明。</span>
+
+<span class="term_hd"># 4. 將上述的目錄加入 xfs 的支援之中：</span>
+[root@www ~]# <span class="term_command">chkfontpath -a /usr/share/fonts/chinese/misc/</span>
+[root@www ~]# <span class="term_command">chkfontpath</span>
+<span class="term_say">....(前面省略)....</span>
+/usr/share/fonts/chinese/misc:unscaled
+/usr/share/fonts/chinese/misc  <span class="term_note">&lt;==這兩行會被新增出來！</span>
+[root@www ~]# <span class="term_command">/etc/init.d/xfs restart</span>
+
+<span class="term_hd"># 5. 在 X window 底下啟動終端機，測試一下有沒有捉到該字型？</span>
+[root@www ~]# <span class="term_command">xlsofnts | grep taipei</span>
+<span class="term_say"># 如果順利的話，你會看到有幾個 taipeiXX 的字樣在螢幕上出現！</span>
+</pre></td></tr></table>
+
+		<p>這個時候的 X server 已經有新支援的中文字形了，很簡單吧！不過如果你想要讓 X client 
+		可以使用額外的字型的話，還得要使用 fontconfig 的軟體提供的 fc-cache 
+		來建立字型快取檔才行 (<a href="#ps4">註4</a>)！<br /><br /></p>
+
+		<a name="fc-cache"></a>
+		<hr /><ul class="list1"><li class="text_import1">讓視窗管理員可以使用額外的字型</li></ul>
+
+		<p>如果想要使用額外的字型的話，你可以自行取得某些字型來處理的。鳥哥這邊從 Windows 
+		取得三個檔案來作為測試，這邊得註明一下是純粹的測試，測試完畢後檔案就給她拿掉了，
+		並沒有持續使用喔！並沒有想要違法的意思啦～大家參考看看就好了。這三個檔案分別是
+		kaiu.ttf mingliu.ttc times.ttf，代表的是中楷體、明體、times and Romans 三種字體。
+		那就來看看如何增加字型吧！(假設上述的三個字體檔是放置在 /root 中)</p>
+
+<table class="term"><tr><td class="term"><pre>
+<span class="term_hd"># 1. 將上述的三個檔案放置到系統設定目錄，亦即底下的目錄中：</span>
+[root@www ~]# <span class="term_command">cd /usr/share/fonts/</span>
+[root@www ~]# <span class="term_command">mkdir windows</span>
+[root@www ~]# <span class="term_command">cp /root/*.tt[fc] /usr/share/fonts/windows</span>
+
+<span class="term_hd"># 2. 使用 fc-cache 將上述的檔案加入字型的支援中：</span>
+[root@www ~]# <span class="term_command">fc-cache -f -v</span>
+<span class="term_say">....(前面省略)....</span>
+<u>/usr/share/fonts/windows</u>: caching, 4 fonts, 0 dirs
+<span class="term_say">....(中間省略)....</span>
+fc-cache: succeeded
+<span class="term_say"># -v 僅是列出目前的字型資料， -f 則是強制重新建立字型快取！</span>
+
+<span class="term_hd"># 3. 透過 fc-list 列出已經被使用的檔案看看：</span>
+[root@www ~]# <span class="term_command">fc-list : file</span>  <span class="term_note">&lt;==找出被快取住的檔名</span>
+<span class="term_say">....(前面省略)....</span>
+/usr/share/fonts/windows/kaiu.ttf:
+/usr/share/fonts/windows/times.ttf:
+/usr/share/fonts/windows/mingliu.ttc:
+<span class="term_say">....(後面省略)....</span>
+</pre></td></tr></table>
+
+		<p>透過 fc-cache 以及 fc-list 去確認過字型確實存在後，就能夠使用視窗管理員的功能去檢查字型檔了。
+		以 GNOME 為例，在『系統』--&gt;『偏好設定』--&gt;『字型』點選後，就會出現可以調整的字型，
+		接下來你就會發現多出了『標楷體、細明體、新細明體』等字體可以選擇囉！試看看吧！鳥哥調整成為『Times and Roman』
+		出現如下圖的結果呢！參考看看：</p>
+
+		<center><img src="0590xwindow/fonts.gif" alt="中文字形的調整結果" 
+		title="中文字形的調整結果" border="1" /><br />
+		圖 2.2.1、中文字形的調整結果<br /></center>
+	</div>
+
+	<hr /><a name="xserver_gen"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">設定檔重建與顯示器參數微調</span><br />
+	<div class="block2">
+		<p>如果你修改 xorg.conf 結果改錯了，導致無法順利的啟動 X server 時，偏偏又忘記製作備份檔！該如何是好？
+		沒關係，我們的 Xorg 有提供不錯的工具可以處理。同時 CentOS 也有提供相關的設定指令，
+		那就是在第二十一章提到的 <a href="/linux_basic/0610hardware.php#setup_x">setup</a> 這個指令啦！
+		詳細的設定請自行前往參考，在這裡我們要介紹的是使用 Xorg 重新製作出設定檔啦！你可以使用 root 的身份這樣執行：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">Xorg -configure :1</span>
+</pre></td></tr></table>
+
+		<p>此時 X 會主動的以內建的模組進行系統硬體的探索，並將硬體與字型的偵測結果寫入 /root/xorg.conf.new 
+		這個檔案裡面去，這就是 xorg.conf 的重製結果。不過，這個新建的檔案不見得真的能夠啟動 X server ，
+		所以我們必須要使用底下的指令來測試一下這個新的設定檔是否能夠順利的運作：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">X -config /root/xorg.conf.new :1</span>
+</pre></td></tr></table>
+
+		<p>因為鳥哥不知道你到底是在 runlevel 幾號，因此上述的測試通通是在 tty8 的終端機上面顯示 (display 1)，
+		這樣就能夠避免切換到不同的 runlevel 囉～如果一切順利的話，你就可以將 /root/xorg.conf.new 複製成為
+		/etc/X11/xorg.conf 覆蓋掉修改錯誤的檔案，然後重新啟動 X ，嘿嘿！應該就能夠順利的救回來你的 X Window System 
+		囉！<br /><br /></p>
+
+		<a name="gtf"></a>
+		<hr /><ul class="list1"><li class="text_import1">關於螢幕解析度與更新率</li></ul>
+
+		<p>有些朋友偶而會這樣問：『我的顯示器明明還不錯，但是螢幕解析度卻永遠只能達到 800x600 而已，
+		這該如何處理？』，螢幕的解析度應該與顯示卡相關性不高，而是與顯示器的更新頻率有關！
+		所謂的更新頻率，指的是在一段時間內螢幕重新繪製畫面的速度。舉例來說， 60Hz 的更新頻率，
+		指的是每秒鐘畫面更新 60 次的意思。那麼關於顯示器的更新頻率該如何調整呢？
+		你得先去找到你的顯示器的使用說明書 (或者是網站會有規格介紹)，取得最高的更新率後，接下來選擇你想要的解析度，
+		然後透過這個 gtf 的指令功能來調整：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">gtf 水平像素 垂直像素 更新頻率 [-xv]</span>
+<span class="term_say">選項與參數：
+水平像素：就是解析度的 X 軸
+垂直像素：就是解析度的 Y 軸
+更新頻率：與顯示器有關，一般可以選擇 60, 75, 80, 85 等頻率
+-x      ：使用 Xorg 設定檔的模式輸出，這是預設值
+-v      ：顯示偵測的過程</span>
+
+<span class="term_hd"># 1. 使用 1024x768 的解析度，75 Hz 的更新頻率來取得顯示器內容</span>
+[root@www ~]# <span class="term_command">gtf 1024 768 75 -x</span>
+<span style="font-size: 9pt"># 1024x768 @ 75.00 Hz (GTF) hsync: 60.15 kHz; pclk: 81.80 MHz
+Modeline "1024x768_75.00"  81.80  1024 1080 1192 1360  768 769 772 802  -HSync +Vsync</span>
+<span class="term_say"># 重點是 Modeline 那一行！那行給他抄下來</span>
+
+<span class="term_hd"># 2. 將上述的資料輸入 xorg.conf 內的 Monitor 項目中：</span>
+[root@www ~]# <span class="term_command">vim /etc/X11/xorg.conf</span>
+Section "Monitor"
+    Identifier   "Monitor0"
+    VendorName   "Monitor Vendor"
+    ModelName    "Monitor Model"
+    <span class="term_write" style="font-size:9pt">Modeline "1024x768_75.00"  81.80  1024 1080 1192 1360  768 769 772 802  -HSync +Vsync</span>
+EndSection
+<span class="term_say"># 就是新增上述的那行特殊字體部分到 Monitor 的項目中即可。</span>
+</pre></td></tr></table>
+
+		<p>然後重新啟動你的 X ，這樣就能夠選擇新的解析度囉！那如何重新啟動 X 呢？兩個方法，
+		一個是『 init 3 ; init 5 』從文字模式與圖形模式的執行等級去切換，另一個比較簡單，
+		如果原本就是 runlevel 5 的話，那麼在 X 的畫面中按下『 [alt] + [crtl] + [backspace] 』三個組合按鍵，
+		就能夠重新啟動 X 視窗囉！</p>
+	</div>
+</div>
+
+
+<hr /><a name="driver"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">顯示卡驅動程式安裝範例</span><br />
+<div class="block1">
+	<p>雖然你的 X 視窗系統已經順利的啟動了，也調整到你想要的解析度了，不過在某些場合底下，你想要使用顯示卡提供的 3D 
+	加速功能時，卻發現 X 提供的預設的驅動程式並不支援！此時真是欲哭無淚啊～那該如何是好？沒關係，安裝官方網站提供的驅動程式即可！
+	目前 (2009) 世界上針對 x86 提供顯示卡的廠商最大的應該是 Nvidia / AMD (ATI) / Intel 這三家 (沒有照市佔率排列)，
+	所以底下鳥哥就針對這三家的顯示卡驅動程式安裝，作個簡單的介紹吧！</p>
+
+	<p>由於硬體驅動程式與核心有關，因此你想要安裝這個驅動程式之前，請務必先參考<a 
+	href="/linux_basic/0520source_code_and_tarball.php">第二十二章</a>與<a
+	href="/linux_basic/0520rpm_and_srpm.php">第二十三章</a>的介紹，才能夠順利的編譯出顯示卡驅動程式喔！
+	<span class="text_import2">建議可以直接使用 yum 去安裝『 Development Tools 』這個軟體群組以及 kernel-devel 
+	這個軟體</span>即可。<br /><br /></p>
+
+	<hr /><a name="nvidia"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">NVidia</span><br />
+	<div class="block2">
+		<p>雖然 Xorg 已經針對 NVidia 公司的顯示卡驅動程式提供了 nv 這個模組，不過這個模組無法提供很多額外的功能。
+		因此，如果你想要使用新的顯示卡功能時，就得要額外安裝 NVidia 提供的給 Linux 的驅動程式才行。
+		你可以這樣作的：<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">下載驅動程式</li></ul>
+
+		<p>建議你可以到 NVidia 的官網 (<a href="http://www.nvidia.com.tw" target="_blank">http://www.nvidia.com.tw</a>)
+		自行去下載最新的驅動程式，你也可以到底下的連結直接查閱給 Linux 用的驅動程式：</p>
+
+		<ul><li><a href="http://www.nvidia.com.tw/object/unix_tw.html"
+		target="_blank">http://www.nvidia.com.tw/object/unix_tw.html</a></li></ul>
+
+		<p>請自行選擇與你的系統相關的環境。鳥哥選擇自己的測試機是 Intel Core2 架構，因此選擇 Linux AMD64/EM64T
+		的驅動程式版本，這個版本的驅動程式檔名為： NVIDIA-Linux-x86_64-xxx.yy.zz-pkg2.run ，其中的 xxx.yy.z 
+		就是驅動程式的版本號碼。我將這個檔案放置到 /root家目錄中。<br /><br /></p>
+
+		<hr /><ul class="list1"><li class="text_import1">開始安裝驅動程式</li></ul>
+
+		<p>安裝過程有點像這樣 (檔名依照你的環境去下載與執行)：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sh NVIDIA-Linux-x86_64-185.18.14-pkg2.run</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/driver_nv_01.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.1、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>上面說的是授權，你必須要接受 (Accept) 才能繼續。</p>
+
+		<center><img src="0590xwindow/driver_nv_02.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.2、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>我們不預期 NVidia 會幫我們編譯好核心模組，因此這裡選擇 No ，讓我們自己編譯模組吧！</p>
+
+		<center><img src="0590xwindow/driver_nv_03.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.3、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>直接按下 OK 來繼續下一步即可。</p>
+
+		<center><img src="0590xwindow/driver_nv_04.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.4、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>開始進行核心模組的編譯！這個過程不會太久～</p>
+
+		<center><img src="0590xwindow/driver_nv_05.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.5、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>是否要安裝額外的 OpenGL 函式庫？要啊！就選擇 Yes 吧！</p>
+
+		<center><img src="0590xwindow/driver_nv_06.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.6、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>這個時候開始安裝顯示卡的驅動程式，會花費一段時間喔！然後出現下圖：</p>
+
+		<center><img src="0590xwindow/driver_nv_07.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.7、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>讓這支安裝程式主動的去修改 xorg.conf 吧！比較輕鬆愉快！就按下 Yes 即可。</p>
+
+		<center><img src="0590xwindow/driver_nv_08.gif" alt="NVidia 驅動程式安裝示意" 
+		title="NVidia 驅動程式安裝示意" border="1" /><br />
+		圖 3.1.8、NVidia 驅動程式安裝示意<br /></center>
+
+		<p>最後按下 OK 就結束安裝囉！這個時候如果你去查閱一下 /etc/X11/xorg.conf 的內容，會發現 Device 的 Driver
+		設定會成為 nvidia 而不是原本的 nv 喔！這樣就搞定囉！很簡單吧！
+		而且這個時候你的 /usr/lib64/xorg/modules/drivers 目錄內，會多出一個 nvidia_drv.so 的驅動程式檔案囉！
+		同時這個軟體還提供了一支很有用的程式來幫助我們進行驅動程式升級喔！</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">nvidia-installer --update</span>
+<span class="term_say"># 可以進行驅動程式的升級檢查喔！</span>
+</pre></td></tr></table>
+
+		<p>好囉，那你就趕緊試看看新的顯示卡晶片的功能吧。而如果有什麼疑問的話，查閱一下 /var/log/nvidia 
+		開頭的登錄檔看看吧！ ^_^</p>
+	</div>
+
+	<hr /><a name="ati"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">ATI (AMD)</span><br />
+	<div class="block2">
+		<p>ATI 已經被 AMD 收購了，而 AMD 在近期已經宣布了 ATI 的顯示卡驅動程式要開放成為 Open source ，
+		這代表未來你可以很輕鬆的就取得 ATI 的顯示卡驅動程式而不必要重新安裝的。不過，就如同前面提到的，
+		若你需要某些特殊功能，建議還是手動安裝一下官方提供的驅動程式吧！你必須要到 AMD 的網站去下載 ATI 顯示卡驅動程式哩！
+		你可以到 <a href="http://www.amdtaiwan.com.tw/" target="_blank">http://www.amdtaiwan.com.tw/</a>
+		選擇『ATI 驅動程式』的連結去選擇你的顯示卡驅動程式版本，也可以點選底下的連結：</p>
+
+		<ul><li><a href="http://ati.amd.com/support/driver.html"
+		target="_blank">http://ati.amd.com/support/driver.html</a></li></ul>
+
+		<p>然後去選擇你的作業系統與顯示卡的型號來下載。鳥哥使用另一部含有 ATI 顯示卡的主機來安裝驅動程式，
+		該主機使用的是 Randon HD 3200 的顯示卡晶片，最後下載的檔案是： ati-driver-installer-9-6-x86.x86_64.run。
+		要安裝這個驅動程式的方法與 NVidia 的方式很像的，同樣的直接執行該檔案即可：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">sh ati-driver-installer-9-6-x86.x86_64.run</span>
+</pre></td></tr></table>
+
+		<center><img src="0590xwindow/driver_ati_01.gif" alt="ATI 顯示卡驅動程式安裝示意" 
+		title="ATI 顯示卡驅動程式安裝示意" border="1" /><br />
+		圖 3.2.1、ATI 顯示卡驅動程式安裝示意<br /></center>
+
+		<p>選擇安裝吧！</p>
+
+		<center><img src="0590xwindow/driver_ati_02.gif" alt="ATI 顯示卡驅動程式安裝示意" 
+		title="ATI 顯示卡驅動程式安裝示意" border="1" /><br />
+		圖 3.2.2、ATI 顯示卡驅動程式安裝示意<br /></center>
+
+		<p>這裡的目的是讓我們確定一下，是否真的是安裝在 x86_64 的硬體上面而已！按下 OK 去！</p>
+
+		<center><img src="0590xwindow/driver_ati_03.gif" alt="ATI 顯示卡驅動程式安裝示意" 
+		title="ATI 顯示卡驅動程式安裝示意" border="1" /><br />
+		圖 3.2.3、ATI 顯示卡驅動程式安裝示意<br /></center>
+
+		<p>看完授權之後，直接給他 Exit 離開授權說明，然後會出現接受與否的字樣：</p>
+
+		<center><img src="0590xwindow/driver_ati_04.gif" alt="ATI 顯示卡驅動程式安裝示意" 
+		title="ATI 顯示卡驅動程式安裝示意" border="1" /><br />
+		圖 3.2.4、ATI 顯示卡驅動程式安裝示意<br /></center>
+
+		<p>要安裝啊！所以當然就是 Yes 下去喔！</p>
+
+		<center><img src="0590xwindow/driver_ati_05.gif" alt="ATI 顯示卡驅動程式安裝示意" 
+		title="ATI 顯示卡驅動程式安裝示意" border="1" /><br />
+		圖 3.2.5、ATI 顯示卡驅動程式安裝示意<br /></center>
+
+		<p>最後選擇預設安裝即可！不需要使用專家安裝啦！這樣就安裝完畢了！也是非常快速吧！最後就會在
+		/usr/lib64/xorg/modules/drivers/ 裡面出現 fglrx_drv.so 這個新的驅動程式啦！
+		與 Nvidia 相同的， ATI 也提供一支名為 aticonfig 的指令來幫忙設定 xorg.conf ，你可以直接輸入『
+		aticonfig -v 』來看看處理的方式即可。然後你就可以重新啟動 X 來看看新的驅動程式功能囉！非常簡單吧！</p>
+	</div>
+
+	<hr /><a name="intel"></a><img src="/images/penguin-s.gif" alt="小標題的圖示" height="23" width="16" align="middle" /><span class="text_h2">Intel</span><br />
+	<div class="block2">
+		<p>老實說，由於 Intel 針對 Linux 的圖形介面驅動程式已經開放成為 Open source 了，所以理論上你不需要重新安裝
+		Intel 的顯示卡驅動程式的。除非你想要使用比預設的更新的驅動程式，那麼才需要重新安裝底下的驅動程式。
+		Intel 對 Linux 的顯示卡驅動程式已經有獨立的網站在運作，如下的連結就是安裝的說明網頁：</p>
+
+		<ul><li><a href="http://intellinuxgraphics.org/install.html"
+		target="_blank">http://intellinuxgraphics.org/install.html</a></li></ul>
+
+		<p>其實 Intel 的顯示卡用的地方非常的多喔！因為只要是整合型主機板晶片組，用的是 Intel 的晶片時，
+		通常都整合了 Intel 的顯示卡囉～鳥哥使用的一組 cluster 用的就是 Intel 的晶片，所以囉～
+		這傢伙也是用的到的啦！</p>
+
+		<p>一般來說， Intel 的顯示卡都常常會使用 i810 等驅動程式，而不是這個較新的 intel 驅動程式！
+		你可以察看一下你系統是否有存在這些檔案：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">locate libdrm</span>
+/usr/lib/libdrm.so.2        <span class="term_note">&lt;==32位元的函式庫</span>
+/usr/lib/libdrm.so.2.0.0
+/usr/lib64/libdrm.so.2      <span class="term_note">&lt;==64位元放置位置不同！</span>
+/usr/lib64/libdrm.so.2.0.0
+/usr/lib64/xorg/modules/linux/libdrm.so
+
+[root@www ~]# <span class="term_command">locate intel | grep xorg</span>
+/usr/lib64/xorg/modules/drivers/intel_drv.so
+<span class="term_say"># 上面這個就是 Intel 的顯示卡驅動程式了！</span>
+</pre></td></tr></table>
+
+		<p>呼呼！我們的 CentOS 有提供新的 Intel 顯示卡驅動程式啦！所以不需要重新安裝說～
+		只是可能需要修改 xorg.conf 這個設定檔的內容。基本上，要修改的地方有：</p>
+
+<table class="term"><tr><td class="term"><pre>
+[root@www ~]# <span class="term_command">vi /etc/X11/xorg.conf</span>
+Section "Device"
+        Identifier  "Videocard0"
+        <span class="term_write">Driver      "intel"</span>  <span class="term_note">&lt;==原本可能會是使用 i810 喔</span>
+EndSection
+
+Section "Module"
+        <span class="term_say">....(中間省略)....</span>
+        <span class="term_write">Load  "glx"    <span class="term_note">&lt;==這兩個很重要！務必要載入！</span>
+        Load  "dri"</span>
+        <span class="term_say">....(中間省略)....</span>
+EndSection
+
+<span class="term_write">Section "DRI"          <span class="term_note">&lt;==這三行是新增的！讓大家都能使用 DRI</span>
+       Mode 0666       <span class="term_note">&lt;==基本上，就是權限的設定</span>
+EndSection</span>
+</pre></td></tr></table>
+
+		<p>如果一切順利的話，接下來就是重新啟動 X 囉～使用新的 Intel 驅動程式吧！加油囉！</p>
+	</div>
+</div>
+
+
+<hr /><a name="hint"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">重點回顧</span><br />
+<div class="block1">
+<ul class="text_import2">
+	<li>Unix Like 作業系統上面的 GUI 使用的是最初由 MIT 所開發的 X window system，在 1987 釋出 X11 
+	版，並於 1994 更改為 X11R6 ，故此 GUI 介面也被稱為 X 或 X11</li>
+	<li>X window system 的 X server 最初由 XFree86 計畫所開發，後來則由 Xorg 基金會所持續開發；</li>
+	<li>X window system 主要分為 X server 與 X client ，其中 X Server 在管理硬體，而 X Client 則是應用程式。</li>
+	<li>在運作上，X Client 應用程式會將所想要呈現的畫面告知 X Server ，最終由 X server 
+	來將結果透過他所管理的硬體繪製出來！</li>
+	<li>每一支 X client 都不知道對方的存在，必須要透過特殊的 X client ，稱為 Window Manager 的，
+	來管理各視窗的重疊、移動、最小化等工作。</li>
+	<li>startx 可以偵測 X server / X client 的啟動腳本，並呼叫 xinit 來分別執行；</li>
+	<li>X 可以啟動多個，各個 X 顯示的位置使用 -display 來處理，顯示位置為 :0, :1...</li>
+	<li>Xorg 是一個 X server ，設定檔位於 /etc/X11/xorg.conf ，裡面含有 Module, Files, Monitor, Device 等設定階段</li>
+	<li>字型管理為 X server 的重點，目前字型管理可由 xfs 及 fontconfig 來處理</li>
+</ul>
+</div>
+
+　
+<hr /><a name="ex"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">本章習題</span><br />
+( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
+<div class="block1">
+<ul>
+	<li>在 X 設定沒問題的情況下，你在 Linux 主機如何取得視窗介面？
+	<div class="blockex">
+		如果是在 run level 3 ，可以使用 startx 進入，至於 run level 5 ，則直接進入
+		tty7 即可使用 display manager 登入 X Window 系統。
+	</div></li>
+
+	<li>利用 startx 可以在 run level 3 的環境下進入 X Window 系統。請問 startx 的主要功能？
+	<div class="blockex">
+		整個 X 視窗系統的重點在啟動 X server 並載入 X client ，而執行 X server/X client 呼叫的任務為
+		xinit ，startx 只是一個較為親和的腳本程式，可以搜尋系統上面的 X server / X client 設定值，
+		以提供 xinit 來執行而已。
+	</div></li>
+
+	<li>如何知道你系統當中 X 系統的版本與計畫？
+	<div class="blockex">
+		最簡單可以利用 root 的身份下達 X -version 即可知道！
+	</div></li>
+
+	<li>要瞭解為何 X 系統可以允許不同硬體、主機、作業系統之間的溝通，需要知道 X server / X client 的相關知識。
+	請問 X Server / X client / Window manager 的主要用途功能？
+	<div class="blockex">
+		X Server 主要負責螢幕的繪製，以及周邊輸入裝置如滑鼠、鍵盤等資料的收集，並回報給 X Client ；
+		X Client 主要負責資料的運算，收到來自 X Server 的資料後，加以運算得到圖形的數據，並回傳給 X Server，
+		讓 X server 自行繪製圖形。至於 Window manager 是一個比較特殊的 X Client ，他可以管理更多控制元素，
+		最重要的地方還是在於視窗的大小、重疊、移動等等的功能。
+	</div></li>
+
+	<li>如何重新啟動 X 
+	<div class="blockex">
+		最簡單在 X Window System 下，直接按下 [alt]+[ctrl]+[backspace&lt;--] 即可，
+		也可以 init 3 再 init 5，也可以關閉 X 後，再 startx 啟動等等。
+	</div></li>
+
+	<li>試說明 ~/.xinitrc 這個檔案的用途？
+	<div class="blockex">
+		當我們要啟動 X 時，必須要啟動 X Client 軟體端。這個 ~/.xinitrc 即是在客制化自己的 X Client ，
+		你可以在這個檔案內輸入你自己的 X Client 。若無此檔案，則預設以 /etc/X11/xinit/xinitrc 替代。
+	</div></li>
+
+	<li>我在 CentOS 的系統中，預設使用 GNOME 登入 X 。但我想要改以 KDE 登入，該怎麼辦？
+	<div class="blockex">
+		首先你必須要已經安裝 KDE 環境 (參考前一章的 yum grouplist 功能)，然後可以藉由修改
+		/etc/sysconfig/desktop 內的設定值即可。但如果你不是 root 無法修訂該檔案時，
+		亦可以在自己的家目錄參考 /etc/X11/xinit/xinitrc 的內容自行製作 ~/.xinitrc 檔案來修改！
+	</div></li>
+
+	<li>X Server 的 port 預設開放在？
+	<div class="blockex">
+		X port 預設開放在 port 6000 ，而且稱此一顯示為 :0 
+	</div></li>
+
+	<li>Linux 主機是否可以有兩個以上的 X 
+	<div class="blockex">
+		是的！可以！第一個 X 通常在 tty7 ，第二個在 tty8 ，第三個在 tty9 ，依序類推。
+		第幾個是以啟動的順序來定義，並非 :0 , :1 的意思～
+	</div></li>
+
+	<li>X Server 的設定檔是 xorg.conf，在該檔案中， Section Files 幹嘛用的？
+	<div class="blockex">
+		相當重要！是設定顯示字型用的。而字型一般放置目錄在 /usr/lib/xorg/modules/fonts/ 當中。
+	</div></li>
+
+	<li>我發現我的 X 系統鍵盤所輸入的字母老是打不出我所需要的單字，可能原因該如何修訂？
+	<div class="blockex">
+		應該是鍵盤符號對應表跑掉了。可以修改 xorg.conf 檔案內，
+		關於 Keyboard 的 Option XkbLayout 項目，將他改為 us 即可！
+	</div></li>
+
+	<li>當我的系統內有安裝 GNOME 及 KDE 兩個 X Widnow Manager ，我原本是以 KDE 為預設的 WM，
+	若想改為 GNOME 時，應該如何修改？
+	<div class="blockex">
+		修改 /etc/sysconfig/desktop 內部，成為 GNOME 即可！
+	</div></li>
+</ul>
+</div>
+
+
+<hr /><a name="reference"></a><img src="/images/penguin-m.gif" alt="大標題的圖示" height="34" width="25" align="middle" /><span class="text_h1">參考資料與延伸閱讀</span><br />
+<div class="block1">
+	<ul>
+	<li><a name="ps1"></a>註1：維基百科對 X Window 的介紹：<a href="http://en.wikipedia.org/wiki/X_Window_System"
+		target="_blank">http://en.wikipedia.org/wiki/X_Window_System</a></li>
+	<li><a name="ps2"></a>註2：X Server/X client 與網路相關性的參考圖示：<br />
+		<a href="http://en.wikipedia.org/wiki/File:X_client_sever_example.svg" 
+		target="_blank">http://en.wikipedia.org/wiki/File:X_client_sever_example.svg</a></li>
+	<li><a name="ps3"></a>註3：系統的 man page： man xinit 、 man Xorg 、 man startx</li>
+	<li><a name="ps4"></a>註4：一些與中文字型有關的網頁連結：<br />
+		洪朝貴老師主筆的字型設定：<a href="http://www.cyut.edu.tw/~ckhung/b/gnu/font.php"
+		target="_blank">http://www.cyut.edu.tw/~ckhung/b/gnu/font.php</a><br />
+		李果正先生的 GNU/Linux 初探第十六章：<a href="http://edt1023.sayya.org/node17.html"
+		target="_blank">http://edt1023.sayya.org/node17.html</a><br />
+		EricCheng 的 fontconfig 軟體簡介：<a href="http://fractal.csie.org/~eric/wiki/Fontconfig"
+		target="_blank">http://fractal.csie.org/~eric/wiki/Fontconfig</a></li>
+	<li>X 相關的官方網站：
+		X.org 官方網站 (<a href="http://www.x.org/" target="_blank">http://www.x.org/</a>)、
+		XFree86 官方網站 (<a href="http://www.xfree86.org/" target="_blank">http://www.xfree86.org/</a>)</li>
+	</ul>
+</div>
+
+
+<hr /><span class="text_history">
+2003/02/12：第一次完成<br />
+2005/06/29：將舊的文章移動到 <a href="/linux_basic/0590xwindow/0590xwindow.php">這裡</a> 。如果你需要舊版的 xf86config
+	與相關的工具，則請前往該舊文章查閱！<br />
+2005/07/11：經歷了許多的時間，將主機的設定檔重複改了改，終於完成一些簡單的 X 測試！<br />
+2006/11/07：經由網友<a href="http://phorum.vbird.org/viewtopic.php?t=27157"
+	target="_blank">x1215 這一篇</a>的介紹，得知該網站，趕緊去處理！<br />
+2009/07/03：將舊版基於 FC4 的版本移動到<a href="/linux_basic/0590xwindow/0590xwindow-fc4.php">此處</a><br />
+2009/07/15：奮戰好幾天，將驅動程式安裝加上，同時加入字型管理功能。<br />
+2009/07/28：網友 LazyBug Chan 兄熱情回報，使用 <a href="#20090728">XFCE 的 Ubuntu 是 Xubuntu 這個分支</a>！感謝回報！<br />
+2009/08/07：加入 Window Manger 的全名與連結<br />
+</span>
+<hr />
+<br /><br />
+    
+</td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>

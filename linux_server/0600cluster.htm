@@ -1,0 +1,1365 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="Author" content="VBird, 鳥哥" />
+	<meta name="Description" content="" />
+    <link href="../styles/default.css" rel="stylesheet" type="text/css" />
+	<title>鳥哥的 Linux 私房菜 -- 架設 Cluster</title>
+    
+</head>
+<body style="margin:0; padding:0">
+
+<center>
+
+
+<!-- 這裡是關於頁首按鈕處的按鈕程式 -->
+<div style="text-align:center">
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+	Linux </span>私房菜</span></span><br />
+<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
+	瀏覽本網頁</span><br />
+
+<a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
+<a href="../index.htm">目錄</a> | 
+<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_server/index.htm">Linux 架站文件</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_security/index.htm">安全管理</a> | 
+<a href="http://phorum.vbird.org">新手討論</a> | 
+
+<br />
+</div>
+
+
+<table summary="本文內容的排版" style="background-color: #fff;" border="0" cellspacing="0" cellpadding="0" class="wrap">
+<tr><td style="width:16px; height:16px; font-size:6px;">　</td>
+    <td style="width:718px; height:16px; font-size:6px;">　</td>
+    <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
+<tr><td style="width:16px; font-size:6px;">　</td>
+  <td width="718">
+  
+
+<center>
+<font color="#3333FF"><font size=+2><font face="標楷體">簡易</font>
+Cluster <font face="標楷體">架設</font></font></font></center>
+
+<div align=right><font face="新細明體"><font color="#3333FF"><font size=-1>最近更新日期：2003/05/20</font></font></font></div>
+<font face="新細明體"><font color="#3333FF"><font size=-2>　</font></font></font>
+<table BORDER COLS=1 WIDTH="100%" BGCOLOR="#FFCCCC" >
+<tr>
+<td><font color="#000099"><font size=-1>近年來因為數值模式模擬的盛行，所以『平行運算』的架構也就越來越重要了！什麼是數值模擬呢？主要就是藉由一些物理理論去開發出來的一些『計算公式』，而這些計算公式藉由程式語言(例如C、Fortran等等)實際的將他編譯成為可執行的程式，最常見的例如中央氣象局不是每天都會預報天氣嗎？這個預報的動作就是利用數值計算去演算出來的。另外，還有空氣品質模式模擬，也是經過運算出來的，除此之外，例如天文、物理、水文等等很多方面的工作，都是利用這種數值模擬的運算的喔！不過，這些程式是很大型的！也就是說，他們在運算的時間是很長的，如果使用單顆
+CPU 的話，不論這顆 CPU 的頻率與效能有多高，還是得要運算個好幾個鐘頭的～如此一來，對於像氣象預報這個急需時效性的工作可能就會有所延誤啊！不過，如果我將這個運算的工作同時丟給多顆
+CPU 呢？也就是讓多顆 CPU 同時進行這個程式的運算工作，如此一來，將可以大大的減低時間的損耗了～這就是平行運算的簡單說明。在
+Linux 平台上面，要達成簡單的平行運算，可以透過 MPI 的函式庫，例如 MPICH
+就是一個很有名的 MPI 軟體喔！馬上來給他看看平行運算類型的 Cluster 建置吧！</font></font></td>
+</tr>
+</table>
+
+<font color="#000099"><font size=-2>　</font></font>
+<br><font color="#000099"><font size=+1><a href="#theory">原理</a>：</font></font>
+<br><font color="#000099">　　：<a href="#theory_whatiscluster">什麼是
+Cluster 與 Cluster 的優點</a></font>
+<br><font color="#000099">　　：<a href="#theory_cluster_master">Cluster
+的主從架構</a></font>
+<br><font color="#000099">　　：<a href="#theory_rsh_mpich">達成 Cluster
+所需要額外功能 ( RSH ) 與軟體 ( MPICH )</a></font>
+<br><font color="#000099"><font size=+1><a href="#step">架設流程</a></font>：</font>
+
+<br><font color="#000099">　　：<a href="#step_overall">整體架構</a></font>
+<br><font color="#000099">　　：<a href="#step_vbird">鳥哥的一個實例規範</a></font>
+<br><font color="#000099">　　：<a href="#step_system">系統安裝 ( Red Hat
+9 )</a></font>
+<br><font color="#000099">　　：<a href="#step_network_firewall">防火牆
+( 含 NAT 主機 ) 與網路設定</a></font>
+<br><font color="#000099">　　：<a href="#step_nfs">NFS 架設規劃(相當重要，參考說明)</a></font>
+<br><font color="#000099">　　：<a href="#step_nis">NIS 架設規劃</a></font>
+
+<br><font color="#000099">　　：<a href="#step_rsh">RSH 設定</a></font>
+<br><font color="#000099">　　：<a href="#step_pgi">安裝 Fortran 90 的編譯程式
+PGI pgf90 ( PS. server version )</a></font>
+<br><font color="#000099">　　：<a href="#step_mpich">安裝 MPICH</a></font>
+<br><font color="#000099"><font size=+1><a href="#othersetings">其他主機相關設定</a></font>：</font>
+<br><font color="#000099">　　：<a href="#othersetings_xwindow">X-Window
+Server/Slave 架構</a></font>
+<br><font color="#000099"><a href="#important">重點回顧</a></font>
+
+<br><font color="#000099"><a href="#reference">參考資源</a></font>
+<br>
+<hr WIDTH="100%"><a NAME="theory"></a><font color="#000099"><font size=+1>原理：</font></font>
+<ul>
+<hr WIDTH="100%">
+<li>
+<a NAME="theory_whatiscluster"></a><font color="#000099"><font size=+1>什麼是
+Cluster 與 Cluster 的優點</font></font></li>
+
+<br>　
+<br>什麼是 Cluster 呢？目前常見的 Cluster (叢集)架構有兩種，一種是 Web
+/ Internet cluster system，這種架構主要是將資料放置在不同的主機上面，亦即由多部主機同時負責一項服務；而另外一種則是所謂的<font color="#000066">平行運算</font>了！<font color="#000066">平行運算</font>其實就是將同一個運算的工作，交給整個
+Cluster 裡面的所有 CPU 來進行同步運算的一個功能。由於使用到多個 CPU 的運算能力，所以可以加快運算的速度。目前比較常見於平行運算功能的，通常需要在超級電腦上面才看的到，這些超級電腦主要是用在天文、軍事、物理等需要很精密的、大量的運算的工作中，而考慮到穩定性，則通常是用在
+Unix 系統上面的硬體架構上。不過，目前由於 PC 上面的 CPU 的運算功能越來越強大了～因此，當然很多程式開發者就動腦筋到
+PC 上面來製作平行電腦的系統囉！我們這篇短文主要在介紹的就是『<font color="#000066">平行運算</font>』這一類的
+Cluster 了！
+
+<br>　
+<br>由於 Cluster 主要是用在平行運算上面的，而所謂的平行運算是使用到多顆
+CPU 的運算功能，因此可以讓您的大型運算的程式很快的執行完畢！因此，如果你的工作環境當中，常常會使用到很耗
+CPU 運算功能的程式時，就可以嘗試使用 Cluster 來進行工作囉！應該可以節省您不少的時間吶！此外，我們這篇短文主要是在
+X86 架構下的 PC 來架設 Cluster 的喔！
+<br>　
+<br>不過，也需要特別留意的是，由於我們的 Cluster 是將一個工作平均分給所有的
+node (註：一顆 CPU 在一個 Cluster 架構下，就稱為一個 node 囉！)，所以，萬一您做成的
+Cluster 系統當中，所有的 node 並非完全相同的運算等級，那麼先做完工作的
+node 將會暫停工作，會等到所有的 node 都進行完畢後，才會在進行下一動～所以啦！強烈的建議在同一個
+cluster 的架構中，盡量所有的 CPU 都使用相同的 CPU 型號，應該會比較好一點喔！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="theory_cluster_master"></a><font color="#000099"><font size=+1>Cluster
+的主從架構</font></font></li>
+
+<br>　
+<br>最簡單的 Cluster 其實就是以一種主從架構來進行資料的運算工作的，圖示如下：
+<center><img SRC="0600cluster/cluster-01.jpg" NOSAVE height=417 width=600></center>
+
+<ul>
+<li>
+
+<font color="#000066">上面的 Master 與 Slave 指的都是 CPU 喔！</font></li>
+
+<br><font color="#000066">　</font>
+<li>
+<font color="#000066">Master 那部機器上面必須要有可以將工作分配給各個 node
+去工作的函式庫，也就是 MPI ，他最重要的功能就是將工作給他分配下去的啦！而最重要的軟體就是：(1)MPICH；(2)編譯器(compiler,
+例如 Fortran)；</font></li>
+
+<br><font color="#000066">　</font>
+<li>
+<font color="#000066">什麼是網路功能呢？如果 master 與 slave 是在同一部機器當中，例如雙
+CPU 的主機板，那麼這裡就不需要網路功能啦！不過，如果我是使用四台雙 CPU
+的 PC 呢？呵呵！那麼這四部主機就需要以高速網路架構進行連線啦！此外，還需要在這四部主機之間建立可以互通訊息的通訊協定才行，這方面的功能就含有：(1)R
+Shell, 亦即稱為 RSH；(2)NIS，使 Master 與 Slave 具有相同的帳號群組關係；(3)NFS，使讀取寫入的資料可以在同一個
+partition 上面；</font></li>
+
+<br><font color="#000066">　</font>
+
+<li>
+<font color="#000066">Slave 就是單純的將來自 Master 的任務給他做完就是了！</font></li>
+</ul>
+　
+<br>整個主從架構大致上就是這樣啦！因此，可以知道的是，我們需要的就是上面那些咚咚囉！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="theory_rsh_mpich"></a><font color="#000099"><font size=+1>達成
+Cluster 所需要額外功能 ( RSH ) 與軟體 ( MPICH )</font></font></li>
+
+<br>　
+<br>由上面的 Cluster 主從架構當中，我們知道 Master 與 Slave 之間的網路溝通很重要的一個咚咚，那就是
+R Shell 囉！此外，還有將一個工作傳送給不同的 node 來進行計算的任務，就需要
+MPICH 這個函式庫來進行！簡單的談一談這兩個玩意兒吧！
+<br>　
+<ul>
+
+<li>
+<b><font color="#000099">RSH：</font></b></li>
+
+<br>在我們的 Linux 主機上面工作，通常使用 BASH 這個 shell 來傳達給 kernel
+工作的訊息，以使主機正確的工作；而如果在不同的主機之間，那就可以使用 R
+Shell 來進行指令的下達喔，如此一來，我們就可以直接在 A 機器，向 B 機器下達工作的指令，而不需要登入
+B 機器呢～那就是 RSH 的主要功能啦！最常見的 RSH 指令就是 rcp 與 rsh 了！有興趣的朋友應該知道以
+man 來查尋一下該指令的用法囉！
+<br>需要附帶一提的是，這個 RSH 是『相當危險』的一個服務喔！由於我們可以直接登入
+RSH 主機，並且在上面進行指令的下達，為了避免還要輸入密碼的問題，因此通常
+RSH 已經將信任主機設定好了，不過，由於 RSH 會啟動一些 port 來監聽 Clients
+的需求，而偏偏這些 port 與 daemon 都還挺危險的，因此，『Cluster 最好是設定在內部網域當中，並使用私有
+IP ，比較能夠避免危險』喔！此外，那個 Master 也必須要設定好一定程度的嚴密防火牆喔！
+<br>　
+<li>
+<b><font color="#000099">MPICH：</font></b></li>
+
+<br>MPI 是 <font color="#000066">Messages Passing Interface</font> 的縮寫，他本身是一個規格很嚴密的通訊標準，主要的功能是在處理平行運算之間各個
+node 的資料交換，請注意， MPI 並不是一套軟體喔！而至於 MPICH 就是符合 MPI
+這個標準通訊協定的一套軟體了！因此，我們可以經由 MPICH 這個軟體提供的 MPI
+函式庫來達成平行運算的功能喔！也就是說，我們所寫的程式，只要能夠使用 MPICH
+提供的函式庫，那麼該程式就可以進行平行運算時候所需要的功能了，這就可以避免程式開發者還要去處理通訊節點上面的問題，而可以將程式開發的重心著重在程式本身的問題上面！
+<br>MPICH 是由 Mathematics and Computer Science Division的 Argonne 實驗室所發展，詳細的資料可以參考：<a href="http://www-unix.mcs.anl.gov/mpi/mpich/" target="_blank">http://www-unix.mcs.anl.gov/mpi/mpich/</a></ul>
+
+　
+<br>除了這兩個軟體之外，還需要 NIS 與 NFS 喔！所以啦！要建置一個 Cluster
+的話，身為系統管理員的您，必須要學會的技能真是相當的多的，至少需要：
+<br>　
+<ul>
+<li>
+<font color="#000066">熟悉 Linux 的操作技巧；</font></li>
+
+<li>
+<font color="#000066">熟悉 Linux 基礎網路參數設定；</font></li>
+
+<li>
+<font color="#000066">熟悉 Linux 相關的 Server 架設(這方面請參考<a href="index.php">鳥哥的私房菜架站篇</a>)；</font></li>
+
+<li>
+<font color="#000066">瞭解 RSH 的相關功能與設定技巧；</font></li>
+
+<li>
+<font color="#000066">瞭解 MPICH 的設定與相關功能；</font></li>
+
+<li>
+<font color="#000066">熟悉至少一種程式語言。</font></li>
+</ul>
+　
+<br>還真的是不好學啊！鳥哥也是新手玩弄 Cluster 說～大家一起研究研究吧！
+^_^</ul>
+
+<hr WIDTH="100%"><a NAME="step"></a><font color="#000099"><font size=+1>架設流程</font></font>
+<ul>要架設 Cluster 當然就是需要多部的 PC 來連線啦！不然怎麼稱為 Cluster
+呢？您說是吧！所以，無論如何，在架設 Cluster 之前，請務必要確認您的『所有硬體以及網路功能都是完整無缺的！』否則就無法繼續下去啦！另外，建議
+Cluster 的所有主機規格盡量相同，可以避免等待的困擾呢！底下就來談一談整個架設流程吧！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_overall"></a><font color="#000099"><font size=+1>整體架構</font></font></li>
+
+<br>　
+<br>整體架構的架設當中，需要的所有軟體為：
+<br>　
+<ul>
+<li>
+Master 主機安裝需要：</li>
+
+<ul>
+<li>
+防火牆的設定(含 NAT 架設)；</li>
+
+<li>
+RSH</li>
+
+<li>
+NIS Server</li>
+
+<li>
+NFS Server</li>
+
+<li>
+Compiler Install</li>
+
+<li>
+MPICH Install</li>
+
+<li>
+其他特殊功能</li>
+</ul>
+　
+<li>
+Slave 主機安裝需要：</li>
+
+<ul>
+<li>
+防火牆的設定</li>
+
+<li>
+RSH</li>
+
+<li>
+NIS Client</li>
+
+<li>
+NFS Client</li>
+
+</ul>
+</ul>
+　
+<br>基本上，幾乎所有的工作都是在 Master 上面做啦！ Slave 最大的任務就是進行來自
+Master 所要求的計算工作，因此，Slave 能夠越簡單越好～至於 Master 上面，由於我們都是在
+Master 主機上面下達工作指令，而總不能老是在螢幕前面下達指令吧！因此上，Master
+通常會有兩個網路介面，分別是對外的 Public IP 與對內的 Priavte IP。而既然
+Master 有提供 Public IP 的設定，自然就比較擔心所謂的駭客入侵問題，所以啦，您的
+Master 主機，要嗎就不要開放 Public IP ，要嗎就務必要設定很嚴密的防火牆，並且不必要的服務就盡量關閉他～畢竟我們的
+Cluster 是要用來做為計算運作的，所以不必要的網路協定服務，當然就是關閉他啦！底下鳥哥將以自己的一個實際案例進行說明的啦！參考看看吧！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_vbird"></a><font color="#000099"><font size=+1>鳥哥的一個實例規範</font></font></li>
+
+<br>　
+<br>在我這個案例當中， Cluster 主要的功能為：進行 MM5 這個氣象模式的運算以及
+Models-3/CMAQ 這個空氣品質模式的運算，而由於這兩個咚咚都是使用 PGI Fortran
+90 做為 Compiler ，因此，我就必須要進行 PGI 的安裝啦！而我的硬體架構主要是這樣的：
+<br>　
+<ul>
+<li>
+Master ： 為雙 CPU 主機，使用 AMD MP 的 CPU ，並且有一顆 120 GB 的硬碟，此外，由於我的數值模式需要
+PGI Fortran ，所以就必須要安裝 Server 版的 PGI Fortran 喔！</li>
+
+<li>
+Slave ： 共有三部 Slave ，每一部均為雙 CPU 的 AMD MP 的 CPU ，並且有一顆
+120 GB 的硬碟；</li>
+
+<li>
+連接 Master 與 Slave 的為 10/100/1000 的 Switch ，當然，四部主機(1 x master
++ 3 x slave)都是安裝 Intel 的 1GB 網路卡喔！</li>
+</ul>
+　
+<br>硬體連接有點像這樣：
+<center><img SRC="0600cluster/cluster-02.jpg" NOSAVE height=278 width=410></center>
+那麼底下就來談一談怎麼安裝他吧！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+
+<a NAME="step_system"></a><font color="#000099"><font size=+1>系統安裝(
+Red Hat 9 )</font></font></li>
+
+<br>　
+<br>我的這個系統使用的是最新的 Red Hat 出版的 Red Hat 9 ，會用這個玩意兒最大的原因是因為
+Red Hat 是目前支援的 Linux 軟體最多的一個 Linux Distribution 了，安裝他之後，就比較不會欠東欠西的，此外，很多的軟體都是以
+Red Hat 做為測試的平台，因此我就選擇他來做為我的系統平台啊！另外，需要留意的是，由於
+Slave 並不需要使用到圖形介面的功能，他單純是用在計算上面，因此我沒有在
+slave 上面安裝圖形介面的打算～至於 Master 則安裝了 KDE 這個咚咚喔！好了，Linux
+的安裝相信大家應該都要很熟悉了，所以我就不再談安裝的詳細步驟，僅提幾個特別需要注意的地方囉：
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Partition 方面：</font></b></li>
+
+<br>因為我的硬碟實在是在蠻大的，並且在 Slave 上面也是 120 GB 的硬碟，如果不將
+Slave 的硬碟使用的話，實在覺得很浪費，因此，一開始我就規劃將四部主機的硬碟全部都以
+NFS 分享到內部網域當中，而為了避免跟系統的檔案放在一起，因此，我就將硬碟分割出除了必要的
+partition 之外，其他的就掛載在 /disk1 這個目錄當中，四部主機的 parition
+都相同，分別是：
+<br>　
+<ul>
+<li>
+<font face="細明體"><font color="#000066">/&nbsp;&nbsp;&nbsp;&nbsp; : 10
+GB</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/var&nbsp; :&nbsp; 5 GB</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/tmp&nbsp; :&nbsp; 3 GB</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">Swap&nbsp; :&nbsp; 3 GB ( 因為我每部
+Linux 主機上面都有 1.5 GB 的記憶體 )</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">/disk1: 96 GB</font></font></li>
+</ul>
+　
+<li>
+<b><font color="#000099">安裝時選擇的套件：</font></b></li>
+
+<br>所有的主機都需要底下的套件安裝(註：因為原本的筆記記錄的很亂，所以如果找不到相同的字眼，那就是我寫錯啦！)：
+<ul>
+<li>
+Administrattion Tools</li>
+
+<li>
+Development Tools</li>
+
+<li>
+Editors</li>
+
+<li>
+Engineering and Scientific</li>
+
+<li>
+FTP Server</li>
+
+<li>
+Kernel Development</li>
+
+<li>
+Network Servers</li>
+
+<li>
+Server configuration Tools</li>
+
+<li>
+Sound and vedio</li>
+
+<li>
+System Tools</li>
+
+<li>
+Text-based Internet</li>
+
+<li>
+Windows File servers</li>
+</ul>
+不過， Master 需要額外再增加 X Window 方面的支援，例如 KDE 與 X-Window
+System 這兩個主要的套件要勾選喔！</ul>
+
+　
+<br>系統安裝大致上就是這些吧，如果有疏漏的，請未來在安裝完畢之後，再以原本
+Red Hat 9 的光碟來重新安裝他吧！反正 Red Hat 系統都是以 rpm 來安裝的，挺容易安裝的喔！整個安裝完畢後，還花不到幾分鐘呢！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_network_firewall"></a><font color="#000099"><font size=+1>防火牆
+( 含 NAT 主機 ) 與網路設定</font></font></li>
+
+<br>　
+<br>由於我們的 Cluster 主要是用在數值運算，因此，當然不需要對外開放網路服務啦！所以，最好就是以私有
+IP 來進行網路的設定是比較好的！此外，最好還是要設定好防火牆的啦！我的網域參數預設是這樣的：
+<br>　
+<ul>
+<li>
+<font color="#000066">Network/netmask：192.168.10.0/255.255.255.0</font></li>
+
+<li>
+<font color="#000066">Master：(對外)140.116.xxx.yyy；(對內)192.168.10.30,
+Gateway 為對外的 Gateway 喔！並且有設定 NAT 啊！</font></li>
+
+<li>
+<font color="#000066">Slave：192.168.10.10, 192.168.10.20, 192.168.10.40
+三部，Gateway 為 192.168.10.30</font></li>
+</ul>
+　
+<br>網路參數的各個檔案是這樣的：
+<br>　
+<ul>
+<li>
+<font color="#000066">各個主機的主機名稱請修改：/etc/sysconfig/network</font></li>
+
+<li>
+
+<font color="#000066">各個主機的網路卡設定項目請修改：/etc/sysconfig/network-scripts/ifcfg-eth0</font></li>
+
+<li>
+<font color="#000066">各個主機的 DNS 查尋系統請修改：/etc/resolv.conf</font></li>
+
+<li>
+<font color="#000066">各個主機的內部主機名稱查尋系統請修改：/etc/hosts，我的
+/etc/hosts 如下：</font></li>
+
+<br><b><font face="細明體"><font color="#000066">127.0.0.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+localhost&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; localhost.localdomain</font></font></b>
+
+<br><b><font face="細明體"><font color="#000066">192.168.10.10&nbsp;&nbsp;
+node1.cluster</font></font></b>
+<br><b><font face="細明體"><font color="#000066">192.168.10.20&nbsp;&nbsp;
+node2.cluster</font></font></b>
+<br><b><font face="細明體"><font color="#000066">192.168.10.30&nbsp;&nbsp;
+server.cluster</font></font></b>
+<br><b><font face="細明體"><font color="#000066">192.168.10.40&nbsp;&nbsp;
+node4.cluster</font></font></b></ul>
+　
+
+<br>而我的每部主機先將所有的網路服務都給他關掉去，僅剩下 SSH 這個網路協定存在而已～所以，我利用
+Red Hat 提供的 ntsysv 這個指令來選擇開機時啟動的項目有：
+<br>　
+<ul>
+<li>
+<font face="細明體"><font color="#000066">atd</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">crond</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">iptables</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">keytable</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">network</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">random</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">sshd</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">syslogd</font></font></li>
+
+<li>
+<font face="細明體"><font color="#000066">xinetd</font></font></li>
+</ul>
+　
+<br>至於防火牆系統的規劃上面，由於 Master 主機 (192.168.10.30) 具有 NAT
+的功能，所以必須要修改一下他的防火牆機制，因此，就有兩個不同的防火牆機制
+scripts 囉！另外，由於擔心外來的入侵攻擊，因此，在這個 Cluster 的系統當中，我的
+iptables 防火牆機制是使用『MAC(網路卡卡號)』來做為設定的基準，而不是使用
+IP 啊！為什麼呢？因為反正我僅允許我自己同網域內的幾部電腦連進來而已，當然沒有必要針對
+IP 啊！所以囉，就必須要收集四部主機的網路卡來允許他進入囉。此外，由於我可能並不在
+Cluster 前面操作，因此會啟用一兩部主機的網路卡卡號，好讓他能夠進入 Cluster
+呦！底下就將我的防火牆機制給他列出來一下：
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Master：</font></b></li>
+
+<table BORDER COLS=1 WIDTH="550" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>#!/bin/bash</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># This program
+is for iptables' rules</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># VBird 2003/05/02</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 0. PATH and
+modules</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; PATH=/sbin:/bin:/usr/sbin:/usr/bin</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; export
+PATH</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_tables</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+iptable_nat</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_nat_ftp</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_nat_irc</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_conntrack</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_conntrack_ftp</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; modprobe
+ip_conntrack_irc</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 1. clear
+the rules and make the policys</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-F</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-X</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-Z</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-F -t nat</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-X -t nat</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-Z -t nat</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-P INPUT&nbsp;&nbsp; DROP</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-P OUTPUT&nbsp; ACCEPT</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-P FORWARD ACCEPT</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-t nat -P PREROUTING&nbsp; ACCEPT</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-t nat -P POSTROUTING ACCEPT</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-t nat -P OUTPUT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ACCEPT</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>#</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 2. NAT services</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; echo
+"1" > /proc/sys/net/ipv4/ip_forward</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-t nat -A POSTROUTING -s 192.168.10.0/24 -o eth1 -j MASQUERADE</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>#</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 3. Trust
+network and conditions</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-A INPUT -m state --state ESTABLISHED,RELATED&nbsp; -j ACCEPT&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>&nbsp; iptables
+-A INPUT -i lo -j ACCEPT</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">&nbsp; iptables
+-A INPUT -m mac --mac-source </font><font color="#FFFF00">XX:YY:ZZ:WW:QQ:PP</font><font color="#FFFFFF">
+-j ACCEPT&nbsp;</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 上面這一行就是網路卡的卡號啦！</font></font></font></td>
+</tr>
+</table>
+　
+<li>
+<b><font color="#000099">Slave：</font></b></li>
+
+<br>Slave 的防火牆機制跟 Master 幾乎一模一樣，只是因為在內部啊，所以不需要啟動
+NAT 的服務即可！上面的給改一改先～</ul>
+　
+<br>好啦！網路的設定與防火牆就到這裡為止，要記得喔，你的網路必須要已經能夠正確的啟動了！如果還是無法啟動網路，或者是防火牆機制還是有問題，那麼對外的那個網路卡的網路線還是先給他拔掉吧！比較安全一些些的啦！等到都設定妥當，尤其是防火牆，然後才來啟動他吧！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+
+<a NAME="step_nfs"></a><font color="#000099"><font size=+1>NFS 架設規劃</font></font></li>
+
+<br>　
+<br>由於我這裡預計要設定 NIS ，並且每部主機的 /disk1 都要分享出去，因此，每部主機都必須要開放
+NFS 的服務喔！並且，每一部主機的設定都可以相同吶！這樣比較容易來設定囉～此外，比較不一樣的地方在於
+Master 這一部，由於我的 Cluster 所有的帳號都在 NIS 的管制之中，因此，我將
+Master 的 /home 也分享出來，並且每部 Slave 主機都掛載 Master 的 /home 才成！
+<br>　
+<br>這個 NFS 在 Cluster 當中是相當重要的，為什麼呢？因為我們不是在四部主機上面工作嗎，而這四部主機會去讀取的『資料』其實都是『在本機上面可以看的到的』資料才行，這還包括底下我們會持續介紹的
+mpich 這個軟體的函式庫呢！也就是說：『在 Cluster 裡面，所有的機器會使用到的資料必須都在相同的目錄當中！』所以，這就是為什麼我們要對
+/home 進行分享，以及進行 NIS 的設定了！此外，因為我的 Server 這部 Master
+機器分享出去的目錄中，已經含有 /disk1 這個 partition，此外，還通通將他掛載在
+/cluster/server 底下，因此，可以建議：『<b><font color="#000066">未來在安裝所有的
+Cluster 需要的套件資料時，例如 Compiler 以及 MPICH 等等，都可以安裝到 /cluster/server
+這個目錄底下，以使所有的主機都能夠使用同一個 partition 來源的資料喔！</font></b>』
+<br>　
+<br><b>設定程序：</b>
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Master：</font></b></li>
+
+</ul>
+
+<ul>&nbsp;
+<table BORDER COLS=1 WIDTH="550" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+啟動 portmap 並且設定開機啟動：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/portmap start</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 portmap on</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 設定 NFS
+分享出去：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">vi /etc/exports</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/home&nbsp;
+192.168.10.0/24(rw,async,no_root_squash)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/disk1 192.168.10.0/24(rw,async,no_root_squash)</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">exportfs -rv</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/nfs start</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 nfs on</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 設定預計的掛載點：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node1</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node2</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node4</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/server</font></font></font></td>
+
+</tr>
+</table>
+　
+<li>
+<b><font color="#000099">Slave：</font></b></li>
+</ul>
+
+<ul>&nbsp;
+<table BORDER COLS=1 WIDTH="550" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+啟動 portmap 並且設定開機啟動：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/portmap start</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">chkconfig --level 35 portmap on</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 設定 NFS
+分享出去：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">vi /etc/exports</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/disk1 192.168.10.0/24(rw,async,no_root_squash)</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">exportfs -rv</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/nfs start</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">chkconfig --level 35 nfs on</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 設定預計的掛載點：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node1</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node2</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/node4</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mkdir -p /cluster/server</font></font></font></td>
+
+</tr>
+</table>
+　</ul>
+<b>掛載程序：</b>
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Master：</font></b></li>
+
+<br>將底下這些指令測試執行一下，如果成功後，將指令寫入 /etc/rc.d/rc.local
+當中</ul>
+
+<ul>&nbsp;
+<table BORDER COLS=1 WIDTH="600" >
+
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font size=-1><font color="#FFFFFF">[root
+@server root]# </font><font color="#FFFF00">mount -t nfs -o bg,intr server.cluster:/disk1
+/cluster/server</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mount -t nfs -o bg,intr&nbsp; node1.cluster:/disk1
+/cluster/node1</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">mount -t nfs -o bg,intr&nbsp; node2.cluster:/disk1
+/cluster/node2</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> mount -t nfs -o bg,intr&nbsp; node4.cluster:/disk1
+/cluster/node4</font></font></font></td>
+
+</tr>
+</table>
+　</ul>
+
+<ul>
+<li>
+<b><font color="#000099">Slave：</font></b></li>
+</ul>
+
+<ul>將底下這些指令測試執行一下，如果成功後，將指令寫入 /etc/rc.d/rc.local
+當中
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font size=-1><font color="#FFFFFF">[root
+@node1 root]# </font><font color="#FFFF00">mount -t nfs&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+server.cluster:/home&nbsp; /home</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">mount -t nfs -o bg,intr server.cluster:/disk1
+/cluster/server</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mount -t nfs -o bg,intr&nbsp; node1.cluster:/disk1
+/cluster/node1</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">mount -t nfs -o bg,intr&nbsp; node2.cluster:/disk1
+/cluster/node2</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]#</font><font color="#FFFF00"> mount -t nfs -o bg,intr&nbsp; node4.cluster:/disk1
+/cluster/node4</font></font></font></td>
+</tr>
+</table>
+　</ul>
+呵呵！這樣就設定成功了！我們每一部主機『看起來』就好像有 400 GB 的硬碟空間啊！可怕了吧！
+^_^
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_nis"></a><font color="#000099"><font size=+1>NIS 架設規劃</font></font></li>
+
+<br>　
+<br>NIS 的設定也是很簡單，不過主要還是需要分為 NIS Server 與 NIS Client
+兩部份來設定的！請注意，在設定之前，就已經要將 NFS 搞定喔！這些流程都是有一定程度的相關性的呢！
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Master：</font></b></li>
+
+<br>在 Master 上面需要進行的工作很多喔！首先，一定要修改 ypserv.conf 以及其他相關的檔案的吶！
+<br>&nbsp;
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+啟動 time 與 time-udp 這兩個預先要啟動的 daemon</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 time on</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 time-upd on</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/xinetd restart</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 建立 NIS
+的領域名稱 (我這裡是設定為 cluster )：&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">nisdomainname cluster&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">echo "/bin/nisdomainname cluster" >>
+/etc/rc.d/rc.local&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">echo "NISDOMAIN=cluster" >> vi /etc/sysconfig/network</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 建立 NIS
+設定檔：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">vi /etc/ypserv.conf</font><font color="#FFFFFF">
+(在這個檔案內增加三行即可)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>127.0.0.0/255.255.255.0&nbsp;&nbsp;
+:&nbsp; *&nbsp; :&nbsp; *&nbsp; :&nbsp; none&nbsp;</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>192.168.10.0/255.255.255.0:&nbsp;
+*&nbsp; :&nbsp; *&nbsp; :&nbsp; none&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+:&nbsp; *&nbsp; :&nbsp; *&nbsp; :&nbsp; deny&nbsp;</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">touch /etc/netgroup</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>4. 啟動 NIS：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/ypserv&nbsp;&nbsp;&nbsp;
+start&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/yppasswdd start&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 ypserv on&nbsp;</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> chkconfig --level 35 yppasswdd on</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>5. 製作資料庫：(每次有更動使用者資訊時，就必須要進行這個步驟！)</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/usr/lib/yp/ypinit -m</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 ypserv on&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> chkconfig --level 35 yppasswdd on</font></font></font></td>
+
+</tr>
+</table>
+　
+<li>
+<b><font color="#000099">Slave：</font></b></li>
+
+<br>至於 NIS Client 則是需要設定 yp.conf 這個檔案呢！
+<br>&nbsp;
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+建立 NIS 的領域名稱 (我這裡是設定為 cluster )：&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">nisdomainname cluster&nbsp;</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">echo "/bin/nisdomainname cluster" >>
+/etc/rc.d/rc.local&nbsp;</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">echo "NISDOMAIN=cluster" >> vi /etc/sysconfig/network</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 建立 NIS
+查尋的主機名稱：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">vi /etc/yp.conf&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>domain cluster&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>ypserver server.cluster</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 修改密碼驗證方式：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">vi /etc/passwd</font><font color="#FFFFFF">
+(在這個檔案的最底下新增如下一行)</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>+::::::</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">vi /etc/nsswitch.conf&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>passwd:&nbsp;&nbsp;&nbsp;&nbsp;
+files nis nisplus&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>shadow:&nbsp;&nbsp;&nbsp;&nbsp;
+files nis nisplus&nbsp;</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>group:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+files nis nisplus&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>hosts:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+files nis dns&nbsp;</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>4. 啟動 NIS：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/ypbind&nbsp;&nbsp;&nbsp;
+start&nbsp;</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chkconfig --level 35 ypbind on&nbsp;</font></font></font></td>
+</tr>
+</table>
+　</ul>
+呵呵！不囉唆！馬上就設定妥當啦！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_rsh"></a><font color="#000099"><font size=+1>RSH 設定</font></font></li>
+
+<br>　
+<br>這個 RSH 已經提過了，主要的功能是提供 Master 可以使用 R 指令(如 rsh,
+rlogin, rcp 等等)來進行 slave 端主機的操控的！所以啦， RSH daemon 主要是在
+slave 機器上面架設的喔！與 Master 就無關啦！Master 只要能夠執行 R command
+即可！雖然是如此，不過，在我的測試當中，最好 Master 也啟動 RSH 比較好一些些囉！在底下的設定當中，我們假設
+Server 上面的所有使用者都可以使用 R command 呢！設定的方法很簡單啊！
+
+<br>　
+<ul>
+<li>
+<b><font color="#000099">Slave &amp; Master：</font></b></li>
+
+<br>底下的設定在 Master 與 Slave 上面都需要動作喔！設定一樣即可！
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+啟動 RSH 囉！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">chkconfig --level 35 rsh on</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">/etc/rc.d/init.d/xinetd restart</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 編輯可使用
+R command 的主機設定檔：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @node1
+root]# </font><font color="#FFFF00">vi /etc/hosts.equiv</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>server.cluster
++</font></font></font></td>
+</tr>
+</table>
+　
+<br>特別注意，由於 RSH 預設就是不支援 root 使用 R command ，所以您必須要到
+master 上面去，並以一般身份使用者進行 R command 的測試才行喔！不要直接以
+root 工作，會無法成功的啦！(顯示 permission deny 的啦！)</ul>
+　
+<ul>
+<li>
+
+<b><font color="#000099">Master：</font></b></li>
+
+<br>由於 RSH Server 上面的設定中，您的 User 家目錄必須要存在一個名為 .rhosts
+的檔案，原本我的 Server 上面就有一個名為 test 的使用者，而並且為了讓我未來新建立的使用者都能夠使用
+R command ，所以我在 Master 這部機器上面做了這樣的動作喔：
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font size=-1><font color="#FFFFFF">[root
+@server root]# </font><font color="#FFFF00">vi /home/test/.rhosts</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>server.cluster</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">vi /etc/skel/.rhosts</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>server.cluster</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">chmod 644 /etc/skel/.rhosts</font></font></font></td>
+
+</tr>
+</table>
+　</ul>
+這樣就妥當的設定好了 RSH 囉！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_pgi"></a><font color="#000099"><font size=+1>安裝 Fortran
+90 的編譯程式 PGI pgf90 ( PS. server version )</font></font></li>
+
+<br>　
+<br>我由 PGI 的官方網站下載了最新的 PGI Server 套件，請特別留意的是，由於
+PGI 有兩種模式，一種是工作站(Workstation)一種則是伺服器(Server)模式，其中，工作站僅能提供單一主機來操作，無法進行
+Cluster 的功能的！因此，<font color="#000066">請務必要下載 Server 的版本</font>，並且是支援
+Linux 版本的喔！不要搞混了！ PGI Fortran Server version 的下載網址在這個地方：<a href="http://www.pgroup.com/downloads.htm" target="_blank">http://www.pgroup.com/downloads.htm</a>，請自行下載吧！比較需要留意的是，從上面這個網站下載的版本僅是分享軟體的版本，您安裝之後可以具有
+15 天的免費使用期限，超過期限之後，又需要重新安裝一次，很是麻煩的啦！如果您的
+Cluster 是用來進行學術研究的，那麼在測試完成之後，可能需要去他的網站註冊，這個註冊的費用差異可就很大了～因為未來我的
+Cluster 需要一直不斷的運作，因此是需要去註冊的啦！並且，我只會用到 Fortran
+這個編譯器，因此，我就直接使用 PGIHPF 這個版本來測試安裝而已，而不是使用全部
+( 含 PGI Fortran 與 C ) 的版本喔！因為註冊的價差差了兩～三萬台幣啊！安裝
+Fortran 真是很簡單的啦！假設您將 linux86-HPF.tar.gz 放置在 /root/software
+底下，則：(註：以下的動作僅只要在 Master 上面進行即可喔！)
+
+<br>　
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+建立 pgi fortran 在 /cluster/server/program/pgi 底下：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">cd /usr/local/src</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+src]# </font><font color="#FFFF00">mkdir pgi-fortran; cd pgi-fortran</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+pgi-fortran]# </font><font color="#FFFF00">tar -zxvf /root/software/linux86-HPF.tar.gz</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+pgi-fortran]# </font><font color="#FFFF00">./install</font></font></font>
+
+<br><font face="細明體"><font color="#FF6666"><font size=-1>接下來會有一些問題，請依序回答您的問題喔！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>至於授權嘛！請建立吧！</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1>最重要的地方，是在第三個問題，他會問你要安裝的目錄，請選擇</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>/cluster/server/program/pgi</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 修改個人參數：由於
+RSH 不以 root 工作，所以我以使用者 test 來測試：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @serer
+root]# </font><font color="#FFFF00">vi /home/test/.bashrc</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入這幾行關於
+PGI 的咚咚：</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>PGI=/cluster/server/program/pgi</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>export PGI</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>PATH=$PGI/linux86/bin:$PATH</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 設定查尋路徑：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> vi /etc/man.config</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>MANPATH /cluster/server/program/pgi/man</font></font></font></td>
+
+</tr>
+</table>
+　
+<br>這樣就好了嗎？！沒錯！確實是這樣就完成了！很是簡單吧！ ^_^要注意的是：
+<br>　
+<ul>
+<li>
+記得 pgf90 必須要讓所有的 node 都能夠讀的到，所以一定要安裝在 Server 的分享出去的目錄當中，我這裡的例子就是安裝在
+/cluster/server/program/gpi 這個目錄當中囉！</li>
+
+<li>
+執行檔要能夠執行，當然是必須要讓目錄在 PATH 這個變數底下，而我的 pgf90
+是在 /cluster/server/program/pgi/linux86/bin 底下，所以，您的 PATH 必須要含有這個目錄才行！</li>
+</ul>
+　
+<br>大概就是如此囉！
+<br>　
+
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="step_mpich"></a><font color="#000099"><font size=+1>安裝 MPICH</font></font></li>
+
+<br>　
+<br>前面我們提過了，安裝 MPICH 是平行運算裡面最重要的一項工作了！因為我們就是靠他來幫我們達成運作的啊！那麼怎麼來安裝呢？又是簡單得不得了啊！首先，請先下載
+mpich 吧！下載的網址在底下，我是以 mpich 1.2.5-1a 來測試的喔！
+<br>　
+<ul><a href="http://www-unix.mcs.anl.gov/mpi/mpich/download.html" target="_blank">http://www-unix.mcs.anl.gov/mpi/mpich/download.html</a></ul>
+　
+<br>假設您將 mpich 下載在 /root/software 裡面，並且預計要安裝到 /cluster/server/program/mpich
+當中，而且僅安裝 Fortran 而已的話，可以這樣做：
+<br>　
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font color="#FFFFFF"><font size=-1>1.
+建立 mpich 在 /cluster/server/program/mpich 底下：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">cd /usr/local/src</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+src]# </font><font color="#FFFF00">tar -zxvf /root/software/mpich.tar.gz</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+src]# </font><font color="#FFFF00">cd mpich-1.2.5</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+mpich-1.2.5]# </font><font color="#FFFF00">./configure --enable-debug \</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+-fc=pgf77 -f90=pgf90&nbsp; \</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">></font><font color="#FFFF00">
+--prefix=/cluster/server/program/mpich</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+mpich-1.2.5]#</font><font color="#FFFF00"> make &amp;&amp; make install</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 建立可以利用的主機狀態：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+mpich-1.2.5]# </font><font color="#FFFF00">cd /cluster/server/program/mpich/share</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+share]# </font><font color="#FFFF00">vi machines.LINUX</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>node1.cluster:2</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>node2.cluster:2</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>node4.cluster:2</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>server.cluster:2</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 這個檔案當中，格式為
+&lt;主機名稱>:&lt;主機的 CPU 個數></font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 建立需要的變數：(又是以
+test 為準喔！)</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">vi /home/test/.bashrc</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入這一些資料：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>PATH=$PATH:/cluster/server/program/mpich/bin</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>export PATH</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>MPI_HOME=/cluster/server/program/mpich</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>MPI_ARCH=$MPI_HOME/bin/tarch</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>export MPI_ARCH
+MPI_HOME</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]#</font><font color="#FFFF00"> vi /etc/man.config</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 加入這一行：</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>MANPATH /cluster/server/program/mpich/man</font></font></font></td>
+</tr>
+</table>
+　
+<br>呵呵！這樣就已經完成了 MPICH 的安裝與設定了！就跟你說很簡單吧！但是呢，要測試可就得需要特別留意了，因為
+root 預設是不許使用 RSH 的，所以測試一定要使用一般身份的使用者，這裡我以
+test 這個人做為測試的使用者喔！所以，請以 test 的身份登入主機，並且，這個
+test 必須要在所有的主機上面都可以被查詢的到才行(請參考 NIS 的設定喔！)。
+<br>　
+<table BORDER COLS=1 WIDTH="600" >
+<tr>
+<td BGCOLOR="#000000"><font face="細明體"><font size=-1><font color="#FFFFFF">[test
+@server test]$ </font><font color="#FFFF00">cp -r /cluster/server/program/mpich/examples/
+.</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[test @server
+test]$</font><font color="#FFFF00"> cd examples</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[test @server
+examples]$ </font><font color="#FFFF00">make pi3f90</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[test @server
+examples]$ </font><font color="#FFFF00">mpirun -np 8 pi3f90</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 上面那個
+-np 後面接的就是使用 CPU 的個數啦！因為我有 8 個 node ，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 所以當然就以最大的
+CPU 個數來測試看看，如果要看到底 CPU 有沒有啟動的話，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 可以先登入各個
+slave 的主機，然後執行『 top -d 1 』來觀察 CPU 的使用率，</font></font></font>
+<br><font face="細明體"><font color="#FF6666"><font size=-1># 再執行上面這個程式，就能夠知道
+CPU 有沒有運作了！ ^_^</font></font></font></td>
+
+</tr>
+</table>
+　
+<br>呵呵！沒想到 PGI 的試用版本就能夠提供多顆 CPU 的 Cluster 運作，真是給他很高興！這樣既然可以測試成功了，自然就可以去向
+PGI 的官方網站註冊了！註冊費用不低，但是挺值得的啊！</ul>
+
+<hr WIDTH="100%"><a NAME="othersetings"></a><font color="#000099"><font size=+1>其他主機相關設定：</font></font>
+<ul>除了一些基本的 Cluster 設定之外，您的主機其實可能還需要其他的設定項目的！最常見的可能就是
+X-Window System 的 server/slave 架構了！您總不希望老是呆在 cluster 前面吧？！粉吵的呢！這個時候，或許就會希望可以在
+Client 端連接上 Server 的 X Server 囉！
+<br>　
+<br>
+<hr WIDTH="100%">
+<li>
+<a NAME="othersetings_xwindow"></a><font color="#000099"><font size=+1>X-Window
+Server/Slave 架構</font></font></li>
+
+<br>　
+
+<br>架設一個很簡單的 X Server 真的是很容易，容易到讓你會很想笑出來～在上面的環境設定好了之後，請注意：『<font color="#000066">您的主機應該是在
+run-level 為三的文字模式底下，也就是沒有 X Window 存在』</font>才對！這個時候，要設定完成
+X Server ，僅要修改一個檔案，並且啟動一支程式即可！先說明一下我的環境：
+<br>　
+<br>X Server 主機的 IP 是 192.168.10.30，作業系統是 Red Hat 9；
+<br>X Client 的 IP 是 192.168.10.100 ，作業系統同時是 Linux 與 Windows
+2000 。
+<br>　
+<ul>
+<li>
+<b><font color="#000099">X Server 的設定：</font></b></li>
+
+<br>由於我們需要啟動監聽來自 X Client 的要求，這個時候需要重新做一下設定：
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFFF"><font size=-1>1. 先備份原先的設定檔：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+root]# </font><font color="#FFFF00">cd /etc/X11/gdm</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+gdm]#</font><font color="#FFFF00"> mv gdm.conf gdm.conf.bak</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 編輯設定檔，只要底下兩行即可！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+gdm]#</font><font color="#FFFF00"> vi gdm.conf</font></font></font>
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>[xdmcp]</font></font></font>
+
+<br><font face="細明體"><font color="#FFFF00"><font size=-1>Enable=1</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>3. 啟動 gdm
+：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+gdm]# </font><font color="#FFFF00">gdm</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+gdm]# </font><font color="#FFFF00">netstat -uln</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>udp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 0.0.0.0:177&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+0.0.0.0:*</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 如果有出現上面這行就對了！</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @server
+gdm]#</font><font color="#FFFF00"> echo "/usr/bin/gdm" >> /etc/rc.d/rc.local</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1># 上面這行在設定開機時啟動
+gdm 囉！</font></font></font></td>
+</tr>
+</table>
+　
+<li>
+<b><font color="#000099">X Client 的設定(在 Linux 上面)：</font></b></li>
+
+<br>如果您的 X Client 同樣是 Linux ，那麼：『在這目前這個 Client 端連接到
+X Server 端執行 X 視窗』的功能，只要進行幾個步驟就可以了！
+<table BORDER COLS=1 WIDTH="550" BGCOLOR="#000000" >
+<tr>
+<td><font face="細明體"><font color="#FFFFFF"><font size=-1>0. 請務必要在
+X Window 當中，進入 X Window 的方式有：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @client
+root]# </font><font color="#FFFF00">startx</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>或</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @client
+root]#</font><font color="#FFFF00"> init 5</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>　</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>1. 在 X Window
+的畫面當中，啟用一個 shell ，然後輸入：</font></font></font>
+
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @client
+root]#</font><font color="#FFFF00"> xhost + 192.168.10.30</font></font></font>
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>192.168.10.30
+being added to access control list</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @client
+root]# </font><font color="#FFFF00">init 3</font><font color="#FFFFFF">
+(離開 X Window)</font></font></font>
+<p><font face="細明體"><font color="#FFFFFF"><font size=-1>2. 在文字介面下輸入：</font></font></font>
+<br><font face="細明體"><font size=-1><font color="#FFFFFF">[root @client
+root]#</font><font color="#FFFF00"> X -query 192.168.10.30</font></font></font>
+
+<br><font face="細明體"><font color="#FFFFFF"><font size=-1>.....(進入
+X Window 囉！)</font></font></font></td>
+</tr>
+</table>
+　
+<li>
+<b><font color="#000099">X Client 的設定(在 Windows 上面)：</font></b></li>
+
+<br>如果您的 X Client 是在 Windows 上面，那麼就必須要額外的來執行其他的軟體了！目前您可以選擇購買
+<a href="http://www.hummingbird.com/products/nc/exceed/index.html?cks=y" target="_blank">Exceed</a>
+這個連線軟體，或者是先『試用』 <a href="http://www.starnet.com/evalkey/" target="_blank">X-Win</a>
+這個軟體！都是用在 Windows 上面模擬連接到 Linux X Server 用的軟體啦！我這裡是以
+X-Win 這套程式做為介紹的，您可以在各大學的 FTP 網站上面捉到這個軟體，當然，也可以在我這裡下載
+5.4 版。
+<p><a href="http://linux.vbird.org/download/#x-win54">http://linux.vbird.org/download/#x-win54</a>
+
+<br>　
+<ol>
+<li>
+在 Windows 上的安裝步驟，就是執行他即可啊！然後一直給他下一步就是了！</li>
+
+<br>　
+<li>
+執行 X-Win32 這個程式，在出現如下的圖示後，按下 Evaluation 這個試用按鈕；</li>
+
+<br><img SRC="0600cluster/cluster-xwin-1.jpg" NOSAVE height=295 width=324>
+<br>　
+<li>
+按下確認按鈕；</li>
+
+<br><img SRC="0600cluster/cluster-xwin-2.jpg" NOSAVE height=254 width=308>
+<br>　
+<li>
+在右下角的小圖示當中，例如：<img SRC="0600cluster/cluster-xwin-3.jpg" NOSAVE BORDER=1 height=36 width=121 align=ABSCENTER>
+給他按下那個 X 囉，就會出現如下的圖示：</li>
+
+<br><img SRC="0600cluster/cluster-xwin-4.jpg" NOSAVE height=325 width=431>
+<br>　
+<li>
+按下 Add 之後，會出現如下的圖示：</li>
+
+<br><img SRC="0600cluster/cluster-xwin-5.jpg" NOSAVE height=256 width=374>
+<br>　
+<li>
+
+上面選擇 XDMCP 這個項目，然後選擇 Next 之後，會出現：</li>
+
+<br><img SRC="0600cluster/cluster-xwin-6.jpg" NOSAVE height=363 width=357>
+<br>　
+<li>
+重要的地方在於 Query 這個選項，以及 192.168.10.30 這個 IP 指向喔！都設定好之後，給他
+Save 一下，會出現：</li>
+
+<br><img SRC="0600cluster/cluster-xwin-7.jpg" NOSAVE height=325 width=431>
+<br>　
+<li>
+上面的圖示當中，給他按下確定吧！然後呢？在右下角的 X 小圖示中 (&nbsp;<img SRC="0600cluster/cluster-xwin-8.jpg" NOSAVE height=57 width=201 align=ABSCENTER>
+) 按一下 X 之後，就會出現剛剛我們建立的 My Linux X Server 這個選項，給他選擇下去的啦，呵呵！就會出現囉：</li>
+
+<br><img SRC="0600cluster/cluster-xwin-9.jpg" NOSAVE height=323 width=534>
+<br>很棒吧！這樣就能在 Windows 上面連線進入 Linux 使用他的 X Window 功能囉！</ol>
+</ul>
+　
+<br>後記：雖然架設一個 X Server/Client 是很簡單的一件事，不過，如果您的機器並不是在
+LAN 裡面的話，而是在 Internet 上面進行 Server/Client 的 X 系統架構的連結，請特別留意的是，由於
+X Window 的圖形介面需要一直傳輸圖形到您的工作機上面來，如此一來，將會損耗掉大部分的頻寬喔！在我的實際案例當中，發現到我的
+X Server/Client 之間流量傳輸達到 2000 Kbits/second, 亦即是 250KBytes/second
+，還記得流量的算法吧？！如果是 ADSL 撥接架構的話，目前已經蠻常見 下載/上傳
+= 1.5M/386K 的傳輸速度，不過，即使下載達到 1.5M 了，不過在我的案例中竟然高達了
+2.0M 的傳輸！呵呵！瞭解吧！所以囉，這個 X Window 的 Server/Client 架構請務必在內部網路架設就好，不要想連上
+Internet 啊！會等的快睡著.....</ul>
+
+<hr WIDTH="100%"><a NAME="important"></a><font color="#000099"><font size=+1>重點回顧</font></font>
+<ul>
+<li>
+<font color="#000066">Cluster 可以是平行計算的一種，主要除了雙 CPU 系統外，也可以用在多主機架構下的一種增快數值計算的方式；</font></li>
+
+<li>
+<font color="#000066">平行計算的 Cluster 主要是藉由主從的架構去運行的，其主要的設定都在
+Master 上面設定的， Slave 主要是計算功能而已，</font></li>
+
+<li>
+<font color="#000066">Cluster 上面相當重要的地方在於 NFS 的設定，因為 Master/Slaves
+都需要讀取同樣的資料，所以 NFS 分享的檔案資料就極其重要了；</font></li>
+
+<li>
+<font color="#000066">除了 NFS 之外，還需要 MPI 這個平行計算的函式庫之安裝，有了
+MPI ，Cluster 才能真的運作起來；</font></li>
+
+<li>
+<font color="#000066">在 Cluster 當中，所有的主機之指令的溝通主要亦經過
+RSH 的運作；</font></li>
+</ul>
+
+<hr WIDTH="100%"><a NAME="reference"></a><font color="#000099"><font size=+1>參考資源</font></font>
+<ul>
+
+<li>
+Marty's Linux Cluster 架設日誌：<a href="http://web.csie.chu.edu.tw/~cs87668/cluster.htm" target="_blank">http://web.csie.chu.edu.tw/~cs87668/cluster.htm</a></li>
+
+<li>
+張裕麟先生的小文章：<a href="http://www.se.ntou.edu.tw/~ylchang/MyDocuments/MPICH-ins.txt" target="_blank">http://www.se.ntou.edu.tw/~ylchang/MyDocuments/MPICH-ins.txt</a></li>
+
+<li>
+國家高速電腦中心：<a href="http://binfo.ym.edu.tw/edu/seminars/200201.files/frame.htm" target="_blank">http://binfo.ym.edu.tw/edu/seminars/200201.files/frame.htm</a></li>
+
+<li>
+MPICH官方網站：<a href="http://www-unix.mcs.anl.gov/mpi/mpich/" target="_blank">http://www-unix.mcs.anl.gov/mpi/mpich/</a></li>
+
+</ul>
+
+<center><font color="#3333FF"><font size=+1><a href="0600cluster.php"><font face="標楷體">簡易</font>
+Cluster <font face="標楷體">架設</font></a></font></font></center>
+
+<hr WIDTH="100%"><font face="新細明體"><font color="#000066"><font size=-1>2003/05/12：第一次完成日期！</font></font></font>
+<br><font face="新細明體"><font color="#000066"><font size=-1>2003/05/20：加入了
+<a href="#othersetings_xwindow">X
+Server/Client</a> 的架構！</font></font></font>
+<br>
+
+  
+  </td>
+  <td style="width:16px; font-size:6px;
+	background-image:url('/images/border-middle-right.jpg')">　</td></tr>
+<tr><td style="width:16px; height:16px; background-image:url('/images/border-bottom-left.jpg');
+        font-size:6px">　</td>
+    <td style="width:750px; height:16px; font-size:6px;
+        background-image:url('/images/border-bottom-center.jpg')">　</td>
+
+    <td style="width:16px; height:16px; background-image:url('/images/border-bottom-right.jpg');
+        font-size:6px">　</td></tr>
+</table>
+
+<div style="padding-top:10px; text-align:center">
+<span style="font-size: 80%">
+
+	本網頁主要以 <a href="http://moztw.org" target="_blank">firefox</a> 配合解析度 1024x768 作為設計依據<br />
+	<a href="http://linux.vbird.org" target="_top" title="前往鳥哥的首頁">http://linux.vbird.org</a>
+	is designed by <a href="mailto:vbird@mail.vbird.idv.tw" title="聯絡鳥哥(我不要廣告信！)">VBird</a>
+		during 2001-2009.
+	<a href="http://aerosol.ev.ncku.edu.tw">Aerosol Lab.</a></span>
+
+</div>
+</center>
+</body>
+</html>
