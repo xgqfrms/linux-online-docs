@@ -1,1 +1,4 @@
-[name: params.json]
+{
+  "name":"Linux-online-docs",
+  "tagline":"linux-online-docs ( 鸟哥的Linux 私房菜)",
+  "body":"### Welcome to this tutorial of linux-online-docs made by GitHub Pages."}
