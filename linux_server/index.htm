@@ -1,34 +1,30 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW" lang="zh-TW">
+<!DOCTYPE html">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-Hans" lang="zh-Hans">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="Author" content="VBird, 鳥哥" />
-	<meta name="Description" content="VBird's Linux 架站文件彙整" />
+	<meta name="Author" content="VBird, 鸟哥" />
+	<meta name="Description" content="Linux 最重要是基础学习，在这个单元中，我们介绍很多 Linux 基础观念！" />
     <link href="../styles/default.css" rel="stylesheet" type="text/css" />
-	<title>鳥哥的 Linux 私房菜 -- 伺服器架設篇目錄</title>
+	<title>鸟哥的Linux私房菜--伺服器架设篇目录</title>
     
 </head>
 <body style="margin:0; padding:0">
-
 <center>
-
+<!-- 鸟哥的Linux私房菜馆 | Linux基础文件 | Linux架站文件 | Linux企业运用 | 安全管理 | 新手讨论 |  -->
 
 <!-- 這裡是關於頁首按鈕處的按鈕程式 -->
 <div style="text-align:center">
-<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鳥哥的<span class="text_head_en"> 
+<span style="font-weight:bolder; color:#3333FF"><span class="text_head0">鸟哥的<span class="text_head_en"> 
 	Linux </span>私房菜</span></span><br />
-<span style="color:#000080">為取得較佳瀏覽結果，請愛用 <a href="http://moztw.org" target="_blank">firefox</a>
-	瀏覽本網頁</span><br />
+<span style="color:#000080">为取得较佳浏览结果，请用 firefox <a href="https://moz.org" target="_blank">firefox</a>
+	浏览本网页</span><br />
 
 <a href="http://linux.vbird.org" target="_top">鳥哥的 Linux 私房菜館</a> | 
-<a href="../index.htm">目錄</a> | 
-<a href="../linux_basic/index.htm">Linux 基礎文件</a> | 
+<a href="../linux_basic/index.htm">Linux 基础文件</a> | 
 <a href="../linux_server/index.htm">Linux 架站文件</a> | 
-<a href="../linux_enterprise/index.htm">Linux 企業運用</a> | 
+<a href="../linux_enterprise/index.htm">Linux 企业运用</a> | 
 <a href="../linux_security/index.htm">安全管理</a> | 
-<a href="http://phorum.vbird.org">新手討論</a> | 
-
+<a href="http://phorum.vbird.org">新手讨论</a> | 
 <br />
 </div>
 
@@ -38,34 +34,24 @@
     <td style="width:718px; height:16px; font-size:6px;">　</td>
     <td style="width:16px; height:16px; font-size:6px;">　</td></tr>
 <tr><td style="width:16px; font-size:6px;">　</td>
-  <td width="718">
-  	
+
+    <td>
 
 <!-- 本文的檔頭部分 -->
 <div style="text-align:center">
-    <a href="index.htm">
-    <span class="text_head0">鳥哥的<span class="text_head_en"> Linux </span>私房菜 -- 伺服器架設篇目錄</span></a><br />
+    <span class="text_head0">鸟哥的<span class="text_head_en"> Linux </span>私房菜 -- 伺服器架设篇目录</span><br />
 </div>
+  	
 <!-- 本文的檔頭部分 -->
 <table class="head1" summary="排版：文章檔頭的說明"><tr><td class="head1">
 <center><span class="text_h2">特別強調</span></center>
-	底下這些文件主要是針對 Linux 的網路伺服器架設來書寫的，鳥哥主要以使用 RPM 安裝的 CentOS 作為基礎的作業系統，
-	CentOS 是屬於 Red Hat 系統的作業系統，所以理論上 RHEL, CentOS, Fedora 等版本都適用的啦！
-	為什麼要使用預設的套件管理方式來安裝所有的伺服器呢？這是因為大多數的 Linux 開發商都會有所謂的線上升級系統，
-	包括 CentOS/Fedora 的 yum ，以及 SuSE 的 YOU ，還有 Debian 的 apt 等等，
-	因為有線上『自動升級』，所以當然會比您自己手動使用 Tarball 的安裝方式來的方便且安全！
-	因為你的系統上頭所有的資料可以在第一時間內『自動』修補完畢嘛！<br /><br />
+	底下这些文件主要是针对Linux的网路伺服器架设来书写的，鸟哥主要以使用RPM安装的CentOS作为基础的作业系统， CentOS是属于Red Hat系统的作业系统，所以理论上RHEL, CentOS, Fedora等版本都适用的啦！为什么要使用预设的套件管理方式来安装所有的伺服器呢？这是因为大多数的Linux开发商都会有所谓的线上升级系统，包括CentOS/Fedora的yum ，以及SuSE的YOU ，还有Debian的apt等等，因为有线上『自动升级』，所以当然会比您自己手动使用Tarball的安装方式来的方便且安全！因为你的系统上头所有的资料可以在第一时间内『自动』修补完毕嘛！<br /><br />
 
-	要架設好一部 Linux 主機實在很簡單，只要按照鳥哥網站上的步驟，一步一步的慢慢設定下去，
-	鐵定可以完成您的設定的！但是，要維護好一部 Linux 主機，卻是很困難的！您必須要熟悉 
-	Linux 的系統架構、網路的基本知識如協定、IP、路由、DNS
-	等等的基礎知識才行！<br /><br />
+	要架设好一部Linux主机实在很简单，只要按照鸟哥网站上的步骤，一步一步的慢慢设定下去，铁定可以完成您的设定的！但是，要维护好一部Linux主机，却是很困难的！您必须要熟悉Linux的系统架构、网路的基本知识如协定、IP、路由、DNS等等的基础知识才行！<br /><br />
 
-	無論如何，您要開始『伺服器架設篇』之前，請務必先讀完『<a href="../linux_basic/">Linux 基礎篇</a>』的文章才行！
-	否則幾乎就如同上面提到的，維護這樣的一部 Linux
-	主機，是很花時間的！沒有這個認知，那就不要架站吧！免得毒害其他的同袍吶！<br /><br />
+	无论如何，您要开始『伺服器架设篇』之前，请务必先读完『Linux基础篇』的文章才行！否则几乎就如同上面提到的，维护这样的一部Linux主机，是很花时间的！没有这个认知，那就不要架站吧！免得毒害其他的同袍呐！<br /><br />
 
-	在架站的過程當中，無論出現任何問題，第一個步驟就是察看登錄檔 (log file)，那是克服問題的地方！
+	在架站的过程当中，无论出现任何问题，第一个步骤就是察看登录档(log file)，那是克服问题的地方！
 </td></tr></table><br />
 
 <!-- 本文的連結區部分 -->
