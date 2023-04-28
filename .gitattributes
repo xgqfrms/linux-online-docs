@@ -1,0 +1,4 @@
+# https://github.com/xgqfrms/cdn/blob/gh-pages/.gitattributes
+*.html linguist-detectable=false
+*.css linguist-detectable=false
+*.md linguist-detectable=false
